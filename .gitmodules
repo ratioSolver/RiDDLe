@@ -1,0 +1,3 @@
+[submodule "extern/semitone"]
+	path = extern/semitone
+	url = https://github.com/ratioSolver/SeMiTONE
