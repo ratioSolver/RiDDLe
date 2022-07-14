@@ -8,7 +8,7 @@
 #define BOOL_KEYWORD "bool"
 #define INT_KEYWORD "int"
 #define REAL_KEYWORD "real"
-#define TP_KEYWORD "tp"
+#define TIME_KEYWORD "time"
 #define STRING_KEYWORD "string"
 
 namespace riddle
@@ -18,7 +18,7 @@ namespace riddle
     BOOL_ID,          // 'bool'
     INT_ID,           // 'int'
     REAL_ID,          // 'real'
-    TP_ID,            // 'tp'
+    TIME_ID,          // 'time'
     STRING_ID,        // 'string'
     TYPEDEF_ID,       // 'typedef'
     ENUM_ID,          // 'enum'

@@ -425,11 +425,15 @@ namespace riddle
             std::string str;
             switch (str += ch; ch = next_char())
             {
-            case 'p':
+            case 'i':
+                if (str += ch; (ch = next_char()) != 'm')
+                    return finish_id(str);
+                if (str += ch; (ch = next_char()) != 'e')
+                    return finish_id(str);
                 if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
                     return finish_id(str);
                 else
-                    return mk_token(TP_ID);
+                    return mk_token(TIME_ID);
             case 'r':
                 if (str += ch; (ch = next_char()) != 'u')
                     return finish_id(str);

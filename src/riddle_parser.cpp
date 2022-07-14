@@ -66,7 +66,7 @@ namespace riddle
             case BOOL_ID:
             case INT_ID:
             case REAL_ID:
-            case TP_ID:
+            case TIME_ID:
             case STRING_ID:
             case LBRACE_ID:
             case BANG_ID:
@@ -125,8 +125,8 @@ namespace riddle
         case REAL_ID:
             pt = new id_token(0, 0, 0, 0, REAL_KEYWORD);
             break;
-        case TP_ID:
-            pt = new id_token(0, 0, 0, 0, TP_KEYWORD);
+        case TIME_ID:
+            pt = new id_token(0, 0, 0, 0, TIME_KEYWORD);
             break;
         case STRING_ID:
             pt = new id_token(0, 0, 0, 0, STRING_KEYWORD);
@@ -262,7 +262,7 @@ namespace riddle
             case BOOL_ID:
             case INT_ID:
             case REAL_ID:
-            case TP_ID:
+            case TIME_ID:
             case STRING_ID: // either a primitive type method or a field declaration..
             {
                 size_t c_pos = pos;
@@ -366,8 +366,8 @@ namespace riddle
             tp.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
             tk = next();
             break;
-        case TP_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, TP_KEYWORD));
+        case TIME_ID:
+            tp.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
             tk = next();
             break;
         case STRING_ID:
@@ -457,8 +457,8 @@ namespace riddle
                     p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
                     tk = next();
                     break;
-                case TP_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TP_KEYWORD));
+                case TIME_ID:
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
                     tk = next();
                     break;
                 case STRING_ID:
@@ -538,8 +538,8 @@ namespace riddle
                     p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
                     tk = next();
                     break;
-                case TP_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TP_KEYWORD));
+                case TIME_ID:
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
                     tk = next();
                     break;
                 case STRING_ID:
@@ -629,8 +629,8 @@ namespace riddle
                     p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
                     tk = next();
                     break;
-                case TP_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TP_KEYWORD));
+                case TIME_ID:
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
                     tk = next();
                     break;
                 case STRING_ID:
@@ -691,7 +691,7 @@ namespace riddle
         case BOOL_ID:
         case INT_ID:
         case REAL_ID:
-        case TP_ID:
+        case TIME_ID:
         case STRING_ID: // a local field having a primitive type..
         {
             std::vector<id_token> ft;
@@ -706,8 +706,8 @@ namespace riddle
             case REAL_ID:
                 ft.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
                 break;
-            case TP_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, TP_KEYWORD));
+            case TIME_ID:
+                ft.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
                 break;
             case STRING_ID:
                 ft.emplace_back(id_token(0, 0, 0, 0, STRING_KEYWORD));
