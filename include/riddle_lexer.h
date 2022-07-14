@@ -100,19 +100,19 @@ namespace riddle
   class int_token final : public token
   {
   public:
-    int_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const smt::I &val) : token(IntLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
+    int_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const semitone::I &val) : token(IntLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
   public:
-    const smt::I val;
+    const semitone::I val;
   };
 
   class real_token final : public token
   {
   public:
-    real_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const smt::rational &val) : token(RealLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
+    real_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const semitone::rational &val) : token(RealLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
   public:
-    const smt::rational val;
+    const semitone::rational val;
   };
 
   class string_token final : public token
@@ -161,7 +161,7 @@ namespace riddle
 
     token *mk_integer_token(const std::string &str) noexcept
     {
-      token *tk = new int_token(start_line, start_pos, end_line, end_pos, static_cast<smt::I>(std::stol(str)));
+      token *tk = new int_token(start_line, start_pos, end_line, end_pos, static_cast<semitone::I>(std::stol(str)));
       start_line = end_line;
       start_pos = end_pos;
       return tk;
@@ -169,7 +169,7 @@ namespace riddle
 
     token *mk_rational_token(const std::string &intgr, const std::string &dec) noexcept
     {
-      token *tk = new real_token(start_line, start_pos, end_line, end_pos, smt::rational(static_cast<smt::I>(std::stol(intgr + dec)), static_cast<smt::I>(std::pow(10, dec.size()))));
+      token *tk = new real_token(start_line, start_pos, end_line, end_pos, semitone::rational(static_cast<semitone::I>(std::stol(intgr + dec)), static_cast<semitone::I>(std::pow(10, dec.size()))));
       start_line = end_line;
       start_pos = end_pos;
       return tk;
