@@ -6,7 +6,11 @@ namespace riddle
     using namespace ast;
 
     RIDDLE_EXPORT parser::parser(std::istream &is) : lex(is) {}
-    RIDDLE_EXPORT parser::~parser() {}
+    RIDDLE_EXPORT parser::~parser()
+    {
+        for (const auto &tk : tks)
+            delete tk;
+    }
 
     token *parser::next()
     {
