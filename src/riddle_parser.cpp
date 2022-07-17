@@ -46,7 +46,7 @@ namespace riddle
         std::vector<const type_declaration *> ts;
         std::vector<const method_declaration *> ms;
         std::vector<const predicate_declaration *> ps;
-        std::vector<const statement *> stmnts;
+        std::vector<std::unique_ptr<const statement>> stmnts;
 
         while (tk->sym != EOF_ID)
         {
@@ -107,7 +107,7 @@ namespace riddle
             }
         }
 
-        return new_compilation_unit(ms, ps, ts, stmnts);
+        return new_compilation_unit(ms, ps, ts, std::move(stmnts));
     }
 
     typedef_declaration *parser::_typedef_declaration()
@@ -423,7 +423,7 @@ namespace riddle
     {
         std::vector<id_token> rt;
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
-        std::vector<const statement *> stmnts;
+        std::vector<std::unique_ptr<const ast::statement>> stmnts;
 
         if (!match(VOID_ID))
         {
@@ -498,7 +498,7 @@ namespace riddle
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
 
-        return new_method_declaration(rt, n, pars, stmnts);
+        return new_method_declaration(rt, n, pars, std::move(stmnts));
     }
 
     constructor_declaration *parser::_constructor_declaration()
@@ -506,7 +506,7 @@ namespace riddle
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
         std::vector<id_token> ins;
         std::vector<std::vector<std::unique_ptr<const expression>>> ivs;
-        std::vector<const statement *> stmnts;
+        std::vector<std::unique_ptr<const ast::statement>> stmnts;
 
         if (!match(ID_ID))
             error("expected identifier..");
@@ -597,14 +597,14 @@ namespace riddle
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
 
-        return new_constructor_declaration(pars, ins, std::move(ivs), stmnts);
+        return new_constructor_declaration(pars, ins, std::move(ivs), std::move(stmnts));
     }
 
     predicate_declaration *parser::_predicate_declaration()
     {
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
         std::vector<std::vector<id_token>> pl;
-        std::vector<const statement *> stmnts;
+        std::vector<std::unique_ptr<const ast::statement>> stmnts;
 
         if (!match(PREDICATE_ID))
             error("expected 'predicate'..");
@@ -687,10 +687,10 @@ namespace riddle
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
 
-        return new_predicate_declaration(n, pars, pl, stmnts);
+        return new_predicate_declaration(n, pars, pl, std::move(stmnts));
     }
 
-    statement *parser::_statement()
+    std::unique_ptr<const statement> parser::_statement()
     {
         switch (tk->sym)
         {
@@ -824,7 +824,7 @@ namespace riddle
         case LBRACE_ID: // either a block or a disjunction..
         {
             tk = next();
-            std::vector<const statement *> stmnts;
+            std::vector<std::unique_ptr<const ast::statement>> stmnts;
             do
             {
                 stmnts.emplace_back(_statement());
@@ -834,7 +834,7 @@ namespace riddle
             case LBRACKET_ID:
             case OR_ID: // a disjunctive statement..
             {
-                std::vector<std::vector<const statement *>> conjs;
+                std::vector<std::vector<std::unique_ptr<const ast::statement>>> conjs;
                 std::vector<std::unique_ptr<const expression>> conj_costs;
                 std::unique_ptr<const ast::expression> e = nullptr;
                 if (match(LBRACKET_ID))
@@ -843,12 +843,10 @@ namespace riddle
                     if (!match(RBRACKET_ID))
                         error("expected ']'..");
                 }
-                conjs.emplace_back(stmnts);
+                conjs.emplace_back(std::move(stmnts));
                 conj_costs.emplace_back(std::move(e));
                 while (match(OR_ID))
                 {
-                    stmnts.clear();
-                    e = nullptr;
                     if (!match(LBRACE_ID))
                         error("expected '{'..");
                     while (!match(RBRACE_ID))
@@ -859,13 +857,13 @@ namespace riddle
                         if (!match(RBRACKET_ID))
                             error("expected ']'..");
                     }
-                    conjs.emplace_back(stmnts);
+                    conjs.emplace_back(std::move(stmnts));
                     conj_costs.emplace_back(std::move(e));
                 }
-                return new_disjunction_statement(conjs, std::move(conj_costs));
+                return new_disjunction_statement(std::move(conjs), std::move(conj_costs));
             }
             default: // a conjunction statement..
-                return new_conjunction_statement(stmnts);
+                return new_conjunction_statement(std::move(stmnts));
             }
         }
         case FACT_ID:
