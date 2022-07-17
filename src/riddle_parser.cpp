@@ -206,7 +206,7 @@ namespace riddle
         if (!match(SEMICOLON_ID))
             error("expected ';'..");
 
-        return new_enum_declaration(n, es, trs);
+        return new_enum_declaration(n, std::move(es), std::move(trs));
     }
 
     std::unique_ptr<const class_declaration> parser::_class_declaration()
@@ -348,7 +348,7 @@ namespace riddle
             }
         }
 
-        return new_class_declaration(n, bcs, std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts));
+        return new_class_declaration(n, std::move(bcs), std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts));
     }
 
     std::unique_ptr<const field_declaration> parser::_field_declaration()
@@ -416,7 +416,7 @@ namespace riddle
         if (!match(SEMICOLON_ID))
             error("expected ';'..");
 
-        return new_field_declaration(tp, std::move(ds));
+        return new_field_declaration(std::move(tp), std::move(ds));
     }
 
     std::unique_ptr<const method_declaration> parser::_method_declaration()
@@ -498,7 +498,7 @@ namespace riddle
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
 
-        return new_method_declaration(rt, n, pars, std::move(stmnts));
+        return new_method_declaration(std::move(rt), n, std::move(pars), std::move(stmnts));
     }
 
     std::unique_ptr<const constructor_declaration> parser::_constructor_declaration()
@@ -687,7 +687,7 @@ namespace riddle
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
 
-        return new_predicate_declaration(n, pars, pl, std::move(stmnts));
+        return new_predicate_declaration(n, std::move(pars), std::move(pl), std::move(stmnts));
     }
 
     std::unique_ptr<const statement> parser::_statement()
@@ -744,7 +744,7 @@ namespace riddle
             if (!match(SEMICOLON_ID))
                 error("expected ';'..");
 
-            return new_local_field_statement(ft, ns, std::move(es));
+            return new_local_field_statement(std::move(ft), std::move(ns), std::move(es));
         }
         case ID_ID: // either a local field, an assignment or an expression..
         {
@@ -782,7 +782,7 @@ namespace riddle
                 if (!match(SEMICOLON_ID))
                     error("expected ';'..");
 
-                return new_local_field_statement(is, ns, std::move(es));
+                return new_local_field_statement(std::move(is), std::move(ns), std::move(es));
             }
             case EQ_ID: // an assignment..
             {
@@ -792,7 +792,7 @@ namespace riddle
                 std::unique_ptr<const ast::expression> e = _expression();
                 if (!match(SEMICOLON_ID))
                     error("expected ';'..");
-                return new_assignment_statement(is, i, e.get());
+                return new_assignment_statement(std::move(is), i, e.get());
             }
             case PLUS_ID: // an expression..
             case MINUS_ID:
@@ -814,7 +814,7 @@ namespace riddle
                 std::unique_ptr<const ast::expression> e = _expression();
                 if (!match(SEMICOLON_ID))
                     error("expected ';'..");
-                return new_expression_statement(e.get());
+                return new_expression_statement(std::move(e));
             }
             default:
                 error("expected either '=' or an identifier..");
@@ -926,14 +926,14 @@ namespace riddle
             std::unique_ptr<const ast::expression> e = _expression();
             if (!match(SEMICOLON_ID))
                 error("expected ';'..");
-            return new_return_statement(e.get());
+            return new_return_statement(std::move(e));
         }
         default:
         {
             std::unique_ptr<const ast::expression> xpr = _expression();
             if (!match(SEMICOLON_ID))
                 error("expected ';'..");
-            return new_expression_statement(xpr.get());
+            return new_expression_statement(std::move(xpr));
         }
         }
     }
@@ -983,7 +983,7 @@ namespace riddle
 
                 if (!match(RPAREN_ID))
                     error("expected ')'..");
-                e = new_cast_expression(ids, _expression());
+                e = new_cast_expression(std::move(ids), _expression());
             }
             else // a parenthesis..
             {
@@ -1033,7 +1033,7 @@ namespace riddle
                     error("expected ')'..");
             }
 
-            e = new_constructor_expression(ids, std::move(xprs));
+            e = new_constructor_expression(std::move(ids), std::move(xprs));
             break;
         }
         case ID_ID:
@@ -1067,10 +1067,10 @@ namespace riddle
                         error("expected ')'..");
                 }
 
-                e = new_function_expression(is, fn, std::move(xprs));
+                e = new_function_expression(std::move(is), fn, std::move(xprs));
             }
             else
-                e = new_id_expression(is);
+                e = new_id_expression(std::move(is));
             break;
         }
         default:
