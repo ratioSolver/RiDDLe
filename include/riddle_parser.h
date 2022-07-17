@@ -476,17 +476,13 @@ namespace riddle
     class field_declaration
     {
     public:
-      field_declaration(const std::vector<id_token> &tp, const std::vector<const variable_declaration *> &ds) : field_type(tp), declarations(ds) {}
+      field_declaration(const std::vector<id_token> &tp, std::vector<std::unique_ptr<const variable_declaration>> ds) : field_type(tp), declarations(std::move(ds)) {}
       field_declaration(const field_declaration &orig) = delete;
-      virtual ~field_declaration()
-      {
-        for (const auto &vd : declarations)
-          delete vd;
-      }
+      virtual ~field_declaration() = default;
 
     protected:
       const std::vector<id_token> field_type;
-      const std::vector<const variable_declaration *> declarations;
+      const std::vector<std::unique_ptr<const variable_declaration>> declarations;
     };
 
     class constructor_declaration
@@ -506,51 +502,31 @@ namespace riddle
     class class_declaration : public type_declaration
     {
     public:
-      class_declaration(const id_token &n, const std::vector<std::vector<id_token>> &bcs, const std::vector<const field_declaration *> &fs, const std::vector<const constructor_declaration *> &cs, const std::vector<const method_declaration *> &ms, const std::vector<const predicate_declaration *> &ps, const std::vector<const type_declaration *> &ts) : name(n), base_classes(bcs), fields(fs), constructors(cs), methods(ms), predicates(ps), types(ts) {}
+      class_declaration(const id_token &n, const std::vector<std::vector<id_token>> &bcs, std::vector<std::unique_ptr<const field_declaration>> fs, std::vector<std::unique_ptr<const constructor_declaration>> cs, std::vector<std::unique_ptr<const method_declaration>> ms, std::vector<std::unique_ptr<const predicate_declaration>> ps, std::vector<std::unique_ptr<const type_declaration>> ts) : name(n), base_classes(bcs), fields(std::move(fs)), constructors(std::move(cs)), methods(std::move(ms)), predicates(std::move(ps)), types(std::move(ts)) {}
       class_declaration(const class_declaration &orig) = delete;
-      virtual ~class_declaration()
-      {
-        for (const auto &f : fields)
-          delete f;
-        for (const auto &c : constructors)
-          delete c;
-        for (const auto &m : methods)
-          delete m;
-        for (const auto &p : predicates)
-          delete p;
-        for (const auto &t : types)
-          delete t;
-      }
+      virtual ~class_declaration() = default;
 
     protected:
       const id_token name;
       const std::vector<std::vector<id_token>> base_classes;
-      const std::vector<const field_declaration *> fields;
-      const std::vector<const constructor_declaration *> constructors;
-      const std::vector<const method_declaration *> methods;
-      const std::vector<const predicate_declaration *> predicates;
-      const std::vector<const type_declaration *> types;
+      const std::vector<std::unique_ptr<const field_declaration>> fields;
+      const std::vector<std::unique_ptr<const constructor_declaration>> constructors;
+      const std::vector<std::unique_ptr<const method_declaration>> methods;
+      const std::vector<std::unique_ptr<const predicate_declaration>> predicates;
+      const std::vector<std::unique_ptr<const type_declaration>> types;
     };
 
     class compilation_unit
     {
     public:
-      compilation_unit(const std::vector<const method_declaration *> &ms, const std::vector<const predicate_declaration *> &ps, const std::vector<const type_declaration *> &ts, std::vector<std::unique_ptr<const ast::statement>> stmnts) : methods(ms), predicates(ps), types(ts), statements(std::move(stmnts)) {}
+      compilation_unit(std::vector<std::unique_ptr<const method_declaration>> ms, std::vector<std::unique_ptr<const predicate_declaration>> ps, std::vector<std::unique_ptr<const type_declaration>> ts, std::vector<std::unique_ptr<const ast::statement>> stmnts) : methods(std::move(ms)), predicates(std::move(ps)), types(std::move(ts)), statements(std::move(stmnts)) {}
       compilation_unit(const compilation_unit &orig) = delete;
-      virtual ~compilation_unit()
-      {
-        for (const auto &t : types)
-          delete t;
-        for (const auto &m : methods)
-          delete m;
-        for (const auto &p : predicates)
-          delete p;
-      }
+      virtual ~compilation_unit() = default;
 
     protected:
-      const std::vector<const method_declaration *> methods;
-      const std::vector<const predicate_declaration *> predicates;
-      const std::vector<const type_declaration *> types;
+      const std::vector<std::unique_ptr<const method_declaration>> methods;
+      const std::vector<std::unique_ptr<const predicate_declaration>> predicates;
+      const std::vector<std::unique_ptr<const type_declaration>> types;
       const std::vector<std::unique_ptr<const ast::statement>> statements;
     };
   } // namespace ast
@@ -562,20 +538,20 @@ namespace riddle
     parser(const parser &orig) = delete;
     RIDDLE_EXPORT virtual ~parser();
 
-    RIDDLE_EXPORT ast::compilation_unit *parse();
+    RIDDLE_EXPORT std::unique_ptr<const ast::compilation_unit> parse();
 
   private:
     token *next();
     bool match(const symbol &sym);
     void backtrack(const size_t &p) noexcept;
 
-    ast::typedef_declaration *_typedef_declaration();
-    ast::enum_declaration *_enum_declaration();
-    ast::class_declaration *_class_declaration();
-    ast::field_declaration *_field_declaration();
-    ast::method_declaration *_method_declaration();
-    ast::constructor_declaration *_constructor_declaration();
-    ast::predicate_declaration *_predicate_declaration();
+    std::unique_ptr<const ast::typedef_declaration> _typedef_declaration();
+    std::unique_ptr<const ast::enum_declaration> _enum_declaration();
+    std::unique_ptr<const ast::class_declaration> _class_declaration();
+    std::unique_ptr<const ast::field_declaration> _field_declaration();
+    std::unique_ptr<const ast::method_declaration> _method_declaration();
+    std::unique_ptr<const ast::constructor_declaration> _constructor_declaration();
+    std::unique_ptr<const ast::predicate_declaration> _predicate_declaration();
     std::unique_ptr<const ast::statement> _statement();
     std::unique_ptr<const ast::expression> _expression(const size_t &pr = 0);
 
@@ -584,15 +560,15 @@ namespace riddle
     /**
      * The declarations.
      */
-    virtual ast::method_declaration *new_method_declaration(const std::vector<id_token> &rt, const id_token &n, const std::vector<std::pair<const std::vector<id_token>, const id_token>> &pars, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return new ast::method_declaration(rt, n, pars, std::move(stmnts)); }
-    virtual ast::predicate_declaration *new_predicate_declaration(const id_token &n, const std::vector<std::pair<const std::vector<id_token>, const id_token>> &pars, const std::vector<std::vector<id_token>> &pl, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return new ast::predicate_declaration(n, pars, pl, std::move(stmnts)); }
-    virtual ast::typedef_declaration *new_typedef_declaration(const id_token &n, const id_token &pt, const ast::expression *e) const noexcept { return new ast::typedef_declaration(n, pt, e); }
-    virtual ast::enum_declaration *new_enum_declaration(const id_token &n, const std::vector<string_token> &es, const std::vector<std::vector<id_token>> &trs) const noexcept { return new ast::enum_declaration(n, es, trs); }
-    virtual ast::class_declaration *new_class_declaration(const id_token &n, const std::vector<std::vector<id_token>> &bcs, const std::vector<const ast::field_declaration *> &fs, const std::vector<const ast::constructor_declaration *> &cs, const std::vector<const ast::method_declaration *> &ms, const std::vector<const ast::predicate_declaration *> &ps, const std::vector<const ast::type_declaration *> &ts) const noexcept { return new ast::class_declaration(n, bcs, fs, cs, ms, ps, ts); }
-    virtual ast::variable_declaration *new_variable_declaration(const id_token &n, const ast::expression *const e = nullptr) const noexcept { return new ast::variable_declaration(n, e); }
-    virtual ast::field_declaration *new_field_declaration(const std::vector<id_token> &tp, const std::vector<const ast::variable_declaration *> &ds) const noexcept { return new ast::field_declaration(tp, ds); }
-    virtual ast::constructor_declaration *new_constructor_declaration(const std::vector<std::pair<const std::vector<id_token>, const id_token>> &pars, const std::vector<id_token> &ins, std::vector<std::vector<std::unique_ptr<const ast::expression>>> ivs, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return new ast::constructor_declaration(pars, ins, std::move(ivs), std::move(stmnts)); }
-    virtual ast::compilation_unit *new_compilation_unit(const std::vector<const ast::method_declaration *> &ms, const std::vector<const ast::predicate_declaration *> &ps, const std::vector<const ast::type_declaration *> &ts, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return new ast::compilation_unit(ms, ps, ts, std::move(stmnts)); }
+    virtual std::unique_ptr<const ast::method_declaration> new_method_declaration(const std::vector<id_token> &rt, const id_token &n, const std::vector<std::pair<const std::vector<id_token>, const id_token>> &pars, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return std::make_unique<const ast::method_declaration>(rt, n, pars, std::move(stmnts)); }
+    virtual std::unique_ptr<const ast::predicate_declaration> new_predicate_declaration(const id_token &n, const std::vector<std::pair<const std::vector<id_token>, const id_token>> &pars, const std::vector<std::vector<id_token>> &pl, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return std::make_unique<const ast::predicate_declaration>(n, pars, pl, std::move(stmnts)); }
+    virtual std::unique_ptr<const ast::typedef_declaration> new_typedef_declaration(const id_token &n, const id_token &pt, const ast::expression *e) const noexcept { return std::make_unique<const ast::typedef_declaration>(n, pt, e); }
+    virtual std::unique_ptr<const ast::enum_declaration> new_enum_declaration(const id_token &n, const std::vector<string_token> &es, const std::vector<std::vector<id_token>> &trs) const noexcept { return std::make_unique<const ast::enum_declaration>(n, es, trs); }
+    virtual std::unique_ptr<const ast::class_declaration> new_class_declaration(const id_token &n, const std::vector<std::vector<id_token>> &bcs, std::vector<std::unique_ptr<const ast::field_declaration>> fs, std::vector<std::unique_ptr<const ast::constructor_declaration>> cs, std::vector<std::unique_ptr<const ast::method_declaration>> ms, std::vector<std::unique_ptr<const ast::predicate_declaration>> ps, std::vector<std::unique_ptr<const ast::type_declaration>> ts) const noexcept { return std::make_unique<const ast::class_declaration>(n, bcs, std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts)); }
+    virtual std::unique_ptr<const ast::variable_declaration> new_variable_declaration(const id_token &n, const ast::expression *const e = nullptr) const noexcept { return std::make_unique<const ast::variable_declaration>(n, e); }
+    virtual std::unique_ptr<const ast::field_declaration> new_field_declaration(const std::vector<id_token> &tp, std::vector<std::unique_ptr<const ast::variable_declaration>> ds) const noexcept { return std::make_unique<const ast::field_declaration>(tp, std::move(ds)); }
+    virtual std::unique_ptr<const ast::constructor_declaration> new_constructor_declaration(const std::vector<std::pair<const std::vector<id_token>, const id_token>> &pars, const std::vector<id_token> &ins, std::vector<std::vector<std::unique_ptr<const ast::expression>>> ivs, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return std::make_unique<const ast::constructor_declaration>(pars, ins, std::move(ivs), std::move(stmnts)); }
+    virtual std::unique_ptr<const ast::compilation_unit> new_compilation_unit(std::vector<std::unique_ptr<const ast::method_declaration>> ms, std::vector<std::unique_ptr<const ast::predicate_declaration>> ps, std::vector<std::unique_ptr<const ast::type_declaration>> ts, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return std::make_unique<const ast::compilation_unit>(std::move(ms), std::move(ps), std::move(ts), std::move(stmnts)); }
 
     /**
      * The statements.

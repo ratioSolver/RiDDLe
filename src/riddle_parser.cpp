@@ -39,13 +39,13 @@ namespace riddle
         tk = tks[pos - 1];
     }
 
-    RIDDLE_EXPORT compilation_unit *parser::parse()
+    RIDDLE_EXPORT std::unique_ptr<const compilation_unit> parser::parse()
     {
         tk = next();
 
-        std::vector<const type_declaration *> ts;
-        std::vector<const method_declaration *> ms;
-        std::vector<const predicate_declaration *> ps;
+        std::vector<std::unique_ptr<const type_declaration>> ts;
+        std::vector<std::unique_ptr<const method_declaration>> ms;
+        std::vector<std::unique_ptr<const predicate_declaration>> ps;
         std::vector<std::unique_ptr<const statement>> stmnts;
 
         while (tk->sym != EOF_ID)
@@ -107,10 +107,10 @@ namespace riddle
             }
         }
 
-        return new_compilation_unit(ms, ps, ts, std::move(stmnts));
+        return new_compilation_unit(std::move(ms), std::move(ps), std::move(ts), std::move(stmnts));
     }
 
-    typedef_declaration *parser::_typedef_declaration()
+    std::unique_ptr<const typedef_declaration> parser::_typedef_declaration()
     {
         id_token *pt = nullptr;
         std::unique_ptr<const ast::expression> e;
@@ -152,7 +152,7 @@ namespace riddle
         return new_typedef_declaration(n, *pt, e.get());
     }
 
-    enum_declaration *parser::_enum_declaration()
+    std::unique_ptr<const enum_declaration> parser::_enum_declaration()
     {
         std::vector<string_token> es;
         std::vector<std::vector<id_token>> trs;
@@ -209,14 +209,14 @@ namespace riddle
         return new_enum_declaration(n, es, trs);
     }
 
-    class_declaration *parser::_class_declaration()
+    std::unique_ptr<const class_declaration> parser::_class_declaration()
     {
-        std::vector<std::vector<id_token>> bcs;          // the base classes..
-        std::vector<const field_declaration *> fs;       // the fields of the class..
-        std::vector<const constructor_declaration *> cs; // the constructors of the class..
-        std::vector<const method_declaration *> ms;      // the methods of the class..
-        std::vector<const predicate_declaration *> ps;   // the predicates of the class..
-        std::vector<const type_declaration *> ts;        // the types of the class..
+        std::vector<std::vector<id_token>> bcs;                         // the base classes..
+        std::vector<std::unique_ptr<const field_declaration>> fs;       // the fields of the class..
+        std::vector<std::unique_ptr<const constructor_declaration>> cs; // the constructors of the class..
+        std::vector<std::unique_ptr<const method_declaration>> ms;      // the methods of the class..
+        std::vector<std::unique_ptr<const predicate_declaration>> ps;   // the predicates of the class..
+        std::vector<std::unique_ptr<const type_declaration>> ts;        // the types of the class..
 
         if (!match(CLASS_ID))
             error("expected 'class'..");
@@ -348,13 +348,13 @@ namespace riddle
             }
         }
 
-        return new_class_declaration(n, bcs, fs, cs, ms, ps, ts);
+        return new_class_declaration(n, bcs, std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts));
     }
 
-    field_declaration *parser::_field_declaration()
+    std::unique_ptr<const field_declaration> parser::_field_declaration()
     {
         std::vector<id_token> tp;
-        std::vector<const variable_declaration *> ds;
+        std::vector<std::unique_ptr<const variable_declaration>> ds;
 
         switch (tk->sym)
         {
@@ -416,10 +416,10 @@ namespace riddle
         if (!match(SEMICOLON_ID))
             error("expected ';'..");
 
-        return new_field_declaration(tp, ds);
+        return new_field_declaration(tp, std::move(ds));
     }
 
-    method_declaration *parser::_method_declaration()
+    std::unique_ptr<const method_declaration> parser::_method_declaration()
     {
         std::vector<id_token> rt;
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
@@ -501,7 +501,7 @@ namespace riddle
         return new_method_declaration(rt, n, pars, std::move(stmnts));
     }
 
-    constructor_declaration *parser::_constructor_declaration()
+    std::unique_ptr<const constructor_declaration> parser::_constructor_declaration()
     {
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
         std::vector<id_token> ins;
@@ -600,7 +600,7 @@ namespace riddle
         return new_constructor_declaration(pars, ins, std::move(ivs), std::move(stmnts));
     }
 
-    predicate_declaration *parser::_predicate_declaration()
+    std::unique_ptr<const predicate_declaration> parser::_predicate_declaration()
     {
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
         std::vector<std::vector<id_token>> pl;
