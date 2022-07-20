@@ -19,9 +19,9 @@ namespace riddle
     class bool_literal_expression : public expression
     {
     public:
-      RIDDLE_EXPORT bool_literal_expression(const bool_token &l) : literal(l) {}
+      bool_literal_expression(const bool_token &l) : literal(l) {}
       bool_literal_expression(const bool_literal_expression &orig) = delete;
-      RIDDLE_EXPORT virtual ~bool_literal_expression() = default;
+      virtual ~bool_literal_expression() = default;
 
     protected:
       const bool_token literal;
@@ -30,9 +30,9 @@ namespace riddle
     class int_literal_expression : public expression
     {
     public:
-      RIDDLE_EXPORT int_literal_expression(const int_token &l) : literal(l) {}
+      int_literal_expression(const int_token &l) : literal(l) {}
       int_literal_expression(const int_literal_expression &orig) = delete;
-      RIDDLE_EXPORT virtual ~int_literal_expression() = default;
+      virtual ~int_literal_expression() = default;
 
     protected:
       const int_token literal;
@@ -41,9 +41,9 @@ namespace riddle
     class real_literal_expression : public expression
     {
     public:
-      RIDDLE_EXPORT real_literal_expression(const real_token &l) : literal(l) {}
+      real_literal_expression(const real_token &l) : literal(l) {}
       real_literal_expression(const real_literal_expression &orig) = delete;
-      RIDDLE_EXPORT virtual ~real_literal_expression() = default;
+      virtual ~real_literal_expression() = default;
 
     protected:
       const real_token literal;
@@ -52,9 +52,9 @@ namespace riddle
     class string_literal_expression : public expression
     {
     public:
-      RIDDLE_EXPORT string_literal_expression(const string_token &l) : literal(l) {}
+      string_literal_expression(const string_token &l) : literal(l) {}
       string_literal_expression(const string_literal_expression &orig) = delete;
-      RIDDLE_EXPORT virtual ~string_literal_expression() = default;
+      virtual ~string_literal_expression() = default;
 
     protected:
       const string_token literal;
@@ -144,9 +144,9 @@ namespace riddle
     class lt_expression : public expression
     {
     public:
-      RIDDLE_EXPORT lt_expression(std::unique_ptr<const expression> l, std::unique_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
+      lt_expression(std::unique_ptr<const expression> l, std::unique_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       lt_expression(const lt_expression &orig) = delete;
-      RIDDLE_EXPORT virtual ~lt_expression() = default;
+      virtual ~lt_expression() = default;
 
     protected:
       std::unique_ptr<const expression> left;
@@ -156,9 +156,9 @@ namespace riddle
     class leq_expression : public expression
     {
     public:
-      RIDDLE_EXPORT leq_expression(std::unique_ptr<const expression> l, std::unique_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
+      leq_expression(std::unique_ptr<const expression> l, std::unique_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       leq_expression(const leq_expression &orig) = delete;
-      RIDDLE_EXPORT virtual ~leq_expression() = default;
+      virtual ~leq_expression() = default;
 
     protected:
       std::unique_ptr<const expression> left;
@@ -168,9 +168,9 @@ namespace riddle
     class geq_expression : public expression
     {
     public:
-      RIDDLE_EXPORT geq_expression(std::unique_ptr<const expression> l, std::unique_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
+      geq_expression(std::unique_ptr<const expression> l, std::unique_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       geq_expression(const geq_expression &orig) = delete;
-      RIDDLE_EXPORT virtual ~geq_expression() = default;
+      virtual ~geq_expression() = default;
 
     protected:
       std::unique_ptr<const expression> left;
@@ -180,9 +180,9 @@ namespace riddle
     class gt_expression : public expression
     {
     public:
-      RIDDLE_EXPORT gt_expression(std::unique_ptr<const expression> l, std::unique_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
+      gt_expression(std::unique_ptr<const expression> l, std::unique_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       gt_expression(const gt_expression &orig) = delete;
-      RIDDLE_EXPORT virtual ~gt_expression() = default;
+      virtual ~gt_expression() = default;
 
     protected:
       std::unique_ptr<const expression> left;
@@ -192,7 +192,7 @@ namespace riddle
     class function_expression : public expression
     {
     public:
-      function_expression(std::vector<id_token> is, const id_token &fn, std::vector<std::unique_ptr<const expression>> es) : ids(is), function_name(std::move(fn)), expressions(std::move(es)) {}
+      function_expression(std::vector<id_token> is, const id_token &fn, std::vector<std::unique_ptr<const expression>> es) : ids(std::move(is)), function_name(std::move(fn)), expressions(std::move(es)) {}
       function_expression(const function_expression &orig) = delete;
       virtual ~function_expression() = default;
 
@@ -205,9 +205,9 @@ namespace riddle
     class id_expression : public expression
     {
     public:
-      RIDDLE_EXPORT id_expression(std::vector<id_token> is) : ids(std::move(is)) {}
+      id_expression(std::vector<id_token> is) : ids(std::move(is)) {}
       id_expression(const id_expression &orig) = delete;
-      RIDDLE_EXPORT virtual ~id_expression() = default;
+      virtual ~id_expression() = default;
 
     protected:
       const std::vector<id_token> ids;
@@ -339,9 +339,9 @@ namespace riddle
     class expression_statement : public statement
     {
     public:
-      RIDDLE_EXPORT expression_statement(std::unique_ptr<const ast::expression> e) : xpr(std::move(e)) {}
+      expression_statement(std::unique_ptr<const ast::expression> e) : xpr(std::move(e)) {}
       expression_statement(const expression_statement &orig) = delete;
-      RIDDLE_EXPORT virtual ~expression_statement() = default;
+      virtual ~expression_statement() = default;
 
     protected:
       std::unique_ptr<const ast::expression> xpr;
