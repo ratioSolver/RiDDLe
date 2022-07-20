@@ -149,7 +149,7 @@ namespace riddle
         if (!match(SEMICOLON_ID))
             error("expected ';'..");
 
-        return new_typedef_declaration(n, *pt, e.get());
+        return new_typedef_declaration(n, *pt, std::move(e));
     }
 
     std::unique_ptr<const enum_declaration> parser::_enum_declaration()
@@ -397,7 +397,7 @@ namespace riddle
         id_token n = *static_cast<id_token *>(tks[pos - 2]);
 
         if (match(EQ_ID))
-            ds.emplace_back(new_variable_declaration(n, _expression().get()));
+            ds.emplace_back(new_variable_declaration(n, _expression()));
         else
             ds.emplace_back(new_variable_declaration(n));
 
@@ -408,7 +408,7 @@ namespace riddle
             id_token c_n = *static_cast<id_token *>(tks[pos - 2]);
 
             if (match(EQ_ID))
-                ds.emplace_back(new_variable_declaration(c_n, _expression().get()));
+                ds.emplace_back(new_variable_declaration(c_n, _expression()));
             else
                 ds.emplace_back(new_variable_declaration(c_n));
         }
@@ -792,7 +792,7 @@ namespace riddle
                 std::unique_ptr<const ast::expression> e = _expression();
                 if (!match(SEMICOLON_ID))
                     error("expected ';'..");
-                return new_assignment_statement(std::move(is), i, e.get());
+                return new_assignment_statement(std::move(is), i, std::move(e));
             }
             case PLUS_ID: // an expression..
             case MINUS_ID:

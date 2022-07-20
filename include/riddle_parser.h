@@ -326,14 +326,14 @@ namespace riddle
     class assignment_statement : public statement
     {
     public:
-      assignment_statement(std::vector<id_token> is, const id_token &i, const expression *const e) : ids(std::move(is)), id(i), xpr(std::move(e)) {}
+      assignment_statement(std::vector<id_token> is, const id_token &i, std::unique_ptr<const ast::expression> e) : ids(std::move(is)), id(i), xpr(std::move(e)) {}
       assignment_statement(const assignment_statement &orig) = delete;
       virtual ~assignment_statement() = default;
 
     protected:
       const std::vector<id_token> ids;
       const id_token id;
-      const expression *const xpr;
+      std::unique_ptr<const ast::expression> xpr;
     };
 
     class expression_statement : public statement
@@ -436,14 +436,14 @@ namespace riddle
     class typedef_declaration : public type_declaration
     {
     public:
-      typedef_declaration(const id_token &n, const id_token &pt, const expression *const e) : name(n), primitive_type(pt), xpr(std::move(e)) {}
+      typedef_declaration(const id_token &n, const id_token &pt, std::unique_ptr<const ast::expression> e) : name(n), primitive_type(pt), xpr(std::move(e)) {}
       typedef_declaration(const typedef_declaration &orig) = delete;
       virtual ~typedef_declaration() = default;
 
     protected:
       const id_token name;
       const id_token primitive_type;
-      const expression *const xpr;
+      std::unique_ptr<const ast::expression> xpr;
     };
 
     class enum_declaration : public type_declaration
@@ -464,13 +464,13 @@ namespace riddle
       friend class field_declaration;
 
     public:
-      variable_declaration(const id_token &n, const expression *const e = nullptr) : name(n), xpr(std::move(e)) {}
+      variable_declaration(const id_token &n, std::unique_ptr<const ast::expression> e = nullptr) : name(n), xpr(std::move(e)) {}
       variable_declaration(const variable_declaration &orig) = delete;
       virtual ~variable_declaration() = default;
 
     protected:
       const id_token name;
-      const expression *const xpr;
+      std::unique_ptr<const ast::expression> xpr;
     };
 
     class field_declaration
@@ -562,10 +562,10 @@ namespace riddle
      */
     virtual std::unique_ptr<const ast::method_declaration> new_method_declaration(std::vector<id_token> rt, const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return std::make_unique<const ast::method_declaration>(std::move(rt), n, std::move(pars), std::move(stmnts)); }
     virtual std::unique_ptr<const ast::predicate_declaration> new_predicate_declaration(const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<std::vector<id_token>> pl, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return std::make_unique<const ast::predicate_declaration>(n, std::move(pars), std::move(pl), std::move(stmnts)); }
-    virtual std::unique_ptr<const ast::typedef_declaration> new_typedef_declaration(const id_token &n, const id_token &pt, const ast::expression *e) const noexcept { return std::make_unique<const ast::typedef_declaration>(n, pt, e); }
+    virtual std::unique_ptr<const ast::typedef_declaration> new_typedef_declaration(const id_token &n, const id_token &pt, std::unique_ptr<const ast::expression> e) const noexcept { return std::make_unique<const ast::typedef_declaration>(n, pt, std::move(e)); }
     virtual std::unique_ptr<const ast::enum_declaration> new_enum_declaration(const id_token &n, std::vector<string_token> es, std::vector<std::vector<id_token>> trs) const noexcept { return std::make_unique<const ast::enum_declaration>(n, std::move(es), std::move(trs)); }
     virtual std::unique_ptr<const ast::class_declaration> new_class_declaration(const id_token &n, std::vector<std::vector<id_token>> bcs, std::vector<std::unique_ptr<const ast::field_declaration>> fs, std::vector<std::unique_ptr<const ast::constructor_declaration>> cs, std::vector<std::unique_ptr<const ast::method_declaration>> ms, std::vector<std::unique_ptr<const ast::predicate_declaration>> ps, std::vector<std::unique_ptr<const ast::type_declaration>> ts) const noexcept { return std::make_unique<const ast::class_declaration>(n, std::move(bcs), std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts)); }
-    virtual std::unique_ptr<const ast::variable_declaration> new_variable_declaration(const id_token &n, const ast::expression *const e = nullptr) const noexcept { return std::make_unique<const ast::variable_declaration>(n, e); }
+    virtual std::unique_ptr<const ast::variable_declaration> new_variable_declaration(const id_token &n, std::unique_ptr<const ast::expression> e = nullptr) const noexcept { return std::make_unique<const ast::variable_declaration>(n, std::move(e)); }
     virtual std::unique_ptr<const ast::field_declaration> new_field_declaration(std::vector<id_token> tp, std::vector<std::unique_ptr<const ast::variable_declaration>> ds) const noexcept { return std::make_unique<const ast::field_declaration>(std::move(tp), std::move(ds)); }
     virtual std::unique_ptr<const ast::constructor_declaration> new_constructor_declaration(std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<id_token> ins, std::vector<std::vector<std::unique_ptr<const ast::expression>>> ivs, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return std::make_unique<const ast::constructor_declaration>(std::move(pars), std::move(ins), std::move(ivs), std::move(stmnts)); }
     virtual std::unique_ptr<const ast::compilation_unit> new_compilation_unit(std::vector<std::unique_ptr<const ast::method_declaration>> ms, std::vector<std::unique_ptr<const ast::predicate_declaration>> ps, std::vector<std::unique_ptr<const ast::type_declaration>> ts, std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return std::make_unique<const ast::compilation_unit>(std::move(ms), std::move(ps), std::move(ts), std::move(stmnts)); }
@@ -574,7 +574,7 @@ namespace riddle
      * The statements.
      */
     virtual std::unique_ptr<const ast::local_field_statement> new_local_field_statement(std::vector<id_token> ft, std::vector<id_token> ns, std::vector<std::unique_ptr<const ast::expression>> es) const noexcept { return std::make_unique<const ast::local_field_statement>(std::move(ft), std::move(ns), std::move(es)); }
-    virtual std::unique_ptr<const ast::assignment_statement> new_assignment_statement(std::vector<id_token> is, const id_token &i, const ast::expression *const e) const noexcept { return std::make_unique<const ast::assignment_statement>(std::move(is), i, e); }
+    virtual std::unique_ptr<const ast::assignment_statement> new_assignment_statement(std::vector<id_token> is, const id_token &i, std::unique_ptr<const ast::expression> e) const noexcept { return std::make_unique<const ast::assignment_statement>(std::move(is), i, std::move(e)); }
     virtual std::unique_ptr<const ast::expression_statement> new_expression_statement(std::unique_ptr<const ast::expression> e) const noexcept { return std::make_unique<const ast::expression_statement>(std::move(e)); }
     virtual std::unique_ptr<const ast::disjunction_statement> new_disjunction_statement(std::vector<std::vector<std::unique_ptr<const ast::statement>>> conjs, std::vector<std::unique_ptr<const ast::expression>> conj_costs) const noexcept { return std::make_unique<const ast::disjunction_statement>(std::move(conjs), std::move(conj_costs)); }
     virtual std::unique_ptr<const ast::conjunction_statement> new_conjunction_statement(std::vector<std::unique_ptr<const ast::statement>> stmnts) const noexcept { return std::make_unique<const ast::conjunction_statement>(std::move(stmnts)); }
