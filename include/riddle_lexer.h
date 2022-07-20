@@ -5,11 +5,11 @@
 #include <istream>
 #include <cmath>
 
-#define BOOL_KEYWORD "bool"
-#define INT_KEYWORD "int"
-#define REAL_KEYWORD "real"
-#define TIME_KEYWORD "time"
-#define STRING_KEYWORD "string"
+#define BOOL_KW "bool"
+#define INT_KW "int"
+#define REAL_KW "real"
+#define TIME_KW "time"
+#define STRING_KW "string"
 
 namespace riddle
 {

@@ -121,19 +121,19 @@ namespace riddle
         switch (tk->sym)
         {
         case BOOL_ID:
-            pt = new id_token(0, 0, 0, 0, BOOL_KEYWORD);
+            pt = new id_token(0, 0, 0, 0, BOOL_KW);
             break;
         case INT_ID:
-            pt = new id_token(0, 0, 0, 0, INT_KEYWORD);
+            pt = new id_token(0, 0, 0, 0, INT_KW);
             break;
         case REAL_ID:
-            pt = new id_token(0, 0, 0, 0, REAL_KEYWORD);
+            pt = new id_token(0, 0, 0, 0, REAL_KW);
             break;
         case TIME_ID:
-            pt = new id_token(0, 0, 0, 0, TIME_KEYWORD);
+            pt = new id_token(0, 0, 0, 0, TIME_KW);
             break;
         case STRING_ID:
-            pt = new id_token(0, 0, 0, 0, STRING_KEYWORD);
+            pt = new id_token(0, 0, 0, 0, STRING_KW);
             break;
         default:
             error("expected primitive type..");
@@ -359,23 +359,23 @@ namespace riddle
         switch (tk->sym)
         {
         case BOOL_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, BOOL_KEYWORD));
+            tp.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
             tk = next();
             break;
         case INT_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, INT_KEYWORD));
+            tp.emplace_back(id_token(0, 0, 0, 0, INT_KW));
             tk = next();
             break;
         case REAL_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
+            tp.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
             tk = next();
             break;
         case TIME_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
+            tp.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
             tk = next();
             break;
         case STRING_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, STRING_KEYWORD));
+            tp.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
             tk = next();
             break;
         case ID_ID:
@@ -450,23 +450,23 @@ namespace riddle
                 switch (tk->sym)
                 {
                 case BOOL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, BOOL_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
                     tk = next();
                     break;
                 case INT_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, INT_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, INT_KW));
                     tk = next();
                     break;
                 case REAL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
                     tk = next();
                     break;
                 case TIME_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
                     tk = next();
                     break;
                 case STRING_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, STRING_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
                     tk = next();
                     break;
                 case ID_ID:
@@ -532,23 +532,23 @@ namespace riddle
                     }
                     break;
                 case BOOL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, BOOL_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
                     tk = next();
                     break;
                 case INT_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, INT_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, INT_KW));
                     tk = next();
                     break;
                 case REAL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
                     tk = next();
                     break;
                 case TIME_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
                     tk = next();
                     break;
                 case STRING_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, STRING_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
                     tk = next();
                     break;
                 default:
@@ -624,23 +624,23 @@ namespace riddle
                 switch (tk->sym)
                 {
                 case BOOL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, BOOL_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
                     tk = next();
                     break;
                 case INT_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, INT_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, INT_KW));
                     tk = next();
                     break;
                 case REAL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
                     tk = next();
                     break;
                 case TIME_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
                     tk = next();
                     break;
                 case STRING_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, STRING_KEYWORD));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
                     tk = next();
                     break;
                 case ID_ID:
@@ -704,19 +704,19 @@ namespace riddle
             switch (tk->sym)
             {
             case BOOL_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, BOOL_KEYWORD));
+                ft.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
                 break;
             case INT_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, INT_KEYWORD));
+                ft.emplace_back(id_token(0, 0, 0, 0, INT_KW));
                 break;
             case REAL_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, REAL_KEYWORD));
+                ft.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
                 break;
             case TIME_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, TIME_KEYWORD));
+                ft.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
                 break;
             case STRING_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, STRING_KEYWORD));
+                ft.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
                 break;
             default:
                 error("expected either 'bool' or 'int' or 'real' or 'string'..");
