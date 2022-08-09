@@ -348,6 +348,9 @@ namespace riddle
             }
         }
 
+        if (cs.empty()) // we add a default constructor..
+            cs.emplace_back(new_constructor_declaration({}, {}, {}, {}));
+
         return new_class_declaration(n, std::move(bcs), std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts));
     }
 
@@ -597,7 +600,7 @@ namespace riddle
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
 
-        return new_constructor_declaration(pars, ins, std::move(ivs), std::move(stmnts));
+        return new_constructor_declaration(pars, std::move(ins), std::move(ivs), std::move(stmnts));
     }
 
     std::unique_ptr<const predicate_declaration> parser::_predicate_declaration()
