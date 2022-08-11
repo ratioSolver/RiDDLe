@@ -2,7 +2,6 @@
 
 #include "riddle_lexer.h"
 #include <vector>
-#include <memory>
 
 namespace riddle
 {
@@ -541,7 +540,7 @@ namespace riddle
     RIDDLE_EXPORT std::unique_ptr<const ast::compilation_unit> parse();
 
   private:
-    token *next();
+    const token *next();
     bool match(const symbol &sym);
     void backtrack(const size_t &p) noexcept;
 
@@ -611,9 +610,9 @@ namespace riddle
     virtual std::unique_ptr<const ast::division_expression> new_division_expression(std::vector<std::unique_ptr<const ast::expression>> es) const noexcept { return std::make_unique<const ast::division_expression>(std::move(es)); }
 
   private:
-    lexer lex;                // the current lexer..
-    token *tk = nullptr;      // the current lookahead token..
-    std::vector<token *> tks; // all the tokens parsed so far..
-    size_t pos = 0;           // the current position within tks'..
+    lexer lex;                                     // the current lexer..
+    const token *tk = nullptr;                     // the current lookahead token..
+    std::vector<std::unique_ptr<const token>> tks; // all the tokens parsed so far..
+    size_t pos = 0;                                // the current position within tks'..
   };
 } // namespace riddle

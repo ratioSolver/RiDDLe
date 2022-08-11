@@ -6,20 +6,16 @@ namespace riddle
     using namespace ast;
 
     RIDDLE_EXPORT parser::parser(std::istream &is) : lex(is) {}
-    RIDDLE_EXPORT parser::~parser()
-    {
-        for (const auto &tk : tks)
-            delete tk;
-    }
+    RIDDLE_EXPORT parser::~parser() {}
 
-    token *parser::next()
+    const token *parser::next()
     {
         while (pos >= tks.size())
         {
-            token *c_tk = lex.next();
-            tks.emplace_back(c_tk);
+            auto c_tk = lex.next();
+            tks.emplace_back(std::move(c_tk));
         }
-        return tks[pos++];
+        return tks[pos++].get();
     }
 
     bool parser::match(const symbol &sym)
@@ -36,7 +32,7 @@ namespace riddle
     void parser::backtrack(const size_t &p) noexcept
     {
         pos = p;
-        tk = tks[pos - 1];
+        tk = tks[pos - 1].get();
     }
 
     RIDDLE_EXPORT std::unique_ptr<const compilation_unit> parser::parse()
@@ -144,7 +140,7 @@ namespace riddle
 
         if (!match(ID_ID))
             error("expected identifier..");
-        id_token n = *static_cast<id_token *>(tks[pos - 2]);
+        auto n = *static_cast<const id_token *>(tks[pos - 2].get());
 
         if (!match(SEMICOLON_ID))
             error("expected ';'..");
@@ -162,7 +158,7 @@ namespace riddle
 
         if (!match(ID_ID))
             error("expected identifier..");
-        id_token n = *static_cast<id_token *>(tks[pos - 2]);
+        auto n = *static_cast<const id_token *>(tks[pos - 2].get());
 
         do
         {
@@ -172,13 +168,13 @@ namespace riddle
                 tk = next();
                 if (!match(StringLiteral_ID))
                     error("expected string literal..");
-                es.emplace_back(*static_cast<string_token *>(tks[pos - 2]));
+                es.emplace_back(*static_cast<const string_token *>(tks[pos - 2].get()));
 
                 while (match(COMMA_ID))
                 {
                     if (!match(StringLiteral_ID))
                         error("expected string literal..");
-                    es.emplace_back(*static_cast<string_token *>(tks[pos - 2]));
+                    es.emplace_back(*static_cast<const string_token *>(tks[pos - 2].get()));
                 }
 
                 if (!match(RBRACE_ID))
@@ -187,15 +183,15 @@ namespace riddle
             case ID_ID:
             {
                 std::vector<id_token> ids;
-                ids.emplace_back(*static_cast<id_token *>(tk));
+                ids.emplace_back(*static_cast<const id_token *>(tk));
                 tk = next();
                 while (match(DOT_ID))
                 {
                     if (!match(ID_ID))
                         error("expected identifier..");
-                    ids.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                    ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
                 }
-                trs.emplace_back(ids);
+                trs.emplace_back(std::move(ids));
                 break;
             }
             default:
@@ -224,7 +220,7 @@ namespace riddle
         if (!match(ID_ID))
             error("expected identifier..");
         // the name of the class..
-        id_token n = *static_cast<id_token *>(tks[pos - 2]);
+        auto n = *static_cast<const id_token *>(tks[pos - 2].get());
 
         if (match(COLON_ID))
         {
@@ -235,9 +231,9 @@ namespace riddle
                 {
                     if (!match(ID_ID))
                         error("expected identifier..");
-                    ids.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                    ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
                 } while (match(DOT_ID));
-                bcs.emplace_back(ids);
+                bcs.emplace_back(std::move(ids));
             } while (match(COMMA_ID));
         }
 
@@ -382,13 +378,13 @@ namespace riddle
             tk = next();
             break;
         case ID_ID:
-            tp.emplace_back(*static_cast<id_token *>(tk));
+            tp.emplace_back(*static_cast<const id_token *>(tk));
             tk = next();
             while (match(DOT_ID))
             {
                 if (!match(ID_ID))
                     error("expected identifier..");
-                tp.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                tp.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
             }
             break;
         default:
@@ -397,7 +393,7 @@ namespace riddle
 
         if (!match(ID_ID))
             error("expected identifier..");
-        id_token n = *static_cast<id_token *>(tks[pos - 2]);
+        auto n = *static_cast<const id_token *>(tks[pos - 2].get());
 
         if (match(EQ_ID))
             ds.emplace_back(new_variable_declaration(n, _expression()));
@@ -408,7 +404,7 @@ namespace riddle
         {
             if (!match(ID_ID))
                 error("expected identifier..");
-            id_token c_n = *static_cast<id_token *>(tks[pos - 2]);
+            auto c_n = *static_cast<const id_token *>(tks[pos - 2].get());
 
             if (match(EQ_ID))
                 ds.emplace_back(new_variable_declaration(c_n, _expression()));
@@ -434,13 +430,13 @@ namespace riddle
             {
                 if (!match(ID_ID))
                     error("expected identifier..");
-                rt.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                rt.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
             } while (match(DOT_ID));
         }
 
         if (!match(ID_ID))
             error("expected identifier..");
-        id_token n = *static_cast<id_token *>(tks[pos - 2]);
+        auto n = *static_cast<const id_token *>(tks[pos - 2].get());
 
         if (!match(LPAREN_ID))
             error("expected '('..");
@@ -473,13 +469,13 @@ namespace riddle
                     tk = next();
                     break;
                 case ID_ID:
-                    p_ids.emplace_back(*static_cast<id_token *>(tk));
+                    p_ids.emplace_back(*static_cast<const id_token *>(tk));
                     tk = next();
                     while (match(DOT_ID))
                     {
                         if (!match(ID_ID))
                             error("expected identifier..");
-                        p_ids.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                        p_ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
                     }
                     break;
                 default:
@@ -487,7 +483,7 @@ namespace riddle
                 }
                 if (!match(ID_ID))
                     error("expected identifier..");
-                id_token pn = *static_cast<id_token *>(tks[pos - 2]);
+                auto pn = *static_cast<const id_token *>(tks[pos - 2].get());
                 pars.emplace_back(p_ids, pn);
             } while (match(COMMA_ID));
 
@@ -525,13 +521,13 @@ namespace riddle
                 switch (tk->sym)
                 {
                 case ID_ID:
-                    p_ids.emplace_back(*static_cast<id_token *>(tk));
+                    p_ids.emplace_back(*static_cast<const id_token *>(tk));
                     tk = next();
                     while (match(DOT_ID))
                     {
                         if (!match(ID_ID))
                             error("expected identifier..");
-                        p_ids.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                        p_ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
                     }
                     break;
                 case BOOL_ID:
@@ -559,7 +555,7 @@ namespace riddle
                 }
                 if (!match(ID_ID))
                     error("expected identifier..");
-                id_token pn = *static_cast<id_token *>(tks[pos - 2]);
+                auto pn = *static_cast<const id_token *>(tks[pos - 2].get());
                 pars.emplace_back(p_ids, pn);
             } while (match(COMMA_ID));
 
@@ -574,7 +570,7 @@ namespace riddle
                 std::vector<std::unique_ptr<const expression>> xprs;
                 if (!match(ID_ID))
                     error("expected identifier..");
-                id_token pn = *static_cast<id_token *>(tks[pos - 2]);
+                auto pn = *static_cast<const id_token *>(tks[pos - 2].get());
 
                 if (!match(LPAREN_ID))
                     error("expected '('..");
@@ -614,7 +610,7 @@ namespace riddle
 
         if (!match(ID_ID))
             error("expected identifier..");
-        id_token n = *static_cast<id_token *>(tks[pos - 2]);
+        auto n = *static_cast<const id_token *>(tks[pos - 2].get());
 
         if (!match(LPAREN_ID))
             error("expected '('..");
@@ -647,13 +643,13 @@ namespace riddle
                     tk = next();
                     break;
                 case ID_ID:
-                    p_ids.emplace_back(*static_cast<id_token *>(tk));
+                    p_ids.emplace_back(*static_cast<const id_token *>(tk));
                     tk = next();
                     while (match(DOT_ID))
                     {
                         if (!match(ID_ID))
                             error("expected identifier..");
-                        p_ids.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                        p_ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
                     }
                     break;
                 default:
@@ -661,7 +657,7 @@ namespace riddle
                 }
                 if (!match(ID_ID))
                     error("expected identifier..");
-                id_token pn = *static_cast<id_token *>(tks[pos - 2]);
+                auto pn = *static_cast<const id_token *>(tks[pos - 2].get());
                 pars.emplace_back(p_ids, pn);
             } while (match(COMMA_ID));
 
@@ -678,9 +674,9 @@ namespace riddle
                 {
                     if (!match(ID_ID))
                         error("expected identifier..");
-                    p_ids.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                    p_ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
                 } while (match(DOT_ID));
-                pl.emplace_back(p_ids);
+                pl.emplace_back(std::move(p_ids));
             } while (match(COMMA_ID));
         }
 
@@ -733,7 +729,7 @@ namespace riddle
             {
                 if (!match(ID_ID))
                     error("expected identifier..");
-                ns.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                ns.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
 
                 if (tk->sym == EQ_ID)
                 {
@@ -753,13 +749,13 @@ namespace riddle
         {
             size_t c_pos = pos;
             std::vector<id_token> is;
-            is.emplace_back(*static_cast<id_token *>(tk));
+            is.emplace_back(*static_cast<const id_token *>(tk));
             tk = next();
             while (match(DOT_ID))
             {
                 if (!match(ID_ID))
                     error("expected identifier..");
-                is.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                is.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
             }
 
             switch (tk->sym)
@@ -771,7 +767,7 @@ namespace riddle
 
                 do
                 {
-                    ns.emplace_back(*static_cast<id_token *>(tk));
+                    ns.emplace_back(*static_cast<const id_token *>(tk));
                     tk = next();
                     if (tk->sym == EQ_ID)
                     {
@@ -880,7 +876,7 @@ namespace riddle
 
             if (!match(ID_ID))
                 error("expected identifier..");
-            id_token fn = *static_cast<id_token *>(tks[pos - 2]);
+            auto fn = *static_cast<const id_token *>(tks[pos - 2].get());
 
             if (!match(EQ_ID))
                 error("expected '='..");
@@ -892,10 +888,10 @@ namespace riddle
             {
                 if (!match(ID_ID))
                     error("expected identifier..");
-                scp.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                scp.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
             } while (match(DOT_ID));
 
-            id_token pn = scp.back();
+            auto pn = scp.back();
             scp.pop_back();
 
             if (!match(LPAREN_ID))
@@ -907,7 +903,7 @@ namespace riddle
                 {
                     if (!match(ID_ID))
                         error("expected identifier..");
-                    id_token assgn_name = *static_cast<id_token *>(tks[pos - 2]);
+                    id_token assgn_name = *static_cast<const id_token *>(tks[pos - 2].get());
 
                     if (!match(COLON_ID))
                         error("expected ':'..");
@@ -948,19 +944,19 @@ namespace riddle
         {
         case BoolLiteral_ID:
             tk = next();
-            e = new_bool_literal_expression(*static_cast<bool_token *>(tks[pos - 2]));
+            e = new_bool_literal_expression(*static_cast<const bool_token *>(tks[pos - 2].get()));
             break;
         case IntLiteral_ID:
             tk = next();
-            e = new_int_literal_expression(*static_cast<int_token *>(tks[pos - 2]));
+            e = new_int_literal_expression(*static_cast<const int_token *>(tks[pos - 2].get()));
             break;
         case RealLiteral_ID:
             tk = next();
-            e = new_real_literal_expression(*static_cast<real_token *>(tks[pos - 2]));
+            e = new_real_literal_expression(*static_cast<const real_token *>(tks[pos - 2].get()));
             break;
         case StringLiteral_ID:
             tk = next();
-            e = new_string_literal_expression(*static_cast<string_token *>(tks[pos - 2]));
+            e = new_string_literal_expression(*static_cast<const string_token *>(tks[pos - 2].get()));
             break;
         case LPAREN_ID: // either a parenthesys expression or a cast..
         {
@@ -981,7 +977,7 @@ namespace riddle
                 {
                     if (!match(ID_ID))
                         error("expected identifier..");
-                    ids.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                    ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
                 } while (match(DOT_ID));
 
                 if (!match(RPAREN_ID))
@@ -1018,7 +1014,7 @@ namespace riddle
             {
                 if (!match(ID_ID))
                     error("expected identifier..");
-                ids.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
             } while (match(DOT_ID));
 
             std::vector<std::unique_ptr<const expression>> xprs;
@@ -1042,13 +1038,13 @@ namespace riddle
         case ID_ID:
         {
             std::vector<id_token> is;
-            is.emplace_back(*static_cast<id_token *>(tk));
+            is.emplace_back(*static_cast<const id_token *>(tk));
             tk = next();
             while (match(DOT_ID))
             {
                 if (!match(ID_ID))
                     error("expected identifier..");
-                is.emplace_back(*static_cast<id_token *>(tks[pos - 2]));
+                is.emplace_back(*static_cast<const id_token *>(tks[pos - 2].get()));
             }
             if (match(LPAREN_ID))
             {

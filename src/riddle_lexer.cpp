@@ -11,7 +11,7 @@ namespace riddle
         ch = next_char();
     }
 
-    RIDDLE_EXPORT token *lexer::next()
+    RIDDLE_EXPORT std::unique_ptr<const token> lexer::next()
     {
         switch (ch)
         {
@@ -579,7 +579,7 @@ namespace riddle
         return sb[pos++];
     }
 
-    token *lexer::finish_id(std::string &str) noexcept
+    std::unique_ptr<const token> lexer::finish_id(std::string &str) noexcept
     {
         if (!is_id_part(ch))
             return mk_id_token(str);

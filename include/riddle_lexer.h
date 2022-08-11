@@ -4,6 +4,7 @@
 #include "rational.h"
 #include <istream>
 #include <cmath>
+#include <memory>
 
 #define BOOL_KW "bool"
 #define INT_KW "int"
@@ -130,60 +131,60 @@ namespace riddle
     RIDDLE_EXPORT lexer(std::istream &is);
     lexer(const lexer &orig) = delete;
 
-    RIDDLE_EXPORT token *next();
+    RIDDLE_EXPORT std::unique_ptr<const token> next();
 
   private:
     static bool is_id_part(const char &ch) noexcept { return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'); }
 
-    token *mk_token(const symbol &sym) noexcept
+    std::unique_ptr<const token> mk_token(const symbol &sym) noexcept
     {
-      token *tk = new token(sym, start_line, start_pos, end_line, end_pos);
+      auto tk = std::make_unique<const token>(sym, start_line, start_pos, end_line, end_pos);
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    token *mk_id_token(const std::string &id) noexcept
+    std::unique_ptr<const token> mk_id_token(const std::string &id) noexcept
     {
-      id_token *tk = new id_token(start_line, start_pos, end_line, end_pos, id);
+      auto tk = std::make_unique<const id_token>(start_line, start_pos, end_line, end_pos, id);
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    token *mk_bool_token(const bool &val) noexcept
+    std::unique_ptr<const token> mk_bool_token(const bool &val) noexcept
     {
-      token *tk = new bool_token(start_line, start_pos, end_line, end_pos, val);
+      auto tk = std::make_unique<const bool_token>(start_line, start_pos, end_line, end_pos, val);
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    token *mk_integer_token(const std::string &str) noexcept
+    std::unique_ptr<const token> mk_integer_token(const std::string &str) noexcept
     {
-      token *tk = new int_token(start_line, start_pos, end_line, end_pos, static_cast<semitone::I>(std::stol(str)));
+      auto tk = std::make_unique<const int_token>(start_line, start_pos, end_line, end_pos, static_cast<semitone::I>(std::stol(str)));
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    token *mk_rational_token(const std::string &intgr, const std::string &dec) noexcept
+    std::unique_ptr<const token> mk_rational_token(const std::string &intgr, const std::string &dec) noexcept
     {
-      token *tk = new real_token(start_line, start_pos, end_line, end_pos, semitone::rational(static_cast<semitone::I>(std::stol(intgr + dec)), static_cast<semitone::I>(std::pow(10, dec.size()))));
+      auto tk = std::make_unique<const real_token>(start_line, start_pos, end_line, end_pos, semitone::rational(static_cast<semitone::I>(std::stol(intgr + dec)), static_cast<semitone::I>(std::pow(10, dec.size()))));
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    token *mk_string_token(const std::string &str) noexcept
+    std::unique_ptr<const token> mk_string_token(const std::string &str) noexcept
     {
-      string_token *tk = new string_token(start_line, start_pos, end_line, end_pos, str);
+      auto tk = std::make_unique<const string_token>(start_line, start_pos, end_line, end_pos, str);
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    token *finish_id(std::string &str) noexcept;
+    std::unique_ptr<const token> finish_id(std::string &str) noexcept;
 
     void error(const std::string &err);
     char next_char() noexcept;
