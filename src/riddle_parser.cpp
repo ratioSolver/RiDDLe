@@ -99,7 +99,7 @@ namespace riddle
                 break;
             }
             default:
-                error("expected either 'typedef' or 'enum' or 'class' or 'predicate' or 'void' or identifier..");
+                error("expected either `typedef` or `enum` or `class` or `predicate` or `void` or identifier..");
             }
         }
 
@@ -112,7 +112,7 @@ namespace riddle
         std::unique_ptr<const ast::expression> e;
 
         if (!match(TYPEDEF_ID))
-            error("expected 'typedef'..");
+            error("expected `typedef`..");
 
         switch (tk->sym)
         {
@@ -143,7 +143,7 @@ namespace riddle
         auto n = *static_cast<const id_token *>(tks[pos - 2].get());
 
         if (!match(SEMICOLON_ID))
-            error("expected ';'..");
+            error("expected `;`..");
 
         return new_typedef_declaration(n, *pt, std::move(e));
     }
@@ -154,7 +154,7 @@ namespace riddle
         std::vector<std::vector<id_token>> trs;
 
         if (!match(ENUM_ID))
-            error("expected 'enum'..");
+            error("expected `enum`..");
 
         if (!match(ID_ID))
             error("expected identifier..");
@@ -178,7 +178,7 @@ namespace riddle
                 }
 
                 if (!match(RBRACE_ID))
-                    error("expected '}'..");
+                    error("expected `}`..");
                 break;
             case ID_ID:
             {
@@ -195,12 +195,12 @@ namespace riddle
                 break;
             }
             default:
-                error("expected either '{' or identifier..");
+                error("expected either `{` or identifier..");
             }
         } while (match(BAR_ID));
 
         if (!match(SEMICOLON_ID))
-            error("expected ';'..");
+            error("expected `;`..");
 
         return new_enum_declaration(n, std::move(es), std::move(trs));
     }
@@ -215,7 +215,7 @@ namespace riddle
         std::vector<std::unique_ptr<const type_declaration>> ts;        // the types of the class..
 
         if (!match(CLASS_ID))
-            error("expected 'class'..");
+            error("expected `class`..");
 
         if (!match(ID_ID))
             error("expected identifier..");
@@ -238,7 +238,7 @@ namespace riddle
         }
 
         if (!match(LBRACE_ID))
-            error("expected '{'..");
+            error("expected `{`..");
 
         while (!match(RBRACE_ID))
         {
@@ -282,7 +282,7 @@ namespace riddle
                     fs.emplace_back(_field_declaration());
                     break;
                 default:
-                    error("expected either '(' or '=' or ';'..");
+                    error("expected either `(` or `=` or `;`..");
                 }
                 break;
             }
@@ -314,7 +314,7 @@ namespace riddle
                         fs.emplace_back(_field_declaration());
                         break;
                     default:
-                        error("expected either '(' or '=' or ';'..");
+                        error("expected either `(` or `=` or `;`..");
                     }
                     break;
                 case ID_ID:
@@ -331,16 +331,16 @@ namespace riddle
                         fs.emplace_back(_field_declaration());
                         break;
                     default:
-                        error("expected either '(' or '=' or ';'..");
+                        error("expected either `(` or `=` or `;`..");
                     }
                     break;
                 default:
-                    error("expected either '(' or '.' or an identifier..");
+                    error("expected either `(` or `.` or an identifier..");
                 }
                 break;
             }
             default:
-                error("expected either 'typedef' or 'enum' or 'class' or 'predicate' or 'void' or identifier..");
+                error("expected either `typedef` or `enum` or `class` or `predicate` or `void` or identifier..");
             }
         }
 
@@ -388,7 +388,7 @@ namespace riddle
             }
             break;
         default:
-            error("expected either 'bool' or 'int' or 'real' or 'string' or an identifier..");
+            error("expected either `bool` or `int` or `real` or `string` or an identifier..");
         }
 
         if (!match(ID_ID))
@@ -413,7 +413,7 @@ namespace riddle
         }
 
         if (!match(SEMICOLON_ID))
-            error("expected ';'..");
+            error("expected `;`..");
 
         return new_field_declaration(std::move(tp), std::move(ds));
     }
@@ -439,7 +439,7 @@ namespace riddle
         auto n = *static_cast<const id_token *>(tks[pos - 2].get());
 
         if (!match(LPAREN_ID))
-            error("expected '('..");
+            error("expected `(`..");
 
         if (!match(RPAREN_ID))
         {
@@ -479,7 +479,7 @@ namespace riddle
                     }
                     break;
                 default:
-                    error("expected either 'bool' or 'int' or 'real' or 'string' or an identifier..");
+                    error("expected either `bool` or `int` or `real` or `string` or an identifier..");
                 }
                 if (!match(ID_ID))
                     error("expected identifier..");
@@ -488,11 +488,11 @@ namespace riddle
             } while (match(COMMA_ID));
 
             if (!match(RPAREN_ID))
-                error("expected ')'..");
+                error("expected `)`..");
         }
 
         if (!match(LBRACE_ID))
-            error("expected '{'..");
+            error("expected `{`..");
 
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
@@ -511,7 +511,7 @@ namespace riddle
             error("expected identifier..");
 
         if (!match(LPAREN_ID))
-            error("expected '('..");
+            error("expected `(`..");
 
         if (!match(RPAREN_ID))
         {
@@ -551,7 +551,7 @@ namespace riddle
                     tk = next();
                     break;
                 default:
-                    error("expected either 'bool' or 'int' or 'real' or 'string' or an identifier..");
+                    error("expected either `bool` or `int` or `real` or `string` or an identifier..");
                 }
                 if (!match(ID_ID))
                     error("expected identifier..");
@@ -560,7 +560,7 @@ namespace riddle
             } while (match(COMMA_ID));
 
             if (!match(RPAREN_ID))
-                error("expected ')'..");
+                error("expected `)`..");
         }
 
         if (match(COLON_ID))
@@ -573,7 +573,7 @@ namespace riddle
                 auto pn = *static_cast<const id_token *>(tks[pos - 2].get());
 
                 if (!match(LPAREN_ID))
-                    error("expected '('..");
+                    error("expected `(`..");
 
                 if (!match(RPAREN_ID))
                 {
@@ -583,7 +583,7 @@ namespace riddle
                     } while (match(COMMA_ID));
 
                     if (!match(RPAREN_ID))
-                        error("expected ')'..");
+                        error("expected `)`..");
                 }
                 ins.emplace_back(pn);
                 ivs.emplace_back(std::move(xprs));
@@ -591,7 +591,7 @@ namespace riddle
         }
 
         if (!match(LBRACE_ID))
-            error("expected '{'..");
+            error("expected `{`..");
 
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
@@ -606,14 +606,14 @@ namespace riddle
         std::vector<std::unique_ptr<const ast::statement>> stmnts;
 
         if (!match(PREDICATE_ID))
-            error("expected 'predicate'..");
+            error("expected `predicate`..");
 
         if (!match(ID_ID))
             error("expected identifier..");
         auto n = *static_cast<const id_token *>(tks[pos - 2].get());
 
         if (!match(LPAREN_ID))
-            error("expected '('..");
+            error("expected `(`..");
 
         if (!match(RPAREN_ID))
         {
@@ -653,7 +653,7 @@ namespace riddle
                     }
                     break;
                 default:
-                    error("expected either 'bool' or 'int' or 'real' or 'string' or an identifier..");
+                    error("expected either `bool` or `int` or `real` or `string` or an identifier..");
                 }
                 if (!match(ID_ID))
                     error("expected identifier..");
@@ -662,7 +662,7 @@ namespace riddle
             } while (match(COMMA_ID));
 
             if (!match(RPAREN_ID))
-                error("expected ')'..");
+                error("expected `)`..");
         }
 
         if (match(COLON_ID))
@@ -681,7 +681,7 @@ namespace riddle
         }
 
         if (!match(LBRACE_ID))
-            error("expected '{'..");
+            error("expected `{`..");
 
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
@@ -718,7 +718,7 @@ namespace riddle
                 ft.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
                 break;
             default:
-                error("expected either 'bool' or 'int' or 'real' or 'string'..");
+                error("expected either `bool` or `int` or `real` or `string`..");
             }
             tk = next();
 
@@ -741,7 +741,7 @@ namespace riddle
             } while (match(COMMA_ID));
 
             if (!match(SEMICOLON_ID))
-                error("expected ';'..");
+                error("expected `;`..");
 
             return new_local_field_statement(std::move(ft), std::move(ns), std::move(es));
         }
@@ -779,7 +779,7 @@ namespace riddle
                 } while (match(COMMA_ID));
 
                 if (!match(SEMICOLON_ID))
-                    error("expected ';'..");
+                    error("expected `;`..");
 
                 return new_local_field_statement(std::move(is), std::move(ns), std::move(es));
             }
@@ -790,7 +790,7 @@ namespace riddle
                 tk = next();
                 std::unique_ptr<const ast::expression> e = _expression();
                 if (!match(SEMICOLON_ID))
-                    error("expected ';'..");
+                    error("expected `;`..");
                 return new_assignment_statement(std::move(is), i, std::move(e));
             }
             case PLUS_ID: // an expression..
@@ -812,11 +812,11 @@ namespace riddle
                 backtrack(c_pos);
                 std::unique_ptr<const ast::expression> e = _expression();
                 if (!match(SEMICOLON_ID))
-                    error("expected ';'..");
+                    error("expected `;`..");
                 return new_expression_statement(std::move(e));
             }
             default:
-                error("expected either '=' or an identifier..");
+                error("expected either `=` or an identifier..");
                 return nullptr;
             }
         }
@@ -840,21 +840,21 @@ namespace riddle
                 {
                     e = _expression();
                     if (!match(RBRACKET_ID))
-                        error("expected ']'..");
+                        error("expected `]`..");
                 }
                 conjs.emplace_back(std::move(stmnts));
                 conj_costs.emplace_back(std::move(e));
                 while (match(OR_ID))
                 {
                     if (!match(LBRACE_ID))
-                        error("expected '{'..");
+                        error("expected `{`..");
                     while (!match(RBRACE_ID))
                         stmnts.emplace_back(_statement());
                     if (match(LBRACKET_ID))
                     {
                         e = _expression();
                         if (!match(RBRACKET_ID))
-                            error("expected ']'..");
+                            error("expected `]`..");
                     }
                     conjs.emplace_back(std::move(stmnts));
                     conj_costs.emplace_back(std::move(e));
@@ -879,10 +879,10 @@ namespace riddle
             auto fn = *static_cast<const id_token *>(tks[pos - 2].get());
 
             if (!match(EQ_ID))
-                error("expected '='..");
+                error("expected `=`..");
 
             if (!match(NEW_ID))
-                error("expected 'new'..");
+                error("expected `new`..");
 
             do
             {
@@ -895,7 +895,7 @@ namespace riddle
             scp.pop_back();
 
             if (!match(LPAREN_ID))
-                error("expected '('..");
+                error("expected `(`..");
 
             if (!match(RPAREN_ID))
             {
@@ -906,32 +906,32 @@ namespace riddle
                     id_token assgn_name = *static_cast<const id_token *>(tks[pos - 2].get());
 
                     if (!match(COLON_ID))
-                        error("expected ':'..");
+                        error("expected `:`..");
 
                     assn_ns.emplace_back(assgn_name);
                     assn_vs.emplace_back(_expression());
                 } while (match(COMMA_ID));
 
                 if (!match(RPAREN_ID))
-                    error("expected ')'..");
+                    error("expected `)`..");
             }
 
             if (!match(SEMICOLON_ID))
-                error("expected ';'..");
+                error("expected `;`..");
             return new_formula_statement(isf, fn, scp, pn, assn_ns, std::move(assn_vs));
         }
         case RETURN_ID:
         {
             std::unique_ptr<const ast::expression> e = _expression();
             if (!match(SEMICOLON_ID))
-                error("expected ';'..");
+                error("expected `;`..");
             return new_return_statement(std::move(e));
         }
         default:
         {
             std::unique_ptr<const ast::expression> xpr = _expression();
             if (!match(SEMICOLON_ID))
-                error("expected ';'..");
+                error("expected `;`..");
             return new_expression_statement(std::move(xpr));
         }
         }
@@ -981,7 +981,7 @@ namespace riddle
                 } while (match(DOT_ID));
 
                 if (!match(RPAREN_ID))
-                    error("expected ')'..");
+                    error("expected `)`..");
                 e = new_cast_expression(std::move(ids), _expression());
             }
             else // a parenthesis..
@@ -989,7 +989,7 @@ namespace riddle
                 backtrack(c_pos);
                 std::unique_ptr<const ast::expression> xpr = _expression();
                 if (!match(RPAREN_ID))
-                    error("expected ')'..");
+                    error("expected `)`..");
                 e = std::move(xpr);
             }
             break;
@@ -1019,7 +1019,7 @@ namespace riddle
 
             std::vector<std::unique_ptr<const expression>> xprs;
             if (!match(LPAREN_ID))
-                error("expected '('..");
+                error("expected `(`..");
 
             if (!match(RPAREN_ID))
             {
@@ -1029,7 +1029,7 @@ namespace riddle
                 } while (match(COMMA_ID));
 
                 if (!match(RPAREN_ID))
-                    error("expected ')'..");
+                    error("expected `)`..");
             }
 
             e = new_constructor_expression(std::move(ids), std::move(xprs));
@@ -1053,7 +1053,7 @@ namespace riddle
                 is.pop_back();
                 std::vector<std::unique_ptr<const expression>> xprs;
                 if (!match(LPAREN_ID))
-                    error("expected '('..");
+                    error("expected `(`..");
 
                 if (!match(RPAREN_ID))
                 {
@@ -1063,7 +1063,7 @@ namespace riddle
                     } while (match(COMMA_ID));
 
                     if (!match(RPAREN_ID))
-                        error("expected ')'..");
+                        error("expected `)`..");
                 }
 
                 e = new_function_expression(std::move(is), fn, std::move(xprs));
@@ -1073,7 +1073,7 @@ namespace riddle
             break;
         }
         default:
-            error("expected either '(' or '+' or '-' or '!' or '[' or 'new' or a literal or an identifier..");
+            error("expected either `(` or `+` or `-` or `!` or `[` or `new` or a literal or an identifier..");
         }
 
         while (
@@ -1214,7 +1214,7 @@ namespace riddle
                 break;
             }
             default:
-                error("expected either '==' or '!=' or '<' or '<=' or '>' or '>=' or '->' or '|' or '&' or '^' or '+' or '-' or '*' or '/'..");
+                error("expected either `==` or `!=` or `<` or `<=` or `>` or `>=` or `->` or `|` or `&` or `^` or `+` or `-` or `*` or `/`..");
             }
         }
 
