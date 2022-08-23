@@ -23,7 +23,7 @@ file(GLOB RIDDLE_HEADERS include/*.h)
 add_library(${PROJECT_NAME} SHARED ${RIDDLE_SOURCES})
 GENERATE_EXPORT_HEADER(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:>)
-target_link_libraries(${PROJECT_NAME} PRIVATE SeMiTONE)
+target_link_libraries(${PROJECT_NAME} PRIVATE SeMiTONE json)
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
