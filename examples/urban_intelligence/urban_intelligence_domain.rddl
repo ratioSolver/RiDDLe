@@ -1,5 +1,5 @@
 class MunicipalTechnician {
-    ReusableResource activity = new ReusableResource(1.0);
+    ReusableResource activity = new ReusableResource(2.0);
 }
 
 class Road {}
