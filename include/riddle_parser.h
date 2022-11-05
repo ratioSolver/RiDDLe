@@ -533,6 +533,7 @@ namespace riddle
   class parser
   {
   public:
+    RIDDLE_EXPORT parser(const std::string &str);
     RIDDLE_EXPORT parser(std::istream &is);
     parser(const parser &orig) = delete;
     RIDDLE_EXPORT virtual ~parser();

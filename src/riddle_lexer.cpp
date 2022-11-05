@@ -2,6 +2,7 @@
 
 namespace riddle
 {
+    RIDDLE_EXPORT lexer::lexer(const std::string &str) : sb(str) { ch = next_char(); }
     RIDDLE_EXPORT lexer::lexer(std::istream &is)
     {
         char buffer[1024];

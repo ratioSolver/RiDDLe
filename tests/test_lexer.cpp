@@ -6,8 +6,7 @@ using namespace riddle;
 
 void test_lexer_0()
 {
-    std::stringstream ss("real a = 5 + 2;\nfalse;");
-    lexer l(ss);
+    lexer l("real a = 5 + 2;\nfalse;");
     auto t0 = l.next();
     assert(t0->sym == REAL_ID);
     auto t1 = l.next();

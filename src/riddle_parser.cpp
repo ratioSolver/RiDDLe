@@ -5,6 +5,7 @@ namespace riddle
 {
     using namespace ast;
 
+    RIDDLE_EXPORT parser::parser(const std::string &str) : lex(str) {}
     RIDDLE_EXPORT parser::parser(std::istream &is) : lex(is) {}
     RIDDLE_EXPORT parser::~parser() {}
 

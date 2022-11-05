@@ -128,6 +128,7 @@ namespace riddle
   class lexer final
   {
   public:
+    RIDDLE_EXPORT lexer(const std::string &str);
     RIDDLE_EXPORT lexer(std::istream &is);
     lexer(const lexer &orig) = delete;
 
