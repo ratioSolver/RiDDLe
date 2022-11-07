@@ -61,6 +61,7 @@ add_test(NAME RiddleGOAC_5Pic_5Wind COMMAND riddle_lib_tests "${PROJECT_SOURCE_D
 
 add_test(NAME RiddleLogistics_0 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/logistics/logistics_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/logistics/logistics_problem_0.rddl")
 add_test(NAME RiddleLogistics_1 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/logistics/logistics_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/logistics/logistics_problem_1.rddl")
+add_test(NAME RiddleLogistics_2 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/logistics/logistics_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/logistics/logistics_problem_2.rddl")
 
 add_test(NAME RiddleTelepresence_0 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/telepresence/telepresence_00.rddl")
 add_test(NAME RiddleTelepresence_1 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/telepresence/telepresence_01.rddl")
