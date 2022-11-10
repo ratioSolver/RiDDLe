@@ -825,10 +825,8 @@ namespace riddle
         {
             tk = next();
             std::vector<std::unique_ptr<const ast::statement>> stmnts;
-            do
-            {
+            while (!match(RBRACE_ID))
                 stmnts.emplace_back(_statement());
-            } while (!match(RBRACE_ID));
             switch (tk->sym)
             {
             case LBRACKET_ID:
