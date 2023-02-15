@@ -101,19 +101,19 @@ namespace riddle
   class int_token final : public token
   {
   public:
-    int_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const semitone::I &val) : token(IntLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
+    int_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const utils::I &val) : token(IntLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
   public:
-    const semitone::I val;
+    const utils::I val;
   };
 
   class real_token final : public token
   {
   public:
-    real_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const semitone::rational &val) : token(RealLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
+    real_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const utils::rational &val) : token(RealLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
   public:
-    const semitone::rational val;
+    const utils::rational val;
   };
 
   class string_token final : public token
@@ -163,7 +163,7 @@ namespace riddle
 
     std::unique_ptr<const token> mk_integer_token(const std::string &str) noexcept
     {
-      auto tk = std::make_unique<const int_token>(start_line, start_pos, end_line, end_pos, static_cast<semitone::I>(std::stol(str)));
+      auto tk = std::make_unique<const int_token>(start_line, start_pos, end_line, end_pos, static_cast<utils::I>(std::stol(str)));
       start_line = end_line;
       start_pos = end_pos;
       return tk;
@@ -171,7 +171,7 @@ namespace riddle
 
     std::unique_ptr<const token> mk_rational_token(const std::string &intgr, const std::string &dec) noexcept
     {
-      auto tk = std::make_unique<const real_token>(start_line, start_pos, end_line, end_pos, semitone::rational(static_cast<semitone::I>(std::stol(intgr + dec)), static_cast<semitone::I>(std::pow(10, dec.size()))));
+      auto tk = std::make_unique<const real_token>(start_line, start_pos, end_line, end_pos, utils::rational(static_cast<utils::I>(std::stol(intgr + dec)), static_cast<utils::I>(std::pow(10, dec.size()))));
       start_line = end_line;
       start_pos = end_pos;
       return tk;
