@@ -5,6 +5,8 @@
 
 namespace riddle
 {
+  class complex_type;
+
   class constructor : public scope
   {
   public:

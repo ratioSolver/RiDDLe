@@ -5,6 +5,9 @@
 
 namespace riddle
 {
+  class env;
+  using context = utils::c_ptr<env>;
+
   namespace ast
   {
     class expression

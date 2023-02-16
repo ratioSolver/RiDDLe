@@ -8,8 +8,6 @@
 namespace riddle
 {
   class core;
-  class type;
-  class complex_type;
   class method;
   using method_ptr = utils::u_ptr<method>;
   class item;
@@ -37,9 +35,6 @@ namespace riddle
     scope &scp;
     std::map<std::string, field_ptr> fields;
   };
-
-  class env;
-  using context = utils::c_ptr<env>;
 
   class env : virtual public utils::countable
   {
