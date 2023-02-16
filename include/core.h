@@ -1,7 +1,8 @@
 #pragma once
 
-#include "scope.h"
-#include "env.h"
+#include "type.h"
+#include "item.h"
+#include "method.h"
 
 namespace riddle
 {
@@ -22,9 +23,15 @@ namespace riddle
     RIDDLE_EXPORT virtual expr new_real();
     RIDDLE_EXPORT virtual expr new_real(utils::rational value);
 
+    RIDDLE_EXPORT type &get_type(const std::string &name) override;
+
+    RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) override;
+
     RIDDLE_EXPORT expr get(const std::string &name) const override;
 
   private:
     std::map<std::string, expr> items;
+    std::map<std::string, type_ptr> types;
+    std::map<std::string, std::vector<method_ptr>> methods;
   };
 } // namespace riddle

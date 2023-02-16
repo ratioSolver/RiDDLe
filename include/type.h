@@ -17,6 +17,9 @@ namespace riddle
 
     virtual expr new_instance() = 0;
 
+    bool operator==(const type &other) const { return this == &other; }
+    bool operator!=(const type &other) const { return this != &other; }
+
   private:
     std::string name;
   };
