@@ -4,16 +4,25 @@
 
 namespace riddle
 {
-    RIDDLE_EXPORT type::type(core &cr, const std::string &name) : cr(cr), name(name) {}
+    type::type(core &cr, const std::string &name) : cr(cr), name(name) {}
 
-    bool_type::bool_type(core &cr) : type(cr, "bool") {}
+    bool_type::bool_type(core &cr) : type(cr, BOOL_KW) {}
     expr bool_type::new_instance() { return cr.new_bool(); }
 
-    int_type::int_type(core &cr) : type(cr, "int") {}
+    int_type::int_type(core &cr) : type(cr, INT_KW) {}
     expr int_type::new_instance() { return cr.new_int(); }
 
-    real_type::real_type(core &cr) : type(cr, "real") {}
+    real_type::real_type(core &cr) : type(cr, REAL_KW) {}
     expr real_type::new_instance() { return cr.new_real(); }
+
+    string_type::string_type(core &cr) : type(cr, STRING_KW) {}
+    expr string_type::new_instance() { return cr.new_string(); }
+
+    RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
+
+    expr predicate::new_instance() { throw std::runtime_error("Predicate cannot be instantiated"); }
+    expr predicate::new_fact() { return cr.new_fact(*this); }
+    expr predicate::new_goal() { return cr.new_goal(*this); }
 
     RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
 
@@ -50,7 +59,8 @@ namespace riddle
 
     RIDDLE_EXPORT expr complex_type::new_instance()
     {
-        auto inst = new item(*this);
-        return expr(inst);
+        auto inst = new complex_item(*this);
+        instances.push_back(inst);
+        return inst;
     }
 } // namespace riddle

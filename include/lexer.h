@@ -11,6 +11,7 @@
 #define REAL_KW "real"
 #define TIME_KW "time"
 #define STRING_KW "string"
+#define THIS_KW "this"
 
 namespace riddle
 {

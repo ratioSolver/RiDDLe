@@ -6,6 +6,8 @@
 namespace riddle
 {
   class type;
+  class complex_type;
+  class predicate;
 
   class item : virtual public utils::countable
   {
@@ -19,10 +21,10 @@ namespace riddle
     type &tp;
   };
 
-  class complex_item : public item, public env
+  class complex_item : public item
   {
   public:
-    complex_item(type &tp, env &ctx);
+    complex_item(type &tp);
     virtual ~complex_item() = default;
 
   private:

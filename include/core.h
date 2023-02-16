@@ -23,6 +23,12 @@ namespace riddle
     RIDDLE_EXPORT virtual expr new_real();
     RIDDLE_EXPORT virtual expr new_real(utils::rational value);
 
+    RIDDLE_EXPORT virtual expr new_string();
+    RIDDLE_EXPORT virtual expr new_string(const std::string &value);
+
+    RIDDLE_EXPORT virtual expr new_fact(const predicate &pred);
+    RIDDLE_EXPORT virtual expr new_goal(const predicate &pred);
+
     RIDDLE_EXPORT type &get_type(const std::string &name) override;
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) override;
 

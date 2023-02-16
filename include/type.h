@@ -10,7 +10,7 @@ namespace riddle
   class type
   {
   public:
-    RIDDLE_EXPORT type(core &cr, const std::string &name);
+    type(core &cr, const std::string &name);
     virtual ~type() = default;
 
     const std::string &get_name() const { return name; }
@@ -53,6 +53,29 @@ namespace riddle
     expr new_instance() override;
   };
 
+  class string_type final : public type
+  {
+  public:
+    string_type(core &cr);
+
+    expr new_instance() override;
+  };
+
+  class predicate : public scope, public type
+  {
+  public:
+    RIDDLE_EXPORT predicate(scope &scp, const std::string &name);
+    virtual ~predicate() = default;
+
+    expr new_instance() override;
+
+    expr new_fact();
+    expr new_goal();
+
+  private:
+    std::vector<expr> instances;
+  };
+
   class complex_type : public scope, public type
   {
   public:
@@ -65,6 +88,7 @@ namespace riddle
     expr new_instance() override;
 
   private:
+    std::vector<expr> instances;
     std::map<std::string, type_ptr> types;
     std::map<std::string, std::vector<method_ptr>> methods;
   };

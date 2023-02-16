@@ -5,19 +5,26 @@ namespace riddle
 {
     RIDDLE_EXPORT core::core() : scope(*this), env(*this, this)
     {
-        types.emplace("bool", new bool_type(*this));
-        types.emplace("int", new int_type(*this));
-        types.emplace("real", new real_type(*this));
+        types.emplace(BOOL_KW, new bool_type(*this));
+        types.emplace(INT_KW, new int_type(*this));
+        types.emplace(REAL_KW, new real_type(*this));
+        types.emplace(STRING_KW, new string_type(*this));
     }
 
     RIDDLE_EXPORT expr core::new_bool() { throw std::logic_error("not implemented"); }
-    RIDDLE_EXPORT expr core::new_bool([[maybe_unused]] bool value) { throw std::logic_error("not implemented"); }
+    RIDDLE_EXPORT expr core::new_bool(bool) { throw std::logic_error("not implemented"); }
 
     RIDDLE_EXPORT expr core::new_int() { throw std::logic_error("not implemented"); }
-    RIDDLE_EXPORT expr core::new_int([[maybe_unused]] utils::I value) { throw std::logic_error("not implemented"); }
+    RIDDLE_EXPORT expr core::new_int(utils::I) { throw std::logic_error("not implemented"); }
 
     RIDDLE_EXPORT expr core::new_real() { throw std::logic_error("not implemented"); }
-    RIDDLE_EXPORT expr core::new_real([[maybe_unused]] utils::rational value) { throw std::logic_error("not implemented"); }
+    RIDDLE_EXPORT expr core::new_real(utils::rational) { throw std::logic_error("not implemented"); }
+
+    RIDDLE_EXPORT expr core::new_string() { throw std::logic_error("not implemented"); }
+    RIDDLE_EXPORT expr core::new_string(const std::string &) { throw std::logic_error("not implemented"); }
+
+    RIDDLE_EXPORT expr core::new_fact(const predicate &) { throw std::logic_error("not implemented"); }
+    RIDDLE_EXPORT expr core::new_goal(const predicate &) { throw std::logic_error("not implemented"); }
 
     RIDDLE_EXPORT type &core::get_type(const std::string &name)
     {
