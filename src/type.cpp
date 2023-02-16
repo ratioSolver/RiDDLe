@@ -26,17 +26,17 @@ namespace riddle
 
     RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
 
-    RIDDLE_EXPORT type &complex_type::get_type(const std::string &name)
+    RIDDLE_EXPORT type &complex_type::get_type(const std::string &tp_name)
     {
-        auto it = types.find(name);
+        auto it = types.find(tp_name);
         if (it != types.end())
             return *it->second;
-        return scope::get_type(name);
+        return scope::get_type(tp_name);
     }
 
-    RIDDLE_EXPORT method &complex_type::get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args)
+    RIDDLE_EXPORT method &complex_type::get_method(const std::string &m_name, const std::vector<std::reference_wrapper<type>> &args)
     {
-        auto it = methods.find(name);
+        auto it = methods.find(m_name);
         if (it != methods.end())
             for (auto &m : it->second)
             {
@@ -54,7 +54,7 @@ namespace riddle
                         return *m;
                 }
             }
-        return scope::get_method(name, args);
+        return scope::get_method(m_name, args);
     }
 
     RIDDLE_EXPORT expr complex_type::new_instance()

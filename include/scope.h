@@ -50,7 +50,7 @@ namespace riddle
 
     method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) { return scp.get_method(name, args); }
 
-    virtual expr &get(const std::string &name);
+    RIDDLE_EXPORT virtual expr &get(const std::string &name);
 
   private:
     scope &scp;

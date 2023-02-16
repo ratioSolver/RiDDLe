@@ -26,17 +26,17 @@ namespace riddle
     RIDDLE_EXPORT expr core::new_fact(const predicate &) { throw std::logic_error("not implemented"); }
     RIDDLE_EXPORT expr core::new_goal(const predicate &) { throw std::logic_error("not implemented"); }
 
-    RIDDLE_EXPORT type &core::get_type(const std::string &name)
+    RIDDLE_EXPORT type &core::get_type(const std::string &tp_name)
     {
-        auto it = types.find(name);
+        auto it = types.find(tp_name);
         if (it != types.end())
             return *it->second;
-        throw std::out_of_range("type `" + name + "` not found");
+        throw std::out_of_range("type `" + tp_name + "` not found");
     }
 
-    RIDDLE_EXPORT method &core::get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args)
+    RIDDLE_EXPORT method &core::get_method(const std::string &m_name, const std::vector<std::reference_wrapper<type>> &args)
     {
-        auto it = methods.find(name);
+        auto it = methods.find(m_name);
         if (it != methods.end())
             for (auto &m : it->second)
             {
@@ -54,7 +54,7 @@ namespace riddle
                         return *m;
                 }
             }
-        throw std::out_of_range("method `" + name + "` not found");
+        throw std::out_of_range("method `" + m_name + "` not found");
     }
 
     RIDDLE_EXPORT expr &core::get(const std::string &name)
