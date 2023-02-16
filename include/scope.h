@@ -38,15 +38,18 @@ namespace riddle
     std::map<std::string, field_ptr> fields;
   };
 
-  class context : public utils::self_countable<context>
+  class env;
+  using context = utils::c_ptr<env>;
+
+  class env : virtual public utils::countable
   {
     friend class core;
 
   public:
-    RIDDLE_EXPORT context(scope &scp, context &ctx, bool self = false);
-    virtual ~context() = default;
+    RIDDLE_EXPORT env(scope &scp, context ctx);
+    virtual ~env() = default;
 
-    context &get_context() { return ctx; }
+    env &get_context() { return *ctx; }
 
     type &get_type(const std::string &name) { return scp.get_type(name); }
 
@@ -56,7 +59,7 @@ namespace riddle
 
   private:
     scope &scp;
-    context &ctx;
+    context ctx;
     std::map<std::string, expr> items;
   };
 } // namespace riddle

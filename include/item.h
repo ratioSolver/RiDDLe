@@ -19,10 +19,10 @@ namespace riddle
     type &tp;
   };
 
-  class complex_item : public item, public context
+  class complex_item : public item, public env
   {
   public:
-    complex_item(type &tp, context &ctx);
+    complex_item(type &tp, env &ctx);
     virtual ~complex_item() = default;
 
   private:

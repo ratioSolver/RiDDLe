@@ -3,7 +3,7 @@
 
 namespace riddle
 {
-    RIDDLE_EXPORT core::core() : scope(*this), context(*this, *this, true)
+    RIDDLE_EXPORT core::core() : scope(*this), env(*this, this)
     {
         types.emplace("bool", new bool_type(*this));
         types.emplace("int", new int_type(*this));

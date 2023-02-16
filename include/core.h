@@ -6,7 +6,7 @@
 
 namespace riddle
 {
-  class core : public scope, public context
+  class core : public scope, public env
   {
   public:
     RIDDLE_EXPORT core();
