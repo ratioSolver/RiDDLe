@@ -14,6 +14,7 @@ namespace riddle
       expression(const expression &orig) = delete;
       virtual ~expression() = default;
     };
+    using expression_ptr = utils::u_ptr<expression>;
 
     class bool_literal_expression : public expression
     {
@@ -308,6 +309,7 @@ namespace riddle
       statement(const statement &orig) = delete;
       virtual ~statement() = default;
     };
+    using statement_ptr = utils::u_ptr<const statement>;
 
     class local_field_statement : public statement
     {

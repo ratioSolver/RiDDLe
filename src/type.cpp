@@ -4,7 +4,7 @@
 
 namespace riddle
 {
-    RIDDLE_EXPORT type::type(scope &scp, const std::string &name) : scope(scp), name(name) { add_field(utils::u_ptr<field>(new field(*this, "this", nullptr, true))); }
+    RIDDLE_EXPORT type::type(scope &scp, const std::string &name) : scope(scp), name(name) {}
 
     RIDDLE_EXPORT bool_type::bool_type(core &cr) : type(cr, "bool") {}
 

@@ -7,25 +7,20 @@ namespace riddle
 {
   class type;
 
-  namespace ast
-  {
-    class expression;
-  } // namespace ast
-
   class field
   {
   public:
-    field(type &tp, const std::string &name, utils::u_ptr<ast::expression> e = nullptr, bool synthetic = false) : tp(tp), name(name), e(std::move(e)), synthetic(synthetic) {}
+    field(type &tp, const std::string &name, ast::expression_ptr e = nullptr, bool synthetic = false) : tp(tp), name(name), e(std::move(e)), synthetic(synthetic) {}
 
     type &get_type() { return tp; }
     const std::string &get_name() const { return name; }
-    utils::u_ptr<ast::expression> &get_expression() { return e; }
+    ast::expression_ptr &get_expression() { return e; }
     bool is_synthetic() const { return synthetic; }
 
   private:
     type &tp;
     std::string name;
-    utils::u_ptr<ast::expression> e;
+    ast::expression_ptr e;
     bool synthetic;
   };
 
