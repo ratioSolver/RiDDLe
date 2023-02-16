@@ -2,5 +2,5 @@
 
 namespace riddle
 {
-    RIDDLE_EXPORT type::type(scope &scp) : scope(scp) {}
+    RIDDLE_EXPORT type::type(scope &scp, const std::string &name) : scope(scp), name(name) {}
 } // namespace riddle

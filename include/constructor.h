@@ -13,4 +13,6 @@ namespace riddle
   private:
     /* data */
   };
+
+  using constructor_ptr = utils::u_ptr<constructor>;
 } // namespace riddle

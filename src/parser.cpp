@@ -1,4 +1,4 @@
-#include "riddle_parser.h"
+#include "parser.h"
 #include <cassert>
 
 namespace riddle

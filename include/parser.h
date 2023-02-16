@@ -1,6 +1,6 @@
 #pragma once
 
-#include "riddle_lexer.h"
+#include "lexer.h"
 #include <vector>
 
 namespace riddle

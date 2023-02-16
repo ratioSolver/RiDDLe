@@ -13,4 +13,6 @@ namespace riddle
   private:
     /* data */
   };
+
+  using method_ptr = utils::u_ptr<method>;
 } // namespace riddle
