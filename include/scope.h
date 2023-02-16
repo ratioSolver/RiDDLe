@@ -17,6 +17,7 @@ namespace riddle
     RIDDLE_EXPORT scope(scope &scp);
     virtual ~scope() = default;
 
+    virtual core &get_core() { return scp.get_core(); }
     scope &get_scope() { return scp; }
 
     RIDDLE_EXPORT field &get_field(const std::string &name);
@@ -24,6 +25,9 @@ namespace riddle
     virtual type &get_type(const std::string &name) { return scp.get_type(name); }
 
     virtual method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) { return scp.get_method(name, args); }
+
+  protected:
+    RIDDLE_EXPORT void add_field(field_ptr f);
 
   private:
     scope &scp;

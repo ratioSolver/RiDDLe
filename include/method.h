@@ -7,11 +7,11 @@ namespace riddle
   class method : public scope
   {
   public:
-    RIDDLE_EXPORT method(scope &scp);
+    RIDDLE_EXPORT method(scope &scp, std::string name, std::vector<field_ptr> &args);
     virtual ~method() = default;
 
   private:
-    /* data */
+    std::string name;
   };
 
   using method_ptr = utils::u_ptr<method>;

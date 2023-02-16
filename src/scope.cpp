@@ -12,4 +12,10 @@ namespace riddle
         else
             return scp.get_field(name);
     }
+
+    RIDDLE_EXPORT void scope::add_field(field_ptr f)
+    {
+        if (!fields.emplace(f->get_name(), std::move(f)).second)
+            throw std::runtime_error("field already exists");
+    }
 } // namespace riddle
