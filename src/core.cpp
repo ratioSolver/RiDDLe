@@ -3,7 +3,7 @@
 
 namespace riddle
 {
-    RIDDLE_EXPORT core::core() : scope(*this), env(*this)
+    RIDDLE_EXPORT core::core() : scope(*this), context(*this, *this, true)
     {
         types.emplace("bool", new bool_type(*this));
         types.emplace("int", new int_type(*this));
@@ -50,7 +50,7 @@ namespace riddle
         throw std::out_of_range("method `" + name + "` not found");
     }
 
-    RIDDLE_EXPORT expr core::get(const std::string &name) const
+    RIDDLE_EXPORT expr &core::get(const std::string &name)
     {
         auto it = items.find(name);
         if (it != items.end())

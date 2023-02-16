@@ -9,7 +9,11 @@ namespace riddle
 {
   class core;
   class type;
+  class complex_type;
   class method;
+  using method_ptr = utils::u_ptr<method>;
+  class item;
+  using expr = utils::c_ptr<item>;
 
   class scope
   {
@@ -32,5 +36,27 @@ namespace riddle
   private:
     scope &scp;
     std::map<std::string, field_ptr> fields;
+  };
+
+  class context : public utils::self_countable<context>
+  {
+    friend class core;
+
+  public:
+    RIDDLE_EXPORT context(scope &scp, context &ctx, bool self = false);
+    virtual ~context() = default;
+
+    context &get_context() { return ctx; }
+
+    type &get_type(const std::string &name) { return scp.get_type(name); }
+
+    method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) { return scp.get_method(name, args); }
+
+    virtual expr &get(const std::string &name);
+
+  private:
+    scope &scp;
+    context &ctx;
+    std::map<std::string, expr> items;
   };
 } // namespace riddle

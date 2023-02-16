@@ -1,4 +1,5 @@
 #include "scope.h"
+#include "item.h"
 
 namespace riddle
 {
@@ -17,5 +18,16 @@ namespace riddle
     {
         if (!fields.emplace(f->get_name(), std::move(f)).second)
             throw std::runtime_error("field already exists");
+    }
+
+    RIDDLE_EXPORT context::context(scope &scp, context &ctx, bool self) : countable(self), scp(scp), ctx(ctx) {}
+
+    RIDDLE_EXPORT expr &context::get(const std::string &name)
+    {
+        auto it = items.find(name);
+        if (it != items.end())
+            return it->second;
+        else
+            return ctx.get(name);
     }
 } // namespace riddle

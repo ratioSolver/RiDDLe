@@ -1,16 +1,16 @@
 #pragma once
 
-#include "env.h"
+#include "scope.h"
 #include <map>
 
 namespace riddle
 {
   class type;
 
-  class item : public utils::countable, public env
+  class item : virtual public utils::countable
   {
   public:
-    item(env &e, type &tp);
+    item(type &tp);
     virtual ~item() = default;
 
     type &get_type() { return tp; }
@@ -19,13 +19,11 @@ namespace riddle
     type &tp;
   };
 
-  class complex_item : public item
+  class complex_item : public item, public context
   {
   public:
-    complex_item(env &e, type &tp);
+    complex_item(type &tp, context &ctx);
     virtual ~complex_item() = default;
-
-    expr get(const std::string &name) const override;
 
   private:
     std::map<std::string, expr> items;

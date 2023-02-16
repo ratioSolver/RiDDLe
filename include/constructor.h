@@ -8,7 +8,7 @@ namespace riddle
   class constructor : public scope
   {
   public:
-    RIDDLE_EXPORT constructor(type &tp, std::vector<field_ptr> &args, std::vector<ast::statement_ptr> &body);
+    RIDDLE_EXPORT constructor(complex_type &tp, std::vector<field_ptr> &args, std::vector<ast::statement_ptr> &body);
     virtual ~constructor() = default;
 
   private:

@@ -6,7 +6,7 @@
 
 namespace riddle
 {
-  class core : public scope, public env
+  class core : public scope, public context
   {
   public:
     RIDDLE_EXPORT core();
@@ -24,13 +24,11 @@ namespace riddle
     RIDDLE_EXPORT virtual expr new_real(utils::rational value);
 
     RIDDLE_EXPORT type &get_type(const std::string &name) override;
-
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) override;
 
-    RIDDLE_EXPORT expr get(const std::string &name) const override;
+    RIDDLE_EXPORT expr &get(const std::string &name) override;
 
   private:
-    std::map<std::string, expr> items;
     std::map<std::string, type_ptr> types;
     std::map<std::string, std::vector<method_ptr>> methods;
   };
