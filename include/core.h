@@ -14,20 +14,20 @@ namespace riddle
 
     core &get_core() override { return *this; }
 
-    RIDDLE_EXPORT virtual expr new_bool();
-    RIDDLE_EXPORT virtual expr new_bool(bool value);
+    virtual expr new_bool() = 0;
+    virtual expr new_bool(bool value) = 0;
 
-    RIDDLE_EXPORT virtual expr new_int();
-    RIDDLE_EXPORT virtual expr new_int(utils::I value);
+    virtual expr new_int() = 0;
+    virtual expr new_int(utils::I value) = 0;
 
-    RIDDLE_EXPORT virtual expr new_real();
-    RIDDLE_EXPORT virtual expr new_real(utils::rational value);
+    virtual expr new_real() = 0;
+    virtual expr new_real(utils::rational value) = 0;
 
-    RIDDLE_EXPORT virtual expr new_string();
-    RIDDLE_EXPORT virtual expr new_string(const std::string &value);
+    virtual expr new_string() = 0;
+    virtual expr new_string(const std::string &value) = 0;
 
-    RIDDLE_EXPORT virtual expr new_fact(const predicate &pred);
-    RIDDLE_EXPORT virtual expr new_goal(const predicate &pred);
+    virtual expr new_fact(const predicate &pred) = 0;
+    virtual expr new_goal(const predicate &pred) = 0;
 
     RIDDLE_EXPORT type &get_type(const std::string &name) override;
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) override;

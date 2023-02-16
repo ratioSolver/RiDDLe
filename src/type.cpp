@@ -57,7 +57,7 @@ namespace riddle
         return scope::get_method(m_name, args);
     }
 
-    RIDDLE_EXPORT expr complex_type::new_instance()
+    expr complex_type::new_instance()
     {
         auto inst = new complex_item(*this);
         instances.push_back(inst);

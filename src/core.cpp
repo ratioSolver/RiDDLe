@@ -11,21 +11,6 @@ namespace riddle
         types.emplace(STRING_KW, new string_type(*this));
     }
 
-    RIDDLE_EXPORT expr core::new_bool() { throw std::logic_error("not implemented"); }
-    RIDDLE_EXPORT expr core::new_bool(bool) { throw std::logic_error("not implemented"); }
-
-    RIDDLE_EXPORT expr core::new_int() { throw std::logic_error("not implemented"); }
-    RIDDLE_EXPORT expr core::new_int(utils::I) { throw std::logic_error("not implemented"); }
-
-    RIDDLE_EXPORT expr core::new_real() { throw std::logic_error("not implemented"); }
-    RIDDLE_EXPORT expr core::new_real(utils::rational) { throw std::logic_error("not implemented"); }
-
-    RIDDLE_EXPORT expr core::new_string() { throw std::logic_error("not implemented"); }
-    RIDDLE_EXPORT expr core::new_string(const std::string &) { throw std::logic_error("not implemented"); }
-
-    RIDDLE_EXPORT expr core::new_fact(const predicate &) { throw std::logic_error("not implemented"); }
-    RIDDLE_EXPORT expr core::new_goal(const predicate &) { throw std::logic_error("not implemented"); }
-
     RIDDLE_EXPORT type &core::get_type(const std::string &tp_name)
     {
         auto it = types.find(tp_name);
