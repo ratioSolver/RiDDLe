@@ -26,6 +26,23 @@ namespace riddle
     virtual expr new_string() = 0;
     virtual expr new_string(const std::string &value) = 0;
 
+    virtual expr add(const std::vector<expr> &exprs) = 0;
+    virtual expr sub(const std::vector<expr> &exprs) = 0;
+    virtual expr mul(const std::vector<expr> &exprs) = 0;
+    virtual expr div(const std::vector<expr> &exprs) = 0;
+    virtual expr minus(const expr &exprs) = 0;
+
+    virtual expr lt(const expr &lhs, const expr &rhs) = 0;
+    virtual expr leq(const expr &lhs, const expr &rhs) = 0;
+    virtual expr gt(const expr &lhs, const expr &rhs) = 0;
+    virtual expr geq(const expr &lhs, const expr &rhs) = 0;
+    virtual expr eq(const expr &lhs, const expr &rhs) = 0;
+
+    virtual expr conj(const std::vector<expr> &exprs) = 0;
+    virtual expr disj(const std::vector<expr> &exprs) = 0;
+    virtual expr exct_one(const std::vector<expr> &exprs) = 0;
+    virtual expr negate(const expr &expr) = 0;
+
     virtual expr new_fact(const predicate &pred) = 0;
     virtual expr new_goal(const predicate &pred) = 0;
 

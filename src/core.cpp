@@ -30,7 +30,7 @@ namespace riddle
                 {
                     bool match = true;
                     for (size_t i = 0; i < m_args.size(); ++i)
-                        if (m_args[i].get().get_type() != args[i].get())
+                        if (!m_args[i].get().get_type().is_assignable_from(args[i].get()))
                         {
                             match = false;
                             break;

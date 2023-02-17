@@ -1,10 +1,32 @@
 #include "type.h"
 #include "core.h"
 #include "item.h"
+#include "constructor.h"
+#include <queue>
 
 namespace riddle
 {
     type::type(core &cr, const std::string &name) : cr(cr), name(name) {}
+
+    bool type::is_assignable_from(const type &other) const
+    {
+        std::queue<const type *> q;
+        q.push(&other);
+        while (!q.empty())
+        {
+            if (q.front() == this)
+                return true;
+            else if (auto ct = dynamic_cast<const complex_type *>(q.front()))
+            {
+                for (const auto &st : ct->get_supertypes())
+                    q.push(st);
+                q.pop();
+            }
+            else
+                return false;
+        }
+        return false;
+    }
 
     bool_type::bool_type(core &cr) : type(cr, BOOL_KW) {}
     expr bool_type::new_instance() { return cr.new_bool(); }
@@ -26,6 +48,27 @@ namespace riddle
 
     RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
 
+    RIDDLE_EXPORT constructor &complex_type::get_constructor(const std::vector<std::reference_wrapper<type>> &args)
+    {
+        for (auto &c : constructors)
+        {
+            auto &c_args = c->get_args();
+            if (c_args.size() == args.size())
+            {
+                bool match = true;
+                for (size_t i = 0; i < c_args.size(); ++i)
+                    if (!c_args[i].get().get_type().is_assignable_from(args[i].get()))
+                    {
+                        match = false;
+                        break;
+                    }
+                if (match)
+                    return *c;
+            }
+        }
+        throw std::out_of_range("constructor not found");
+    }
+
     RIDDLE_EXPORT type &complex_type::get_type(const std::string &tp_name)
     {
         auto it = types.find(tp_name);
@@ -45,7 +88,7 @@ namespace riddle
                 {
                     bool match = true;
                     for (size_t i = 0; i < m_args.size(); ++i)
-                        if (m_args[i].get().get_type() != args[i].get())
+                        if (!m_args[i].get().get_type().is_assignable_from(args[i].get()))
                         {
                             match = false;
                             break;

@@ -1,9 +1,137 @@
 #include "parser.h"
+#include "core.h"
 #include <cassert>
 
 namespace riddle
 {
     using namespace ast;
+
+    expr bool_literal_expression::evaluate(context &ctx) const { return ctx->get_core().new_bool(literal.val); }
+    expr int_literal_expression::evaluate(context &ctx) const { return ctx->get_core().new_int(literal.val); }
+    expr real_literal_expression::evaluate(context &ctx) const { return ctx->get_core().new_real(literal.val); }
+    expr string_literal_expression::evaluate(context &ctx) const { return ctx->get_core().new_string(literal.str); }
+
+    expr cast_expression::evaluate(context &ctx) const
+    {
+        type *t = &ctx->get_type(cast_to_type.front().id);
+        for (auto it = cast_to_type.begin() + 1; it != cast_to_type.end(); ++it)
+            if (auto ct = dynamic_cast<complex_type *>(t))
+                t = &ct->get_type(it->id);
+            else
+                throw std::runtime_error("invalid cast");
+        auto e = xpr->evaluate(ctx);
+        if (!t->is_assignable_from(e->get_type()))
+            throw std::runtime_error("invalid cast");
+        return e;
+    }
+
+    expr plus_expression::evaluate(context &ctx) const { return xpr->evaluate(ctx); }
+    expr minus_expression::evaluate(context &ctx) const { return ctx->get_core().minus(xpr->evaluate(ctx)); }
+
+    expr not_expression::evaluate(context &ctx) const { return ctx->get_core().negate(xpr->evaluate(ctx)); }
+
+    expr constructor_expression::evaluate(context &ctx) const
+    {
+        type *t = &ctx->get_type(instance_type.front().id);
+        for (auto it = instance_type.begin() + 1; it != instance_type.end(); ++it)
+            if (auto ct = dynamic_cast<complex_type *>(t))
+                t = &ct->get_type(it->id);
+            else
+                throw std::runtime_error("cannot find type");
+
+        std::vector<expr> args;
+        std::vector<std::reference_wrapper<type>> arg_types;
+        for (auto &xpr : expressions)
+        {
+            auto e = xpr->evaluate(ctx);
+            args.emplace_back(e);
+            arg_types.emplace_back(e->get_type());
+        }
+
+        throw std::runtime_error("not implemented");
+    }
+
+    expr eq_expression::evaluate(context &ctx) const { return ctx->get_core().eq(left->evaluate(ctx), right->evaluate(ctx)); }
+    expr neq_expression::evaluate(context &ctx) const { return ctx->get_core().negate(ctx->get_core().eq(left->evaluate(ctx), right->evaluate(ctx))); }
+
+    expr lt_expression::evaluate(context &ctx) const { return ctx->get_core().lt(left->evaluate(ctx), right->evaluate(ctx)); }
+    expr leq_expression::evaluate(context &ctx) const { return ctx->get_core().leq(left->evaluate(ctx), right->evaluate(ctx)); }
+    expr gt_expression::evaluate(context &ctx) const { return ctx->get_core().gt(left->evaluate(ctx), right->evaluate(ctx)); }
+    expr geq_expression::evaluate(context &ctx) const { return ctx->get_core().geq(left->evaluate(ctx), right->evaluate(ctx)); }
+
+    expr function_expression::evaluate(context &ctx) const
+    {
+        throw std::runtime_error("not implemented");
+    }
+
+    expr id_expression::evaluate(context &ctx) const
+    {
+        auto e = ctx->get(ids.front().id);
+        for (auto it = ids.begin() + 1; it != ids.end(); ++it)
+            if (auto ci = dynamic_cast<complex_item *>(&*e))
+                e = ci->get(it->id);
+            else
+                throw std::runtime_error("cannot find item");
+        return e;
+    }
+
+    expr implication_expression::evaluate(context &ctx) const { return ctx->get_core().disj({ctx->get_core().negate(left->evaluate(ctx)), right->evaluate(ctx)}); }
+
+    expr disjunction_expression::evaluate(context &ctx) const
+    {
+        std::vector<expr> args;
+        for (auto &xpr : expressions)
+            args.emplace_back(xpr->evaluate(ctx));
+        return ctx->get_core().disj(args);
+    }
+
+    expr conjunction_expression::evaluate(context &ctx) const
+    {
+        std::vector<expr> args;
+        for (auto &xpr : expressions)
+            args.emplace_back(xpr->evaluate(ctx));
+        return ctx->get_core().conj(args);
+    }
+
+    expr exct_one_expression::evaluate(context &ctx) const
+    {
+        std::vector<expr> args;
+        for (auto &xpr : expressions)
+            args.emplace_back(xpr->evaluate(ctx));
+        return ctx->get_core().exct_one(args);
+    }
+
+    expr addition_expression::evaluate(context &ctx) const
+    {
+        std::vector<expr> args;
+        for (auto &xpr : expressions)
+            args.emplace_back(xpr->evaluate(ctx));
+        return ctx->get_core().add(args);
+    }
+
+    expr subtraction_expression::evaluate(context &ctx) const
+    {
+        std::vector<expr> args;
+        for (auto &xpr : expressions)
+            args.emplace_back(xpr->evaluate(ctx));
+        return ctx->get_core().sub(args);
+    }
+
+    expr multiplication_expression::evaluate(context &ctx) const
+    {
+        std::vector<expr> args;
+        for (auto &xpr : expressions)
+            args.emplace_back(xpr->evaluate(ctx));
+        return ctx->get_core().mul(args);
+    }
+
+    expr division_expression::evaluate(context &ctx) const
+    {
+        std::vector<expr> args;
+        for (auto &xpr : expressions)
+            args.emplace_back(xpr->evaluate(ctx));
+        return ctx->get_core().div(args);
+    }
 
     RIDDLE_EXPORT parser::parser(const std::string &str) : lex(str) {}
     RIDDLE_EXPORT parser::parser(std::istream &is) : lex(is) {}

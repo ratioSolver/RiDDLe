@@ -7,6 +7,16 @@ namespace riddle
 {
   class env;
   using context = utils::c_ptr<env>;
+  class item;
+  using expr = utils::c_ptr<item>;
+  class field;
+  using field_ptr = utils::u_ptr<field>;
+  class type;
+  using type_ptr = utils::u_ptr<type>;
+  class method;
+  using method_ptr = utils::u_ptr<method>;
+  class constructor;
+  using constructor_ptr = utils::u_ptr<constructor>;
 
   namespace ast
   {
@@ -16,188 +26,222 @@ namespace riddle
       expression() = default;
       expression(const expression &orig) = delete;
       virtual ~expression() = default;
+
+      virtual expr evaluate(context &ctx) const = 0;
     };
     using expression_ptr = utils::u_ptr<expression>;
 
-    class bool_literal_expression : public expression
+    class bool_literal_expression final : public expression
     {
     public:
       bool_literal_expression(const bool_token &l) : literal(l) {}
       bool_literal_expression(const bool_literal_expression &orig) = delete;
       virtual ~bool_literal_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const bool_token literal;
     };
 
-    class int_literal_expression : public expression
+    class int_literal_expression final : public expression
     {
     public:
       int_literal_expression(const int_token &l) : literal(l) {}
       int_literal_expression(const int_literal_expression &orig) = delete;
       virtual ~int_literal_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const int_token literal;
     };
 
-    class real_literal_expression : public expression
+    class real_literal_expression final : public expression
     {
     public:
       real_literal_expression(const real_token &l) : literal(l) {}
       real_literal_expression(const real_literal_expression &orig) = delete;
       virtual ~real_literal_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const real_token literal;
     };
 
-    class string_literal_expression : public expression
+    class string_literal_expression final : public expression
     {
     public:
       string_literal_expression(const string_token &l) : literal(l) {}
       string_literal_expression(const string_literal_expression &orig) = delete;
       virtual ~string_literal_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const string_token literal;
     };
 
-    class cast_expression : public expression
+    class cast_expression final : public expression
     {
     public:
       cast_expression(std::vector<id_token> tp, utils::u_ptr<const expression> e) : cast_to_type(std::move(tp)), xpr(std::move(e)) {}
       cast_expression(const cast_expression &orig) = delete;
       virtual ~cast_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const std::vector<id_token> cast_to_type;
-      utils::u_ptr<const expression> xpr;
+      const utils::u_ptr<const expression> xpr;
     };
 
-    class plus_expression : public expression
+    class plus_expression final : public expression
     {
     public:
       plus_expression(utils::u_ptr<const expression> e) : xpr(std::move(e)) {}
       plus_expression(const plus_expression &orig) = delete;
       virtual ~plus_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> xpr;
+      const utils::u_ptr<const expression> xpr;
     };
 
-    class minus_expression : public expression
+    class minus_expression final : public expression
     {
     public:
       minus_expression(utils::u_ptr<const expression> e) : xpr(std::move(e)) {}
       minus_expression(const minus_expression &orig) = delete;
       virtual ~minus_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> xpr;
+      const utils::u_ptr<const expression> xpr;
     };
 
-    class not_expression : public expression
+    class not_expression final : public expression
     {
     public:
       not_expression(utils::u_ptr<const expression> e) : xpr(std::move(e)) {}
       not_expression(const not_expression &orig) = delete;
       virtual ~not_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> xpr;
+      const utils::u_ptr<const expression> xpr;
     };
 
-    class constructor_expression : public expression
+    class constructor_expression final : public expression
     {
     public:
       constructor_expression(std::vector<id_token> it, std::vector<utils::u_ptr<const expression>> es) : instance_type(std::move(it)), expressions(std::move(es)) {}
       constructor_expression(const constructor_expression &orig) = delete;
       virtual ~constructor_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const std::vector<id_token> instance_type;
       const std::vector<utils::u_ptr<const expression>> expressions;
     };
 
-    class eq_expression : public expression
+    class eq_expression final : public expression
     {
     public:
       eq_expression(utils::u_ptr<const expression> l, utils::u_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       eq_expression(const eq_expression &orig) = delete;
       virtual ~eq_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> left;
-      utils::u_ptr<const expression> right;
+      const utils::u_ptr<const expression> left;
+      const utils::u_ptr<const expression> right;
     };
 
-    class neq_expression : public expression
+    class neq_expression final : public expression
     {
     public:
       neq_expression(utils::u_ptr<const expression> l, utils::u_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       neq_expression(const neq_expression &orig) = delete;
       virtual ~neq_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> left;
-      utils::u_ptr<const expression> right;
+      const utils::u_ptr<const expression> left;
+      const utils::u_ptr<const expression> right;
     };
 
-    class lt_expression : public expression
+    class lt_expression final : public expression
     {
     public:
       lt_expression(utils::u_ptr<const expression> l, utils::u_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       lt_expression(const lt_expression &orig) = delete;
       virtual ~lt_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> left;
-      utils::u_ptr<const expression> right;
+      const utils::u_ptr<const expression> left;
+      const utils::u_ptr<const expression> right;
     };
 
-    class leq_expression : public expression
+    class leq_expression final : public expression
     {
     public:
       leq_expression(utils::u_ptr<const expression> l, utils::u_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       leq_expression(const leq_expression &orig) = delete;
       virtual ~leq_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> left;
-      utils::u_ptr<const expression> right;
+      const utils::u_ptr<const expression> left;
+      const utils::u_ptr<const expression> right;
     };
 
-    class geq_expression : public expression
+    class geq_expression final : public expression
     {
     public:
       geq_expression(utils::u_ptr<const expression> l, utils::u_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       geq_expression(const geq_expression &orig) = delete;
       virtual ~geq_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> left;
-      utils::u_ptr<const expression> right;
+      const utils::u_ptr<const expression> left;
+      const utils::u_ptr<const expression> right;
     };
 
-    class gt_expression : public expression
+    class gt_expression final : public expression
     {
     public:
       gt_expression(utils::u_ptr<const expression> l, utils::u_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       gt_expression(const gt_expression &orig) = delete;
       virtual ~gt_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> left;
-      utils::u_ptr<const expression> right;
+      const utils::u_ptr<const expression> left;
+      const utils::u_ptr<const expression> right;
     };
 
-    class function_expression : public expression
+    class function_expression final : public expression
     {
     public:
       function_expression(std::vector<id_token> is, const id_token &fn, std::vector<utils::u_ptr<const expression>> es) : ids(std::move(is)), function_name(std::move(fn)), expressions(std::move(es)) {}
       function_expression(const function_expression &orig) = delete;
       virtual ~function_expression() = default;
+
+      expr evaluate(context &ctx) const override;
 
     protected:
       const std::vector<id_token> ids;
@@ -205,101 +249,119 @@ namespace riddle
       const std::vector<utils::u_ptr<const expression>> expressions;
     };
 
-    class id_expression : public expression
+    class id_expression final : public expression
     {
     public:
       id_expression(std::vector<id_token> is) : ids(std::move(is)) {}
       id_expression(const id_expression &orig) = delete;
       virtual ~id_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const std::vector<id_token> ids;
     };
 
-    class implication_expression : public expression
+    class implication_expression final : public expression
     {
     public:
       implication_expression(utils::u_ptr<const expression> l, utils::u_ptr<const expression> r) : left(std::move(l)), right(std::move(r)) {}
       implication_expression(const implication_expression &orig) = delete;
       virtual ~implication_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
-      utils::u_ptr<const expression> left;
-      utils::u_ptr<const expression> right;
+      const utils::u_ptr<const expression> left;
+      const utils::u_ptr<const expression> right;
     };
 
-    class disjunction_expression : public expression
+    class disjunction_expression final : public expression
     {
     public:
       disjunction_expression(std::vector<utils::u_ptr<const expression>> es) : expressions(std::move(es)) {}
       disjunction_expression(const disjunction_expression &orig) = delete;
       virtual ~disjunction_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
     };
 
-    class conjunction_expression : public expression
+    class conjunction_expression final : public expression
     {
     public:
       conjunction_expression(std::vector<utils::u_ptr<const expression>> es) : expressions(std::move(es)) {}
       conjunction_expression(const conjunction_expression &orig) = delete;
       virtual ~conjunction_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
     };
 
-    class exct_one_expression : public expression
+    class exct_one_expression final : public expression
     {
     public:
       exct_one_expression(std::vector<utils::u_ptr<const expression>> es) : expressions(std::move(es)) {}
       exct_one_expression(const exct_one_expression &orig) = delete;
       virtual ~exct_one_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
     };
 
-    class addition_expression : public expression
+    class addition_expression final : public expression
     {
     public:
       addition_expression(std::vector<utils::u_ptr<const expression>> es) : expressions(std::move(es)) {}
       addition_expression(const addition_expression &orig) = delete;
       virtual ~addition_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
     };
 
-    class subtraction_expression : public expression
+    class subtraction_expression final : public expression
     {
     public:
       subtraction_expression(std::vector<utils::u_ptr<const expression>> es) : expressions(std::move(es)) {}
       subtraction_expression(const subtraction_expression &orig) = delete;
       virtual ~subtraction_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
     };
 
-    class multiplication_expression : public expression
+    class multiplication_expression final : public expression
     {
     public:
       multiplication_expression(std::vector<utils::u_ptr<const expression>> es) : expressions(std::move(es)) {}
       multiplication_expression(const multiplication_expression &orig) = delete;
       virtual ~multiplication_expression() = default;
 
+      expr evaluate(context &ctx) const override;
+
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
     };
 
-    class division_expression : public expression
+    class division_expression final : public expression
     {
     public:
       division_expression(std::vector<utils::u_ptr<const expression>> es) : expressions(std::move(es)) {}
       division_expression(const division_expression &orig) = delete;
       virtual ~division_expression() = default;
+
+      expr evaluate(context &ctx) const override;
 
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;

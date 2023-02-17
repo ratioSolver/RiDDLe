@@ -27,6 +27,8 @@ namespace riddle
     complex_item(type &tp);
     virtual ~complex_item() = default;
 
+    RIDDLE_EXPORT expr &get(const std::string &name);
+
   private:
     std::map<std::string, expr> items;
   };

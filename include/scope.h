@@ -8,10 +8,6 @@
 namespace riddle
 {
   class core;
-  class method;
-  using method_ptr = utils::u_ptr<method>;
-  class item;
-  using expr = utils::c_ptr<item>;
 
   class scope
   {
@@ -44,7 +40,9 @@ namespace riddle
     RIDDLE_EXPORT env(scope &scp, context ctx);
     virtual ~env() = default;
 
-    env &get_context() { return *ctx; }
+    core &get_core() { return scp.get_core(); }
+
+    context &get_context() { return ctx; }
 
     type &get_type(const std::string &name) { return scp.get_type(name); }
 

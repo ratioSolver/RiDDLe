@@ -23,6 +23,4 @@ namespace riddle
     ast::expression_ptr e;
     bool synthetic;
   };
-
-  using field_ptr = utils::u_ptr<field>;
 } // namespace riddle

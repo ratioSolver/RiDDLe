@@ -18,6 +18,4 @@ namespace riddle
     std::vector<std::reference_wrapper<field>> args;
     std::vector<ast::statement_ptr> body;
   };
-
-  using method_ptr = utils::u_ptr<method>;
 } // namespace riddle
