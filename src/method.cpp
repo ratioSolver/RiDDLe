@@ -14,4 +14,9 @@ namespace riddle
             add_field(std::move(arg));
         }
     }
+
+    RIDDLE_EXPORT expr method::call(expr &self, std::vector<expr> exprs)
+    {
+        throw std::runtime_error("method `" + name + "` not implemented");
+    }
 } // namespace riddle

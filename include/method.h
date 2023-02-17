@@ -13,6 +13,8 @@ namespace riddle
 
     std::vector<std::reference_wrapper<field>> &get_args() { return args; }
 
+    RIDDLE_EXPORT expr call(expr &self, std::vector<expr> exprs);
+
   private:
     std::string name;
     std::vector<std::reference_wrapper<field>> args;

@@ -15,6 +15,11 @@ namespace riddle
 
     std::vector<std::reference_wrapper<field>> &get_args() { return args; }
 
+    RIDDLE_EXPORT expr new_instance(std::vector<expr> &args);
+
+  private:
+    void call(expr &self, std::vector<expr> exprs);
+
   private:
     std::vector<std::reference_wrapper<field>> args;
     std::vector<ast::statement_ptr> body;

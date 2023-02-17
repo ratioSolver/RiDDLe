@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "core.h"
+#include "constructor.h"
 #include <cassert>
 
 namespace riddle
@@ -32,12 +33,14 @@ namespace riddle
 
     expr constructor_expression::evaluate(context &ctx) const
     {
-        type *t = &ctx->get_type(instance_type.front().id);
+        complex_type *t = dynamic_cast<complex_type *>(&ctx->get_type(instance_type.front().id));
+        if (!t)
+            throw std::runtime_error("cannot invoke constructor on non-complex type");
         for (auto it = instance_type.begin() + 1; it != instance_type.end(); ++it)
             if (auto ct = dynamic_cast<complex_type *>(t))
-                t = &ct->get_type(it->id);
+                t = dynamic_cast<complex_type *>(&ct->get_type(it->id));
             else
-                throw std::runtime_error("cannot find type");
+                throw std::runtime_error("cannot invoke constructor on non-complex type");
 
         std::vector<expr> args;
         std::vector<std::reference_wrapper<type>> arg_types;
@@ -48,7 +51,7 @@ namespace riddle
             arg_types.emplace_back(e->get_type());
         }
 
-        throw std::runtime_error("not implemented");
+        return t->get_constructor(arg_types).new_instance(args);
     }
 
     expr eq_expression::evaluate(context &ctx) const { return ctx->get_core().eq(left->evaluate(ctx), right->evaluate(ctx)); }
@@ -61,7 +64,29 @@ namespace riddle
 
     expr function_expression::evaluate(context &ctx) const
     {
-        throw std::runtime_error("not implemented");
+        auto e = ctx->get(ids.front().id);
+        for (auto it = ids.begin() + 1; it != ids.end(); ++it)
+            if (auto ci = dynamic_cast<complex_item *>(&*e))
+                e = ci->get(it->id);
+            else
+                throw std::runtime_error("cannot find item");
+
+        std::vector<expr> args;
+        std::vector<std::reference_wrapper<type>> arg_types;
+        for (auto &xpr : expressions)
+        {
+            auto e = xpr->evaluate(ctx);
+            args.emplace_back(e);
+            arg_types.emplace_back(e->get_type());
+        }
+
+        if (auto t = dynamic_cast<complex_type *>(&e->get_type()))
+        {
+            auto &m = t->get_method(function_name.id, arg_types);
+            return m.call(e, args);
+        }
+        else
+            throw std::runtime_error("cannot find function");
     }
 
     expr id_expression::evaluate(context &ctx) const

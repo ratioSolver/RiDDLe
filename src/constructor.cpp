@@ -1,5 +1,6 @@
 #include "constructor.h"
 #include "type.h"
+#include "item.h"
 
 namespace riddle
 {
@@ -12,5 +13,18 @@ namespace riddle
             args.emplace_back(*arg);
             add_field(std::move(arg));
         }
+    }
+
+    RIDDLE_EXPORT expr constructor::new_instance(std::vector<expr> &as)
+    {
+        complex_type &tp = static_cast<complex_type &>(get_scope());
+        auto inst = tp.new_instance();
+        call(inst, as);
+        return inst;
+    }
+
+    RIDDLE_EXPORT void constructor::call(expr &self, std::vector<expr> exprs)
+    {
+        throw std::runtime_error("Not implemented");
     }
 } // namespace riddle
