@@ -158,6 +158,55 @@ namespace riddle
         return ctx->get_core().div(args);
     }
 
+    void local_field_statement::execute(context &ctx) const
+    {
+        type *t = &ctx->get_type(field_type.front().id);
+        for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
+            if (auto ct = dynamic_cast<complex_type *>(t))
+                t = &ct->get_type(it->id);
+            else
+                throw std::runtime_error("cannot find type");
+
+        throw std::runtime_error("not implemented");
+    }
+
+    void assignment_statement::execute(context &ctx) const
+    {
+        auto e = ctx->get(ids.front().id);
+        for (auto it = ids.begin() + 1; it != ids.end(); ++it)
+            if (auto ci = dynamic_cast<complex_item *>(&*e))
+                e = ci->get(it->id);
+            else
+                throw std::runtime_error("cannot find item");
+
+        throw std::runtime_error("not implemented");
+    }
+
+    void expression_statement::execute(context &ctx) const
+    {
+        throw std::runtime_error("not implemented");
+    }
+
+    void disjunction_statement::execute(context &ctx) const
+    {
+        throw std::runtime_error("not implemented");
+    }
+
+    void conjunction_statement::execute(context &ctx) const
+    {
+        throw std::runtime_error("not implemented");
+    }
+
+    void formula_statement::execute(context &ctx) const
+    {
+        throw std::runtime_error("not implemented");
+    }
+
+    void return_statement::execute(context &ctx) const
+    {
+        throw std::runtime_error("not implemented");
+    }
+
     RIDDLE_EXPORT parser::parser(const std::string &str) : lex(str) {}
     RIDDLE_EXPORT parser::parser(std::istream &is) : lex(is) {}
     RIDDLE_EXPORT parser::~parser() {}

@@ -373,15 +373,19 @@ namespace riddle
       statement() = default;
       statement(const statement &orig) = delete;
       virtual ~statement() = default;
+
+      virtual void execute(context &ctx) const = 0;
     };
     using statement_ptr = utils::u_ptr<const statement>;
 
-    class local_field_statement : public statement
+    class local_field_statement final : public statement
     {
     public:
       local_field_statement(std::vector<id_token> ft, std::vector<id_token> ns, std::vector<utils::u_ptr<const expression>> es) : field_type(std::move(ft)), names(std::move(ns)), xprs(std::move(es)) {}
       local_field_statement(const local_field_statement &orig) = delete;
       virtual ~local_field_statement() = default;
+
+      void execute(context &ctx) const override;
 
     protected:
       const std::vector<id_token> field_type;
@@ -389,12 +393,14 @@ namespace riddle
       const std::vector<utils::u_ptr<const expression>> xprs;
     };
 
-    class assignment_statement : public statement
+    class assignment_statement final : public statement
     {
     public:
       assignment_statement(std::vector<id_token> is, const id_token &i, utils::u_ptr<const ast::expression> e) : ids(std::move(is)), id(i), xpr(std::move(e)) {}
       assignment_statement(const assignment_statement &orig) = delete;
       virtual ~assignment_statement() = default;
+
+      void execute(context &ctx) const override;
 
     protected:
       const std::vector<id_token> ids;
@@ -402,46 +408,54 @@ namespace riddle
       utils::u_ptr<const ast::expression> xpr;
     };
 
-    class expression_statement : public statement
+    class expression_statement final : public statement
     {
     public:
       expression_statement(utils::u_ptr<const ast::expression> e) : xpr(std::move(e)) {}
       expression_statement(const expression_statement &orig) = delete;
       virtual ~expression_statement() = default;
 
+      void execute(context &ctx) const override;
+
     protected:
       utils::u_ptr<const ast::expression> xpr;
     };
 
-    class disjunction_statement : public statement
+    class disjunction_statement final : public statement
     {
     public:
       disjunction_statement(std::vector<std::vector<utils::u_ptr<const ast::statement>>> conjs, std::vector<utils::u_ptr<const expression>> conj_costs) : conjunctions(std::move(conjs)), conjunction_costs(std::move(conj_costs)) {}
       disjunction_statement(const disjunction_statement &orig) = delete;
       virtual ~disjunction_statement() = default;
 
+      void execute(context &ctx) const override;
+
     protected:
       const std::vector<std::vector<utils::u_ptr<const ast::statement>>> conjunctions;
       const std::vector<utils::u_ptr<const expression>> conjunction_costs;
     };
 
-    class conjunction_statement : public statement
+    class conjunction_statement final : public statement
     {
     public:
       conjunction_statement(std::vector<utils::u_ptr<const ast::statement>> stmnts) : statements(std::move(stmnts)) {}
       conjunction_statement(const conjunction_statement &orig) = delete;
       virtual ~conjunction_statement() = default;
 
+      void execute(context &ctx) const override;
+
     protected:
       const std::vector<utils::u_ptr<const ast::statement>> statements;
     };
 
-    class formula_statement : public statement
+    class formula_statement final : public statement
     {
     public:
       formula_statement(const bool &isf, const id_token &fn, std::vector<id_token> scp, const id_token &pn, std::vector<id_token> assn_ns, std::vector<utils::u_ptr<const expression>> assn_vs) : is_fact(isf), formula_name(fn), formula_scope(std::move(scp)), predicate_name(pn), assignment_names(std::move(assn_ns)), assignment_values(std::move(assn_vs)) {}
       formula_statement(const formula_statement &orig) = delete;
       virtual ~formula_statement() = default;
+
+      void execute(context &ctx) const override;
 
     protected:
       const bool is_fact;
@@ -452,12 +466,14 @@ namespace riddle
       const std::vector<utils::u_ptr<const expression>> assignment_values;
     };
 
-    class return_statement : public statement
+    class return_statement final : public statement
     {
     public:
       return_statement(utils::u_ptr<const ast::expression> e) : xpr(std::move(e)) {}
       return_statement(const return_statement &orig) = delete;
       virtual ~return_statement() = default;
+
+      void execute(context &ctx) const override;
 
     protected:
       utils::u_ptr<const ast::expression> xpr;
