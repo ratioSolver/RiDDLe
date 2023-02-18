@@ -655,63 +655,10 @@ namespace riddle
     const ast::method_declaration *_method_declaration();
     const ast::constructor_declaration *_constructor_declaration();
     const ast::predicate_declaration *_predicate_declaration();
-    const ast::statement *_statement();
+    ast::statement_ptr _statement();
     ast::expression_ptr _expression(const size_t &pr = 0);
 
     void error(const std::string &err);
-
-    /**
-     * The declarations.
-     */
-    const ast::method_declaration *new_method_declaration(std::vector<id_token> rt, const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<ast::statement_ptr> stmnts) const noexcept { return new const ast::method_declaration(std::move(rt), n, std::move(pars), std::move(stmnts)); }
-    const ast::predicate_declaration *new_predicate_declaration(const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<std::vector<id_token>> pl, std::vector<ast::statement_ptr> stmnts) const noexcept { return new const ast::predicate_declaration(n, std::move(pars), std::move(pl), std::move(stmnts)); }
-    const ast::typedef_declaration *new_typedef_declaration(const id_token &n, const id_token &pt, ast::expression_ptr e) const noexcept { return new const ast::typedef_declaration(n, pt, std::move(e)); }
-    const ast::enum_declaration *new_enum_declaration(const id_token &n, std::vector<string_token> es, std::vector<std::vector<id_token>> trs) const noexcept { return new const ast::enum_declaration(n, std::move(es), std::move(trs)); }
-    const ast::class_declaration *new_class_declaration(const id_token &n, std::vector<std::vector<id_token>> bcs, std::vector<ast::field_declaration_ptr> fs, std::vector<ast::constructor_declaration_ptr> cs, std::vector<ast::method_declaration_ptr> ms, std::vector<ast::predicate_declaration_ptr> ps, std::vector<ast::type_declaration_ptr> ts) const noexcept { return new const ast::class_declaration(n, std::move(bcs), std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts)); }
-    const ast::variable_declaration *new_variable_declaration(const id_token &n, ast::expression_ptr e = nullptr) const noexcept { return new const ast::variable_declaration(n, std::move(e)); }
-    const ast::field_declaration *new_field_declaration(std::vector<id_token> tp, std::vector<ast::variable_declaration_ptr> ds) const noexcept { return new const ast::field_declaration(std::move(tp), std::move(ds)); }
-    const ast::constructor_declaration *new_constructor_declaration(std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<id_token> ins, std::vector<std::vector<ast::expression_ptr>> ivs, std::vector<ast::statement_ptr> stmnts) const noexcept { return new const ast::constructor_declaration(std::move(pars), std::move(ins), std::move(ivs), std::move(stmnts)); }
-    const ast::compilation_unit *new_compilation_unit(std::vector<ast::method_declaration_ptr> ms, std::vector<ast::predicate_declaration_ptr> ps, std::vector<ast::type_declaration_ptr> ts, std::vector<ast::statement_ptr> stmnts) const noexcept { return new const ast::compilation_unit(std::move(ms), std::move(ps), std::move(ts), std::move(stmnts)); }
-
-    /**
-     * The statements.
-     */
-    const ast::local_field_statement *new_local_field_statement(std::vector<id_token> ft, std::vector<id_token> ns, std::vector<ast::expression_ptr> es) const noexcept { return new const ast::local_field_statement(std::move(ft), std::move(ns), std::move(es)); }
-    const ast::assignment_statement *new_assignment_statement(std::vector<id_token> is, const id_token &i, ast::expression_ptr e) const noexcept { return new const ast::assignment_statement(std::move(is), i, std::move(e)); }
-    const ast::expression_statement *new_expression_statement(ast::expression_ptr e) const noexcept { return new const ast::expression_statement(std::move(e)); }
-    const ast::disjunction_statement *new_disjunction_statement(std::vector<std::vector<ast::statement_ptr>> conjs, std::vector<ast::expression_ptr> conj_costs) const noexcept { return new const ast::disjunction_statement(std::move(conjs), std::move(conj_costs)); }
-    const ast::conjunction_statement *new_conjunction_statement(std::vector<ast::statement_ptr> stmnts) const noexcept { return new const ast::conjunction_statement(std::move(stmnts)); }
-    const ast::formula_statement *new_formula_statement(const bool &isf, const id_token &fn, std::vector<id_token> scp, const id_token &pn, std::vector<id_token> assn_ns, std::vector<ast::expression_ptr> assn_vs) const noexcept { return new const ast::formula_statement(isf, fn, std::move(scp), pn, std::move(assn_ns), std::move(assn_vs)); }
-    const ast::return_statement *new_return_statement(ast::expression_ptr e) const noexcept { return new const ast::return_statement(std::move(e)); }
-
-    /**
-     * The expressions.
-     */
-    const ast::bool_literal_expression *new_bool_literal_expression(const bool_token &l) const noexcept { return new const ast::bool_literal_expression(l); }
-    const ast::int_literal_expression *new_int_literal_expression(const int_token &l) const noexcept { return new const ast::int_literal_expression(l); }
-    const ast::real_literal_expression *new_real_literal_expression(const real_token &l) const noexcept { return new const ast::real_literal_expression(l); }
-    const ast::string_literal_expression *new_string_literal_expression(const string_token &l) const noexcept { return new const ast::string_literal_expression(l); }
-    const ast::cast_expression *new_cast_expression(std::vector<id_token> tp, ast::expression_ptr e) const noexcept { return new const ast::cast_expression(std::move(tp), std::move(e)); }
-    const ast::plus_expression *new_plus_expression(ast::expression_ptr e) const noexcept { return new const ast::plus_expression(std::move(e)); }
-    const ast::minus_expression *new_minus_expression(ast::expression_ptr e) const noexcept { return new const ast::minus_expression(std::move(e)); }
-    const ast::not_expression *new_not_expression(ast::expression_ptr e) const noexcept { return new const ast::not_expression(std::move(e)); }
-    const ast::constructor_expression *new_constructor_expression(std::vector<id_token> it, std::vector<ast::expression_ptr> es) const noexcept { return new const ast::constructor_expression(std::move(it), std::move(es)); }
-    const ast::eq_expression *new_eq_expression(ast::expression_ptr l, ast::expression_ptr r) const noexcept { return new const ast::eq_expression(std::move(l), std::move(r)); }
-    const ast::neq_expression *new_neq_expression(ast::expression_ptr l, ast::expression_ptr r) const noexcept { return new const ast::neq_expression(std::move(l), std::move(r)); }
-    const ast::lt_expression *new_lt_expression(ast::expression_ptr l, ast::expression_ptr r) const noexcept { return new const ast::lt_expression(std::move(l), std::move(r)); }
-    const ast::leq_expression *new_leq_expression(ast::expression_ptr l, ast::expression_ptr r) const noexcept { return new const ast::leq_expression(std::move(l), std::move(r)); }
-    const ast::geq_expression *new_geq_expression(ast::expression_ptr l, ast::expression_ptr r) const noexcept { return new const ast::geq_expression(std::move(l), std::move(r)); }
-    const ast::gt_expression *new_gt_expression(ast::expression_ptr l, ast::expression_ptr r) const noexcept { return new const ast::gt_expression(std::move(l), std::move(r)); }
-    const ast::function_expression *new_function_expression(std::vector<id_token> is, const id_token &fn, std::vector<ast::expression_ptr> es) const noexcept { return new const ast::function_expression(std::move(is), fn, std::move(es)); }
-    const ast::id_expression *new_id_expression(std::vector<id_token> is) const noexcept { return new const ast::id_expression(std::move(is)); }
-    const ast::implication_expression *new_implication_expression(ast::expression_ptr l, ast::expression_ptr r) const noexcept { return new const ast::implication_expression(std::move(l), std::move(r)); }
-    const ast::disjunction_expression *new_disjunction_expression(std::vector<ast::expression_ptr> es) const noexcept { return new const ast::disjunction_expression(std::move(es)); }
-    const ast::conjunction_expression *new_conjunction_expression(std::vector<ast::expression_ptr> es) const noexcept { return new const ast::conjunction_expression(std::move(es)); }
-    const ast::exct_one_expression *new_exct_one_expression(std::vector<ast::expression_ptr> es) const noexcept { return new const ast::exct_one_expression(std::move(es)); }
-    const ast::addition_expression *new_addition_expression(std::vector<ast::expression_ptr> es) const noexcept { return new const ast::addition_expression(std::move(es)); }
-    const ast::subtraction_expression *new_subtraction_expression(std::vector<ast::expression_ptr> es) const noexcept { return new const ast::subtraction_expression(std::move(es)); }
-    const ast::multiplication_expression *new_multiplication_expression(std::vector<ast::expression_ptr> es) const noexcept { return new const ast::multiplication_expression(std::move(es)); }
-    const ast::division_expression *new_division_expression(std::vector<ast::expression_ptr> es) const noexcept { return new const ast::division_expression(std::move(es)); }
 
   private:
     lexer lex;                                  // the current lexer..

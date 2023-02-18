@@ -410,7 +410,7 @@ namespace riddle
             }
         }
 
-        return new_compilation_unit(std::move(ms), std::move(ps), std::move(ts), std::move(stmnts));
+        return new compilation_unit(std::move(ms), std::move(ps), std::move(ts), std::move(stmnts));
     }
 
     const typedef_declaration *parser::_typedef_declaration()
@@ -452,7 +452,7 @@ namespace riddle
         if (!match(SEMICOLON_ID))
             error("expected `;`..");
 
-        return new_typedef_declaration(n, *pt, std::move(e));
+        return new typedef_declaration(n, *pt, std::move(e));
     }
 
     const enum_declaration *parser::_enum_declaration()
@@ -509,7 +509,7 @@ namespace riddle
         if (!match(SEMICOLON_ID))
             error("expected `;`..");
 
-        return new_enum_declaration(n, std::move(es), std::move(trs));
+        return new enum_declaration(n, std::move(es), std::move(trs));
     }
 
     const class_declaration *parser::_class_declaration()
@@ -652,9 +652,9 @@ namespace riddle
         }
 
         if (cs.empty()) // we add a default constructor..
-            cs.emplace_back(new_constructor_declaration({}, {}, {}, {}));
+            cs.emplace_back(new constructor_declaration({}, {}, {}, {}));
 
-        return new_class_declaration(n, std::move(bcs), std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts));
+        return new class_declaration(n, std::move(bcs), std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts));
     }
 
     const field_declaration *parser::_field_declaration()
@@ -703,9 +703,9 @@ namespace riddle
         auto n = *static_cast<const id_token *>(tks[pos - 2].operator->());
 
         if (match(EQ_ID))
-            ds.emplace_back(new_variable_declaration(n, _expression()));
+            ds.emplace_back(new variable_declaration(n, _expression()));
         else
-            ds.emplace_back(new_variable_declaration(n));
+            ds.emplace_back(new variable_declaration(n));
 
         while (match(COMMA_ID))
         {
@@ -714,15 +714,15 @@ namespace riddle
             auto c_n = *static_cast<const id_token *>(tks[pos - 2].operator->());
 
             if (match(EQ_ID))
-                ds.emplace_back(new_variable_declaration(c_n, _expression()));
+                ds.emplace_back(new variable_declaration(c_n, _expression()));
             else
-                ds.emplace_back(new_variable_declaration(c_n));
+                ds.emplace_back(new variable_declaration(c_n));
         }
 
         if (!match(SEMICOLON_ID))
             error("expected `;`..");
 
-        return new_field_declaration(std::move(tp), std::move(ds));
+        return new field_declaration(std::move(tp), std::move(ds));
     }
 
     const method_declaration *parser::_method_declaration()
@@ -804,7 +804,7 @@ namespace riddle
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
 
-        return new_method_declaration(std::move(rt), n, std::move(pars), std::move(stmnts));
+        return new method_declaration(std::move(rt), n, std::move(pars), std::move(stmnts));
     }
 
     const constructor_declaration *parser::_constructor_declaration()
@@ -903,7 +903,7 @@ namespace riddle
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
 
-        return new_constructor_declaration(pars, std::move(ins), std::move(ivs), std::move(stmnts));
+        return new constructor_declaration(pars, std::move(ins), std::move(ivs), std::move(stmnts));
     }
 
     const predicate_declaration *parser::_predicate_declaration()
@@ -993,10 +993,10 @@ namespace riddle
         while (!match(RBRACE_ID))
             stmnts.emplace_back(_statement());
 
-        return new_predicate_declaration(n, std::move(pars), std::move(pl), std::move(stmnts));
+        return new predicate_declaration(n, std::move(pars), std::move(pl), std::move(stmnts));
     }
 
-    const statement *parser::_statement()
+    ast::statement_ptr parser::_statement()
     {
         switch (tk->sym)
         {
@@ -1050,7 +1050,7 @@ namespace riddle
             if (!match(SEMICOLON_ID))
                 error("expected `;`..");
 
-            return new_local_field_statement(std::move(ft), std::move(ns), std::move(es));
+            return new local_field_statement(std::move(ft), std::move(ns), std::move(es));
         }
         case ID_ID: // either a local field, an assignment or an expression..
         {
@@ -1088,7 +1088,7 @@ namespace riddle
                 if (!match(SEMICOLON_ID))
                     error("expected `;`..");
 
-                return new_local_field_statement(std::move(is), std::move(ns), std::move(es));
+                return new local_field_statement(std::move(is), std::move(ns), std::move(es));
             }
             case EQ_ID: // an assignment..
             {
@@ -1098,7 +1098,7 @@ namespace riddle
                 auto e = _expression();
                 if (!match(SEMICOLON_ID))
                     error("expected `;`..");
-                return new_assignment_statement(std::move(is), i, std::move(e));
+                return new assignment_statement(std::move(is), i, std::move(e));
             }
             case PLUS_ID: // an expression..
             case MINUS_ID:
@@ -1120,7 +1120,7 @@ namespace riddle
                 auto e = _expression();
                 if (!match(SEMICOLON_ID))
                     error("expected `;`..");
-                return new_expression_statement(std::move(e));
+                return new expression_statement(std::move(e));
             }
             default:
                 error("expected either `=` or an identifier..");
@@ -1164,10 +1164,10 @@ namespace riddle
                     conjs.emplace_back(std::move(stmnts));
                     conj_costs.emplace_back(std::move(e));
                 }
-                return new_disjunction_statement(std::move(conjs), std::move(conj_costs));
+                return new disjunction_statement(std::move(conjs), std::move(conj_costs));
             }
             default: // a conjunction statement..
-                return new_conjunction_statement(std::move(stmnts));
+                return new conjunction_statement(std::move(stmnts));
             }
         }
         case FACT_ID:
@@ -1223,21 +1223,21 @@ namespace riddle
 
             if (!match(SEMICOLON_ID))
                 error("expected `;`..");
-            return new_formula_statement(isf, fn, scp, pn, assn_ns, std::move(assn_vs));
+            return new formula_statement(isf, fn, scp, pn, assn_ns, std::move(assn_vs));
         }
         case RETURN_ID:
         {
             auto e = _expression();
             if (!match(SEMICOLON_ID))
                 error("expected `;`..");
-            return new_return_statement(std::move(e));
+            return new return_statement(std::move(e));
         }
         default:
         {
             auto xpr = _expression();
             if (!match(SEMICOLON_ID))
                 error("expected `;`..");
-            return new_expression_statement(std::move(xpr));
+            return new expression_statement(std::move(xpr));
         }
         }
     }
@@ -1249,19 +1249,19 @@ namespace riddle
         {
         case BoolLiteral_ID:
             tk = next();
-            e = new_bool_literal_expression(*static_cast<const bool_token *>(tks[pos - 2].operator->()));
+            e = new bool_literal_expression(*static_cast<const bool_token *>(tks[pos - 2].operator->()));
             break;
         case IntLiteral_ID:
             tk = next();
-            e = new_int_literal_expression(*static_cast<const int_token *>(tks[pos - 2].operator->()));
+            e = new int_literal_expression(*static_cast<const int_token *>(tks[pos - 2].operator->()));
             break;
         case RealLiteral_ID:
             tk = next();
-            e = new_real_literal_expression(*static_cast<const real_token *>(tks[pos - 2].operator->()));
+            e = new real_literal_expression(*static_cast<const real_token *>(tks[pos - 2].operator->()));
             break;
         case StringLiteral_ID:
             tk = next();
-            e = new_string_literal_expression(*static_cast<const string_token *>(tks[pos - 2].operator->()));
+            e = new string_literal_expression(*static_cast<const string_token *>(tks[pos - 2].operator->()));
             break;
         case LPAREN_ID: // either a parenthesys expression or a cast..
         {
@@ -1287,7 +1287,7 @@ namespace riddle
 
                 if (!match(RPAREN_ID))
                     error("expected `)`..");
-                e = new_cast_expression(std::move(ids), _expression());
+                e = new cast_expression(std::move(ids), _expression());
             }
             else // a parenthesis..
             {
@@ -1300,15 +1300,15 @@ namespace riddle
         }
         case PLUS_ID:
             tk = next();
-            e = new_plus_expression(_expression(4));
+            e = new plus_expression(_expression(4));
             break;
         case MINUS_ID:
             tk = next();
-            e = new_minus_expression(_expression(4));
+            e = new minus_expression(_expression(4));
             break;
         case BANG_ID:
             tk = next();
-            e = new_not_expression(_expression(4));
+            e = new not_expression(_expression(4));
             break;
         case NEW_ID:
         {
@@ -1336,7 +1336,7 @@ namespace riddle
                     error("expected `)`..");
             }
 
-            e = new_constructor_expression(std::move(ids), std::move(xprs));
+            e = new constructor_expression(std::move(ids), std::move(xprs));
             break;
         }
         case ID_ID:
@@ -1370,10 +1370,10 @@ namespace riddle
                         error("expected `)`..");
                 }
 
-                e = new_function_expression(std::move(is), fn, std::move(xprs));
+                e = new function_expression(std::move(is), fn, std::move(xprs));
             }
             else
-                e = new_id_expression(std::move(is));
+                e = new id_expression(std::move(is));
             break;
         }
         default:
@@ -1391,46 +1391,46 @@ namespace riddle
             case EQEQ_ID:
                 assert(0 >= pr);
                 tk = next();
-                e = new_eq_expression(std::move(e), _expression(1));
+                e = new eq_expression(std::move(e), _expression(1));
                 break;
             case BANGEQ_ID:
                 assert(0 >= pr);
                 tk = next();
-                e = new_neq_expression(std::move(e), _expression(1));
+                e = new neq_expression(std::move(e), _expression(1));
                 break;
             case LT_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_lt_expression(std::move(e), _expression(1));
+                e = new lt_expression(std::move(e), _expression(1));
                 break;
             }
             case LTEQ_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_leq_expression(std::move(e), _expression(1));
+                e = new leq_expression(std::move(e), _expression(1));
                 break;
             }
             case GTEQ_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_geq_expression(std::move(e), _expression(1));
+                e = new geq_expression(std::move(e), _expression(1));
                 break;
             }
             case GT_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_gt_expression(std::move(e), _expression(1));
+                e = new gt_expression(std::move(e), _expression(1));
                 break;
             }
             case IMPLICATION_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_implication_expression(std::move(e), _expression(1));
+                e = new implication_expression(std::move(e), _expression(1));
                 break;
             }
             case BAR_ID:
@@ -1442,7 +1442,7 @@ namespace riddle
                 while (match(BAR_ID))
                     xprs.emplace_back(_expression(2));
 
-                e = new_disjunction_expression(std::move(xprs));
+                e = new disjunction_expression(std::move(xprs));
                 break;
             }
             case AMP_ID:
@@ -1454,7 +1454,7 @@ namespace riddle
                 while (match(AMP_ID))
                     xprs.emplace_back(_expression(2));
 
-                e = new_conjunction_expression(std::move(xprs));
+                e = new conjunction_expression(std::move(xprs));
                 break;
             }
             case CARET_ID:
@@ -1466,7 +1466,7 @@ namespace riddle
                 while (match(CARET_ID))
                     xprs.emplace_back(_expression(2));
 
-                e = new_exct_one_expression(std::move(xprs));
+                e = new exct_one_expression(std::move(xprs));
                 break;
             }
             case PLUS_ID:
@@ -1478,7 +1478,7 @@ namespace riddle
                 while (match(PLUS_ID))
                     xprs.emplace_back(_expression(3));
 
-                e = new_addition_expression(std::move(xprs));
+                e = new addition_expression(std::move(xprs));
                 break;
             }
             case MINUS_ID:
@@ -1490,7 +1490,7 @@ namespace riddle
                 while (match(MINUS_ID))
                     xprs.emplace_back(_expression(3));
 
-                e = new_subtraction_expression(std::move(xprs));
+                e = new subtraction_expression(std::move(xprs));
                 break;
             }
             case STAR_ID:
@@ -1502,7 +1502,7 @@ namespace riddle
                 while (match(STAR_ID))
                     xprs.emplace_back(_expression(4));
 
-                e = new_multiplication_expression(std::move(xprs));
+                e = new multiplication_expression(std::move(xprs));
                 break;
             }
             case SLASH_ID:
@@ -1514,7 +1514,7 @@ namespace riddle
                 while (match(SLASH_ID))
                     xprs.emplace_back(_expression(4));
 
-                e = new_division_expression(std::move(xprs));
+                e = new division_expression(std::move(xprs));
                 break;
             }
             default:
