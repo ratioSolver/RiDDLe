@@ -45,7 +45,9 @@ namespace riddle
             arg_types.emplace_back(e->get_type());
         }
 
-        return t->get_constructor(arg_types).new_instance(args);
+        auto inst = t->new_instance();
+        t->get_constructor(arg_types).call(inst, args);
+        return inst;
     }
 
     expr eq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().eq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
@@ -299,8 +301,8 @@ namespace riddle
                     else
                         throw std::runtime_error("cannot find type");
                 }
-            for (const auto &sp : q.front()->get_supertypes())
-                q.push(static_cast<predicate *>(&sp.get()));
+            for (const auto &sp : q.front()->get_parents())
+                q.push(&sp.get());
             q.pop();
         }
 

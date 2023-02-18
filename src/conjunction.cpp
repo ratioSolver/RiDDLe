@@ -3,7 +3,7 @@
 
 namespace riddle
 {
-    conjunction::conjunction(scope &scp, env ctx, const utils::rational cst, const std::vector<ast::statement_ptr> &body) : scope(scp), ctx(ctx), cst(cst), body(body) {}
+    conjunction::conjunction(scope &scp, env ctx, const utils::rational cst, const std::vector<ast::statement_ptr> &body) : scope(scp), ctx(ctx), cost(cst), body(body) {}
 
     void conjunction::execute()
     {

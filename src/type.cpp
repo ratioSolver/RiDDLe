@@ -18,7 +18,7 @@ namespace riddle
                 return true;
             else if (auto ct = dynamic_cast<const complex_type *>(q.front()))
             {
-                for (const auto &st : ct->get_supertypes())
+                for (const auto &st : ct->get_parents())
                     q.push(&st.get());
                 q.pop();
             }
@@ -63,6 +63,13 @@ namespace riddle
         auto goal = cr.new_goal(*this);
         instances.emplace_back(goal);
         return goal;
+    }
+
+    RIDDLE_EXPORT void predicate::call(expr &atm)
+    {
+        env ctx(static_cast<complex_item *>(atm.operator->()));
+        for (const auto &stmnt : body)
+            stmnt->execute(*this, ctx);
     }
 
     RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}

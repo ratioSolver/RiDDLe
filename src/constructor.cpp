@@ -15,15 +15,7 @@ namespace riddle
         }
     }
 
-    RIDDLE_EXPORT expr constructor::new_instance(std::vector<expr> &as)
-    {
-        complex_type &tp = static_cast<complex_type &>(get_scope());
-        auto inst = tp.new_instance();
-        call(inst, as);
-        return inst;
-    }
-
-    void constructor::call(expr &self, std::vector<expr> exprs)
+    RIDDLE_EXPORT void constructor::call(expr &self, std::vector<expr> exprs)
     {
         env ctx(static_cast<complex_item *>(self.operator->()));
         for (size_t i = 0; i < args.size(); ++i)
