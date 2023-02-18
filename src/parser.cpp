@@ -342,10 +342,14 @@ namespace riddle
         tk = tks[pos - 1].operator->();
     }
 
-    RIDDLE_EXPORT ast::compilation_unit_ptr parser::parse()
+    RIDDLE_EXPORT compilation_unit_ptr parser::parse()
     {
         tk = next();
+        return _compilation_unit();
+    }
 
+    compilation_unit_ptr parser::_compilation_unit()
+    {
         std::vector<type_declaration_ptr> ts;
         std::vector<method_declaration_ptr> ms;
         std::vector<predicate_declaration_ptr> ps;
@@ -657,10 +661,10 @@ namespace riddle
         return new class_declaration(n, std::move(bcs), std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts));
     }
 
-    const field_declaration *parser::_field_declaration()
+    field_declaration_ptr parser::_field_declaration()
     {
         std::vector<id_token> tp;
-        std::vector<utils::u_ptr<const variable_declaration>> ds;
+        std::vector<variable_declaration_ptr> ds;
 
         switch (tk->sym)
         {
@@ -725,11 +729,11 @@ namespace riddle
         return new field_declaration(std::move(tp), std::move(ds));
     }
 
-    const method_declaration *parser::_method_declaration()
+    method_declaration_ptr parser::_method_declaration()
     {
         std::vector<id_token> rt;
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
-        std::vector<utils::u_ptr<const ast::statement>> stmnts;
+        std::vector<statement_ptr> stmnts;
 
         if (!match(VOID_ID))
         {
@@ -807,12 +811,12 @@ namespace riddle
         return new method_declaration(std::move(rt), n, std::move(pars), std::move(stmnts));
     }
 
-    const constructor_declaration *parser::_constructor_declaration()
+    constructor_declaration_ptr parser::_constructor_declaration()
     {
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
         std::vector<id_token> ins;
         std::vector<std::vector<expression_ptr>> ivs;
-        std::vector<utils::u_ptr<const ast::statement>> stmnts;
+        std::vector<statement_ptr> stmnts;
 
         if (!match(ID_ID))
             error("expected identifier..");
@@ -906,11 +910,11 @@ namespace riddle
         return new constructor_declaration(pars, std::move(ins), std::move(ivs), std::move(stmnts));
     }
 
-    const predicate_declaration *parser::_predicate_declaration()
+    predicate_declaration_ptr parser::_predicate_declaration()
     {
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
         std::vector<std::vector<id_token>> pl;
-        std::vector<utils::u_ptr<const ast::statement>> stmnts;
+        std::vector<statement_ptr> stmnts;
 
         if (!match(PREDICATE_ID))
             error("expected `predicate`..");
@@ -996,7 +1000,7 @@ namespace riddle
         return new predicate_declaration(n, std::move(pars), std::move(pl), std::move(stmnts));
     }
 
-    ast::statement_ptr parser::_statement()
+    statement_ptr parser::_statement()
     {
         switch (tk->sym)
         {
@@ -1130,7 +1134,7 @@ namespace riddle
         case LBRACE_ID: // either a block or a disjunction..
         {
             tk = next();
-            std::vector<utils::u_ptr<const ast::statement>> stmnts;
+            std::vector<statement_ptr> stmnts;
             while (!match(RBRACE_ID))
                 stmnts.emplace_back(_statement());
             switch (tk->sym)
@@ -1138,7 +1142,7 @@ namespace riddle
             case LBRACKET_ID:
             case OR_ID: // a disjunctive statement..
             {
-                std::vector<std::vector<utils::u_ptr<const ast::statement>>> conjs;
+                std::vector<std::vector<statement_ptr>> conjs;
                 std::vector<expression_ptr> conj_costs;
                 expression_ptr e = nullptr;
                 if (match(LBRACKET_ID))
@@ -1242,7 +1246,7 @@ namespace riddle
         }
     }
 
-    ast::expression_ptr parser::_expression(const size_t &pr)
+    expression_ptr parser::_expression(const size_t &pr)
     {
         expression_ptr e = nullptr;
         switch (tk->sym)

@@ -648,13 +648,14 @@ namespace riddle
     bool match(const symbol &sym);
     void backtrack(const size_t &p) noexcept;
 
+    ast::compilation_unit_ptr _compilation_unit();
     const ast::typedef_declaration *_typedef_declaration();
     const ast::enum_declaration *_enum_declaration();
     const ast::class_declaration *_class_declaration();
-    const ast::field_declaration *_field_declaration();
-    const ast::method_declaration *_method_declaration();
-    const ast::constructor_declaration *_constructor_declaration();
-    const ast::predicate_declaration *_predicate_declaration();
+    ast::field_declaration_ptr _field_declaration();
+    ast::method_declaration_ptr _method_declaration();
+    ast::constructor_declaration_ptr _constructor_declaration();
+    ast::predicate_declaration_ptr _predicate_declaration();
     ast::statement_ptr _statement();
     ast::expression_ptr _expression(const size_t &pr = 0);
 
