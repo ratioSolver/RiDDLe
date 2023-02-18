@@ -6,7 +6,7 @@ classDiagram
     scope <|-- core
     env <|-- core
     scope <|-- conjunction
-    scope <|-- constructor
+    scope <|-- Constructor
     scope <|-- method
     item <|-- complex_item
     type <|-- complex_type
@@ -33,7 +33,7 @@ classDiagram
         -vector~statement~ body
     }
 
-    class constructor {
+    class Constructor {
         +call(expr self, vector~expr~ args)
         -vector~field~ args
         -vector~statement~ body
