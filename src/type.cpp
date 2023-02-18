@@ -6,7 +6,7 @@
 
 namespace riddle
 {
-    type::type(core &cr, const std::string &name, bool primitive) : cr(cr), name(name), primitive(primitive) {}
+    type::type(scope &scp, const std::string &name, bool primitive) : scp(scp), name(name), primitive(primitive) {}
 
     bool type::is_assignable_from(const type &other) const
     {
@@ -29,21 +29,28 @@ namespace riddle
     }
 
     bool_type::bool_type(core &cr) : type(cr, BOOL_KW) {}
-    expr bool_type::new_instance() { return cr.new_bool(); }
+    expr bool_type::new_instance() { return scp.get_core().new_bool(); }
 
     int_type::int_type(core &cr) : type(cr, INT_KW) {}
-    expr int_type::new_instance() { return cr.new_int(); }
+    expr int_type::new_instance() { return scp.get_core().new_int(); }
 
     real_type::real_type(core &cr) : type(cr, REAL_KW) {}
-    expr real_type::new_instance() { return cr.new_real(); }
+    expr real_type::new_instance() { return scp.get_core().new_real(); }
 
     string_type::string_type(core &cr) : type(cr, STRING_KW) {}
-    expr string_type::new_instance() { return cr.new_string(); }
+    expr string_type::new_instance() { return scp.get_core().new_string(); }
 
     time_point_type::time_point_type(core &cr) : type(cr, TIME_POINT_KW) {}
-    expr time_point_type::new_instance() { return cr.new_time_point(); }
+    expr time_point_type::new_instance() { return scp.get_core().new_time_point(); }
 
-    RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name, std::vector<field_ptr> &as, std::vector<ast::statement_ptr> &body) : scope(scp), type(scp.get_core(), name), body(std::move(body))
+    typedef_type::typedef_type(scope &scp, const std::string &name, type &tp, const ast::expression_ptr &xpr) : type(scp, name), tp(tp), expr(xpr) {}
+    expr typedef_type::new_instance()
+    {
+        env ctx(scp.get_core());
+        return expr->evaluate(scp, ctx);
+    }
+
+    RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name, std::vector<field_ptr> as, const std::vector<ast::statement_ptr> &body) : scope(scp), type(scp.get_core(), name), body(body)
     {
         if (!is_core(scp))
             add_field(new field(static_cast<complex_type &>(scp), THIS_KW, nullptr, true));
@@ -57,13 +64,13 @@ namespace riddle
 
     expr predicate::new_fact()
     {
-        auto fact = cr.new_fact(*this);
+        auto fact = get_core().new_fact(*this);
         instances.emplace_back(fact);
         return fact;
     }
     expr predicate::new_goal()
     {
-        auto goal = cr.new_goal(*this);
+        auto goal = get_core().new_goal(*this);
         instances.emplace_back(goal);
         return goal;
     }

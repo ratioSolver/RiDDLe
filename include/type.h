@@ -1,6 +1,8 @@
 #pragma once
 
 #include "scope.h"
+#include "method.h"
+#include "constructor.h"
 #include <functional>
 
 namespace riddle
@@ -8,7 +10,7 @@ namespace riddle
   class type
   {
   public:
-    type(core &cr, const std::string &name, bool primitive = false);
+    type(scope &scp, const std::string &name, bool primitive = false);
     virtual ~type() = default;
 
     const std::string &get_name() const { return name; }
@@ -22,7 +24,7 @@ namespace riddle
     bool operator!=(const type &other) const { return this != &other; }
 
   protected:
-    core &cr;
+    scope &scp;
 
   private:
     std::string name;
@@ -69,14 +71,30 @@ namespace riddle
     expr new_instance() override;
   };
 
-  class predicate : public scope, public type
+  class typedef_type final : public type
   {
   public:
-    RIDDLE_EXPORT predicate(scope &scp, const std::string &name, std::vector<field_ptr> &args, std::vector<ast::statement_ptr> &body);
+    typedef_type(scope &scp, const std::string &name, type &tp, const ast::expression_ptr &xpr);
+
+    type &get_basic_type() const { return tp; }
+
+    expr new_instance() override;
+
+  private:
+    type &tp;
+    const ast::expression_ptr &expr;
+  };
+
+  class predicate : public scope, public type
+  {
+    friend class ast::predicate_declaration;
+
+  public:
+    RIDDLE_EXPORT predicate(scope &scp, const std::string &name, std::vector<field_ptr> args, const std::vector<ast::statement_ptr> &body);
     virtual ~predicate() = default;
 
-    std::vector<std::reference_wrapper<predicate>> get_parents() const { return parents; }
-    std::vector<std::reference_wrapper<field>> &get_args() { return args; }
+    const std::vector<std::reference_wrapper<predicate>> &get_parents() const { return parents; }
+    const std::vector<std::reference_wrapper<field>> &get_args() const { return args; }
 
     expr new_instance() override { return new_fact(); }
     const std::vector<expr> &get_instances() const { return instances; }
@@ -86,15 +104,29 @@ namespace riddle
 
     RIDDLE_EXPORT void call(expr &atm);
 
+  protected:
+    void add_parent(predicate &parent) { parents.emplace_back(parent); }
+
+    void add_arg(field_ptr arg)
+    {
+      args.push_back(*arg);
+      add_field(std::move(arg));
+    }
+
   private:
     std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
     std::vector<std::reference_wrapper<field>> args;
-    std::vector<ast::statement_ptr> body;
+    const std::vector<ast::statement_ptr> &body;
     std::vector<expr> instances;
   };
 
   class complex_type : public scope, public type
   {
+    friend class ast::method_declaration;
+    friend class ast::constructor_declaration;
+    friend class ast::predicate_declaration;
+    friend class ast::typedef_declaration;
+
   public:
     RIDDLE_EXPORT complex_type(scope &scp, const std::string &name);
     virtual ~complex_type() = default;
@@ -102,12 +134,20 @@ namespace riddle
     std::vector<std::reference_wrapper<complex_type>> get_parents() const { return parents; }
 
     RIDDLE_EXPORT constructor &get_constructor(const std::vector<std::reference_wrapper<type>> &args);
+    bool has_type(const std::string &name) const override { return types.find(name) != types.end(); }
     RIDDLE_EXPORT type &get_type(const std::string &name) override;
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) override;
     RIDDLE_EXPORT predicate &get_predicate(const std::string &name) override;
 
     expr new_instance() override;
     const std::vector<expr> &get_instances() const { return instances; }
+
+  protected:
+    void add_parent(complex_type &parent) { parents.emplace_back(parent); }
+    void add_constructor(constructor_ptr &&constructor) { constructors.emplace_back(std::move(constructor)); }
+    void add_type(type_ptr &&type) { types.emplace(type->get_name(), std::move(type)); }
+    void add_method(method_ptr &&method) { methods[method->get_name()].emplace_back(std::move(method)); }
+    void add_predicate(predicate_ptr &&predicate) { predicates.emplace(predicate->get_name(), std::move(predicate)); }
 
   private:
     std::vector<std::reference_wrapper<complex_type>> parents; // the base types (i.e. the types this type inherits from)..

@@ -311,6 +311,99 @@ namespace riddle
 
     void return_statement::execute(scope &scp, env &ctx) const { ctx.items.emplace(RETURN_KW, xpr->evaluate(scp, ctx)); }
 
+    void method_declaration::refine(scope &scp) const
+    {
+        type *rt; // the method's return type..
+        if (!return_type.empty())
+        {
+            rt = &scp.get_type(return_type.front().id);
+            for (auto it = return_type.begin() + 1; it != return_type.end(); ++it)
+                if (auto ci = dynamic_cast<complex_type *>(rt))
+                    rt = &ci->get_type(it->id);
+                else
+                    throw std::runtime_error("cannot find type");
+        }
+
+        std::vector<field_ptr> args; // the method's arguments..
+        for (const auto &[tp_id_tkns, id_tkn] : parameters)
+        {
+            auto *tp = &scp.get_type(tp_id_tkns.front().id);
+            for (auto it = tp_id_tkns.begin() + 1; it != tp_id_tkns.end(); ++it)
+                if (auto ci = dynamic_cast<complex_type *>(tp))
+                    tp = &ci->get_type(it->id);
+                else
+                    throw std::runtime_error("cannot find type");
+            args.emplace_back(new field(*tp, id_tkn.id));
+        }
+
+        // we create the method and add it to the scope..
+        auto mtd = new method(scp, name.id, std::move(args), body, rt);
+        if (auto c = dynamic_cast<core *>(&scp))
+            c->add_method(std::move(mtd)); // we add the method to the core..
+        else if (auto c = dynamic_cast<complex_type *>(&scp))
+            c->add_method(std::move(mtd)); // we add the method to the complex type..
+        else
+            throw std::runtime_error("cannot add method");
+    }
+
+    void predicate_declaration::declare(scope &scp) const
+    { // we create the predicate and add it to the scope..
+        auto p = new predicate(scp, name.id, std::vector<field_ptr>(), body);
+        if (auto c = dynamic_cast<core *>(&scp))
+            c->add_predicate(std::move(p)); // we add the predicate to the core..
+        else if (auto c = dynamic_cast<complex_type *>(&scp))
+            c->add_predicate(std::move(p)); // we add the predicate to the complex type..
+        else
+            throw std::runtime_error("cannot add predicate");
+    }
+
+    void predicate_declaration::refine(scope &scp) const
+    {
+        auto &p = scp.get_predicate(name.id); // the predicate to refine..
+
+        // the predicate's arguments..
+        for (const auto &[tp_id_tkns, id_tkn] : parameters)
+        { // we find the type..
+            auto *tp = &scp.get_type(tp_id_tkns.front().id);
+            for (auto it = tp_id_tkns.begin() + 1; it != tp_id_tkns.end(); ++it)
+                if (auto ci = dynamic_cast<complex_type *>(tp))
+                    tp = &ci->get_type(it->id);
+                else
+                    throw std::runtime_error("cannot find type");
+
+            // we add the argument to the predicate..
+            p.add_arg(new field(*tp, id_tkn.id));
+        }
+
+        // the predicate's parents..
+        for (const auto &sp : predicate_list)
+        {
+            auto sp_p = &scp.get_predicate(sp.front().id);
+            for (auto it = sp.begin() + 1; it != sp.end(); ++it)
+                sp_p = &sp_p->get_predicate(it->id);
+            p.add_parent(*sp_p);
+        }
+    }
+
+    void typedef_declaration::declare(scope &scp) const
+    { // we create the typedef and add it to the scope..
+        auto td = new typedef_type(scp, name.id, scp.get_type(primitive_type.id), xpr);
+        if (auto c = dynamic_cast<core *>(&scp))
+            c->add_type(std::move(td)); // we add the typedef to the core..
+        else if (auto c = dynamic_cast<complex_type *>(&scp))
+            c->add_type(std::move(td)); // we add the typedef to the complex type..
+        else
+            throw std::runtime_error("cannot add typedef");
+    }
+
+    void compilation_unit::declare(scope &scp) const
+    {
+        for (const auto &t : types)
+            t->declare(scp);
+        for (const auto &p : predicates)
+            p->declare(scp);
+    }
+
     RIDDLE_EXPORT parser::parser(const std::string &str) : lex(str) {}
     RIDDLE_EXPORT parser::parser(std::istream &is) : lex(is) {}
     RIDDLE_EXPORT parser::~parser() {}

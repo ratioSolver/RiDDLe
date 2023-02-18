@@ -8,9 +8,26 @@ namespace riddle
 {
   class core : public scope, public env
   {
+    friend class ast::method_declaration;
+    friend class ast::predicate_declaration;
+    friend class ast::typedef_declaration;
+
   public:
     RIDDLE_EXPORT core();
     virtual ~core() = default;
+
+    /**
+     * @brief Parses the given riddle script.
+     *
+     * @param script The riddle script to parse.
+     */
+    RIDDLE_EXPORT virtual void read(const std::string &script);
+    /**
+     * @brief Parses the given riddle files.
+     *
+     * @param files The riddle files to parse.
+     */
+    RIDDLE_EXPORT virtual void read(const std::vector<std::string> &files);
 
     core &get_core() override { return *this; }
 
@@ -72,6 +89,11 @@ namespace riddle
     RIDDLE_EXPORT predicate &get_predicate(const std::string &name) override;
 
     RIDDLE_EXPORT expr &get(const std::string &name) override;
+
+  protected:
+    void add_type(type_ptr tp) { types.emplace(tp->get_name(), std::move(tp)); }
+    void add_method(method_ptr mthd) { methods[mthd->get_name()].emplace_back(std::move(mthd)); }
+    void add_predicate(predicate_ptr pred) { predicates.emplace(pred->get_name(), std::move(pred)); }
 
   private:
     type *bt, *it, *rt, *tt, *st;               // builtin types..

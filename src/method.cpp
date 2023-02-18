@@ -5,7 +5,7 @@
 
 namespace riddle
 {
-    RIDDLE_EXPORT method::method(scope &scp, std::string name, std::vector<field_ptr> &as, std::vector<ast::statement_ptr> &body) : scope(scp), name(name), body(std::move(body))
+    RIDDLE_EXPORT method::method(scope &scp, std::string name, std::vector<field_ptr> &&as, const std::vector<ast::statement_ptr> &body, type *ret_type) : scope(scp), ret_type(ret_type), name(name), body(body)
     {
         if (auto tp = dynamic_cast<type *>(&scp))
             add_field(new field(*tp, THIS_KW, nullptr, true));

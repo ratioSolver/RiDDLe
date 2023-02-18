@@ -1,5 +1,6 @@
 #include "core.h"
 #include "item.h"
+#include <fstream>
 #include <stdexcept>
 
 namespace riddle
@@ -11,6 +12,33 @@ namespace riddle
         types.emplace(rt->get_name(), rt);
         types.emplace(tt->get_name(), tt);
         types.emplace(st->get_name(), st);
+    }
+
+    RIDDLE_EXPORT void core::read(const std::string &script)
+    {
+        parser prs(script);
+        auto cu = prs.parse();
+        cus.emplace_back(std::move(cu));
+    }
+
+    RIDDLE_EXPORT void core::read(const std::vector<std::string> &files)
+    {
+        std::vector<ast::compilation_unit_ptr> c_cus;
+        c_cus.reserve(files.size());
+
+        for (auto &f : files)
+            if (std::ifstream ifs(f); ifs)
+            {
+                parser prs(ifs);
+                auto cu = prs.parse();
+                c_cus.emplace_back(std::move(cu));
+            }
+            else
+                throw std::invalid_argument("cannot find file `" + f + "`");
+
+        cus.reserve(cus.size() + c_cus.size());
+        for (auto &cu : c_cus)
+            cus.emplace_back(std::move(cu));
     }
 
     RIDDLE_EXPORT type &core::get_type(const std::string &tp_name)

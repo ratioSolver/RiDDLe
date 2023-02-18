@@ -498,6 +498,10 @@ namespace riddle
       type_declaration() {}
       type_declaration(const type_declaration &orig) = delete;
       virtual ~type_declaration() {}
+
+      virtual void declare(scope &) const = 0;
+      virtual void refine(scope &) const = 0;
+      virtual void refine_predicates(scope &) const = 0;
     };
     using type_declaration_ptr = utils::u_ptr<const type_declaration>;
 
@@ -507,6 +511,8 @@ namespace riddle
       method_declaration(std::vector<id_token> rt, const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<statement_ptr> stmnts) : return_type(std::move(rt)), name(n), parameters(std::move(pars)), body(std::move(stmnts)) {}
       method_declaration(const method_declaration &orig) = delete;
       virtual ~method_declaration() = default;
+
+      void refine(scope &scp) const;
 
     protected:
       const std::vector<id_token> return_type;
@@ -523,6 +529,9 @@ namespace riddle
       predicate_declaration(const predicate_declaration &orig) = delete;
       virtual ~predicate_declaration() = default;
 
+      void declare(scope &scp) const;
+      void refine(scope &scp) const;
+
     protected:
       const id_token name;
       const std::vector<std::pair<const std::vector<id_token>, const id_token>> parameters;
@@ -538,6 +547,10 @@ namespace riddle
       typedef_declaration(const typedef_declaration &orig) = delete;
       virtual ~typedef_declaration() = default;
 
+      void declare(scope &scp) const override;
+      void refine(scope &) const override {}
+      void refine_predicates(scope &) const override {}
+
     protected:
       const id_token name;
       const id_token primitive_type;
@@ -550,6 +563,10 @@ namespace riddle
       enum_declaration(const id_token &n, std::vector<string_token> es, std::vector<std::vector<id_token>> trs) : name(n), enums(std::move(es)), type_refs(std::move(trs)) {}
       enum_declaration(const enum_declaration &orig) = delete;
       virtual ~enum_declaration() = default;
+
+      void declare(scope &scp) const override;
+      void refine(scope &scp) const override;
+      void refine_predicates(scope &) const override {}
 
     protected:
       const id_token name;
@@ -579,6 +596,8 @@ namespace riddle
       field_declaration(const field_declaration &orig) = delete;
       virtual ~field_declaration() = default;
 
+      void refine(scope &scp) const;
+
     protected:
       const std::vector<id_token> field_type;
       const std::vector<variable_declaration_ptr> declarations;
@@ -591,6 +610,8 @@ namespace riddle
       constructor_declaration(std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<id_token> ins, std::vector<std::vector<expression_ptr>> ivs, std::vector<statement_ptr> stmnts) : parameters(std::move(pars)), init_names(std::move(ins)), init_vals(std::move(ivs)), body(std::move(stmnts)) {}
       constructor_declaration(const constructor_declaration &orig) = delete;
       virtual ~constructor_declaration() = default;
+
+      void refine(scope &scp) const;
 
     protected:
       const std::vector<std::pair<const std::vector<id_token>, const id_token>> parameters;
@@ -606,6 +627,10 @@ namespace riddle
       class_declaration(const id_token &n, std::vector<std::vector<id_token>> bcs, std::vector<field_declaration_ptr> fs, std::vector<constructor_declaration_ptr> cs, std::vector<method_declaration_ptr> ms, std::vector<predicate_declaration_ptr> ps, std::vector<type_declaration_ptr> ts) : name(n), base_classes(std::move(bcs)), fields(std::move(fs)), constructors(std::move(cs)), methods(std::move(ms)), predicates(std::move(ps)), types(std::move(ts)) {}
       class_declaration(const class_declaration &orig) = delete;
       virtual ~class_declaration() = default;
+
+      void declare(scope &scp) const override;
+      void refine(scope &scp) const override;
+      void refine_predicates(scope &scp) const override;
 
     protected:
       const id_token name;
@@ -623,6 +648,11 @@ namespace riddle
       compilation_unit(std::vector<method_declaration_ptr> ms, std::vector<predicate_declaration_ptr> ps, std::vector<type_declaration_ptr> ts, std::vector<statement_ptr> stmnts) : methods(std::move(ms)), predicates(std::move(ps)), types(std::move(ts)), body(std::move(stmnts)) {}
       compilation_unit(const compilation_unit &orig) = delete;
       virtual ~compilation_unit() = default;
+
+      void declare(scope &scp) const;
+      void refine(scope &scp) const;
+      void refine_predicates(scope &scp) const;
+      void execute(scope &scp, env &ctx) const;
 
     protected:
       const std::vector<method_declaration_ptr> methods;

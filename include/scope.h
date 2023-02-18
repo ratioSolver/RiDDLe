@@ -22,6 +22,7 @@ namespace riddle
 
     RIDDLE_EXPORT field &get_field(const std::string &name);
 
+    virtual bool has_type(const std::string &name) const { return scp.has_type(name); }
     virtual type &get_type(const std::string &name) { return scp.get_type(name); }
 
     virtual method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) { return scp.get_method(name, args); }
