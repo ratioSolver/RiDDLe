@@ -53,6 +53,14 @@ namespace riddle
     expr new_instance() override;
   };
 
+  class time_point_type final : public type
+  {
+  public:
+    time_point_type(core &cr);
+
+    expr new_instance() override;
+  };
+
   class string_type final : public type
   {
   public:

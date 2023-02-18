@@ -40,6 +40,9 @@ namespace riddle
     string_type::string_type(core &cr) : type(cr, STRING_KW) {}
     expr string_type::new_instance() { return cr.new_string(); }
 
+    time_point_type::time_point_type(core &cr) : type(cr, TIME_POINT_KW) {}
+    expr time_point_type::new_instance() { return cr.new_time_point(); }
+
     RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name, std::vector<field_ptr> &as, std::vector<ast::statement_ptr> &body) : scope(scp), type(scp.get_core(), name), body(std::move(body))
     {
         if (!is_core(scp))

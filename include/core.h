@@ -23,6 +23,9 @@ namespace riddle
     virtual expr new_real() = 0;
     virtual expr new_real(utils::rational value) = 0;
 
+    virtual expr new_time_point() = 0;
+    virtual expr new_time_point(utils::rational value) = 0;
+
     virtual expr new_string() = 0;
     virtual expr new_string(const std::string &value) = 0;
 
@@ -55,14 +58,24 @@ namespace riddle
     virtual utils::inf_rational arith_value(const expr &xpr) const = 0;
 
     virtual bool is_enum(const expr &xpr) const = 0;
-    virtual std::vector<expr> enum_value(const expr &xpr) const = 0;
+    virtual std::vector<expr> domain(const expr &xpr) const = 0;
     virtual void prune(const expr &xpr, const expr &val) = 0;
+
+    type &get_bool_type() const noexcept { return *bt; }
+    type &get_int_type() const noexcept { return *it; }
+    type &get_real_type() const noexcept { return *rt; }
+    type &get_time_type() const noexcept { return *tt; }
+    type &get_string_type() const noexcept { return *st; }
 
     RIDDLE_EXPORT type &get_type(const std::string &name) override;
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) override;
     RIDDLE_EXPORT predicate &get_predicate(const std::string &name) override;
 
     RIDDLE_EXPORT expr &get(const std::string &name) override;
+
+  private:
+    type *bt, *it, *rt, *tt, *st;               // builtin types..
+    std::vector<ast::compilation_unit_ptr> cus; // the compilation units..
 
   private:
     std::map<std::string, type_ptr> types;

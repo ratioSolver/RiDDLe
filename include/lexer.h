@@ -9,7 +9,7 @@
 #define BOOL_KW "bool"
 #define INT_KW "int"
 #define REAL_KW "real"
-#define TIME_KW "time"
+#define TIME_POINT_KW "time"
 #define STRING_KW "string"
 #define THIS_KW "this"
 #define RETURN_KW "return"

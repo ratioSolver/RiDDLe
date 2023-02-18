@@ -260,7 +260,7 @@ namespace riddle
             {
                 if (scp.get_core().is_enum(v))
                 { // the assignment is an enum (we prune the unassignable values)..
-                    for (auto &val : scp.get_core().enum_value(v))
+                    for (auto &val : scp.get_core().domain(v))
                         if (!t.is_assignable_from(val->get_type()))
                             scp.get_core().prune(v, val);
                 }
@@ -342,7 +342,7 @@ namespace riddle
         tk = tks[pos - 1].operator->();
     }
 
-    RIDDLE_EXPORT utils::u_ptr<const compilation_unit> parser::parse()
+    RIDDLE_EXPORT ast::compilation_unit_ptr parser::parse()
     {
         tk = next();
 
@@ -433,7 +433,7 @@ namespace riddle
             pt = new id_token(0, 0, 0, 0, REAL_KW);
             break;
         case TIME_ID:
-            pt = new id_token(0, 0, 0, 0, TIME_KW);
+            pt = new id_token(0, 0, 0, 0, TIME_POINT_KW);
             break;
         case STRING_ID:
             pt = new id_token(0, 0, 0, 0, STRING_KW);
@@ -677,7 +677,7 @@ namespace riddle
             tk = next();
             break;
         case TIME_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
+            tp.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
             tk = next();
             break;
         case STRING_ID:
@@ -768,7 +768,7 @@ namespace riddle
                     tk = next();
                     break;
                 case TIME_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
                     tk = next();
                     break;
                 case STRING_ID:
@@ -850,7 +850,7 @@ namespace riddle
                     tk = next();
                     break;
                 case TIME_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
                     tk = next();
                     break;
                 case STRING_ID:
@@ -942,7 +942,7 @@ namespace riddle
                     tk = next();
                     break;
                 case TIME_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
+                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
                     tk = next();
                     break;
                 case STRING_ID:
@@ -1019,7 +1019,7 @@ namespace riddle
                 ft.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
                 break;
             case TIME_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, TIME_KW));
+                ft.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
                 break;
             case STRING_ID:
                 ft.emplace_back(id_token(0, 0, 0, 0, STRING_KW));

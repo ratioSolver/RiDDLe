@@ -4,12 +4,13 @@
 
 namespace riddle
 {
-    RIDDLE_EXPORT core::core() : scope(*this)
+    RIDDLE_EXPORT core::core() : scope(*this), bt(new bool_type(*this)), it(new int_type(*this)), rt(new real_type(*this)), tt(new time_point_type(*this)), st(new string_type(*this))
     {
-        types.emplace(BOOL_KW, new bool_type(*this));
-        types.emplace(INT_KW, new int_type(*this));
-        types.emplace(REAL_KW, new real_type(*this));
-        types.emplace(STRING_KW, new string_type(*this));
+        types.emplace(bt->get_name(), bt);
+        types.emplace(it->get_name(), it);
+        types.emplace(rt->get_name(), rt);
+        types.emplace(tt->get_name(), tt);
+        types.emplace(st->get_name(), st);
     }
 
     RIDDLE_EXPORT type &core::get_type(const std::string &tp_name)
