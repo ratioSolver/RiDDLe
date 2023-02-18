@@ -3,14 +3,14 @@
 title: Class Diagram
 ---
 classDiagram
-    scope ~|-- core
-    env ~|-- core
-    scope ~|-- conjunction
-    scope ~|-- constructor
-    scope ~|-- method
-    item ~|-- complex_item
-    type ~|-- complex_type
-    type ~|-- predicate
+    scope <|-- core
+    env <|-- core
+    scope <|-- conjunction
+    scope <|-- constructor
+    scope <|-- method
+    item <|-- complex_item
+    type <|-- complex_type
+    type <|-- predicate
 
     class scope {
         +get_type(string name)
