@@ -1,8 +1,8 @@
 #pragma once
 
 #include "type.h"
-#include "item.h"
 #include "method.h"
+#include "inf_rational.h"
 
 namespace riddle
 {
@@ -26,11 +26,13 @@ namespace riddle
     virtual expr new_string() = 0;
     virtual expr new_string(const std::string &value) = 0;
 
-    virtual expr add(const std::vector<expr> &exprs) = 0;
-    virtual expr sub(const std::vector<expr> &exprs) = 0;
-    virtual expr mul(const std::vector<expr> &exprs) = 0;
-    virtual expr div(const std::vector<expr> &exprs) = 0;
-    virtual expr minus(const expr &exprs) = 0;
+    virtual expr new_enum(const type &tp, const std::vector<expr> &xprs) = 0;
+
+    virtual expr add(const std::vector<expr> &xprs) = 0;
+    virtual expr sub(const std::vector<expr> &xprs) = 0;
+    virtual expr mul(const std::vector<expr> &xprs) = 0;
+    virtual expr div(const std::vector<expr> &xprs) = 0;
+    virtual expr minus(const expr &xprs) = 0;
 
     virtual expr lt(const expr &lhs, const expr &rhs) = 0;
     virtual expr leq(const expr &lhs, const expr &rhs) = 0;
@@ -38,21 +40,35 @@ namespace riddle
     virtual expr geq(const expr &lhs, const expr &rhs) = 0;
     virtual expr eq(const expr &lhs, const expr &rhs) = 0;
 
-    virtual expr conj(const std::vector<expr> &exprs) = 0;
-    virtual expr disj(const std::vector<expr> &exprs) = 0;
-    virtual expr exct_one(const std::vector<expr> &exprs) = 0;
-    virtual expr negate(const expr &expr) = 0;
+    virtual expr conj(const std::vector<expr> &xprs) = 0;
+    virtual expr disj(const std::vector<expr> &xprs) = 0;
+    virtual expr exct_one(const std::vector<expr> &xprs) = 0;
+    virtual expr negate(const expr &xpr) = 0;
+
+    virtual void assert_fact(const expr &xpr) = 0;
+
+    virtual void new_disjunction(const std::vector<conjunction_ptr> &conjs) = 0;
 
     virtual expr new_fact(const predicate &pred) = 0;
     virtual expr new_goal(const predicate &pred) = 0;
 
+    virtual utils::inf_rational arith_value(const expr &xpr) const = 0;
+
+    virtual bool is_enum(const expr &xpr) const = 0;
+    virtual std::vector<expr> enum_value(const expr &xpr) const = 0;
+    virtual void prune(const expr &xpr, const expr &val) = 0;
+
     RIDDLE_EXPORT type &get_type(const std::string &name) override;
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) override;
+    RIDDLE_EXPORT predicate &get_predicate(const std::string &name) override;
 
     RIDDLE_EXPORT expr &get(const std::string &name) override;
 
   private:
     std::map<std::string, type_ptr> types;
     std::map<std::string, std::vector<method_ptr>> methods;
+    std::map<std::string, predicate_ptr> predicates;
   };
+
+  inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }
 } // namespace riddle

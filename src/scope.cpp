@@ -20,7 +20,7 @@ namespace riddle
             throw std::runtime_error("field already exists");
     }
 
-    RIDDLE_EXPORT env::env(scope &scp, context ctx) : scp(scp), ctx(ctx) {}
+    RIDDLE_EXPORT env::env(env_ptr parent) : parent(parent) {}
 
     RIDDLE_EXPORT expr &env::get(const std::string &name)
     {
@@ -28,6 +28,6 @@ namespace riddle
         if (it != items.end())
             return it->second;
         else
-            return ctx->get(name);
+            return parent->get(name);
     }
 } // namespace riddle

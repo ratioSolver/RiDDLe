@@ -1,9 +1,10 @@
 #include "core.h"
+#include "item.h"
 #include <stdexcept>
 
 namespace riddle
 {
-    RIDDLE_EXPORT core::core() : scope(*this), env(*this, this)
+    RIDDLE_EXPORT core::core() : scope(*this)
     {
         types.emplace(BOOL_KW, new bool_type(*this));
         types.emplace(INT_KW, new int_type(*this));
@@ -40,6 +41,14 @@ namespace riddle
                 }
             }
         throw std::out_of_range("method `" + m_name + "` not found");
+    }
+
+    RIDDLE_EXPORT predicate &core::get_predicate(const std::string &name)
+    {
+        auto it = predicates.find(name);
+        if (it != predicates.end())
+            return *it->second;
+        throw std::out_of_range("predicate `" + name + "` not found");
     }
 
     RIDDLE_EXPORT expr &core::get(const std::string &name)

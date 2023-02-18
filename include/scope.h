@@ -8,6 +8,7 @@
 namespace riddle
 {
   class core;
+  class complex_item;
 
   class scope
   {
@@ -16,6 +17,7 @@ namespace riddle
     virtual ~scope() = default;
 
     virtual core &get_core() { return scp.get_core(); }
+    virtual const core &get_core() const { return scp.get_core(); }
     scope &get_scope() { return scp; }
 
     RIDDLE_EXPORT field &get_field(const std::string &name);
@@ -23,6 +25,8 @@ namespace riddle
     virtual type &get_type(const std::string &name) { return scp.get_type(name); }
 
     virtual method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) { return scp.get_method(name, args); }
+
+    virtual predicate &get_predicate(const std::string &name) { return scp.get_predicate(name); }
 
   protected:
     RIDDLE_EXPORT void add_field(field_ptr f);
@@ -35,24 +39,22 @@ namespace riddle
   class env : virtual public utils::countable
   {
     friend class core;
+    friend class complex_item;
+    friend class constructor;
+    friend class method;
+    friend class ast::local_field_statement;
+    friend class ast::assignment_statement;
+    friend class ast::formula_statement;
+    friend class ast::return_statement;
 
   public:
-    RIDDLE_EXPORT env(scope &scp, context ctx);
+    RIDDLE_EXPORT env(env_ptr parent = nullptr);
     virtual ~env() = default;
-
-    core &get_core() { return scp.get_core(); }
-
-    context &get_context() { return ctx; }
-
-    type &get_type(const std::string &name) { return scp.get_type(name); }
-
-    method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) { return scp.get_method(name, args); }
 
     RIDDLE_EXPORT virtual expr &get(const std::string &name);
 
   private:
-    scope &scp;
-    context ctx;
+    env_ptr parent;
     std::map<std::string, expr> items;
   };
 } // namespace riddle

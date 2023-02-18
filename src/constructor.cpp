@@ -25,6 +25,11 @@ namespace riddle
 
     RIDDLE_EXPORT void constructor::call(expr &self, std::vector<expr> exprs)
     {
-        throw std::runtime_error("Not implemented");
+        env ctx(static_cast<complex_item *>(self.operator->()));
+        for (size_t i = 0; i < args.size(); ++i)
+            ctx.items.emplace(args[i].get().get_name(), std::move(exprs[i]));
+
+        for (const auto &stmnt : body)
+            stmnt->execute(*this, ctx);
     }
 } // namespace riddle

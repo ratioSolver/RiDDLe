@@ -5,8 +5,9 @@
 
 namespace riddle
 {
+  class scope;
   class env;
-  using context = utils::c_ptr<env>;
+  using env_ptr = utils::c_ptr<env>;
   class item;
   using expr = utils::c_ptr<item>;
   class field;
@@ -17,6 +18,18 @@ namespace riddle
   using method_ptr = utils::u_ptr<method>;
   class constructor;
   using constructor_ptr = utils::u_ptr<constructor>;
+  class predicate;
+  using predicate_ptr = utils::u_ptr<predicate>;
+  class conjunction;
+  using conjunction_ptr = utils::u_ptr<conjunction>;
+
+  class inconsistency_exception : public std::exception
+  {
+  public:
+    inconsistency_exception() = default;
+
+    virtual const char *what() const noexcept override { return "inconsistency detected"; }
+  };
 
   namespace ast
   {
@@ -27,7 +40,7 @@ namespace riddle
       expression(const expression &orig) = delete;
       virtual ~expression() = default;
 
-      virtual expr evaluate(context &ctx) const = 0;
+      virtual expr evaluate(scope &scp, env &ctx) const = 0;
     };
     using expression_ptr = utils::u_ptr<expression>;
 
@@ -38,7 +51,7 @@ namespace riddle
       bool_literal_expression(const bool_literal_expression &orig) = delete;
       virtual ~bool_literal_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const bool_token literal;
@@ -51,7 +64,7 @@ namespace riddle
       int_literal_expression(const int_literal_expression &orig) = delete;
       virtual ~int_literal_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const int_token literal;
@@ -64,7 +77,7 @@ namespace riddle
       real_literal_expression(const real_literal_expression &orig) = delete;
       virtual ~real_literal_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const real_token literal;
@@ -77,7 +90,7 @@ namespace riddle
       string_literal_expression(const string_literal_expression &orig) = delete;
       virtual ~string_literal_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const string_token literal;
@@ -90,7 +103,7 @@ namespace riddle
       cast_expression(const cast_expression &orig) = delete;
       virtual ~cast_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> cast_to_type;
@@ -104,7 +117,7 @@ namespace riddle
       plus_expression(const plus_expression &orig) = delete;
       virtual ~plus_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> xpr;
@@ -117,7 +130,7 @@ namespace riddle
       minus_expression(const minus_expression &orig) = delete;
       virtual ~minus_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> xpr;
@@ -130,7 +143,7 @@ namespace riddle
       not_expression(const not_expression &orig) = delete;
       virtual ~not_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> xpr;
@@ -143,7 +156,7 @@ namespace riddle
       constructor_expression(const constructor_expression &orig) = delete;
       virtual ~constructor_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> instance_type;
@@ -157,7 +170,7 @@ namespace riddle
       eq_expression(const eq_expression &orig) = delete;
       virtual ~eq_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> left;
@@ -171,7 +184,7 @@ namespace riddle
       neq_expression(const neq_expression &orig) = delete;
       virtual ~neq_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> left;
@@ -185,7 +198,7 @@ namespace riddle
       lt_expression(const lt_expression &orig) = delete;
       virtual ~lt_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> left;
@@ -199,7 +212,7 @@ namespace riddle
       leq_expression(const leq_expression &orig) = delete;
       virtual ~leq_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> left;
@@ -213,7 +226,7 @@ namespace riddle
       geq_expression(const geq_expression &orig) = delete;
       virtual ~geq_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> left;
@@ -227,7 +240,7 @@ namespace riddle
       gt_expression(const gt_expression &orig) = delete;
       virtual ~gt_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> left;
@@ -241,7 +254,7 @@ namespace riddle
       function_expression(const function_expression &orig) = delete;
       virtual ~function_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> ids;
@@ -256,7 +269,7 @@ namespace riddle
       id_expression(const id_expression &orig) = delete;
       virtual ~id_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> ids;
@@ -269,7 +282,7 @@ namespace riddle
       implication_expression(const implication_expression &orig) = delete;
       virtual ~implication_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const utils::u_ptr<const expression> left;
@@ -283,7 +296,7 @@ namespace riddle
       disjunction_expression(const disjunction_expression &orig) = delete;
       virtual ~disjunction_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
@@ -296,7 +309,7 @@ namespace riddle
       conjunction_expression(const conjunction_expression &orig) = delete;
       virtual ~conjunction_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
@@ -309,7 +322,7 @@ namespace riddle
       exct_one_expression(const exct_one_expression &orig) = delete;
       virtual ~exct_one_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
@@ -322,7 +335,7 @@ namespace riddle
       addition_expression(const addition_expression &orig) = delete;
       virtual ~addition_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
@@ -335,7 +348,7 @@ namespace riddle
       subtraction_expression(const subtraction_expression &orig) = delete;
       virtual ~subtraction_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
@@ -348,7 +361,7 @@ namespace riddle
       multiplication_expression(const multiplication_expression &orig) = delete;
       virtual ~multiplication_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
@@ -361,7 +374,7 @@ namespace riddle
       division_expression(const division_expression &orig) = delete;
       virtual ~division_expression() = default;
 
-      expr evaluate(context &ctx) const override;
+      expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<utils::u_ptr<const expression>> expressions;
@@ -374,7 +387,7 @@ namespace riddle
       statement(const statement &orig) = delete;
       virtual ~statement() = default;
 
-      virtual void execute(context &ctx) const = 0;
+      virtual void execute(scope &scp, env &ctx) const = 0;
     };
     using statement_ptr = utils::u_ptr<const statement>;
 
@@ -385,7 +398,7 @@ namespace riddle
       local_field_statement(const local_field_statement &orig) = delete;
       virtual ~local_field_statement() = default;
 
-      void execute(context &ctx) const override;
+      void execute(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> field_type;
@@ -400,7 +413,7 @@ namespace riddle
       assignment_statement(const assignment_statement &orig) = delete;
       virtual ~assignment_statement() = default;
 
-      void execute(context &ctx) const override;
+      void execute(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> ids;
@@ -415,7 +428,7 @@ namespace riddle
       expression_statement(const expression_statement &orig) = delete;
       virtual ~expression_statement() = default;
 
-      void execute(context &ctx) const override;
+      void execute(scope &scp, env &ctx) const override;
 
     protected:
       utils::u_ptr<const ast::expression> xpr;
@@ -428,7 +441,7 @@ namespace riddle
       disjunction_statement(const disjunction_statement &orig) = delete;
       virtual ~disjunction_statement() = default;
 
-      void execute(context &ctx) const override;
+      void execute(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<std::vector<utils::u_ptr<const ast::statement>>> conjunctions;
@@ -438,14 +451,14 @@ namespace riddle
     class conjunction_statement final : public statement
     {
     public:
-      conjunction_statement(std::vector<utils::u_ptr<const ast::statement>> stmnts) : statements(std::move(stmnts)) {}
+      conjunction_statement(std::vector<utils::u_ptr<const ast::statement>> stmnts) : body(std::move(stmnts)) {}
       conjunction_statement(const conjunction_statement &orig) = delete;
       virtual ~conjunction_statement() = default;
 
-      void execute(context &ctx) const override;
+      void execute(scope &scp, env &ctx) const override;
 
     protected:
-      const std::vector<utils::u_ptr<const ast::statement>> statements;
+      const std::vector<utils::u_ptr<const ast::statement>> body;
     };
 
     class formula_statement final : public statement
@@ -455,7 +468,7 @@ namespace riddle
       formula_statement(const formula_statement &orig) = delete;
       virtual ~formula_statement() = default;
 
-      void execute(context &ctx) const override;
+      void execute(scope &scp, env &ctx) const override;
 
     protected:
       const bool is_fact;
@@ -473,7 +486,7 @@ namespace riddle
       return_statement(const return_statement &orig) = delete;
       virtual ~return_statement() = default;
 
-      void execute(context &ctx) const override;
+      void execute(scope &scp, env &ctx) const override;
 
     protected:
       utils::u_ptr<const ast::expression> xpr;
@@ -490,7 +503,7 @@ namespace riddle
     class method_declaration
     {
     public:
-      method_declaration(std::vector<id_token> rt, const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<utils::u_ptr<const ast::statement>> stmnts) : return_type(std::move(rt)), name(n), parameters(std::move(pars)), statements(std::move(stmnts)) {}
+      method_declaration(std::vector<id_token> rt, const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<utils::u_ptr<const ast::statement>> stmnts) : return_type(std::move(rt)), name(n), parameters(std::move(pars)), body(std::move(stmnts)) {}
       method_declaration(const method_declaration &orig) = delete;
       virtual ~method_declaration() = default;
 
@@ -498,13 +511,13 @@ namespace riddle
       const std::vector<id_token> return_type;
       const id_token name;
       const std::vector<std::pair<const std::vector<id_token>, const id_token>> parameters;
-      const std::vector<utils::u_ptr<const ast::statement>> statements;
+      const std::vector<utils::u_ptr<const ast::statement>> body;
     };
 
     class predicate_declaration
     {
     public:
-      predicate_declaration(const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<std::vector<id_token>> pl, std::vector<utils::u_ptr<const ast::statement>> stmnts) : name(n), parameters(std::move(pars)), predicate_list(std::move(pl)), statements(std::move(stmnts)) {}
+      predicate_declaration(const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<std::vector<id_token>> pl, std::vector<utils::u_ptr<const ast::statement>> stmnts) : name(n), parameters(std::move(pars)), predicate_list(std::move(pl)), body(std::move(stmnts)) {}
       predicate_declaration(const predicate_declaration &orig) = delete;
       virtual ~predicate_declaration() = default;
 
@@ -512,7 +525,7 @@ namespace riddle
       const id_token name;
       const std::vector<std::pair<const std::vector<id_token>, const id_token>> parameters;
       const std::vector<std::vector<id_token>> predicate_list;
-      const std::vector<utils::u_ptr<const ast::statement>> statements;
+      const std::vector<utils::u_ptr<const ast::statement>> body;
     };
 
     class typedef_declaration : public type_declaration
@@ -570,7 +583,7 @@ namespace riddle
     class constructor_declaration
     {
     public:
-      constructor_declaration(std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<id_token> ins, std::vector<std::vector<utils::u_ptr<const expression>>> ivs, std::vector<utils::u_ptr<const ast::statement>> stmnts) : parameters(std::move(pars)), init_names(std::move(ins)), init_vals(std::move(ivs)), statements(std::move(stmnts)) {}
+      constructor_declaration(std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<id_token> ins, std::vector<std::vector<utils::u_ptr<const expression>>> ivs, std::vector<utils::u_ptr<const ast::statement>> stmnts) : parameters(std::move(pars)), init_names(std::move(ins)), init_vals(std::move(ivs)), body(std::move(stmnts)) {}
       constructor_declaration(const constructor_declaration &orig) = delete;
       virtual ~constructor_declaration() = default;
 
@@ -578,7 +591,7 @@ namespace riddle
       const std::vector<std::pair<const std::vector<id_token>, const id_token>> parameters;
       const std::vector<id_token> init_names;
       const std::vector<std::vector<utils::u_ptr<const expression>>> init_vals;
-      const std::vector<utils::u_ptr<const ast::statement>> statements;
+      const std::vector<utils::u_ptr<const ast::statement>> body;
     };
 
     class class_declaration : public type_declaration
@@ -601,7 +614,7 @@ namespace riddle
     class compilation_unit
     {
     public:
-      compilation_unit(std::vector<utils::u_ptr<const method_declaration>> ms, std::vector<utils::u_ptr<const predicate_declaration>> ps, std::vector<utils::u_ptr<const type_declaration>> ts, std::vector<utils::u_ptr<const ast::statement>> stmnts) : methods(std::move(ms)), predicates(std::move(ps)), types(std::move(ts)), statements(std::move(stmnts)) {}
+      compilation_unit(std::vector<utils::u_ptr<const method_declaration>> ms, std::vector<utils::u_ptr<const predicate_declaration>> ps, std::vector<utils::u_ptr<const type_declaration>> ts, std::vector<utils::u_ptr<const ast::statement>> stmnts) : methods(std::move(ms)), predicates(std::move(ps)), types(std::move(ts)), body(std::move(stmnts)) {}
       compilation_unit(const compilation_unit &orig) = delete;
       virtual ~compilation_unit() = default;
 
@@ -609,7 +622,7 @@ namespace riddle
       const std::vector<utils::u_ptr<const method_declaration>> methods;
       const std::vector<utils::u_ptr<const predicate_declaration>> predicates;
       const std::vector<utils::u_ptr<const type_declaration>> types;
-      const std::vector<utils::u_ptr<const ast::statement>> statements;
+      const std::vector<utils::u_ptr<const ast::statement>> body;
     };
   } // namespace ast
 

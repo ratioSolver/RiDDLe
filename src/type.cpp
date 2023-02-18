@@ -6,7 +6,7 @@
 
 namespace riddle
 {
-    type::type(core &cr, const std::string &name) : cr(cr), name(name) {}
+    type::type(core &cr, const std::string &name, bool primitive) : cr(cr), name(name), primitive(primitive) {}
 
     bool type::is_assignable_from(const type &other) const
     {
@@ -19,7 +19,7 @@ namespace riddle
             else if (auto ct = dynamic_cast<const complex_type *>(q.front()))
             {
                 for (const auto &st : ct->get_supertypes())
-                    q.push(st);
+                    q.push(&st.get());
                 q.pop();
             }
             else
@@ -40,11 +40,30 @@ namespace riddle
     string_type::string_type(core &cr) : type(cr, STRING_KW) {}
     expr string_type::new_instance() { return cr.new_string(); }
 
-    RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
+    RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name, std::vector<field_ptr> &as, std::vector<ast::statement_ptr> &body) : scope(scp), type(scp.get_core(), name), body(std::move(body))
+    {
+        if (!is_core(scp))
+            add_field(new field(static_cast<complex_type &>(scp), THIS_KW, nullptr, true));
+        args.reserve(as.size());
+        for (auto &arg : as)
+        {
+            args.emplace_back(*arg);
+            add_field(std::move(arg));
+        }
+    }
 
-    expr predicate::new_instance() { throw std::runtime_error("Predicate cannot be instantiated"); }
-    expr predicate::new_fact() { return cr.new_fact(*this); }
-    expr predicate::new_goal() { return cr.new_goal(*this); }
+    expr predicate::new_fact()
+    {
+        auto fact = cr.new_fact(*this);
+        instances.emplace_back(fact);
+        return fact;
+    }
+    expr predicate::new_goal()
+    {
+        auto goal = cr.new_goal(*this);
+        instances.emplace_back(goal);
+        return goal;
+    }
 
     RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
 
@@ -98,6 +117,14 @@ namespace riddle
                 }
             }
         return scope::get_method(m_name, args);
+    }
+
+    RIDDLE_EXPORT predicate &complex_type::get_predicate(const std::string &p_name)
+    {
+        auto it = predicates.find(p_name);
+        if (it != predicates.end())
+            return *it->second;
+        return scope::get_predicate(p_name);
     }
 
     expr complex_type::new_instance()

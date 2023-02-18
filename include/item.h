@@ -21,15 +21,12 @@ namespace riddle
     type &tp;
   };
 
-  class complex_item : public item
+  class complex_item : public item, public env
   {
   public:
     complex_item(type &tp);
     virtual ~complex_item() = default;
 
-    RIDDLE_EXPORT expr &get(const std::string &name);
-
-  private:
-    std::map<std::string, expr> items;
+    RIDDLE_EXPORT expr &get(const std::string &name) override;
   };
 } // namespace riddle

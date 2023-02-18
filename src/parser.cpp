@@ -1,39 +1,31 @@
 #include "parser.h"
 #include "core.h"
+#include "item.h"
 #include "constructor.h"
+#include "method.h"
+#include "conjunction.h"
+#include <queue>
 #include <cassert>
 
 namespace riddle
 {
     using namespace ast;
 
-    expr bool_literal_expression::evaluate(context &ctx) const { return ctx->get_core().new_bool(literal.val); }
-    expr int_literal_expression::evaluate(context &ctx) const { return ctx->get_core().new_int(literal.val); }
-    expr real_literal_expression::evaluate(context &ctx) const { return ctx->get_core().new_real(literal.val); }
-    expr string_literal_expression::evaluate(context &ctx) const { return ctx->get_core().new_string(literal.str); }
+    expr bool_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_bool(literal.val); }
+    expr int_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_int(literal.val); }
+    expr real_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_real(literal.val); }
+    expr string_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_string(literal.str); }
 
-    expr cast_expression::evaluate(context &ctx) const
+    expr cast_expression::evaluate(scope &scp, env &ctx) const { return xpr->evaluate(scp, ctx); }
+
+    expr plus_expression::evaluate(scope &scp, env &ctx) const { return xpr->evaluate(scp, ctx); }
+    expr minus_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().minus(xpr->evaluate(scp, ctx)); }
+
+    expr not_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().negate(xpr->evaluate(scp, ctx)); }
+
+    expr constructor_expression::evaluate(scope &scp, env &ctx) const
     {
-        type *t = &ctx->get_type(cast_to_type.front().id);
-        for (auto it = cast_to_type.begin() + 1; it != cast_to_type.end(); ++it)
-            if (auto ct = dynamic_cast<complex_type *>(t))
-                t = &ct->get_type(it->id);
-            else
-                throw std::runtime_error("invalid cast");
-        auto e = xpr->evaluate(ctx);
-        if (!t->is_assignable_from(e->get_type()))
-            throw std::runtime_error("invalid cast");
-        return e;
-    }
-
-    expr plus_expression::evaluate(context &ctx) const { return xpr->evaluate(ctx); }
-    expr minus_expression::evaluate(context &ctx) const { return ctx->get_core().minus(xpr->evaluate(ctx)); }
-
-    expr not_expression::evaluate(context &ctx) const { return ctx->get_core().negate(xpr->evaluate(ctx)); }
-
-    expr constructor_expression::evaluate(context &ctx) const
-    {
-        complex_type *t = dynamic_cast<complex_type *>(&ctx->get_type(instance_type.front().id));
+        complex_type *t = dynamic_cast<complex_type *>(&scp.get_type(instance_type.front().id));
         if (!t)
             throw std::runtime_error("cannot invoke constructor on non-complex type");
         for (auto it = instance_type.begin() + 1; it != instance_type.end(); ++it)
@@ -43,10 +35,12 @@ namespace riddle
                 throw std::runtime_error("cannot invoke constructor on non-complex type");
 
         std::vector<expr> args;
+        args.reserve(expressions.size());
         std::vector<std::reference_wrapper<type>> arg_types;
+        arg_types.reserve(expressions.size());
         for (auto &xpr : expressions)
         {
-            auto e = xpr->evaluate(ctx);
+            auto e = xpr->evaluate(scp, ctx);
             args.emplace_back(e);
             arg_types.emplace_back(e->get_type());
         }
@@ -54,17 +48,17 @@ namespace riddle
         return t->get_constructor(arg_types).new_instance(args);
     }
 
-    expr eq_expression::evaluate(context &ctx) const { return ctx->get_core().eq(left->evaluate(ctx), right->evaluate(ctx)); }
-    expr neq_expression::evaluate(context &ctx) const { return ctx->get_core().negate(ctx->get_core().eq(left->evaluate(ctx), right->evaluate(ctx))); }
+    expr eq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().eq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
+    expr neq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().negate(scp.get_core().eq(left->evaluate(scp, ctx), right->evaluate(scp, ctx))); }
 
-    expr lt_expression::evaluate(context &ctx) const { return ctx->get_core().lt(left->evaluate(ctx), right->evaluate(ctx)); }
-    expr leq_expression::evaluate(context &ctx) const { return ctx->get_core().leq(left->evaluate(ctx), right->evaluate(ctx)); }
-    expr gt_expression::evaluate(context &ctx) const { return ctx->get_core().gt(left->evaluate(ctx), right->evaluate(ctx)); }
-    expr geq_expression::evaluate(context &ctx) const { return ctx->get_core().geq(left->evaluate(ctx), right->evaluate(ctx)); }
+    expr lt_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().lt(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
+    expr leq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().leq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
+    expr gt_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().gt(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
+    expr geq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().geq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
 
-    expr function_expression::evaluate(context &ctx) const
+    expr function_expression::evaluate(scope &scp, env &ctx) const
     {
-        auto e = ctx->get(ids.front().id);
+        auto e = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
             if (auto ci = dynamic_cast<complex_item *>(&*e))
                 e = ci->get(it->id);
@@ -75,7 +69,7 @@ namespace riddle
         std::vector<std::reference_wrapper<type>> arg_types;
         for (auto &xpr : expressions)
         {
-            auto e = xpr->evaluate(ctx);
+            auto e = xpr->evaluate(scp, ctx);
             args.emplace_back(e);
             arg_types.emplace_back(e->get_type());
         }
@@ -89,9 +83,9 @@ namespace riddle
             throw std::runtime_error("cannot find function");
     }
 
-    expr id_expression::evaluate(context &ctx) const
+    expr id_expression::evaluate(scope &, env &ctx) const
     {
-        auto e = ctx->get(ids.front().id);
+        auto e = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
             if (auto ci = dynamic_cast<complex_item *>(&*e))
                 e = ci->get(it->id);
@@ -100,112 +94,220 @@ namespace riddle
         return e;
     }
 
-    expr implication_expression::evaluate(context &ctx) const { return ctx->get_core().disj({ctx->get_core().negate(left->evaluate(ctx)), right->evaluate(ctx)}); }
+    expr implication_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().disj({scp.get_core().negate(left->evaluate(scp, ctx)), right->evaluate(scp, ctx)}); }
 
-    expr disjunction_expression::evaluate(context &ctx) const
+    expr disjunction_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
+        args.reserve(expressions.size());
         for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(ctx));
-        return ctx->get_core().disj(args);
+            args.emplace_back(xpr->evaluate(scp, ctx));
+        return scp.get_core().disj(args);
     }
 
-    expr conjunction_expression::evaluate(context &ctx) const
+    expr conjunction_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
+        args.reserve(expressions.size());
         for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(ctx));
-        return ctx->get_core().conj(args);
+            args.emplace_back(xpr->evaluate(scp, ctx));
+        return scp.get_core().conj(args);
     }
 
-    expr exct_one_expression::evaluate(context &ctx) const
+    expr exct_one_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
+        args.reserve(expressions.size());
         for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(ctx));
-        return ctx->get_core().exct_one(args);
+            args.emplace_back(xpr->evaluate(scp, ctx));
+        return scp.get_core().exct_one(args);
     }
 
-    expr addition_expression::evaluate(context &ctx) const
+    expr addition_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
+        args.reserve(expressions.size());
         for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(ctx));
-        return ctx->get_core().add(args);
+            args.emplace_back(xpr->evaluate(scp, ctx));
+        return scp.get_core().add(args);
     }
 
-    expr subtraction_expression::evaluate(context &ctx) const
+    expr subtraction_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
+        args.reserve(expressions.size());
         for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(ctx));
-        return ctx->get_core().sub(args);
+            args.emplace_back(xpr->evaluate(scp, ctx));
+        return scp.get_core().sub(args);
     }
 
-    expr multiplication_expression::evaluate(context &ctx) const
+    expr multiplication_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
+        args.reserve(expressions.size());
         for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(ctx));
-        return ctx->get_core().mul(args);
+            args.emplace_back(xpr->evaluate(scp, ctx));
+        return scp.get_core().mul(args);
     }
 
-    expr division_expression::evaluate(context &ctx) const
+    expr division_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
+        args.reserve(expressions.size());
         for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(ctx));
-        return ctx->get_core().div(args);
+            args.emplace_back(xpr->evaluate(scp, ctx));
+        return scp.get_core().div(args);
     }
 
-    void local_field_statement::execute(context &ctx) const
+    void local_field_statement::execute(scope &scp, env &ctx) const
     {
-        type *t = &ctx->get_type(field_type.front().id);
-        for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
-            if (auto ct = dynamic_cast<complex_type *>(t))
-                t = &ct->get_type(it->id);
+        for (size_t i = 0; i < names.size(); ++i)
+            if (xprs[i])
+                ctx.items.emplace(names[i].id, xprs[i]->evaluate(scp, ctx));
             else
-                throw std::runtime_error("cannot find type");
+            {
+                type *t = &scp.get_type(field_type.front().id);
+                for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
+                    if (auto ct = dynamic_cast<complex_type *>(t))
+                        t = &ct->get_type(it->id);
+                    else
+                        throw std::runtime_error("cannot find type");
 
-        throw std::runtime_error("not implemented");
+                if (t->is_primitive())
+                    ctx.items.emplace(names[i].id, t->new_instance());
+                else if (auto ct = dynamic_cast<complex_type *>(t))
+                    switch (ct->get_instances().size())
+                    {
+                    case 0:
+                        throw inconsistency_exception();
+                    case 1:
+                        ctx.items.emplace(names[i].id, ct->get_instances().front());
+                        break;
+                    default:
+                        ctx.items.emplace(names[i].id, scp.get_core().new_enum(*ct, ct->get_instances()));
+                    }
+                else
+                    throw std::runtime_error("cannot find type");
+            }
     }
 
-    void assignment_statement::execute(context &ctx) const
+    void assignment_statement::execute(scope &scp, env &ctx) const
     {
-        auto e = ctx->get(ids.front().id);
+        auto e = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
             if (auto ci = dynamic_cast<complex_item *>(&*e))
                 e = ci->get(it->id);
             else
                 throw std::runtime_error("cannot find item");
 
-        throw std::runtime_error("not implemented");
+        if (auto ci = dynamic_cast<complex_item *>(&*e))
+            ci->items.emplace(id.id, xpr->evaluate(scp, ctx));
+        else
+            throw std::runtime_error("cannot find item");
     }
 
-    void expression_statement::execute(context &ctx) const
+    void expression_statement::execute(scope &scp, env &ctx) const { scp.get_core().assert_fact(xpr->evaluate(scp, ctx)); }
+
+    void disjunction_statement::execute(scope &scp, env &ctx) const
     {
-        throw std::runtime_error("not implemented");
+        std::vector<conjunction_ptr> conjs;
+        conjs.reserve(conjunctions.size());
+
+        for (size_t i = 0; i < conjunctions.size(); ++i)
+            conjs.emplace_back(new conjunction(scp, ctx, scp.get_core().arith_value(conjunction_costs[i]->evaluate(scp, ctx)).get_rational(), conjunctions[i]));
+
+        scp.get_core().new_disjunction(conjs);
     }
 
-    void disjunction_statement::execute(context &ctx) const
+    void conjunction_statement::execute(scope &scp, env &ctx) const
     {
-        throw std::runtime_error("not implemented");
+        for (auto &stmnt : body)
+            stmnt->execute(scp, ctx);
     }
 
-    void conjunction_statement::execute(context &ctx) const
+    void formula_statement::execute(scope &scp, env &ctx) const
     {
-        throw std::runtime_error("not implemented");
+        predicate *p;
+        std::unordered_map<std::string, expr> assgnments;
+        if (!formula_scope.empty())
+        { // the formula's scope is explicitely declared..
+            auto e = ctx.get(formula_scope.front().id);
+            for (auto it = formula_scope.begin() + 1; it != formula_scope.end(); ++it)
+                if (auto ci = dynamic_cast<complex_item *>(&*e))
+                    e = ci->get(it->id);
+                else
+                    throw std::runtime_error("cannot find item");
+
+            p = &static_cast<complex_type &>(e->get_type()).get_predicate(predicate_name.id);
+            assgnments.emplace(TAU_KW, e);
+        }
+        else
+        { // we inherit the formula's scope..
+            p = &scp.get_predicate(predicate_name.id);
+            if (!is_core(p->get_scope()))
+                assgnments.emplace(TAU_KW, ctx.get(TAU_KW));
+        }
+
+        for (size_t i = 0; i < assignment_names.size(); ++i)
+        {
+            auto v = assignment_values[i]->evaluate(scp, ctx);
+            const auto &t = p->get_field(assignment_names[i].id).get_type();
+            if (t.is_assignable_from(v->get_type())) // the target type is a superclass of the assignment..
+                assgnments.emplace(assignment_names[i].id, v);
+            else if (v->get_type().is_assignable_from(t)) // the assignment is a superclass of the target type..
+            {
+                if (scp.get_core().is_enum(v))
+                { // the assignment is an enum (we prune the unassignable values)..
+                    for (auto &val : scp.get_core().enum_value(v))
+                        if (!t.is_assignable_from(val->get_type()))
+                            scp.get_core().prune(v, val);
+                }
+                else // the assignment is a constant (which cannot be assigned to the target type)..
+                    throw inconsistency_exception();
+                assgnments.emplace(assignment_names[i].id, v);
+            }
+            else
+                throw std::runtime_error("unrelated types");
+        }
+
+        auto atm_xpr = is_fact ? scp.get_core().new_fact(*p) : scp.get_core().new_goal(*p);
+        auto &atm = static_cast<complex_item &>(*atm_xpr);
+        atm.items.insert(assgnments.begin(), assgnments.end());
+
+        // we initialize the unassigned atom's fields..
+        std::queue<predicate *> q;
+        q.push(p);
+        while (!q.empty())
+        {
+            for (const auto &arg : q.front()->get_args())
+                if (auto arg_it = atm.items.find(arg.get().get_name()); arg_it == atm.items.end())
+                {
+                    type &tp = arg.get().get_type();
+                    if (tp.is_primitive())
+                        atm.items.emplace(arg.get().get_name(), tp.new_instance());
+                    else if (auto ct = dynamic_cast<complex_type *>(&tp))
+                        switch (ct->get_instances().size())
+                        {
+                        case 0:
+                            throw inconsistency_exception();
+                        case 1:
+                            atm.items.emplace(arg.get().get_name(), ct->get_instances().front());
+                            break;
+                        default:
+                            atm.items.emplace(arg.get().get_name(), scp.get_core().new_enum(*ct, ct->get_instances()));
+                        }
+                    else
+                        throw std::runtime_error("cannot find type");
+                }
+            for (const auto &sp : q.front()->get_supertypes())
+                q.push(static_cast<predicate *>(&sp.get()));
+            q.pop();
+        }
+
+        ctx.items.emplace(formula_name.id, atm_xpr);
     }
 
-    void formula_statement::execute(context &ctx) const
-    {
-        throw std::runtime_error("not implemented");
-    }
-
-    void return_statement::execute(context &ctx) const
-    {
-        throw std::runtime_error("not implemented");
-    }
+    void return_statement::execute(scope &scp, env &ctx) const { ctx.items.emplace(RETURN_KW, xpr->evaluate(scp, ctx)); }
 
     RIDDLE_EXPORT parser::parser(const std::string &str) : lex(str) {}
     RIDDLE_EXPORT parser::parser(std::istream &is) : lex(is) {}
