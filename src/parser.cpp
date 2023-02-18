@@ -58,10 +58,10 @@ namespace riddle
 
     expr function_expression::evaluate(scope &scp, env &ctx) const
     {
-        auto e = ctx.get(ids.front().id);
+        auto self = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto ci = dynamic_cast<complex_item *>(&*e))
-                e = ci->get(it->id);
+            if (auto ci = dynamic_cast<complex_item *>(&*self))
+                self = ci->get(it->id);
             else
                 throw std::runtime_error("cannot find item");
 
@@ -74,10 +74,10 @@ namespace riddle
             arg_types.emplace_back(e->get_type());
         }
 
-        if (auto t = dynamic_cast<complex_type *>(&e->get_type()))
+        if (auto t = dynamic_cast<complex_type *>(&self->get_type()))
         {
             auto &m = t->get_method(function_name.id, arg_types);
-            return m.call(e, args);
+            return m.call(self, args);
         }
         else
             throw std::runtime_error("cannot find function");

@@ -23,7 +23,7 @@ namespace riddle
         return inst;
     }
 
-    RIDDLE_EXPORT void constructor::call(expr &self, std::vector<expr> exprs)
+    void constructor::call(expr &self, std::vector<expr> exprs)
     {
         env ctx(static_cast<complex_item *>(self.operator->()));
         for (size_t i = 0; i < args.size(); ++i)
