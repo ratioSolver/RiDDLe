@@ -656,7 +656,7 @@ namespace riddle
     const ast::constructor_declaration *_constructor_declaration();
     const ast::predicate_declaration *_predicate_declaration();
     const ast::statement *_statement();
-    const ast::expression *_expression(const size_t &pr = 0);
+    ast::expression_ptr _expression(const size_t &pr = 0);
 
     void error(const std::string &err);
 

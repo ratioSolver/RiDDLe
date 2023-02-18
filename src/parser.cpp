@@ -346,10 +346,10 @@ namespace riddle
     {
         tk = next();
 
-        std::vector<utils::u_ptr<const type_declaration>> ts;
-        std::vector<utils::u_ptr<const method_declaration>> ms;
-        std::vector<utils::u_ptr<const predicate_declaration>> ps;
-        std::vector<utils::u_ptr<const statement>> stmnts;
+        std::vector<type_declaration_ptr> ts;
+        std::vector<method_declaration_ptr> ms;
+        std::vector<predicate_declaration_ptr> ps;
+        std::vector<statement_ptr> stmnts;
 
         while (tk->sym != EOF_ID)
         {
@@ -416,7 +416,7 @@ namespace riddle
     const typedef_declaration *parser::_typedef_declaration()
     {
         id_token *pt = nullptr;
-        const ast::expression *e;
+        expression_ptr e;
 
         if (!match(TYPEDEF_ID))
             error("expected `typedef`..");
@@ -452,7 +452,7 @@ namespace riddle
         if (!match(SEMICOLON_ID))
             error("expected `;`..");
 
-        return new_typedef_declaration(n, *pt, e);
+        return new_typedef_declaration(n, *pt, std::move(e));
     }
 
     const enum_declaration *parser::_enum_declaration()
@@ -514,12 +514,12 @@ namespace riddle
 
     const class_declaration *parser::_class_declaration()
     {
-        std::vector<std::vector<id_token>> bcs;                      // the base classes..
-        std::vector<utils::u_ptr<const field_declaration>> fs;       // the fields of the class..
-        std::vector<utils::u_ptr<const constructor_declaration>> cs; // the constructors of the class..
-        std::vector<utils::u_ptr<const method_declaration>> ms;      // the methods of the class..
-        std::vector<utils::u_ptr<const predicate_declaration>> ps;   // the predicates of the class..
-        std::vector<utils::u_ptr<const type_declaration>> ts;        // the types of the class..
+        std::vector<std::vector<id_token>> bcs;      // the base classes..
+        std::vector<field_declaration_ptr> fs;       // the fields of the class..
+        std::vector<constructor_declaration_ptr> cs; // the constructors of the class..
+        std::vector<method_declaration_ptr> ms;      // the methods of the class..
+        std::vector<predicate_declaration_ptr> ps;   // the predicates of the class..
+        std::vector<type_declaration_ptr> ts;        // the types of the class..
 
         if (!match(CLASS_ID))
             error("expected `class`..");
@@ -811,7 +811,7 @@ namespace riddle
     {
         std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
         std::vector<id_token> ins;
-        std::vector<std::vector<utils::u_ptr<const expression>>> ivs;
+        std::vector<std::vector<expression_ptr>> ivs;
         std::vector<utils::u_ptr<const ast::statement>> stmnts;
 
         if (!match(ID_ID))
@@ -874,7 +874,7 @@ namespace riddle
         {
             do
             {
-                std::vector<utils::u_ptr<const expression>> xprs;
+                std::vector<expression_ptr> xprs;
                 if (!match(ID_ID))
                     error("expected identifier..");
                 auto pn = *static_cast<const id_token *>(tks[pos - 2].operator->());
@@ -1030,7 +1030,7 @@ namespace riddle
             tk = next();
 
             std::vector<id_token> ns;
-            std::vector<utils::u_ptr<const expression>> es;
+            std::vector<expression_ptr> es;
 
             do
             {
@@ -1070,7 +1070,7 @@ namespace riddle
             case ID_ID: // a local field..
             {
                 std::vector<id_token> ns;
-                std::vector<utils::u_ptr<const expression>> es;
+                std::vector<expression_ptr> es;
 
                 do
                 {
@@ -1098,7 +1098,7 @@ namespace riddle
                 auto e = _expression();
                 if (!match(SEMICOLON_ID))
                     error("expected `;`..");
-                return new_assignment_statement(std::move(is), i, e);
+                return new_assignment_statement(std::move(is), i, std::move(e));
             }
             case PLUS_ID: // an expression..
             case MINUS_ID:
@@ -1120,7 +1120,7 @@ namespace riddle
                 auto e = _expression();
                 if (!match(SEMICOLON_ID))
                     error("expected `;`..");
-                return new_expression_statement(e);
+                return new_expression_statement(std::move(e));
             }
             default:
                 error("expected either `=` or an identifier..");
@@ -1139,8 +1139,8 @@ namespace riddle
             case OR_ID: // a disjunctive statement..
             {
                 std::vector<std::vector<utils::u_ptr<const ast::statement>>> conjs;
-                std::vector<utils::u_ptr<const expression>> conj_costs;
-                const ast::expression *e = nullptr;
+                std::vector<expression_ptr> conj_costs;
+                expression_ptr e = nullptr;
                 if (match(LBRACKET_ID))
                 {
                     e = _expression();
@@ -1148,7 +1148,7 @@ namespace riddle
                         error("expected `]`..");
                 }
                 conjs.emplace_back(std::move(stmnts));
-                conj_costs.emplace_back(e);
+                conj_costs.emplace_back(std::move(e));
                 while (match(OR_ID))
                 {
                     if (!match(LBRACE_ID))
@@ -1162,7 +1162,7 @@ namespace riddle
                             error("expected `]`..");
                     }
                     conjs.emplace_back(std::move(stmnts));
-                    conj_costs.emplace_back(e);
+                    conj_costs.emplace_back(std::move(e));
                 }
                 return new_disjunction_statement(std::move(conjs), std::move(conj_costs));
             }
@@ -1177,7 +1177,7 @@ namespace riddle
             tk = next();
             std::vector<id_token> scp;
             std::vector<id_token> assn_ns;
-            std::vector<utils::u_ptr<const expression>> assn_vs;
+            std::vector<expression_ptr> assn_vs;
 
             if (!match(ID_ID))
                 error("expected identifier..");
@@ -1230,21 +1230,21 @@ namespace riddle
             auto e = _expression();
             if (!match(SEMICOLON_ID))
                 error("expected `;`..");
-            return new_return_statement(e);
+            return new_return_statement(std::move(e));
         }
         default:
         {
             auto xpr = _expression();
             if (!match(SEMICOLON_ID))
                 error("expected `;`..");
-            return new_expression_statement(xpr);
+            return new_expression_statement(std::move(xpr));
         }
         }
     }
 
-    const ast::expression *parser::_expression(const size_t &pr)
+    ast::expression_ptr parser::_expression(const size_t &pr)
     {
-        const expression *e = nullptr;
+        expression_ptr e = nullptr;
         switch (tk->sym)
         {
         case BoolLiteral_ID:
@@ -1292,10 +1292,9 @@ namespace riddle
             else // a parenthesis..
             {
                 backtrack(c_pos);
-                auto xpr = _expression();
+                e = _expression();
                 if (!match(RPAREN_ID))
                     error("expected `)`..");
-                e = xpr;
             }
             break;
         }
@@ -1322,7 +1321,7 @@ namespace riddle
                 ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
             } while (match(DOT_ID));
 
-            std::vector<utils::u_ptr<const expression>> xprs;
+            std::vector<expression_ptr> xprs;
             if (!match(LPAREN_ID))
                 error("expected `(`..");
 
@@ -1356,7 +1355,7 @@ namespace riddle
                 tk = next();
                 id_token fn = is.back();
                 is.pop_back();
-                std::vector<utils::u_ptr<const expression>> xprs;
+                std::vector<expression_ptr> xprs;
                 if (!match(LPAREN_ID))
                     error("expected `(`..");
 
@@ -1392,53 +1391,53 @@ namespace riddle
             case EQEQ_ID:
                 assert(0 >= pr);
                 tk = next();
-                e = new_eq_expression(e, _expression(1));
+                e = new_eq_expression(std::move(e), _expression(1));
                 break;
             case BANGEQ_ID:
                 assert(0 >= pr);
                 tk = next();
-                e = new_neq_expression(e, _expression(1));
+                e = new_neq_expression(std::move(e), _expression(1));
                 break;
             case LT_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_lt_expression(e, _expression(1));
+                e = new_lt_expression(std::move(e), _expression(1));
                 break;
             }
             case LTEQ_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_leq_expression(e, _expression(1));
+                e = new_leq_expression(std::move(e), _expression(1));
                 break;
             }
             case GTEQ_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_geq_expression(e, _expression(1));
+                e = new_geq_expression(std::move(e), _expression(1));
                 break;
             }
             case GT_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_gt_expression(e, _expression(1));
+                e = new_gt_expression(std::move(e), _expression(1));
                 break;
             }
             case IMPLICATION_ID:
             {
                 assert(1 >= pr);
                 tk = next();
-                e = new_implication_expression(e, _expression(1));
+                e = new_implication_expression(std::move(e), _expression(1));
                 break;
             }
             case BAR_ID:
             {
                 assert(1 >= pr);
-                std::vector<utils::u_ptr<const expression>> xprs;
-                xprs.emplace_back(e);
+                std::vector<expression_ptr> xprs;
+                xprs.emplace_back(std::move(e));
 
                 while (match(BAR_ID))
                     xprs.emplace_back(_expression(2));
@@ -1449,8 +1448,8 @@ namespace riddle
             case AMP_ID:
             {
                 assert(1 >= pr);
-                std::vector<utils::u_ptr<const expression>> xprs;
-                xprs.emplace_back(e);
+                std::vector<expression_ptr> xprs;
+                xprs.emplace_back(std::move(e));
 
                 while (match(AMP_ID))
                     xprs.emplace_back(_expression(2));
@@ -1461,8 +1460,8 @@ namespace riddle
             case CARET_ID:
             {
                 assert(1 >= pr);
-                std::vector<utils::u_ptr<const expression>> xprs;
-                xprs.emplace_back(e);
+                std::vector<expression_ptr> xprs;
+                xprs.emplace_back(std::move(e));
 
                 while (match(CARET_ID))
                     xprs.emplace_back(_expression(2));
@@ -1473,8 +1472,8 @@ namespace riddle
             case PLUS_ID:
             {
                 assert(2 >= pr);
-                std::vector<utils::u_ptr<const expression>> xprs;
-                xprs.emplace_back(e);
+                std::vector<expression_ptr> xprs;
+                xprs.emplace_back(std::move(e));
 
                 while (match(PLUS_ID))
                     xprs.emplace_back(_expression(3));
@@ -1485,8 +1484,8 @@ namespace riddle
             case MINUS_ID:
             {
                 assert(2 >= pr);
-                std::vector<utils::u_ptr<const expression>> xprs;
-                xprs.emplace_back(e);
+                std::vector<expression_ptr> xprs;
+                xprs.emplace_back(std::move(e));
 
                 while (match(MINUS_ID))
                     xprs.emplace_back(_expression(3));
@@ -1497,8 +1496,8 @@ namespace riddle
             case STAR_ID:
             {
                 assert(3 >= pr);
-                std::vector<utils::u_ptr<const expression>> xprs;
-                xprs.emplace_back(e);
+                std::vector<expression_ptr> xprs;
+                xprs.emplace_back(std::move(e));
 
                 while (match(STAR_ID))
                     xprs.emplace_back(_expression(4));
@@ -1509,8 +1508,8 @@ namespace riddle
             case SLASH_ID:
             {
                 assert(3 >= pr);
-                std::vector<utils::u_ptr<const expression>> xprs;
-                xprs.emplace_back(e);
+                std::vector<expression_ptr> xprs;
+                xprs.emplace_back(std::move(e));
 
                 while (match(SLASH_ID))
                     xprs.emplace_back(_expression(4));
