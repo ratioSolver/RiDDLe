@@ -18,7 +18,7 @@ namespace riddle
     }
 
     RIDDLE_EXPORT expr method::call(expr &self, std::vector<expr> exprs)
-    {
+    { // we create a new environment for the method..
         env ctx;
         if (auto ci = dynamic_cast<complex_item *>(self.operator->()))
             ctx = env(ci);
@@ -27,12 +27,19 @@ namespace riddle
         else
             throw std::runtime_error("invalid method call");
 
+        // ..and we add the arguments to it
         for (size_t i = 0; i < args.size(); ++i)
+        {
+            if (!args[i].get().get_type().is_assignable_from(exprs[i]->get_type()))
+                throw std::runtime_error("invalid argument type");
             ctx.items.emplace(args[i].get().get_name(), std::move(exprs[i]));
+        }
 
+        // we execute the method body..
         for (const auto &stmnt : body)
             stmnt->execute(*this, ctx);
 
+        // and we return the value of the return keyword if it exists..
         if (ctx.items.find(RETURN_KW) != ctx.items.end())
             return ctx.items.at(RETURN_KW);
         else

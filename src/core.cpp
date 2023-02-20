@@ -6,7 +6,7 @@
 namespace riddle
 {
     RIDDLE_EXPORT core::core() : scope(*this), bt(new bool_type(*this)), it(new int_type(*this)), rt(new real_type(*this)), tt(new time_point_type(*this)), st(new string_type(*this))
-    {
+    { // we add the basic types to the core..
         types.emplace(bt->get_name(), bt);
         types.emplace(it->get_name(), it);
         types.emplace(rt->get_name(), rt);
@@ -18,6 +18,10 @@ namespace riddle
     {
         parser prs(script);
         auto cu = prs.parse();
+        cu->declare(*this);
+        cu->refine(*this);
+        cu->refine_predicates(*this);
+        cu->execute(*this, *this);
         cus.emplace_back(std::move(cu));
     }
 
@@ -35,6 +39,15 @@ namespace riddle
             }
             else
                 throw std::invalid_argument("cannot find file `" + f + "`");
+
+        for (auto &cu : c_cus)
+            cu->declare(*this);
+        for (auto &cu : c_cus)
+            cu->refine(*this);
+        for (auto &cu : c_cus)
+            cu->refine_predicates(*this);
+        for (auto &cu : c_cus)
+            cu->execute(*this, *this);
 
         cus.reserve(cus.size() + c_cus.size());
         for (auto &cu : c_cus)

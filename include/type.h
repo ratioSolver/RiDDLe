@@ -7,6 +7,10 @@
 
 namespace riddle
 {
+  /**
+   * @brief The base class for all types.
+   *
+   */
   class type
   {
   public:
@@ -15,9 +19,27 @@ namespace riddle
 
     const std::string &get_name() const { return name; }
 
+    /**
+     * @brief Check if this type is assignable from another type.
+     *
+     * @param other The other type.
+     * @return true If this type is assignable from the other type.
+     * @return false If this type is not assignable from the other type.
+     */
     bool is_assignable_from(const type &other) const;
+    /**
+     * @brief Check if this type is primitive (i.e. a built-in type).
+     *
+     * @return true If this type is primitive.
+     * @return false If this type is not primitive.
+     */
     bool is_primitive() const { return primitive; }
 
+    /**
+     * @brief Create a new instance of this type.
+     *
+     * @return expr The new instance.
+     */
     virtual expr new_instance() = 0;
 
     bool operator==(const type &other) const { return this == &other; }
@@ -31,6 +53,10 @@ namespace riddle
     bool primitive;
   };
 
+  /**
+   * @brief The type for boolean values.
+   *
+   */
   class bool_type final : public type
   {
   public:
@@ -39,6 +65,10 @@ namespace riddle
     expr new_instance() override;
   };
 
+  /**
+   * @brief The type for integer values.
+   *
+   */
   class int_type final : public type
   {
   public:
@@ -47,6 +77,10 @@ namespace riddle
     expr new_instance() override;
   };
 
+  /**
+   * @brief The type for real values.
+   *
+   */
   class real_type final : public type
   {
   public:
@@ -55,6 +89,10 @@ namespace riddle
     expr new_instance() override;
   };
 
+  /**
+   * @brief The type for time values.
+   *
+   */
   class time_point_type final : public type
   {
   public:
@@ -63,6 +101,10 @@ namespace riddle
     expr new_instance() override;
   };
 
+  /**
+   * @brief The type for string values.
+   *
+   */
   class string_type final : public type
   {
   public:
@@ -71,20 +113,33 @@ namespace riddle
     expr new_instance() override;
   };
 
+  /**
+   * @brief The type for a typedef.
+   *
+   */
   class typedef_type final : public type
   {
   public:
     typedef_type(scope &scp, const std::string &name, type &tp, const ast::expression_ptr &xpr);
 
+    /**
+     * @brief Get the basic type of this typedef.
+     *
+     * @return type& The basic type.
+     */
     type &get_basic_type() const { return tp; }
 
     expr new_instance() override;
 
   private:
     type &tp;
-    const ast::expression_ptr &expr;
+    const ast::expression_ptr &xpr;
   };
 
+  /**
+   * @brief The type for an enum. It contains a set of allowed values representing the initial domain of the instantiated variables.
+   *
+   */
   class enum_type final : public type
   {
     friend class ast::enum_declaration;
@@ -103,6 +158,10 @@ namespace riddle
     std::vector<std::reference_wrapper<enum_type>> enums;
   };
 
+  /**
+   * @brief The predicate type. A predicate is represented by a name and a set of arguments. It also contains a set of instances, which are the facts and goals that have been created from this predicate. Finally, it contains the body of the predicate, which is a set of statements that are executed when a goal has to be achieved.
+   *
+   */
   class predicate : public scope, public type
   {
     friend class ast::predicate_declaration;
@@ -114,12 +173,32 @@ namespace riddle
     const std::vector<std::reference_wrapper<predicate>> &get_parents() const { return parents; }
     const std::vector<std::reference_wrapper<field>> &get_args() const { return args; }
 
+    /**
+     * @brief Create a new instance of this predicate. This is equivalent to calling new_fact().
+     *
+     * @return expr The new instance.
+     */
     expr new_instance() override { return new_fact(); }
     const std::vector<expr> &get_instances() const { return instances; }
 
+    /**
+     * @brief Create a new fact from this predicate.
+     *
+     * @return expr The new fact.
+     */
     expr new_fact();
+    /**
+     * @brief Create a new goal from this predicate.
+     *
+     * @return expr The new goal.
+     */
     expr new_goal();
 
+    /**
+     * @brief Call the rule associated with this predicate with the given atom as the right-hand side.
+     *
+     * @param atm The atom representing the right-hand side of the rule.
+     */
     RIDDLE_EXPORT void call(expr &atm);
 
   protected:

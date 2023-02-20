@@ -43,11 +43,12 @@ namespace riddle
     time_point_type::time_point_type(core &cr) : type(cr, TIME_POINT_KW) {}
     expr time_point_type::new_instance() { return scp.get_core().new_time_point(); }
 
-    typedef_type::typedef_type(scope &scp, const std::string &name, type &tp, const ast::expression_ptr &xpr) : type(scp, name), tp(tp), expr(xpr) {}
+    typedef_type::typedef_type(scope &scp, const std::string &name, type &tp, const ast::expression_ptr &xpr) : type(scp, name), tp(tp), xpr(xpr) {}
     expr typedef_type::new_instance()
     {
+        // we create a new environment for the expression evaluation..
         env ctx(scp.get_core());
-        return expr->evaluate(scp, ctx);
+        return xpr->evaluate(scp, ctx);
     }
 
     enum_type::enum_type(scope &scp, const std::string &name) : type(scp, name) {}
@@ -81,20 +82,20 @@ namespace riddle
     }
 
     expr predicate::new_fact()
-    {
+    { // we create a new fact..
         auto fact = get_core().new_fact(*this);
         instances.emplace_back(fact);
         return fact;
     }
     expr predicate::new_goal()
-    {
+    { // we create a new goal..
         auto goal = get_core().new_goal(*this);
         instances.emplace_back(goal);
         return goal;
     }
 
     RIDDLE_EXPORT void predicate::call(expr &atm)
-    {
+    { // we create a new environment for the rule's body execution..
         env ctx(static_cast<complex_item *>(atm.operator->()));
         for (const auto &stmnt : body)
             stmnt->execute(*this, ctx);
