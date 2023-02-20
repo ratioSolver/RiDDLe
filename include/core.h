@@ -133,13 +133,21 @@ namespace riddle
     virtual expr new_string(const std::string &value) = 0;
 
     /**
+     * @brief Creates a new object expression.
+     *
+     * @param tp The type of the object expression.
+     * @return expr The new object expression.
+     */
+    virtual expr new_item(complex_type &tp) = 0;
+
+    /**
      * @brief Creates a new enum expression.
      *
      * @param tp The type of the enum expression.
      * @param xprs The values of the enum expression.
      * @return expr The new enum expression.
      */
-    virtual expr new_enum(const type &tp, const std::vector<expr> &xprs) = 0;
+    virtual expr new_enum(type &tp, const std::vector<expr> &xprs) = 0;
 
     /**
      * @brief Creates a new arithmetic expression representing the sum of the given expressions.

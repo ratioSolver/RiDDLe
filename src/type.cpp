@@ -165,7 +165,7 @@ namespace riddle
 
     expr complex_type::new_instance()
     {
-        auto inst = new complex_item(*this);
+        auto inst = get_core().new_item(*this);
         instances.push_back(inst);
         return inst;
     }

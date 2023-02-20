@@ -29,4 +29,6 @@ namespace riddle
 
     RIDDLE_EXPORT expr &get(const std::string &name) override;
   };
+
+  inline uintptr_t get_id(const item &itm) noexcept { return reinterpret_cast<uintptr_t>(&itm); }
 } // namespace riddle
