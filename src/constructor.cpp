@@ -4,7 +4,7 @@
 
 namespace riddle
 {
-    RIDDLE_EXPORT constructor::constructor(complex_type &tp, std::vector<field_ptr> &as, std::vector<ast::statement_ptr> &body) : scope(tp), body(std::move(body))
+    RIDDLE_EXPORT constructor::constructor(complex_type &tp, std::vector<field_ptr> as, const std::vector<ast::statement_ptr> &body) : scope(tp), body(body)
     {
         add_field(new field(tp, THIS_KW, nullptr, true));
         args.reserve(as.size());

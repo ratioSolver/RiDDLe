@@ -389,19 +389,201 @@ namespace riddle
     { // we create the typedef and add it to the scope..
         auto td = new typedef_type(scp, name.id, scp.get_type(primitive_type.id), xpr);
         if (auto c = dynamic_cast<core *>(&scp))
-            c->add_type(std::move(td)); // we add the typedef to the core..
+            c->add_type(td); // we add the typedef to the core..
         else if (auto c = dynamic_cast<complex_type *>(&scp))
-            c->add_type(std::move(td)); // we add the typedef to the complex type..
+            c->add_type(td); // we add the typedef to the complex type..
         else
             throw std::runtime_error("cannot add typedef");
     }
 
+    void enum_declaration::declare(scope &scp) const
+    { // we create the enum and add it to the scope..
+        auto en = new enum_type(scp, name.id);
+
+        // the enum's instances..
+        for (const auto &e : enums)
+            en->instances.emplace_back(scp.get_core().new_string(e.str));
+
+        if (auto c = dynamic_cast<core *>(&scp))
+            c->add_type(en); // we add the enum to the core..
+        else if (auto c = dynamic_cast<complex_type *>(&scp))
+            c->add_type(en); // we add the enum to the complex type..
+        else
+            throw std::runtime_error("cannot add enum");
+    }
+
+    void enum_declaration::refine(scope &scp) const
+    {
+        if (!type_refs.empty())
+        {
+            if (auto en = dynamic_cast<enum_type *>(&scp.get_type(name.id))) // the enum to refine..
+                for (const auto &tr : type_refs)
+                {
+                    auto *tp = &scp.get_type(tr.front().id);
+                    for (auto it = tr.begin() + 1; it != tr.end(); ++it)
+                        if (auto ci = dynamic_cast<complex_type *>(tp))
+                            tp = &ci->get_type(it->id);
+                        else
+                            throw std::runtime_error("cannot find type");
+                    if (auto e = dynamic_cast<enum_type *>(tp))
+                        en->enums.emplace_back(*e);
+                    else
+                        throw std::runtime_error("cannot refine enum with non-enum type");
+                }
+            else
+                throw std::runtime_error("cannot refine non-enum type");
+        }
+    }
+
+    void field_declaration::refine(scope &scp) const
+    {
+        auto *tp = &scp.get_type(field_type.front().id);
+        for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
+            if (auto ci = dynamic_cast<complex_type *>(tp))
+                tp = &ci->get_type(it->id);
+            else
+                throw std::runtime_error("cannot find type");
+
+        for (const auto &d : declarations)
+        {
+            auto *fld = new field(*tp, d->name.id, d->xpr);
+            if (auto c = dynamic_cast<core *>(&scp))
+                c->add_field(fld); // we add the field to the core..
+            else if (auto c = dynamic_cast<complex_type *>(&scp))
+                c->add_field(fld); // we add the field to the complex type..
+            else
+                throw std::runtime_error("cannot add field");
+        }
+    }
+
+    void constructor_declaration::refine(scope &scp) const
+    {
+        std::vector<field_ptr> args;
+        args.reserve(parameters.size());
+        for (const auto &[tp_id_tkns, id_tkn] : parameters)
+        { // we find the type..
+            auto *tp = &scp.get_type(tp_id_tkns.front().id);
+            for (auto it = tp_id_tkns.begin() + 1; it != tp_id_tkns.end(); ++it)
+                if (auto ci = dynamic_cast<complex_type *>(tp))
+                    tp = &ci->get_type(it->id);
+                else
+                    throw std::runtime_error("cannot find type");
+
+            // we add the argument to the constructor..
+            args.emplace_back(new field(*tp, id_tkn.id));
+        }
+
+        if (auto c = dynamic_cast<complex_type *>(&scp))
+            c->add_constructor(new constructor(*c, std::move(args), body)); // we add the constructor to the complex type..
+        else
+            throw std::runtime_error("cannot add constructor");
+    }
+
+    void class_declaration::declare(scope &scp) const
+    { // we create the class and add it to the scope..
+        auto cl = new complex_type(scp, name.id);
+        if (auto c = dynamic_cast<core *>(&scp))
+            c->add_type(cl); // we add the class to the core..
+        else if (auto c = dynamic_cast<complex_type *>(&scp))
+            c->add_type(cl); // we add the class to the complex type..
+        else
+            throw std::runtime_error("cannot add class");
+
+        // we declare the enclosed types..
+        for (const auto &t : types)
+            t->declare(*cl);
+    }
+
+    void class_declaration::refine(scope &scp) const
+    {
+        auto &tp = scp.get_type(name.id);
+        if (auto c_tp = dynamic_cast<complex_type *>(&tp))
+        { // we add the base classes..
+            for (const auto &t : base_classes)
+            { // we find the base class..
+                auto *bc = &scp.get_type(t.front().id);
+                for (auto it = t.begin() + 1; it != t.end(); ++it)
+                    if (auto ci = dynamic_cast<complex_type *>(bc))
+                        bc = &ci->get_type(it->id);
+                    else
+                        throw std::runtime_error("cannot find type");
+
+                if (auto bc_ct = dynamic_cast<complex_type *>(bc))
+                    c_tp->parents.emplace_back(*bc_ct); // we add the base class to the class..
+                else
+                    throw std::runtime_error("cannot add non-class type as base class");
+            }
+
+            // we refine the fields..
+            for (const auto &f : fields)
+                f->refine(*c_tp);
+            // we refine the constructors..
+            for (const auto &c : constructors)
+                c->refine(*c_tp);
+            // we refine the methods..
+            for (const auto &m : methods)
+                m->refine(*c_tp);
+            // we refine the enclosed types..
+            for (const auto &t : types)
+                t->refine(*c_tp);
+            // we refine the enclosed predicates..
+            for (const auto &p : predicates)
+                p->refine(*c_tp);
+        }
+        else
+            throw std::runtime_error("cannot refine non-class type");
+    }
+
+    void class_declaration::refine_predicates(scope &scp) const
+    {
+        auto &tp = scp.get_type(name.id);
+        if (auto c_tp = dynamic_cast<complex_type *>(&tp))
+        { // we refine the enclosed predicates..
+            for (const auto &p : predicates)
+                p->refine(*c_tp);
+            // we refine the enclosed types..
+            for (const auto &t : types)
+                t->refine_predicates(*c_tp);
+        }
+        else
+            throw std::runtime_error("cannot refine non-class type");
+    }
+
     void compilation_unit::declare(scope &scp) const
     {
+        // we declare the types..
         for (const auto &t : types)
             t->declare(scp);
+        // we declare the predicates..
         for (const auto &p : predicates)
             p->declare(scp);
+    }
+
+    void compilation_unit::refine(scope &scp) const
+    {
+        // we refine the types..
+        for (const auto &t : types)
+            t->refine(scp);
+        // we refine the methods..
+        for (const auto &m : methods)
+            m->refine(scp);
+        // we refine the predicates..
+        for (const auto &p : predicates)
+            p->refine(scp);
+    }
+
+    void compilation_unit::refine_predicates(scope &scp) const
+    {
+        // we refine the types..
+        for (const auto &t : types)
+            t->refine_predicates(scp);
+    }
+
+    void compilation_unit::execute(scope &scp, env &ctx) const
+    {
+        // we execute the statements..
+        for (const auto &s : body)
+            s->execute(scp, ctx);
     }
 
     RIDDLE_EXPORT parser::parser(const std::string &str) : lex(str) {}

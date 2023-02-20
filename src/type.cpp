@@ -50,6 +50,24 @@ namespace riddle
         return expr->evaluate(scp, ctx);
     }
 
+    enum_type::enum_type(scope &scp, const std::string &name) : type(scp, name) {}
+    std::vector<expr> enum_type::get_all_values() const
+    {
+        std::vector<expr> values;
+        values.reserve(instances.size());
+        for (const auto &inst : instances)
+            values.emplace_back(inst);
+        for (const auto &e : enums)
+        {
+            auto ev = e.get().instances;
+            values.reserve(values.size() + ev.size());
+            for (const auto &v : ev)
+                values.emplace_back(v);
+        }
+        return values;
+    }
+    expr enum_type::new_instance() { return scp.get_core().new_enum(*this, get_all_values()); }
+
     RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name, std::vector<field_ptr> as, const std::vector<ast::statement_ptr> &body) : scope(scp), type(scp.get_core(), name), body(body)
     {
         if (!is_core(scp))

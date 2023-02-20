@@ -12,6 +12,8 @@ namespace riddle
 
   class scope
   {
+    friend class ast::field_declaration;
+
   public:
     RIDDLE_EXPORT scope(scope &scp);
     virtual ~scope() = default;

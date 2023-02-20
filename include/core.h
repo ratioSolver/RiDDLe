@@ -11,6 +11,8 @@ namespace riddle
     friend class ast::method_declaration;
     friend class ast::predicate_declaration;
     friend class ast::typedef_declaration;
+    friend class ast::enum_declaration;
+    friend class ast::class_declaration;
 
   public:
     RIDDLE_EXPORT core();

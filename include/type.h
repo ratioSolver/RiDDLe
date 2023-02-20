@@ -85,6 +85,24 @@ namespace riddle
     const ast::expression_ptr &expr;
   };
 
+  class enum_type final : public type
+  {
+    friend class ast::enum_declaration;
+
+  public:
+    enum_type(scope &scp, const std::string &name);
+
+    const std::vector<std::reference_wrapper<enum_type>> &get_enums() const { return enums; }
+
+    std::vector<expr> get_all_values() const;
+
+    expr new_instance() override;
+
+  private:
+    std::vector<expr> instances;
+    std::vector<std::reference_wrapper<enum_type>> enums;
+  };
+
   class predicate : public scope, public type
   {
     friend class ast::predicate_declaration;
@@ -126,6 +144,8 @@ namespace riddle
     friend class ast::constructor_declaration;
     friend class ast::predicate_declaration;
     friend class ast::typedef_declaration;
+    friend class ast::enum_declaration;
+    friend class ast::class_declaration;
 
   public:
     RIDDLE_EXPORT complex_type(scope &scp, const std::string &name);
