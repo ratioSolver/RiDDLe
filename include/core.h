@@ -5,8 +5,33 @@
 #include "bool.h"
 #include "inf_rational.h"
 
+#ifdef BUILD_LISTENERS
+#define FIRE_LOG(msg) fire_log(msg)
+#define FIRE_READ(rddl) fire_read(rddl)
+#define FIRE_STATE_CHANGED() fire_state_changed()
+#define FIRE_STARTED_SOLVING() fire_started_solving()
+#define FIRE_SOLUTION_FOUND() fire_solution_found()
+#define FIRE_INCONSISTENT_PROBLEM() fire_inconsistent_problem()
+#else
+#define FIRE_LOG(msg)
+#define FIRE_READ(rddl)
+#define FIRE_STATE_CHANGED()
+#define FIRE_STARTED_SOLVING()
+#define FIRE_SOLUTION_FOUND()
+#define FIRE_INCONSISTENT_PROBLEM()
+#endif
+
+#ifdef COMPUTE_NAMES
+#define RECOMPUTE_NAMES() recompute_names()
+#else
+#define RECOMPUTE_NAMES()
+#endif
+
 namespace riddle
 {
+#ifdef BUILD_LISTENERS
+  class core_listener;
+#endif
   class core : public scope, public env
   {
     friend class ast::method_declaration;
@@ -14,6 +39,9 @@ namespace riddle
     friend class ast::typedef_declaration;
     friend class ast::enum_declaration;
     friend class ast::class_declaration;
+#ifdef BUILD_LISTENERS
+    friend class core_listener;
+#endif
 
   public:
     RIDDLE_EXPORT core();
@@ -375,6 +403,21 @@ namespace riddle
      */
     void add_predicate(predicate_ptr pred) { predicates.emplace(pred->get_name(), std::move(pred)); }
 
+#ifdef COMPUTE_NAMES
+  public:
+    std::string guess_name(const item &itm) const noexcept
+    {
+      if (const auto at_f = expr_names.find(&itm); at_f != expr_names.cend())
+        return at_f->second;
+      return "";
+    }
+
+  private:
+    void recompute_names() noexcept;
+
+    std::unordered_map<const item *, const std::string> expr_names;
+#endif
+
   private:
     type *bt, *it, *rt, *tt, *st;               // builtin types..
     std::vector<ast::compilation_unit_ptr> cus; // the compilation units..
@@ -383,6 +426,20 @@ namespace riddle
     std::map<std::string, type_ptr> types;
     std::map<std::string, std::vector<method_ptr>> methods;
     std::map<std::string, predicate_ptr> predicates;
+
+#ifdef BUILD_LISTENERS
+  private:
+    std::vector<core_listener *> listeners; // the core listeners..
+
+  protected:
+    RIDDLE_EXPORT void fire_log(const std::string &msg) const noexcept;
+    RIDDLE_EXPORT void fire_read(const std::string &script) const noexcept;
+    RIDDLE_EXPORT void fire_read(const std::vector<std::string> &files) const noexcept;
+    RIDDLE_EXPORT void fire_state_changed() const noexcept;
+    RIDDLE_EXPORT void fire_started_solving() const noexcept;
+    RIDDLE_EXPORT void fire_solution_found() const noexcept;
+    RIDDLE_EXPORT void fire_inconsistent_problem() const noexcept;
+#endif
   };
 
   inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }

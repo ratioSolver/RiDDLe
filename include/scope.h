@@ -56,6 +56,8 @@ namespace riddle
 
     RIDDLE_EXPORT virtual expr &get(const std::string &name);
 
+    const std::map<std::string, expr> &get_vars() const { return items; }
+
   private:
     env_ptr parent;
     std::map<std::string, expr> items;

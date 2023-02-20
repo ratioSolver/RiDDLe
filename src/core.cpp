@@ -3,6 +3,13 @@
 #include <fstream>
 #include <stdexcept>
 
+#ifdef BUILD_LISTENERS
+#include "core_listener.h"
+#endif
+#ifdef COMPUTE_NAMES
+#include <queue>
+#endif
+
 namespace riddle
 {
     RIDDLE_EXPORT core::core() : scope(*this), bt(new bool_type(*this)), it(new int_type(*this)), rt(new real_type(*this)), tt(new time_point_type(*this)), st(new string_type(*this))
@@ -23,6 +30,8 @@ namespace riddle
         cu->refine_predicates(*this);
         cu->execute(*this, *this);
         cus.emplace_back(std::move(cu));
+        RECOMPUTE_NAMES();
+        FIRE_READ(script);
     }
 
     RIDDLE_EXPORT void core::read(const std::vector<std::string> &files)
@@ -52,6 +61,9 @@ namespace riddle
         cus.reserve(cus.size() + c_cus.size());
         for (auto &cu : c_cus)
             cus.emplace_back(std::move(cu));
+
+        RECOMPUTE_NAMES();
+        FIRE_READ(files);
     }
 
     RIDDLE_EXPORT type &core::get_type(const std::string &tp_name)
@@ -100,4 +112,68 @@ namespace riddle
             return it->second;
         throw std::out_of_range("item `" + name + "` not found");
     }
+
+#ifdef BUILD_LISTENERS
+    RIDDLE_EXPORT void core::fire_log(const std::string &msg) const noexcept
+    {
+        for (auto &l : listeners)
+            l->log(msg);
+    }
+    RIDDLE_EXPORT void core::fire_read(const std::string &msg) const noexcept
+    {
+        for (auto &l : listeners)
+            l->read(msg);
+    }
+    RIDDLE_EXPORT void core::fire_read(const std::vector<std::string> &files) const noexcept
+    {
+        for (auto &l : listeners)
+            l->read(files);
+    }
+    RIDDLE_EXPORT void core::fire_state_changed() const noexcept
+    {
+        for (auto &l : listeners)
+            l->state_changed();
+    }
+    RIDDLE_EXPORT void core::fire_started_solving() const noexcept
+    {
+        for (auto &l : listeners)
+            l->started_solving();
+    }
+    RIDDLE_EXPORT void core::fire_solution_found() const noexcept
+    {
+        for (auto &l : listeners)
+            l->solution_found();
+    }
+    RIDDLE_EXPORT void core::fire_inconsistent_problem() const noexcept
+    {
+        for (auto &l : listeners)
+            l->inconsistent_problem();
+    }
+#endif
+
+#ifdef COMPUTE_NAMES
+    void core::recompute_names() noexcept
+    {
+        expr_names.clear();
+
+        std::queue<std::pair<std::string, expr>> q;
+        for (const auto &xpr : get_vars())
+        {
+            expr_names.emplace(&*xpr.second, xpr.first);
+            if (!xpr.second->get_type().is_primitive())
+                q.push(xpr);
+        }
+
+        while (!q.empty())
+        {
+            const auto &c_xpr = q.front();
+            if (const auto *ci = dynamic_cast<complex_item *>(&*c_xpr.second))
+                for (const auto &xpr : ci->get_vars())
+                    if (expr_names.emplace(&*xpr.second, expr_names.at(&*c_xpr.second) + '.' + xpr.first).second)
+                        if (!xpr.second->get_type().is_primitive())
+                            q.push(xpr);
+            q.pop();
+        }
+    }
+#endif
 } // namespace riddle
