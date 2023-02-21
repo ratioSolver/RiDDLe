@@ -451,4 +451,9 @@ namespace riddle
   };
 
   inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }
+
+  class unsolvable_exception : public std::exception
+  {
+    const char *what() const noexcept override { return "the problem is unsolvable.."; }
+  };
 } // namespace riddle
