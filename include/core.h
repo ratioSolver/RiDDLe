@@ -294,6 +294,14 @@ namespace riddle
     virtual expr new_goal(const predicate &pred) = 0;
 
     /**
+     * @brief Returns whether the given expression is a constant.
+     *
+     * @param xpr The expression to check.
+     * @return true If the given expression is a constant.
+     * @return false If the given expression is not a constant.
+     */
+    virtual bool is_constant(const expr &xpr) const = 0;
+    /**
      * @brief Returns the boolean value of the given expression.
      *
      * @param xpr The expression to evaluate.
@@ -368,6 +376,14 @@ namespace riddle
      * @return type& The string type.
      */
     type &get_string_type() const noexcept { return *st; }
+
+    /**
+     * @brief Get the type of the given expressions. If the expressions are all integers, the integer type is returned. If the expressions are all reals, the real type is returned. If the expressions are all times or constants, the time type is returned. Otherwise, the real type is returned.
+     *
+     * @param args The expressions to get the type of.
+     * @return type& The type of the given expressions.
+     */
+    RIDDLE_EXPORT type &get_type(const std::vector<expr> &args);
 
     /**
      * @brief Returns the type with the given name.

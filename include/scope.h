@@ -37,6 +37,13 @@ namespace riddle
     RIDDLE_EXPORT field &get_field(const std::string &name);
 
     /**
+     * @brief Get the fields in the scope.
+     *
+     * @return const std::map<std::string, field_ptr>& The fields in the scope.
+     */
+    const std::map<std::string, field_ptr> &get_fields() const { return fields; }
+
+    /**
      * @brief Check if the scope has a field with the given name.
      *
      * @param name The name of the field.

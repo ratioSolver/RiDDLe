@@ -66,6 +66,21 @@ namespace riddle
         FIRE_READ(files);
     }
 
+    RIDDLE_EXPORT type &core::get_type(const std::vector<expr> &args)
+    {
+        if (std::all_of(args.begin(), args.end(), [this](const expr &e)
+                        { return e->get_type() == get_int_type(); }))
+            return get_int_type();
+        else if (std::all_of(args.begin(), args.end(), [this](const expr &e)
+                             { return e->get_type() == get_real_type(); }))
+            return get_real_type();
+        else if (std::all_of(args.begin(), args.end(), [this](const expr &e)
+                             { return e->get_type() == get_time_type(); }))
+            return get_time_type();
+        else
+            return get_real_type();
+    }
+
     RIDDLE_EXPORT type &core::get_type(const std::string &tp_name)
     {
         auto it = types.find(tp_name);
