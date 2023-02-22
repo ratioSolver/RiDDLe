@@ -246,7 +246,7 @@ namespace riddle
         else
         { // we inherit the formula's scope..
             p = &scp.get_predicate(predicate_name.id);
-            if (!is_core(p->get_scope()))
+            if (!is_core(p->scope::get_scope()))
                 assgnments.emplace(TAU_KW, ctx.get(TAU_KW));
         }
 

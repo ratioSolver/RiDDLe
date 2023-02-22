@@ -17,6 +17,19 @@ namespace riddle
     type(scope &scp, const std::string &name, bool primitive = false);
     virtual ~type() = default;
 
+    /**
+     * @brief Get the scope this type is defined in.
+     *
+     * @return scope& The scope.
+     */
+    scope &get_scope() { return scp; }
+    /**
+     * @brief Get the scope this type is defined in.
+     *
+     * @return const scope& The scope.
+     */
+    const scope &get_scope() const { return scp; }
+
     const std::string &get_name() const { return name; }
 
     /**

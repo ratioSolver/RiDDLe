@@ -16,6 +16,7 @@ namespace riddle
     virtual ~item() = default;
 
     type &get_type() { return tp; }
+    const type &get_type() const { return tp; }
 
   private:
     type &tp;
