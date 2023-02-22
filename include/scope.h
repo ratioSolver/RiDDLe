@@ -9,6 +9,7 @@ namespace riddle
 {
   class core;
   class complex_item;
+  class enum_item;
 
   class scope
   {
@@ -85,6 +86,7 @@ namespace riddle
   {
     friend class core;
     friend class complex_item;
+    friend class enum_item;
     friend class constructor;
     friend class method;
     friend class ast::local_field_statement;

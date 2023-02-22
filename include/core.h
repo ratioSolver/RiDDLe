@@ -150,6 +150,15 @@ namespace riddle
     virtual expr new_enum(type &tp, const std::vector<expr> &xprs) = 0;
 
     /**
+     * @brief Returns the expression with the given name in the given scope.
+     *
+     * @param xpr The scope to search in.
+     * @param name The name of the expression to search for.
+     * @return expr The expression with the given name in the given scope.
+     */
+    virtual expr get_enum(expr &xpr, const std::string &name) = 0;
+
+    /**
      * @brief Creates a new arithmetic expression representing the sum of the given expressions.
      *
      * @param xprs The expressions to sum.

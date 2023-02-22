@@ -18,6 +18,19 @@ namespace riddle
     virtual ~type() = default;
 
     /**
+     * @brief Get the core this type is defined in.
+     *
+     * @return core& The core.
+     */
+    core &get_core() { return scp.get_core(); }
+    /**
+     * @brief Get the core this type is defined in.
+     *
+     * @return const core& The core.
+     */
+    const core &get_core() const { return scp.get_core(); }
+
+    /**
      * @brief Get the scope this type is defined in.
      *
      * @return scope& The scope.

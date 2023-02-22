@@ -83,13 +83,13 @@ namespace riddle
 
     expr predicate::new_fact()
     { // we create a new fact..
-        auto fact = get_core().new_fact(*this);
+        auto fact = type::get_core().new_fact(*this);
         instances.emplace_back(fact);
         return fact;
     }
     expr predicate::new_goal()
     { // we create a new goal..
-        auto goal = get_core().new_goal(*this);
+        auto goal = type::get_core().new_goal(*this);
         instances.emplace_back(goal);
         return goal;
     }
@@ -165,7 +165,7 @@ namespace riddle
 
     expr complex_type::new_instance()
     {
-        auto inst = get_core().new_item(*this);
+        auto inst = type::get_core().new_item(*this);
         instances.push_back(inst);
         return inst;
     }
