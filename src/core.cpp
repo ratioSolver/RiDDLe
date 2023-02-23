@@ -13,13 +13,13 @@
 
 namespace riddle
 {
-    RIDDLE_EXPORT core::core() : scope(*this), bt(new bool_type(*this)), it(new int_type(*this)), rt(new real_type(*this)), tt(new time_point_type(*this)), st(new string_type(*this))
+    RIDDLE_EXPORT core::core() : scope(*this), b_tp(new bool_type(*this)), i_tp(new int_type(*this)), r_tp(new real_type(*this)), t_tp(new time_point_type(*this)), s_tp(new string_type(*this))
     { // we add the basic types to the core..
-        types.emplace(bt->get_name(), bt);
-        types.emplace(it->get_name(), it);
-        types.emplace(rt->get_name(), rt);
-        types.emplace(tt->get_name(), tt);
-        types.emplace(st->get_name(), st);
+        types.emplace(b_tp->get_name(), b_tp);
+        types.emplace(i_tp->get_name(), i_tp);
+        types.emplace(r_tp->get_name(), r_tp);
+        types.emplace(t_tp->get_name(), t_tp);
+        types.emplace(s_tp->get_name(), s_tp);
     }
 
     RIDDLE_EXPORT void core::read(const std::string &script)

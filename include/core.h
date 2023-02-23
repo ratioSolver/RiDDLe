@@ -351,31 +351,31 @@ namespace riddle
      *
      * @return type& The bool type.
      */
-    type &get_bool_type() const noexcept { return *bt; }
+    type &get_bool_type() const noexcept { return *b_tp; }
     /**
      * @brief Get the int type object.
      *
      * @return type& The int type.
      */
-    type &get_int_type() const noexcept { return *it; }
+    type &get_int_type() const noexcept { return *i_tp; }
     /**
      * @brief Get the real type object.
      *
      * @return type& The real type.
      */
-    type &get_real_type() const noexcept { return *rt; }
+    type &get_real_type() const noexcept { return *r_tp; }
     /**
      * @brief Get the time type object.
      *
      * @return type& The time type.
      */
-    type &get_time_type() const noexcept { return *tt; }
+    type &get_time_type() const noexcept { return *t_tp; }
     /**
      * @brief Get the string type object.
      *
      * @return type& The string type.
      */
-    type &get_string_type() const noexcept { return *st; }
+    type &get_string_type() const noexcept { return *s_tp; }
 
     /**
      * @brief Get the type of the given expressions. If the expressions are all integers, the integer type is returned. If the expressions are all reals, the real type is returned. If the expressions are all times or constants, the time type is returned. Otherwise, the real type is returned.
@@ -452,7 +452,7 @@ namespace riddle
 #endif
 
   private:
-    type *bt, *it, *rt, *tt, *st;               // builtin types..
+    type *b_tp, *i_tp, *r_tp, *t_tp, *s_tp;     // builtin types..
     std::vector<ast::compilation_unit_ptr> cus; // the compilation units..
 
   private:
