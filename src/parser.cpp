@@ -230,7 +230,7 @@ namespace riddle
     void formula_statement::execute(scope &scp, env &ctx) const
     {
         predicate *p;
-        std::unordered_map<std::string, expr> assgnments;
+        std::map<std::string, expr> assgnments;
         if (!formula_scope.empty())
         { // the formula's scope is explicitely declared..
             auto e = ctx.get(formula_scope.front().id);
