@@ -259,7 +259,7 @@ namespace riddle
     std::vector<std::reference_wrapper<complex_type>> get_parents() const { return parents; }
 
     RIDDLE_EXPORT constructor &get_constructor(const std::vector<std::reference_wrapper<type>> &args);
-    bool has_type(const std::string &name) const override { return types.find(name) != types.end(); }
+    bool has_type(const std::string &nm) const override { return types.find(nm) != types.end(); }
     RIDDLE_EXPORT type &get_type(const std::string &name) override;
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) override;
     RIDDLE_EXPORT predicate &get_predicate(const std::string &name) override;

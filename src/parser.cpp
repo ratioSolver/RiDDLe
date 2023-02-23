@@ -313,7 +313,7 @@ namespace riddle
 
     void method_declaration::refine(scope &scp) const
     {
-        type *rt; // the method's return type..
+        type *rt = nullptr; // the method's return type..
         if (!return_type.empty())
         {
             rt = &scp.get_type(return_type.front().id);
@@ -338,10 +338,10 @@ namespace riddle
 
         // we create the method and add it to the scope..
         auto mtd = new method(scp, name.id, std::move(args), body, rt);
-        if (auto c = dynamic_cast<core *>(&scp))
-            c->add_method(std::move(mtd)); // we add the method to the core..
-        else if (auto c = dynamic_cast<complex_type *>(&scp))
-            c->add_method(std::move(mtd)); // we add the method to the complex type..
+        if (auto cr = dynamic_cast<core *>(&scp))
+            cr->add_method(std::move(mtd)); // we add the method to the core..
+        else if (auto ct = dynamic_cast<complex_type *>(&scp))
+            ct->add_method(std::move(mtd)); // we add the method to the complex type..
         else
             throw std::runtime_error("cannot add method");
     }
@@ -349,10 +349,10 @@ namespace riddle
     void predicate_declaration::declare(scope &scp) const
     { // we create the predicate and add it to the scope..
         auto p = new predicate(scp, name.id, std::vector<field_ptr>(), body);
-        if (auto c = dynamic_cast<core *>(&scp))
-            c->add_predicate(std::move(p)); // we add the predicate to the core..
-        else if (auto c = dynamic_cast<complex_type *>(&scp))
-            c->add_predicate(std::move(p)); // we add the predicate to the complex type..
+        if (auto cr = dynamic_cast<core *>(&scp))
+            cr->add_predicate(std::move(p)); // we add the predicate to the core..
+        else if (auto ct = dynamic_cast<complex_type *>(&scp))
+            ct->add_predicate(std::move(p)); // we add the predicate to the complex type..
         else
             throw std::runtime_error("cannot add predicate");
     }
@@ -388,10 +388,10 @@ namespace riddle
     void typedef_declaration::declare(scope &scp) const
     { // we create the typedef and add it to the scope..
         auto td = new typedef_type(scp, name.id, scp.get_type(primitive_type.id), xpr);
-        if (auto c = dynamic_cast<core *>(&scp))
-            c->add_type(td); // we add the typedef to the core..
-        else if (auto c = dynamic_cast<complex_type *>(&scp))
-            c->add_type(td); // we add the typedef to the complex type..
+        if (auto cr = dynamic_cast<core *>(&scp))
+            cr->add_type(td); // we add the typedef to the core..
+        else if (auto ct = dynamic_cast<complex_type *>(&scp))
+            ct->add_type(td); // we add the typedef to the complex type..
         else
             throw std::runtime_error("cannot add typedef");
     }
@@ -404,10 +404,10 @@ namespace riddle
         for (const auto &e : enums)
             en->instances.emplace_back(scp.get_core().new_string(e.str));
 
-        if (auto c = dynamic_cast<core *>(&scp))
-            c->add_type(en); // we add the enum to the core..
-        else if (auto c = dynamic_cast<complex_type *>(&scp))
-            c->add_type(en); // we add the enum to the complex type..
+        if (auto cr = dynamic_cast<core *>(&scp))
+            cr->add_type(en); // we add the enum to the core..
+        else if (auto ct = dynamic_cast<complex_type *>(&scp))
+            ct->add_type(en); // we add the enum to the complex type..
         else
             throw std::runtime_error("cannot add enum");
     }
@@ -447,10 +447,10 @@ namespace riddle
         for (const auto &d : declarations)
         {
             auto *fld = new field(*tp, d->name.id, d->xpr);
-            if (auto c = dynamic_cast<core *>(&scp))
-                c->add_field(fld); // we add the field to the core..
-            else if (auto c = dynamic_cast<complex_type *>(&scp))
-                c->add_field(fld); // we add the field to the complex type..
+            if (auto cr = dynamic_cast<core *>(&scp))
+                cr->add_field(fld); // we add the field to the core..
+            else if (auto ct = dynamic_cast<complex_type *>(&scp))
+                ct->add_field(fld); // we add the field to the complex type..
             else
                 throw std::runtime_error("cannot add field");
         }
@@ -482,10 +482,10 @@ namespace riddle
     void class_declaration::declare(scope &scp) const
     { // we create the class and add it to the scope..
         auto cl = new complex_type(scp, name.id);
-        if (auto c = dynamic_cast<core *>(&scp))
-            c->add_type(cl); // we add the class to the core..
-        else if (auto c = dynamic_cast<complex_type *>(&scp))
-            c->add_type(cl); // we add the class to the complex type..
+        if (auto cr = dynamic_cast<core *>(&scp))
+            cr->add_type(cl); // we add the class to the core..
+        else if (auto ct = dynamic_cast<complex_type *>(&scp))
+            ct->add_type(cl); // we add the class to the complex type..
         else
             throw std::runtime_error("cannot add class");
 

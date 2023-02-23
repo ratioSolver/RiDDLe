@@ -1,6 +1,7 @@
 #include "core.h"
 #include "item.h"
 #include <fstream>
+#include <algorithm>
 #include <stdexcept>
 
 #ifdef BUILD_LISTENERS
