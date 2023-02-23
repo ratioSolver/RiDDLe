@@ -218,7 +218,7 @@ namespace riddle
         for (size_t i = 0; i < conjunctions.size(); ++i)
             conjs.emplace_back(new conjunction(scp, ctx, scp.get_core().arith_value(conjunction_costs[i]->evaluate(scp, ctx)).get_rational(), conjunctions[i]));
 
-        scp.get_core().new_disjunction(conjs);
+        scp.get_core().new_disjunction(std::move(conjs));
     }
 
     void conjunction_statement::execute(scope &scp, env &ctx) const

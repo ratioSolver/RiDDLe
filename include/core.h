@@ -276,7 +276,7 @@ namespace riddle
      *
      * @param conjs The conjunctions to disjunct.
      */
-    virtual void new_disjunction(const std::vector<conjunction_ptr> &conjs) = 0;
+    virtual void new_disjunction(std::vector<conjunction_ptr> conjs) = 0;
 
     /**
      * @brief Creates a new expression representing a fact of the given predicate.
