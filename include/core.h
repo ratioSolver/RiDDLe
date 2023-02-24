@@ -316,12 +316,26 @@ namespace riddle
      */
     virtual utils::inf_rational arith_value(const expr &xpr) const = 0;
     /**
+     * @brief Returns the bounds of the given expression.
+     *
+     * @param xpr The expression to evaluate.
+     * @return std::pair<utils::inf_rational, utils::inf_rational> The bounds of the given expression.
+     */
+    virtual std::pair<utils::inf_rational, utils::inf_rational> arith_bounds(const expr &xpr) const = 0;
+    /**
      * @brief Returns the time value of the given expression.
      *
      * @param xpr The expression to evaluate.
      * @return utils::inf_rational The time value of the given expression.
      */
     virtual utils::inf_rational time_value(const expr &xpr) const = 0;
+    /**
+     * @brief Returns the bounds of the given expression.
+     *
+     * @param xpr The expression to evaluate.
+     * @return std::pair<utils::inf_rational, utils::inf_rational> The bounds of the given expression.
+     */
+    virtual std::pair<utils::inf_rational, utils::inf_rational> time_bounds(const expr &xpr) const = 0;
 
     /**
      * @brief Returns whether the given expression is an enumeration.
