@@ -76,5 +76,21 @@ namespace riddle
     RIDDLE_EXPORT expr &get(const std::string &name) override;
   };
 
+  /**
+   * @brief A class for representing atoms.
+   *
+   */
+  class atom_item : public complex_item
+  {
+  public:
+    atom_item(predicate &p, bool is_fact = true);
+    virtual ~atom_item() = default;
+
+    bool is_fact() const { return is_fact_; }
+
+  private:
+    const bool is_fact_;
+  };
+
   inline uintptr_t get_id(const item &itm) noexcept { return reinterpret_cast<uintptr_t>(&itm); }
 } // namespace riddle

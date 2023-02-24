@@ -284,14 +284,14 @@ namespace riddle
      * @param pred The predicate of the fact.
      * @return expr A new expression representing a fact of the given predicate.
      */
-    virtual expr new_fact(const predicate &pred) = 0;
+    virtual expr new_fact(predicate &pred) = 0;
     /**
      * @brief Creates a new expression representing a goal of the given predicate.
      *
      * @param pred The predicate of the goal.
      * @return expr A new expression representing a goal of the given predicate.
      */
-    virtual expr new_goal(const predicate &pred) = 0;
+    virtual expr new_goal(predicate &pred) = 0;
 
     /**
      * @brief Returns whether the given expression is a constant.
@@ -435,6 +435,13 @@ namespace riddle
      * @param pred The predicate to add.
      */
     void add_predicate(predicate_ptr pred) { predicates.emplace(pred->get_name(), std::move(pred)); }
+
+    /**
+     * @brief Adds the given expression to the given predicate.
+     *
+     * @param xpr The expression to add.
+     */
+    void add_atom(predicate &pred, expr atm) { pred.instances.emplace_back(atm); }
 
 #ifdef COMPUTE_NAMES
   public:

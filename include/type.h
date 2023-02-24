@@ -190,6 +190,7 @@ namespace riddle
    */
   class predicate : public scope, public type
   {
+    friend class core;
     friend class ast::predicate_declaration;
 
   public:
