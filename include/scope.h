@@ -60,6 +60,13 @@ namespace riddle
     virtual type &get_type(const std::string &name) { return scp.get_type(name); }
 
     /**
+     * @brief Get the types in the scope.
+     *
+     * @return std::vector<std::reference_wrapper<type>> The types in the scope.
+     */
+    RIDDLE_EXPORT virtual std::vector<std::reference_wrapper<type>> get_types() const;
+
+    /**
      * @brief Get the method with the given name and arguments.
      *
      * @param name The name of the method.

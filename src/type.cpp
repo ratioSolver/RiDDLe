@@ -132,6 +132,14 @@ namespace riddle
         return scope::get_type(tp_name);
     }
 
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> complex_type::get_types() const
+    {
+        std::vector<std::reference_wrapper<type>> tps;
+        for (const auto &tp : types)
+            tps.emplace_back(*tp.second);
+        return tps;
+    }
+
     RIDDLE_EXPORT method &complex_type::get_method(const std::string &m_name, const std::vector<std::reference_wrapper<type>> &args)
     {
         auto it = methods.find(m_name);

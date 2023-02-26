@@ -90,6 +90,15 @@ namespace riddle
         throw std::out_of_range("type `" + tp_name + "` not found");
     }
 
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> core::get_types() const
+    {
+        std::vector<std::reference_wrapper<type>> res;
+        res.reserve(types.size());
+        for (auto &tp : types)
+            res.emplace_back(*tp.second);
+        return res;
+    }
+
     RIDDLE_EXPORT method &core::get_method(const std::string &m_name, const std::vector<std::reference_wrapper<type>> &args)
     {
         auto it = methods.find(m_name);

@@ -1,5 +1,6 @@
 #include "scope.h"
 #include "item.h"
+#include "type.h"
 
 namespace riddle
 {
@@ -19,6 +20,8 @@ namespace riddle
         if (!fields.emplace(f->get_name(), std::move(f)).second)
             throw std::runtime_error("field already exists");
     }
+
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> scope::get_types() const { return {}; }
 
     RIDDLE_EXPORT env::env(env_ptr parent) : parent(parent) {}
 

@@ -407,6 +407,12 @@ namespace riddle
      */
     RIDDLE_EXPORT type &get_type(const std::string &name) override;
     /**
+     * @brief Returns all the types in this core.
+     *
+     * @return std::vector<std::reference_wrapper<type>> All types in this core.
+     */
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> get_types() const override;
+    /**
      * @brief Returns the method with the given name and argument types.
      *
      * @param name The name of the method to get.
