@@ -10,10 +10,12 @@ namespace riddle
   class core;
   class complex_item;
   class enum_item;
+  class complex_type;
 
   class scope
   {
     friend class ast::field_declaration;
+    friend class complex_type;
 
   public:
     RIDDLE_EXPORT scope(scope &scp);

@@ -177,4 +177,22 @@ namespace riddle
         instances.push_back(inst);
         return inst;
     }
+
+    RIDDLE_EXPORT void complex_type::add_predicate(predicate_ptr &&pred)
+    {
+        // we add the tau field to the predicate..
+        pred->add_field(new field(*this, TAU_KW));
+        // we notify all the supertypes that a new predicate has been created..
+        std::queue<complex_type *> q;
+        q.push(this);
+        while (!q.empty())
+        {
+            auto &tp = *q.front();
+            tp.new_predicate(*pred);
+            for (auto &parent : tp.parents)
+                q.push(&parent.get());
+            q.pop();
+        }
+        predicates.emplace(pred->get_name(), std::move(pred));
+    }
 } // namespace riddle

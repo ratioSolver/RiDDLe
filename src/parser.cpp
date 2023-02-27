@@ -62,7 +62,7 @@ namespace riddle
     {
         auto self = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto ci = dynamic_cast<complex_item *>(&*self))
+            if (auto ci = dynamic_cast<complex_item *>(self.operator->()))
                 self = ci->get(it->id);
             else
                 throw std::runtime_error("cannot find item");
@@ -89,7 +89,7 @@ namespace riddle
     {
         auto e = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto ci = dynamic_cast<complex_item *>(&*e))
+            if (auto ci = dynamic_cast<complex_item *>(e.operator->()))
                 e = ci->get(it->id);
             else
                 throw std::runtime_error("cannot find item");
@@ -197,12 +197,12 @@ namespace riddle
     {
         auto e = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto ci = dynamic_cast<complex_item *>(&*e))
+            if (auto ci = dynamic_cast<complex_item *>(e.operator->()))
                 e = ci->get(it->id);
             else
                 throw std::runtime_error("cannot find item");
 
-        if (auto ci = dynamic_cast<complex_item *>(&*e))
+        if (auto ci = dynamic_cast<complex_item *>(e.operator->()))
             ci->items.emplace(id.id, xpr->evaluate(scp, ctx));
         else
             throw std::runtime_error("cannot find item");
@@ -235,7 +235,7 @@ namespace riddle
         { // the formula's scope is explicitely declared..
             auto e = ctx.get(formula_scope.front().id);
             for (auto it = formula_scope.begin() + 1; it != formula_scope.end(); ++it)
-                if (auto ci = dynamic_cast<complex_item *>(&*e))
+                if (auto ci = dynamic_cast<complex_item *>(e.operator->()))
                     e = ci->get(it->id);
                 else
                     throw std::runtime_error("cannot find item");

@@ -274,7 +274,10 @@ namespace riddle
     void add_constructor(constructor_ptr &&constructor) { constructors.emplace_back(std::move(constructor)); }
     void add_type(type_ptr &&type) { types.emplace(type->get_name(), std::move(type)); }
     void add_method(method_ptr &&method) { methods[method->get_name()].emplace_back(std::move(method)); }
-    void add_predicate(predicate_ptr &&predicate) { predicates.emplace(predicate->get_name(), std::move(predicate)); }
+    RIDDLE_EXPORT void add_predicate(predicate_ptr &&pred);
+
+  private:
+    virtual void new_predicate(predicate &) {}
 
   private:
     std::vector<std::reference_wrapper<complex_type>> parents; // the base types (i.e. the types this type inherits from)..

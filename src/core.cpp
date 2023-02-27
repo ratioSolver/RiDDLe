@@ -15,11 +15,11 @@ namespace riddle
 {
     RIDDLE_EXPORT core::core() : scope(*this), b_tp(new bool_type(*this)), i_tp(new int_type(*this)), r_tp(new real_type(*this)), t_tp(new time_point_type(*this)), s_tp(new string_type(*this))
     { // we add the basic types to the core..
-        types.emplace(b_tp->get_name(), b_tp);
-        types.emplace(i_tp->get_name(), i_tp);
-        types.emplace(r_tp->get_name(), r_tp);
-        types.emplace(t_tp->get_name(), t_tp);
-        types.emplace(s_tp->get_name(), s_tp);
+        add_type(b_tp);
+        add_type(i_tp);
+        add_type(r_tp);
+        add_type(t_tp);
+        add_type(s_tp);
     }
 
     RIDDLE_EXPORT void core::read(const std::string &script)
@@ -184,7 +184,7 @@ namespace riddle
         std::queue<std::pair<std::string, expr>> q;
         for (const auto &xpr : get_vars())
         {
-            expr_names.emplace(&*xpr.second, xpr.first);
+            expr_names.emplace(xpr.second.operator->(), xpr.first);
             if (!xpr.second->get_type().is_primitive())
                 q.push(xpr);
         }
@@ -192,9 +192,9 @@ namespace riddle
         while (!q.empty())
         {
             const auto &c_xpr = q.front();
-            if (const auto *ci = dynamic_cast<complex_item *>(&*c_xpr.second))
+            if (const auto *ci = dynamic_cast<complex_item *>(c_xpr.second.operator->()))
                 for (const auto &xpr : ci->get_vars())
-                    if (expr_names.emplace(&*xpr.second, expr_names.at(&*c_xpr.second) + '.' + xpr.first).second)
+                    if (expr_names.emplace(xpr.second.operator->(), expr_names.at(c_xpr.second.operator->()) + '.' + xpr.first).second)
                         if (!xpr.second->get_type().is_primitive())
                             q.push(xpr);
             q.pop();
