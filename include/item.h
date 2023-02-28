@@ -80,11 +80,11 @@ namespace riddle
    * @brief A class for representing atoms.
    *
    */
-  class atom_item : public complex_item
+  class atom : public complex_item
   {
   public:
-    atom_item(predicate &p, bool is_fact = true);
-    virtual ~atom_item() = default;
+    atom(predicate &p, bool is_fact = true);
+    virtual ~atom() = default;
 
     bool is_fact() const { return is_fact_; }
 

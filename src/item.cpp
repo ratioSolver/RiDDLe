@@ -35,5 +35,5 @@ namespace riddle
         }
     }
 
-    atom_item::atom_item(predicate &p, bool is_fact) : complex_item(p), is_fact_(is_fact) {}
+    atom::atom(predicate &p, bool is_fact) : complex_item(p), is_fact_(is_fact) {}
 } // namespace riddle
