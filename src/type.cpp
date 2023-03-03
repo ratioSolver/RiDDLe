@@ -3,6 +3,7 @@
 #include "item.h"
 #include "constructor.h"
 #include <queue>
+#include <cassert>
 
 namespace riddle
 {
@@ -96,9 +97,14 @@ namespace riddle
 
     RIDDLE_EXPORT void predicate::call(expr &atm)
     { // we create a new environment for the rule's body execution..
-        env ctx(static_cast<complex_item *>(atm.operator->()));
-        for (const auto &stmnt : body)
-            stmnt->execute(*this, ctx);
+        if (auto a = dynamic_cast<atom *>(atm.operator->()))
+        {
+            env ctx(a);
+            for (const auto &stmnt : body)
+                stmnt->execute(*this, ctx);
+        }
+        else
+            throw std::runtime_error("invalid atom type");
     }
 
     RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
