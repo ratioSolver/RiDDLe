@@ -85,6 +85,13 @@ namespace riddle
      */
     virtual predicate &get_predicate(const std::string &name) { return scp.get_predicate(name); }
 
+    /**
+     * @brief Returns all the predicates in this scope.
+     *
+     * @return std::vector<std::reference_wrapper<predicate>> All predicates in this scope.
+     */
+    RIDDLE_EXPORT virtual std::vector<std::reference_wrapper<predicate>> get_predicates() const;
+
   protected:
     /**
      * @brief Add a field to the scope.

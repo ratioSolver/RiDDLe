@@ -429,6 +429,13 @@ namespace riddle
     RIDDLE_EXPORT predicate &get_predicate(const std::string &name) override;
 
     /**
+     * @brief Returns all the predicates in this core.
+     *
+     * @return std::vector<std::reference_wrapper<predicate>> All predicates in this core.
+     */
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<predicate>> get_predicates() const override;
+
+    /**
      * @brief Returns the expression with the given name.
      *
      * @param name The name of the expression to get.

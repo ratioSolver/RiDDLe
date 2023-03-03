@@ -43,7 +43,29 @@ namespace riddle
      */
     const scope &get_scope() const { return scp; }
 
+    /**
+     * @brief Get the name of the type.
+     *
+     * @return const std::string& The name of the type.
+     */
     const std::string &get_name() const { return name; }
+
+    /**
+     * @brief Get the full name of the type. This is the name of the type prefixed by the names of all enclosing scopes.
+     *
+     * @return std::string The full name of the type.
+     */
+    std::string get_full_name() const noexcept
+    {
+      std::string tp_name = name;
+      const type *t = this;
+      while (const type *sc = dynamic_cast<const type *>(&t->get_scope()))
+      {
+        tp_name.insert(0, sc->get_name() + ":");
+        t = sc;
+      }
+      return tp_name;
+    }
 
     /**
      * @brief Check if this type is assignable from another type.

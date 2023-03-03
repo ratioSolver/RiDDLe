@@ -130,6 +130,15 @@ namespace riddle
         throw std::out_of_range("predicate `" + name + "` not found");
     }
 
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<predicate>> core::get_predicates() const
+    {
+        std::vector<std::reference_wrapper<predicate>> res;
+        res.reserve(predicates.size());
+        for (auto &pred : predicates)
+            res.emplace_back(*pred.second);
+        return res;
+    }
+
     RIDDLE_EXPORT expr &core::get(const std::string &name)
     {
         auto it = items.find(name);
