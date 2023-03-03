@@ -173,7 +173,7 @@ namespace riddle
                     if (auto ct = dynamic_cast<complex_type *>(t))
                         t = &ct->get_type(it->id);
                     else
-                        throw std::runtime_error("cannot find type");
+                        throw std::runtime_error("cannot find type `" + it->id + "`..");
 
                 if (t->is_primitive())
                     ctx.items.emplace(names[i].id, t->new_instance());
@@ -188,8 +188,24 @@ namespace riddle
                     default:
                         ctx.items.emplace(names[i].id, scp.get_core().new_enum(*ct, ct->get_instances()));
                     }
+                else if (auto et = dynamic_cast<enum_type *>(t))
+                {
+                    auto all_values = et->get_all_values();
+                    switch (all_values.size())
+                    {
+                    case 0:
+                        throw inconsistency_exception();
+                    case 1:
+                        ctx.items.emplace(names[i].id, all_values.front());
+                        break;
+                    default:
+                        ctx.items.emplace(names[i].id, scp.get_core().new_enum(*et, all_values));
+                    }
+                }
+                else if (auto td = dynamic_cast<typedef_type *>(t))
+                    ctx.items.emplace(names[i].id, td->new_instance());
                 else
-                    throw std::runtime_error("cannot find type");
+                    throw std::runtime_error("cannot create instance of type `" + t->get_name() + "`..");
             }
     }
 
