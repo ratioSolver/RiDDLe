@@ -28,19 +28,19 @@ namespace riddle
         return false;
     }
 
-    bool_type::bool_type(core &cr) : type(cr, BOOL_KW) {}
+    bool_type::bool_type(core &cr) : type(cr, BOOL_KW, true) {}
     expr bool_type::new_instance() { return scp.get_core().new_bool(); }
 
-    int_type::int_type(core &cr) : type(cr, INT_KW) {}
+    int_type::int_type(core &cr) : type(cr, INT_KW, true) {}
     expr int_type::new_instance() { return scp.get_core().new_int(); }
 
-    real_type::real_type(core &cr) : type(cr, REAL_KW) {}
+    real_type::real_type(core &cr) : type(cr, REAL_KW, true) {}
     expr real_type::new_instance() { return scp.get_core().new_real(); }
 
-    string_type::string_type(core &cr) : type(cr, STRING_KW) {}
+    string_type::string_type(core &cr) : type(cr, STRING_KW, true) {}
     expr string_type::new_instance() { return scp.get_core().new_string(); }
 
-    time_point_type::time_point_type(core &cr) : type(cr, TIME_POINT_KW) {}
+    time_point_type::time_point_type(core &cr) : type(cr, TIME_POINT_KW, true) {}
     expr time_point_type::new_instance() { return scp.get_core().new_time_point(); }
 
     typedef_type::typedef_type(scope &scp, const std::string &name, type &tp, const ast::expression_ptr &xpr) : type(scp, name), tp(tp), xpr(xpr) {}
