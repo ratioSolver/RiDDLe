@@ -542,9 +542,9 @@ namespace riddle
             // we refine the enclosed types..
             for (const auto &t : types)
                 t->refine(*c_tp);
-            // we refine the enclosed predicates..
+            // we declare the enclosed predicates..
             for (const auto &p : predicates)
-                p->refine(*c_tp);
+                p->declare(*c_tp);
         }
         else
             throw std::runtime_error("cannot refine non-class type");
