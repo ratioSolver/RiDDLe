@@ -435,14 +435,6 @@ namespace riddle
      */
     RIDDLE_EXPORT std::vector<std::reference_wrapper<predicate>> get_predicates() const override;
 
-    /**
-     * @brief Returns the expression with the given name.
-     *
-     * @param name The name of the expression to get.
-     * @return expr& The expression with the given name.
-     */
-    RIDDLE_EXPORT expr &get(const std::string &name) override;
-
   protected:
     /**
      * @brief Adds the given type to this core.

@@ -32,7 +32,9 @@ namespace riddle
         auto it = items.find(name);
         if (it != items.end())
             return it->second;
-        else
+        else if (parent)
             return parent->get(name);
+        else
+            throw std::out_of_range("item `" + name + "` not found");
     }
 } // namespace riddle

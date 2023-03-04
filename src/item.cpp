@@ -9,17 +9,9 @@ namespace riddle
     core &item::get_core() { return tp.get_core(); }
     const core &item::get_core() const { return tp.get_core(); }
 
-    complex_item::complex_item(type &tp) : item(tp) {}
+    complex_item::complex_item(type &tp) : item(tp), env(&tp.get_core()) {}
 
-    RIDDLE_EXPORT expr &complex_item::get(const std::string &name)
-    {
-        auto it = items.find(name);
-        if (it != items.end())
-            return it->second;
-        throw std::out_of_range("item `" + name + "` not found");
-    }
-
-    enum_item::enum_item(type &tp) : item(tp) {}
+    enum_item::enum_item(type &tp) : item(tp), env(&tp.get_core()) {}
 
     RIDDLE_EXPORT expr &enum_item::get(const std::string &name)
     {

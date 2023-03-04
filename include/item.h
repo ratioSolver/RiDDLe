@@ -59,8 +59,6 @@ namespace riddle
   public:
     complex_item(type &tp);
     virtual ~complex_item() = default;
-
-    RIDDLE_EXPORT expr &get(const std::string &name) override;
   };
 
   /**

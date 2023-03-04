@@ -139,14 +139,6 @@ namespace riddle
         return res;
     }
 
-    RIDDLE_EXPORT expr &core::get(const std::string &name)
-    {
-        auto it = items.find(name);
-        if (it != items.end())
-            return it->second;
-        throw std::out_of_range("item `" + name + "` not found");
-    }
-
 #ifdef BUILD_LISTENERS
     RIDDLE_EXPORT void core::fire_log(const std::string &msg) const noexcept
     {

@@ -232,7 +232,7 @@ namespace riddle
         conjs.reserve(conjunctions.size());
 
         for (size_t i = 0; i < conjunctions.size(); ++i)
-            conjs.emplace_back(new conjunction(scp, ctx, scp.get_core().arith_value(conjunction_costs[i]->evaluate(scp, ctx)).get_rational(), conjunctions[i]));
+            conjs.emplace_back(new conjunction(scp, ctx, conjunction_costs[i] ? scp.get_core().arith_value(conjunction_costs[i]->evaluate(scp, ctx)).get_rational() : utils::rational::ONE, conjunctions[i]));
 
         scp.get_core().new_disjunction(std::move(conjs));
     }
@@ -289,7 +289,7 @@ namespace riddle
         }
 
         auto atm_xpr = is_fact ? scp.get_core().new_fact(*p) : scp.get_core().new_goal(*p);
-        auto &atm = static_cast<complex_item &>(*atm_xpr);
+        auto &atm = static_cast<atom &>(*atm_xpr);
         atm.items.insert(assgnments.begin(), assgnments.end());
 
         // we initialize the unassigned atom's fields..
