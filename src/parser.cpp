@@ -288,7 +288,7 @@ namespace riddle
                 throw std::runtime_error("unrelated types");
         }
 
-        auto atm_xpr = is_fact ? scp.get_core().new_fact(*p) : scp.get_core().new_goal(*p);
+        auto atm_xpr = is_fact ? p->new_fact() : p->new_goal();
         auto &atm = static_cast<atom &>(*atm_xpr);
         atm.items.insert(assgnments.begin(), assgnments.end());
 
