@@ -391,6 +391,10 @@ namespace riddle
      */
     type &get_string_type() const noexcept { return *s_tp; }
 
+    RIDDLE_EXPORT field &get_field(const std::string &name) const override;
+
+    bool has_type(const std::string &nm) const override { return types.find(nm) != types.end(); }
+
     /**
      * @brief Get the type of the given expressions. If the expressions are all integers, the integer type is returned. If the expressions are all reals, the real type is returned. If the expressions are all times or constants, the time type is returned. Otherwise, the real type is returned.
      *
@@ -405,7 +409,7 @@ namespace riddle
      * @param name The name of the type to get.
      * @return type& The type with the given name.
      */
-    RIDDLE_EXPORT type &get_type(const std::string &name) override;
+    RIDDLE_EXPORT type &get_type(const std::string &name) const override;
     /**
      * @brief Returns all the types in this core.
      *
@@ -419,14 +423,14 @@ namespace riddle
      * @param args The argument types of the method to get.
      * @return method& The method with the given name and argument types.
      */
-    RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) override;
+    RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) const override;
     /**
      * @brief Returns the predicate with the given name.
      *
      * @param name The name of the predicate to get.
      * @return predicate& The predicate with the given name.
      */
-    RIDDLE_EXPORT predicate &get_predicate(const std::string &name) override;
+    RIDDLE_EXPORT predicate &get_predicate(const std::string &name) const override;
 
     /**
      * @brief Returns all the predicates in this core.

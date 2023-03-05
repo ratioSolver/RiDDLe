@@ -82,7 +82,15 @@ namespace riddle
             return get_real_type();
     }
 
-    RIDDLE_EXPORT type &core::get_type(const std::string &tp_name)
+    RIDDLE_EXPORT field &core::get_field(const std::string &name) const
+    {
+        auto it = fields.find(name);
+        if (it != fields.end())
+            return *it->second;
+        throw std::out_of_range("field `" + name + "` not found");
+    }
+
+    RIDDLE_EXPORT type &core::get_type(const std::string &tp_name) const
     {
         auto it = types.find(tp_name);
         if (it != types.end())
@@ -99,7 +107,7 @@ namespace riddle
         return res;
     }
 
-    RIDDLE_EXPORT method &core::get_method(const std::string &m_name, const std::vector<std::reference_wrapper<type>> &args)
+    RIDDLE_EXPORT method &core::get_method(const std::string &m_name, const std::vector<std::reference_wrapper<type>> &args) const
     {
         auto it = methods.find(m_name);
         if (it != methods.end())
@@ -122,7 +130,7 @@ namespace riddle
         throw std::out_of_range("method `" + m_name + "` not found");
     }
 
-    RIDDLE_EXPORT predicate &core::get_predicate(const std::string &name)
+    RIDDLE_EXPORT predicate &core::get_predicate(const std::string &name) const
     {
         auto it = predicates.find(name);
         if (it != predicates.end())

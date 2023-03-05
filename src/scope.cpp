@@ -6,7 +6,7 @@ namespace riddle
 {
     RIDDLE_EXPORT scope::scope(scope &scp) : scp(scp) {}
 
-    RIDDLE_EXPORT field &scope::get_field(const std::string &name)
+    RIDDLE_EXPORT field &scope::get_field(const std::string &name) const
     {
         auto it = fields.find(name);
         if (it != fields.end())

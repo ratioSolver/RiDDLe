@@ -15,6 +15,7 @@ namespace riddle
   class scope
   {
     friend class ast::field_declaration;
+    friend class core;
     friend class complex_type;
 
   public:
@@ -36,7 +37,7 @@ namespace riddle
      * @param name The name of the field.
      * @return field& The field with the given name.
      */
-    RIDDLE_EXPORT field &get_field(const std::string &name);
+    RIDDLE_EXPORT virtual field &get_field(const std::string &name) const;
 
     /**
      * @brief Get the fields in the scope.
@@ -59,7 +60,7 @@ namespace riddle
      * @param name The name of the type.
      * @return type& The type with the given name.
      */
-    virtual type &get_type(const std::string &name) { return scp.get_type(name); }
+    virtual type &get_type(const std::string &name) const { return scp.get_type(name); }
 
     /**
      * @brief Get the types in the scope.
@@ -75,7 +76,7 @@ namespace riddle
      * @param args The arguments of the method.
      * @return method& The method with the given name and arguments.
      */
-    virtual method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) { return scp.get_method(name, args); }
+    virtual method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) const { return scp.get_method(name, args); }
 
     /**
      * @brief Get the predicate with the given name.
@@ -83,7 +84,7 @@ namespace riddle
      * @param name The name of the predicate.
      * @return predicate& The predicate with the given name.
      */
-    virtual predicate &get_predicate(const std::string &name) { return scp.get_predicate(name); }
+    virtual predicate &get_predicate(const std::string &name) const { return scp.get_predicate(name); }
 
     /**
      * @brief Returns all the predicates in this scope.

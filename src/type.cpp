@@ -130,7 +130,7 @@ namespace riddle
         throw std::out_of_range("constructor not found");
     }
 
-    RIDDLE_EXPORT type &complex_type::get_type(const std::string &tp_name)
+    RIDDLE_EXPORT type &complex_type::get_type(const std::string &tp_name) const
     {
         auto it = types.find(tp_name);
         if (it != types.end())
@@ -146,7 +146,7 @@ namespace riddle
         return tps;
     }
 
-    RIDDLE_EXPORT method &complex_type::get_method(const std::string &m_name, const std::vector<std::reference_wrapper<type>> &args)
+    RIDDLE_EXPORT method &complex_type::get_method(const std::string &m_name, const std::vector<std::reference_wrapper<type>> &args) const
     {
         auto it = methods.find(m_name);
         if (it != methods.end())
@@ -169,7 +169,7 @@ namespace riddle
         return scope::get_method(m_name, args);
     }
 
-    RIDDLE_EXPORT predicate &complex_type::get_predicate(const std::string &p_name)
+    RIDDLE_EXPORT predicate &complex_type::get_predicate(const std::string &p_name) const
     {
         auto it = predicates.find(p_name);
         if (it != predicates.end())
