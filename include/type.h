@@ -213,6 +213,7 @@ namespace riddle
   class predicate : public scope, public type
   {
     friend class core;
+    friend class complex_type;
     friend class ast::predicate_declaration;
 
   public:
@@ -221,6 +222,8 @@ namespace riddle
 
     const std::vector<std::reference_wrapper<predicate>> &get_parents() const { return parents; }
     const std::vector<std::reference_wrapper<field>> &get_args() const { return args; }
+
+    RIDDLE_EXPORT field &get_field(const std::string &name) const override;
 
     /**
      * @brief Create a new instance of this predicate. This is equivalent to calling new_fact().
@@ -281,6 +284,8 @@ namespace riddle
 
     std::vector<std::reference_wrapper<complex_type>> get_parents() const { return parents; }
 
+    RIDDLE_EXPORT field &get_field(const std::string &name) const override;
+
     RIDDLE_EXPORT constructor &get_constructor(const std::vector<std::reference_wrapper<type>> &args);
     bool has_type(const std::string &nm) const override { return types.find(nm) != types.end(); }
     RIDDLE_EXPORT type &get_type(const std::string &name) const override;
@@ -293,6 +298,7 @@ namespace riddle
 
   protected:
     void add_parent(complex_type &parent) { parents.emplace_back(parent); }
+    static void add_parent(predicate &pred, predicate &parent) { pred.add_parent(parent); }
     void add_constructor(constructor_ptr &&constructor) { constructors.emplace_back(std::move(constructor)); }
     void add_type(type_ptr &&type) { types.emplace(type->get_name(), std::move(type)); }
     void add_method(method_ptr &&method) { methods[method->get_name()].emplace_back(std::move(method)); }

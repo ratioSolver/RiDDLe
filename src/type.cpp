@@ -82,6 +82,26 @@ namespace riddle
         }
     }
 
+    RIDDLE_EXPORT field &predicate::get_field(const std::string &name) const
+    {
+        try
+        { // first check in any enclosing scope
+            return scope::get_field(name);
+        }
+        catch (const std::exception &e)
+        { // if not in any enclosing scope, check in the superclass
+            for (const auto &tp : parents)
+                try
+                {
+                    return tp.get().get_field(name);
+                }
+                catch (const std::exception &e)
+                {
+                }
+        }
+        throw std::out_of_range("field `" + name + "` not found");
+    }
+
     expr predicate::new_fact()
     { // we create a new fact..
         auto fact = type::get_core().new_fact(*this);
@@ -109,6 +129,26 @@ namespace riddle
 
     RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
 
+    RIDDLE_EXPORT field &complex_type::get_field(const std::string &name) const
+    {
+        try
+        { // first check in any enclosing scope
+            return scope::get_field(name);
+        }
+        catch (const std::exception &e)
+        { // if not in any enclosing scope, check in the superclass
+            for (const auto &tp : parents)
+                try
+                {
+                    return tp.get().get_field(name);
+                }
+                catch (const std::exception &e)
+                {
+                }
+        }
+        throw std::out_of_range("field `" + name + "` not found");
+    }
+
     RIDDLE_EXPORT constructor &complex_type::get_constructor(const std::vector<std::reference_wrapper<type>> &args)
     {
         for (auto &c : constructors)
@@ -135,7 +175,22 @@ namespace riddle
         auto it = types.find(tp_name);
         if (it != types.end())
             return *it->second;
-        return scope::get_type(tp_name);
+        try
+        { // first check in any enclosing scope
+            return scope::get_type(tp_name);
+        }
+        catch (const std::exception &e)
+        { // if not in any enclosing scope, check any superclass
+            for (const auto &st : parents)
+                try
+                {
+                    return st.get().get_type(tp_name);
+                }
+                catch (const std::out_of_range &)
+                {
+                }
+        }
+        throw std::out_of_range("type `" + tp_name + "` not found");
     }
 
     RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> complex_type::get_types() const
@@ -166,7 +221,23 @@ namespace riddle
                         return *m;
                 }
             }
-        return scope::get_method(m_name, args);
+
+        try
+        { // first check in any enclosing scope
+            return scope::get_method(m_name, args);
+        }
+        catch (const std::exception &e)
+        { // if not in any enclosing scope, check any superclass
+            for (const auto &st : parents)
+                try
+                {
+                    return st.get().get_method(m_name, args);
+                }
+                catch (const std::out_of_range &)
+                {
+                }
+        }
+        throw std::out_of_range("method `" + m_name + "` not found");
     }
 
     RIDDLE_EXPORT predicate &complex_type::get_predicate(const std::string &p_name) const
@@ -174,7 +245,22 @@ namespace riddle
         auto it = predicates.find(p_name);
         if (it != predicates.end())
             return *it->second;
-        return scope::get_predicate(p_name);
+        try
+        { // first check in any enclosing scope
+            return scope::get_predicate(p_name);
+        }
+        catch (const std::exception &e)
+        { // if not in any enclosing scope, check any superclass
+            for (const auto &st : parents)
+                try
+                {
+                    return st.get().get_predicate(p_name);
+                }
+                catch (const std::out_of_range &)
+                {
+                }
+        }
+        throw std::out_of_range("predicate `" + p_name + "` not found");
     }
 
     expr complex_type::new_instance()
