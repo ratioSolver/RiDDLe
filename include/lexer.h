@@ -32,6 +32,7 @@ namespace riddle
     PREDICATE_ID,     // `predicate`
     NEW_ID,           // `new`
     OR_ID,            // `or`
+    FOR_ID,           // `for`
     THIS_ID,          // `this`
     VOID_ID,          // `void`
     RETURN_ID,        // `return`
@@ -139,6 +140,13 @@ namespace riddle
     RIDDLE_EXPORT token_ptr next();
 
   private:
+    /**
+     * @brief Check if the character is a valid identifier part.
+     *
+     * @param ch The character to check.
+     * @return true If the character is a valid identifier part.
+     * @return false If the character is not a valid identifier part.
+     */
     static bool is_id_part(const char &ch) noexcept { return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'); }
 
     token_ptr mk_token(const symbol &sym) noexcept

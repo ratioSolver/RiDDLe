@@ -237,6 +237,33 @@ namespace riddle
         scp.get_core().new_disjunction(std::move(conjs));
     }
 
+    void for_all_statement::execute(scope &scp, env &ctx) const
+    {
+        type *t = &scp.get_type(field_type.front().id);
+        for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
+            if (auto ct = dynamic_cast<complex_type *>(t))
+                t = &ct->get_type(it->id);
+            else
+                throw std::runtime_error("cannot find type `" + it->id + "`..");
+
+        if (auto ct = dynamic_cast<complex_type *>(t))
+        {
+            auto is = ct->get_instances();
+            if (is.empty())
+                throw inconsistency_exception();
+            else
+                for (auto ci : is)
+                {
+                    env c_ctx(ctx);
+                    c_ctx.items.emplace(id.id, ci);
+                    for (auto &stmnt : body)
+                        stmnt->execute(scp, ctx);
+                }
+        }
+        else
+            throw std::runtime_error("cannot iterate over type `" + t->get_name() + "`..");
+    }
+
     void conjunction_statement::execute(scope &scp, env &ctx) const
     {
         for (auto &stmnt : body)
@@ -1519,6 +1546,35 @@ namespace riddle
             if (!match(SEMICOLON_ID))
                 error("expected `;`..");
             return new formula_statement(isf, fn, scp, pn, assn_ns, std::move(assn_vs));
+        }
+        case FOR_ID:
+        {
+            tk = next();
+            std::vector<id_token> ft;
+            id_token *id = nullptr;
+            std::vector<statement_ptr> stmnts;
+
+            if (!match(LPAREN_ID))
+                error("expected `(`..");
+            do
+            {
+                if (!match(ID_ID))
+                    error("expected identifier..");
+                ft.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
+            } while (match(DOT_ID));
+
+            if (!match(ID_ID))
+                error("expected identifier..");
+            id = new id_token(*static_cast<const id_token *>(tks[pos - 2].operator->()));
+
+            if (!match(RPAREN_ID))
+                error("expected `)`..");
+
+            if (!match(LBRACE_ID))
+                error("expected `{`..");
+            while (!match(RBRACE_ID))
+                stmnts.emplace_back(_statement());
+            return new for_all_statement(ft, *id, std::move(stmnts));
         }
         case RETURN_ID:
         {

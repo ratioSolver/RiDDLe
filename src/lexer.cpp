@@ -278,26 +278,37 @@ namespace riddle
         case 'f':
         {
             std::string str;
-            if (str += ch; (ch = next_char()) != 'a')
-                return finish_id(str);
             switch (str += ch; ch = next_char())
             {
-            case 'c':
-                if (str += ch; (ch = next_char()) != 't')
+            case 'a':
+                switch (str += ch; ch = next_char())
+                {
+                case 'c':
+                    if (str += ch; (ch = next_char()) != 't')
+                        return finish_id(str);
+                    if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
+                        return finish_id(str);
+                    else
+                        return mk_token(FACT_ID);
+                case 'l':
+                    if (str += ch; (ch = next_char()) != 's')
+                        return finish_id(str);
+                    if (str += ch; (ch = next_char()) != 'e')
+                        return finish_id(str);
+                    if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
+                        return finish_id(str);
+                    else
+                        return mk_bool_token(false);
+                default:
+                    return finish_id(str);
+                }
+            case 'o':
+                if (str += ch; (ch = next_char()) != 'r')
                     return finish_id(str);
                 if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
                     return finish_id(str);
                 else
-                    return mk_token(FACT_ID);
-            case 'l':
-                if (str += ch; (ch = next_char()) != 's')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'e')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                    return finish_id(str);
-                else
-                    return mk_bool_token(false);
+                    return mk_token(FOR_ID);
             default:
                 return finish_id(str);
             }

@@ -116,6 +116,7 @@ namespace riddle
     friend class ast::local_field_statement;
     friend class ast::assignment_statement;
     friend class ast::formula_statement;
+    friend class ast::for_all_statement;
     friend class ast::return_statement;
 
   public:
