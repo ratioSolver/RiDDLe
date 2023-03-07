@@ -282,7 +282,7 @@ namespace riddle
     RIDDLE_EXPORT complex_type(scope &scp, const std::string &name);
     virtual ~complex_type() = default;
 
-    std::vector<std::reference_wrapper<complex_type>> get_parents() const { return parents; }
+    const std::vector<std::reference_wrapper<complex_type>> &get_parents() const { return parents; }
 
     RIDDLE_EXPORT field &get_field(const std::string &name) const override;
 
