@@ -69,17 +69,17 @@ namespace riddle
 
     RIDDLE_EXPORT type &core::get_type(const std::vector<expr> &args)
     {
-        if (std::all_of(args.begin(), args.end(), [this](const expr &e)
+        if (std::all_of(args.begin(), args.end(), [this](const auto &e)
                         { return e->get_type() == get_int_type(); }))
             return get_int_type();
-        else if (std::all_of(args.begin(), args.end(), [this](const expr &e)
-                             { return e->get_type() == get_real_type(); }))
+        else if (std::all_of(args.begin(), args.end(), [this](const auto &e)
+                             { return e->get_type() == get_real_type() || is_constant(e); }))
             return get_real_type();
-        else if (std::all_of(args.begin(), args.end(), [this](const expr &e)
-                             { return e->get_type() == get_time_type(); }))
+        else if (std::all_of(args.begin(), args.end(), [this](const auto &e)
+                             { return e->get_type() == get_time_type() || is_constant(e); }))
             return get_time_type();
         else
-            return get_real_type();
+            throw std::invalid_argument("cannot determine type of expressions");
     }
 
     RIDDLE_EXPORT field &core::get_field(const std::string &name) const
