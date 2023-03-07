@@ -62,10 +62,10 @@ namespace riddle
     {
         auto self = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto ci = dynamic_cast<complex_item *>(self.operator->()))
-                self = ci->get(it->id);
+            if (auto c_env = dynamic_cast<env *>(self.operator->()))
+                self = c_env->get(it->id);
             else
-                throw std::runtime_error("cannot find item");
+                throw std::runtime_error("cannot find `" + it->id + "` item..");
 
         std::vector<expr> args;
         std::vector<std::reference_wrapper<type>> arg_types;
@@ -89,10 +89,10 @@ namespace riddle
     {
         auto e = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto ci = dynamic_cast<complex_item *>(e.operator->()))
-                e = ci->get(it->id);
+            if (auto c_env = dynamic_cast<env *>(e.operator->()))
+                e = c_env->get(it->id);
             else
-                throw std::runtime_error("cannot find item");
+                throw std::runtime_error("cannot find `" + it->id + "` item..");
         return e;
     }
 
@@ -213,15 +213,15 @@ namespace riddle
     {
         auto e = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto ci = dynamic_cast<complex_item *>(e.operator->()))
-                e = ci->get(it->id);
+            if (auto c_env = dynamic_cast<env *>(e.operator->()))
+                e = c_env->get(it->id);
             else
-                throw std::runtime_error("cannot find item");
+                throw std::runtime_error("cannot find `" + it->id + "` item..");
 
-        if (auto ci = dynamic_cast<complex_item *>(e.operator->()))
-            ci->items.emplace(id.id, xpr->evaluate(scp, ctx));
+        if (auto c_env = dynamic_cast<env *>(e.operator->()))
+            c_env->items.emplace(id.id, xpr->evaluate(scp, ctx));
         else
-            throw std::runtime_error("cannot find item");
+            throw std::runtime_error("cannot find `" + id.id + "` item..");
     }
 
     void expression_statement::execute(scope &scp, env &ctx) const { scp.get_core().assert_fact(xpr->evaluate(scp, ctx)); }
@@ -278,10 +278,10 @@ namespace riddle
         { // the formula's scope is explicitely declared..
             auto e = ctx.get(formula_scope.front().id);
             for (auto it = formula_scope.begin() + 1; it != formula_scope.end(); ++it)
-                if (auto ci = dynamic_cast<complex_item *>(e.operator->()))
-                    e = ci->get(it->id);
+                if (auto c_env = dynamic_cast<env *>(e.operator->()))
+                    e = c_env->get(it->id);
                 else
-                    throw std::runtime_error("cannot find item");
+                    throw std::runtime_error("cannot find `" + it->id + "` item..");
 
             p = &static_cast<complex_type &>(e->get_type()).get_predicate(predicate_name.id);
             assgnments.emplace(TAU_KW, e);
@@ -517,7 +517,7 @@ namespace riddle
         }
 
         if (auto c = dynamic_cast<complex_type *>(&scp))
-            c->add_constructor(new constructor(*c, std::move(args), body)); // we add the constructor to the complex type..
+            c->add_constructor(new constructor(*c, std::move(args), init_names, init_vals, body)); // we add the constructor to the complex type..
         else
             throw std::runtime_error("cannot add constructor");
     }

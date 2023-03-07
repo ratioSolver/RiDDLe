@@ -201,8 +201,8 @@ namespace riddle
         while (!q.empty())
         {
             const auto &c_xpr = q.front();
-            if (const auto *ci = dynamic_cast<complex_item *>(c_xpr.second.operator->()))
-                for (const auto &xpr : ci->get_vars())
+            if (const auto *c_env = dynamic_cast<env *>(c_xpr.second.operator->()))
+                for (const auto &xpr : c_env->get_vars())
                     if (expr_names.emplace(xpr.second.operator->(), expr_names.at(c_xpr.second.operator->()) + '.' + xpr.first).second)
                         if (!xpr.second->get_type().is_primitive())
                             q.push(xpr);

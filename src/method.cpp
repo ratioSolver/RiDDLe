@@ -20,10 +20,8 @@ namespace riddle
     RIDDLE_EXPORT expr method::call(expr &self, std::vector<expr> exprs)
     { // we create a new environment for the method..
         env ctx;
-        if (auto ci = dynamic_cast<complex_item *>(self.operator->()))
-            ctx = env(ci);
-        else if (auto cr = dynamic_cast<core *>(self.operator->()))
-            ctx = env(cr);
+        if (auto c_env = dynamic_cast<env *>(self.operator->()))
+            ctx = env(c_env);
         else
             throw std::runtime_error("invalid method call");
 
