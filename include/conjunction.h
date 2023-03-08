@@ -12,7 +12,7 @@ namespace riddle
 
     const utils::rational &get_cost() const { return cost; }
 
-    void execute();
+    RIDDLE_EXPORT void execute();
 
   private:
     env ctx;
