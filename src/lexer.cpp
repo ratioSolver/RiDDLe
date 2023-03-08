@@ -1,4 +1,4 @@
-#include "riddle_lexer.h"
+#include "lexer.h"
 
 namespace riddle
 {
@@ -12,7 +12,7 @@ namespace riddle
         ch = next_char();
     }
 
-    RIDDLE_EXPORT std::unique_ptr<const token> lexer::next()
+    RIDDLE_EXPORT token_ptr lexer::next()
     {
         switch (ch)
         {
@@ -278,26 +278,37 @@ namespace riddle
         case 'f':
         {
             std::string str;
-            if (str += ch; (ch = next_char()) != 'a')
-                return finish_id(str);
             switch (str += ch; ch = next_char())
             {
-            case 'c':
-                if (str += ch; (ch = next_char()) != 't')
+            case 'a':
+                switch (str += ch; ch = next_char())
+                {
+                case 'c':
+                    if (str += ch; (ch = next_char()) != 't')
+                        return finish_id(str);
+                    if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
+                        return finish_id(str);
+                    else
+                        return mk_token(FACT_ID);
+                case 'l':
+                    if (str += ch; (ch = next_char()) != 's')
+                        return finish_id(str);
+                    if (str += ch; (ch = next_char()) != 'e')
+                        return finish_id(str);
+                    if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
+                        return finish_id(str);
+                    else
+                        return mk_bool_token(false);
+                default:
+                    return finish_id(str);
+                }
+            case 'o':
+                if (str += ch; (ch = next_char()) != 'r')
                     return finish_id(str);
                 if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
                     return finish_id(str);
                 else
-                    return mk_token(FACT_ID);
-            case 'l':
-                if (str += ch; (ch = next_char()) != 's')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'e')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                    return finish_id(str);
-                else
-                    return mk_bool_token(false);
+                    return mk_token(FOR_ID);
             default:
                 return finish_id(str);
             }
@@ -580,7 +591,7 @@ namespace riddle
         return sb[pos++];
     }
 
-    std::unique_ptr<const token> lexer::finish_id(std::string &str) noexcept
+    token_ptr lexer::finish_id(std::string &str) noexcept
     {
         if (!is_id_part(ch))
             return mk_id_token(str);

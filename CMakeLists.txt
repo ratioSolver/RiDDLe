@@ -15,17 +15,29 @@ include(CMakePackageConfigHelpers)
 include(CTest)
 enable_testing()
 
-option(ADD_COVERAGE "Add coverage" OFF)
+option(COMPUTE_NAMES "Computes the objects' names" OFF)
+option(BUILD_LISTENERS "Builds the core's listeners" OFF)
 
-add_subdirectory(extern/semitone)
+add_subdirectory(extern/utils)
 
 file(GLOB RIDDLE_SOURCES src/*.cpp)
 file(GLOB RIDDLE_HEADERS include/*.h)
 
 add_library(${PROJECT_NAME} SHARED ${RIDDLE_SOURCES})
+add_dependencies(${PROJECT_NAME} utils)
 GENERATE_EXPORT_HEADER(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/include $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:>)
-target_link_libraries(${PROJECT_NAME} PRIVATE SeMiTONE json)
+target_link_libraries(${PROJECT_NAME} PUBLIC utils)
+
+message(STATUS "Compute names:          ${COMPUTE_NAMES}")
+if(COMPUTE_NAMES)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC COMPUTE_NAMES)
+endif()
+
+message(STATUS "Build core listeners:   ${BUILD_LISTENERS}")
+if(BUILD_LISTENERS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC BUILD_LISTENERS)
+endif()
 
 if(BUILD_TESTING)
     add_subdirectory(tests)

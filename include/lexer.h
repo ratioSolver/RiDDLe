@@ -2,15 +2,18 @@
 
 #include "riddle_export.h"
 #include "rational.h"
+#include "memory.h"
 #include <istream>
 #include <cmath>
-#include <memory>
 
 #define BOOL_KW "bool"
 #define INT_KW "int"
 #define REAL_KW "real"
-#define TIME_KW "time"
+#define TIME_POINT_KW "time"
 #define STRING_KW "string"
+#define THIS_KW "this"
+#define RETURN_KW "return"
+#define TAU_KW "tau"
 
 namespace riddle
 {
@@ -29,6 +32,7 @@ namespace riddle
     PREDICATE_ID,     // `predicate`
     NEW_ID,           // `new`
     OR_ID,            // `or`
+    FOR_ID,           // `for`
     THIS_ID,          // `this`
     VOID_ID,          // `void`
     RETURN_ID,        // `return`
@@ -79,6 +83,7 @@ namespace riddle
     const size_t end_line;
     const size_t end_pos;
   };
+  using token_ptr = utils::u_ptr<const token>;
 
   class id_token final : public token
   {
@@ -101,19 +106,19 @@ namespace riddle
   class int_token final : public token
   {
   public:
-    int_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const semitone::I &val) : token(IntLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
+    int_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const utils::I &val) : token(IntLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
   public:
-    const semitone::I val;
+    const utils::I val;
   };
 
   class real_token final : public token
   {
   public:
-    real_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const semitone::rational &val) : token(RealLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
+    real_token(const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos, const utils::rational &val) : token(RealLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
   public:
-    const semitone::rational val;
+    const utils::rational val;
   };
 
   class string_token final : public token
@@ -132,60 +137,67 @@ namespace riddle
     RIDDLE_EXPORT lexer(std::istream &is);
     lexer(const lexer &orig) = delete;
 
-    RIDDLE_EXPORT std::unique_ptr<const token> next();
+    RIDDLE_EXPORT token_ptr next();
 
   private:
+    /**
+     * @brief Check if the character is a valid identifier part.
+     *
+     * @param ch The character to check.
+     * @return true If the character is a valid identifier part.
+     * @return false If the character is not a valid identifier part.
+     */
     static bool is_id_part(const char &ch) noexcept { return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'); }
 
-    std::unique_ptr<const token> mk_token(const symbol &sym) noexcept
+    token_ptr mk_token(const symbol &sym) noexcept
     {
-      auto tk = std::make_unique<const token>(sym, start_line, start_pos, end_line, end_pos);
+      auto tk = new const token(sym, start_line, start_pos, end_line, end_pos);
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    std::unique_ptr<const token> mk_id_token(const std::string &id) noexcept
+    token_ptr mk_id_token(const std::string &id) noexcept
     {
-      auto tk = std::make_unique<const id_token>(start_line, start_pos, end_line, end_pos, id);
+      auto tk = new const id_token(start_line, start_pos, end_line, end_pos, id);
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    std::unique_ptr<const token> mk_bool_token(const bool &val) noexcept
+    token_ptr mk_bool_token(const bool &val) noexcept
     {
-      auto tk = std::make_unique<const bool_token>(start_line, start_pos, end_line, end_pos, val);
+      auto tk = new const bool_token(start_line, start_pos, end_line, end_pos, val);
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    std::unique_ptr<const token> mk_integer_token(const std::string &str) noexcept
+    token_ptr mk_integer_token(const std::string &str) noexcept
     {
-      auto tk = std::make_unique<const int_token>(start_line, start_pos, end_line, end_pos, static_cast<semitone::I>(std::stol(str)));
+      auto tk = new const int_token(start_line, start_pos, end_line, end_pos, static_cast<utils::I>(std::stol(str)));
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    std::unique_ptr<const token> mk_rational_token(const std::string &intgr, const std::string &dec) noexcept
+    token_ptr mk_rational_token(const std::string &intgr, const std::string &dec) noexcept
     {
-      auto tk = std::make_unique<const real_token>(start_line, start_pos, end_line, end_pos, semitone::rational(static_cast<semitone::I>(std::stol(intgr + dec)), static_cast<semitone::I>(std::pow(10, dec.size()))));
+      auto tk = new const real_token(start_line, start_pos, end_line, end_pos, utils::rational(static_cast<utils::I>(std::stol(intgr + dec)), static_cast<utils::I>(std::pow(10, dec.size()))));
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    std::unique_ptr<const token> mk_string_token(const std::string &str) noexcept
+    token_ptr mk_string_token(const std::string &str) noexcept
     {
-      auto tk = std::make_unique<const string_token>(start_line, start_pos, end_line, end_pos, str);
+      auto tk = new const string_token(start_line, start_pos, end_line, end_pos, str);
       start_line = end_line;
       start_pos = end_pos;
       return tk;
     }
 
-    std::unique_ptr<const token> finish_id(std::string &str) noexcept;
+    token_ptr finish_id(std::string &str) noexcept;
 
     void error(const std::string &err);
     char next_char() noexcept;

@@ -1,4 +1,4 @@
-#include "riddle_lexer.h"
+#include "lexer.h"
 #include <sstream>
 #include <cassert>
 
