@@ -1,6 +1,5 @@
 #pragma once
 
-#include "riddle_export.h"
 #include "field.h"
 #include <vector>
 #include <map>

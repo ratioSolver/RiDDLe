@@ -53,7 +53,7 @@ namespace riddle
     }
 
     enum_type::enum_type(scope &scp, const std::string &name) : type(scp, name) {}
-    std::vector<expr> enum_type::get_all_values() const
+    RIDDLE_EXPORT std::vector<expr> enum_type::get_all_values() const
     {
         std::vector<expr> values;
         values.reserve(instances.size());
@@ -263,7 +263,7 @@ namespace riddle
         throw std::out_of_range("predicate `" + p_name + "` not found");
     }
 
-    expr complex_type::new_instance()
+    RIDDLE_EXPORT expr complex_type::new_instance()
     {
         auto inst = type::get_core().new_item(*this);
         instances.push_back(inst);

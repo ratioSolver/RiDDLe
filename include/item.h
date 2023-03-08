@@ -57,7 +57,7 @@ namespace riddle
   class complex_item : public item, public env, public utils::enum_val
   {
   public:
-    complex_item(type &tp);
+    RIDDLE_EXPORT complex_item(type &tp);
     virtual ~complex_item() = default;
   };
 

@@ -197,7 +197,7 @@ namespace riddle
 
     const std::vector<std::reference_wrapper<enum_type>> &get_enums() const { return enums; }
 
-    std::vector<expr> get_all_values() const;
+    RIDDLE_EXPORT std::vector<expr> get_all_values() const;
 
     expr new_instance() override;
 
@@ -293,7 +293,7 @@ namespace riddle
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) const override;
     RIDDLE_EXPORT predicate &get_predicate(const std::string &name) const override;
 
-    expr new_instance() override;
+    RIDDLE_EXPORT expr new_instance() override;
     const std::vector<expr> &get_instances() const { return instances; }
 
   protected:

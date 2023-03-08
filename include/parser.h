@@ -40,7 +40,7 @@ namespace riddle
       expression(const expression &orig) = delete;
       virtual ~expression() = default;
 
-      virtual RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const = 0;
+      virtual expr evaluate(scope &scp, env &ctx) const = 0;
     };
     using expression_ptr = utils::u_ptr<const expression>;
 
@@ -362,7 +362,7 @@ namespace riddle
       statement(const statement &orig) = delete;
       virtual ~statement() = default;
 
-      virtual RIDDLE_EXPORT void execute(scope &scp, env &ctx) const = 0;
+      virtual void execute(scope &scp, env &ctx) const = 0;
     };
     using statement_ptr = utils::u_ptr<const statement>;
 
