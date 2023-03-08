@@ -135,14 +135,14 @@ namespace riddle
         { // first check in any enclosing scope
             return scope::get_field(name);
         }
-        catch (const std::exception &e)
+        catch (const std::exception &)
         { // if not in any enclosing scope, check in the superclass
             for (const auto &tp : parents)
                 try
                 {
                     return tp.get().get_field(name);
                 }
-                catch (const std::exception &e)
+                catch (const std::exception &)
                 {
                 }
         }
@@ -179,7 +179,7 @@ namespace riddle
         { // first check in any enclosing scope
             return scope::get_type(tp_name);
         }
-        catch (const std::exception &e)
+        catch (const std::exception &)
         { // if not in any enclosing scope, check any superclass
             for (const auto &st : parents)
                 try
@@ -226,7 +226,7 @@ namespace riddle
         { // first check in any enclosing scope
             return scope::get_method(m_name, args);
         }
-        catch (const std::exception &e)
+        catch (const std::exception &)
         { // if not in any enclosing scope, check any superclass
             for (const auto &st : parents)
                 try
@@ -249,7 +249,7 @@ namespace riddle
         { // first check in any enclosing scope
             return scope::get_predicate(p_name);
         }
-        catch (const std::exception &e)
+        catch (const std::exception &)
         { // if not in any enclosing scope, check any superclass
             for (const auto &st : parents)
                 try
