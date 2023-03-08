@@ -129,24 +129,24 @@ namespace riddle
 
     RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
 
-    RIDDLE_EXPORT field &complex_type::get_field(const std::string &name) const
+    RIDDLE_EXPORT field &complex_type::get_field(const std::string &f_name) const
     {
         try
         { // first check in any enclosing scope
-            return scope::get_field(name);
+            return scope::get_field(f_name);
         }
         catch (const std::exception &)
         { // if not in any enclosing scope, check in the superclass
             for (const auto &tp : parents)
                 try
                 {
-                    return tp.get().get_field(name);
+                    return tp.get().get_field(f_name);
                 }
                 catch (const std::exception &)
                 {
                 }
         }
-        throw std::out_of_range("field `" + name + "` not found");
+        throw std::out_of_range("field `" + f_name + "` not found");
     }
 
     RIDDLE_EXPORT constructor &complex_type::get_constructor(const std::vector<std::reference_wrapper<type>> &args)
