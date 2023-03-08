@@ -17,7 +17,7 @@ namespace riddle
   class item : virtual public utils::countable
   {
   public:
-    item(type &tp);
+    item(type &tp) : tp(tp) {}
     virtual ~item() = default;
 
     /**
@@ -25,13 +25,13 @@ namespace riddle
      *
      * @return core& The core.
      */
-    core &get_core();
+    RIDDLE_EXPORT core &get_core();
     /**
      * @brief Get the core this item is defined in.
      *
      * @return const core& The core.
      */
-    const core &get_core() const;
+    RIDDLE_EXPORT const core &get_core() const;
 
     /**
      * @brief Get the type of this item.

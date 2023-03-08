@@ -40,7 +40,7 @@ namespace riddle
       expression(const expression &orig) = delete;
       virtual ~expression() = default;
 
-      virtual expr evaluate(scope &scp, env &ctx) const = 0;
+      virtual RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const = 0;
     };
     using expression_ptr = utils::u_ptr<const expression>;
 
@@ -50,7 +50,7 @@ namespace riddle
       bool_literal_expression(const bool_token &l) : literal(l) {}
       bool_literal_expression(const bool_literal_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const bool_token literal;
@@ -62,7 +62,7 @@ namespace riddle
       int_literal_expression(const int_token &l) : literal(l) {}
       int_literal_expression(const int_literal_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const int_token literal;
@@ -74,7 +74,7 @@ namespace riddle
       real_literal_expression(const real_token &l) : literal(l) {}
       real_literal_expression(const real_literal_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const real_token literal;
@@ -86,7 +86,7 @@ namespace riddle
       string_literal_expression(const string_token &l) : literal(l) {}
       string_literal_expression(const string_literal_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const string_token literal;
@@ -98,7 +98,7 @@ namespace riddle
       cast_expression(std::vector<id_token> tp, expression_ptr e) : cast_to_type(std::move(tp)), xpr(std::move(e)) {}
       cast_expression(const cast_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> cast_to_type;
@@ -111,7 +111,7 @@ namespace riddle
       plus_expression(expression_ptr e) : xpr(std::move(e)) {}
       plus_expression(const plus_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr xpr;
@@ -123,7 +123,7 @@ namespace riddle
       minus_expression(expression_ptr e) : xpr(std::move(e)) {}
       minus_expression(const minus_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr xpr;
@@ -135,7 +135,7 @@ namespace riddle
       not_expression(expression_ptr e) : xpr(std::move(e)) {}
       not_expression(const not_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr xpr;
@@ -147,7 +147,7 @@ namespace riddle
       constructor_expression(std::vector<id_token> it, std::vector<expression_ptr> es) : instance_type(std::move(it)), expressions(std::move(es)) {}
       constructor_expression(const constructor_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> instance_type;
@@ -160,7 +160,7 @@ namespace riddle
       eq_expression(expression_ptr l, expression_ptr r) : left(std::move(l)), right(std::move(r)) {}
       eq_expression(const eq_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr left;
@@ -173,7 +173,7 @@ namespace riddle
       neq_expression(expression_ptr l, expression_ptr r) : left(std::move(l)), right(std::move(r)) {}
       neq_expression(const neq_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr left;
@@ -186,7 +186,7 @@ namespace riddle
       lt_expression(expression_ptr l, expression_ptr r) : left(std::move(l)), right(std::move(r)) {}
       lt_expression(const lt_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr left;
@@ -199,7 +199,7 @@ namespace riddle
       leq_expression(expression_ptr l, expression_ptr r) : left(std::move(l)), right(std::move(r)) {}
       leq_expression(const leq_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr left;
@@ -212,7 +212,7 @@ namespace riddle
       geq_expression(expression_ptr l, expression_ptr r) : left(std::move(l)), right(std::move(r)) {}
       geq_expression(const geq_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr left;
@@ -225,7 +225,7 @@ namespace riddle
       gt_expression(expression_ptr l, expression_ptr r) : left(std::move(l)), right(std::move(r)) {}
       gt_expression(const gt_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr left;
@@ -238,7 +238,7 @@ namespace riddle
       function_expression(std::vector<id_token> is, const id_token &fn, std::vector<expression_ptr> es) : ids(std::move(is)), function_name(std::move(fn)), expressions(std::move(es)) {}
       function_expression(const function_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> ids;
@@ -252,7 +252,7 @@ namespace riddle
       id_expression(std::vector<id_token> is) : ids(std::move(is)) {}
       id_expression(const id_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> ids;
@@ -264,7 +264,7 @@ namespace riddle
       implication_expression(expression_ptr l, expression_ptr r) : left(std::move(l)), right(std::move(r)) {}
       implication_expression(const implication_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const expression_ptr left;
@@ -277,7 +277,7 @@ namespace riddle
       disjunction_expression(std::vector<expression_ptr> es) : expressions(std::move(es)) {}
       disjunction_expression(const disjunction_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -289,7 +289,7 @@ namespace riddle
       conjunction_expression(std::vector<expression_ptr> es) : expressions(std::move(es)) {}
       conjunction_expression(const conjunction_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -301,7 +301,7 @@ namespace riddle
       exct_one_expression(std::vector<expression_ptr> es) : expressions(std::move(es)) {}
       exct_one_expression(const exct_one_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -313,7 +313,7 @@ namespace riddle
       addition_expression(std::vector<expression_ptr> es) : expressions(std::move(es)) {}
       addition_expression(const addition_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -325,7 +325,7 @@ namespace riddle
       subtraction_expression(std::vector<expression_ptr> es) : expressions(std::move(es)) {}
       subtraction_expression(const subtraction_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -337,7 +337,7 @@ namespace riddle
       multiplication_expression(std::vector<expression_ptr> es) : expressions(std::move(es)) {}
       multiplication_expression(const multiplication_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -349,7 +349,7 @@ namespace riddle
       division_expression(std::vector<expression_ptr> es) : expressions(std::move(es)) {}
       division_expression(const division_expression &orig) = delete;
 
-      expr evaluate(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -362,7 +362,7 @@ namespace riddle
       statement(const statement &orig) = delete;
       virtual ~statement() = default;
 
-      virtual void execute(scope &scp, env &ctx) const = 0;
+      virtual RIDDLE_EXPORT void execute(scope &scp, env &ctx) const = 0;
     };
     using statement_ptr = utils::u_ptr<const statement>;
 
@@ -372,7 +372,7 @@ namespace riddle
       local_field_statement(std::vector<id_token> ft, std::vector<id_token> ns, std::vector<expression_ptr> es) : field_type(std::move(ft)), names(std::move(ns)), xprs(std::move(es)) {}
       local_field_statement(const local_field_statement &orig) = delete;
 
-      void execute(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> field_type;
@@ -386,7 +386,7 @@ namespace riddle
       assignment_statement(std::vector<id_token> is, const id_token &i, expression_ptr e) : ids(std::move(is)), id(i), xpr(std::move(e)) {}
       assignment_statement(const assignment_statement &orig) = delete;
 
-      void execute(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> ids;
@@ -400,7 +400,7 @@ namespace riddle
       expression_statement(expression_ptr e) : xpr(std::move(e)) {}
       expression_statement(const expression_statement &orig) = delete;
 
-      void execute(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
     protected:
       expression_ptr xpr;
@@ -412,7 +412,7 @@ namespace riddle
       disjunction_statement(std::vector<std::vector<statement_ptr>> conjs, std::vector<expression_ptr> conj_costs) : conjunctions(std::move(conjs)), conjunction_costs(std::move(conj_costs)) {}
       disjunction_statement(const disjunction_statement &orig) = delete;
 
-      void execute(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<std::vector<statement_ptr>> conjunctions;
@@ -425,7 +425,7 @@ namespace riddle
       for_all_statement(std::vector<id_token> ft, const id_token &i, std::vector<statement_ptr> stmnts) : field_type(std::move(ft)), id(i), body(std::move(stmnts)) {}
       for_all_statement(const for_all_statement &orig) = delete;
 
-      void execute(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<id_token> field_type;
@@ -439,7 +439,7 @@ namespace riddle
       conjunction_statement(std::vector<statement_ptr> stmnts) : body(std::move(stmnts)) {}
       conjunction_statement(const conjunction_statement &orig) = delete;
 
-      void execute(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
     protected:
       const std::vector<statement_ptr> body;
@@ -451,7 +451,7 @@ namespace riddle
       formula_statement(const bool &isf, const id_token &fn, std::vector<id_token> scp, const id_token &pn, std::vector<id_token> assn_ns, std::vector<expression_ptr> assn_vs) : is_fact(isf), formula_name(fn), formula_scope(std::move(scp)), predicate_name(pn), assignment_names(std::move(assn_ns)), assignment_values(std::move(assn_vs)) {}
       formula_statement(const formula_statement &orig) = delete;
 
-      void execute(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
     protected:
       const bool is_fact;
@@ -468,7 +468,7 @@ namespace riddle
       return_statement(expression_ptr e) : xpr(std::move(e)) {}
       return_statement(const return_statement &orig) = delete;
 
-      void execute(scope &scp, env &ctx) const override;
+      RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
     protected:
       expression_ptr xpr;
@@ -481,9 +481,9 @@ namespace riddle
       type_declaration(const type_declaration &orig) = delete;
       virtual ~type_declaration() = default;
 
-      virtual void declare(scope &) const = 0;
-      virtual void refine(scope &) const = 0;
-      virtual void refine_predicates(scope &) const = 0;
+      virtual RIDDLE_EXPORT void declare(scope &) const = 0;
+      virtual RIDDLE_EXPORT void refine(scope &) const = 0;
+      virtual RIDDLE_EXPORT void refine_predicates(scope &) const = 0;
     };
     using type_declaration_ptr = utils::u_ptr<const type_declaration>;
 
@@ -493,7 +493,7 @@ namespace riddle
       method_declaration(std::vector<id_token> rt, const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<statement_ptr> stmnts) : return_type(std::move(rt)), name(n), parameters(std::move(pars)), body(std::move(stmnts)) {}
       method_declaration(const method_declaration &orig) = delete;
 
-      void refine(scope &scp) const;
+      RIDDLE_EXPORT void refine(scope &scp) const;
 
     protected:
       const std::vector<id_token> return_type;
@@ -509,8 +509,8 @@ namespace riddle
       predicate_declaration(const id_token &n, std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<std::vector<id_token>> pl, std::vector<statement_ptr> stmnts) : name(n), parameters(std::move(pars)), predicate_list(std::move(pl)), body(std::move(stmnts)) {}
       predicate_declaration(const predicate_declaration &orig) = delete;
 
-      void declare(scope &scp) const;
-      void refine(scope &scp) const;
+      RIDDLE_EXPORT void declare(scope &scp) const;
+      RIDDLE_EXPORT void refine(scope &scp) const;
 
     protected:
       const id_token name;
@@ -526,9 +526,9 @@ namespace riddle
       typedef_declaration(const id_token &n, const id_token &pt, expression_ptr e) : name(n), primitive_type(pt), xpr(std::move(e)) {}
       typedef_declaration(const typedef_declaration &orig) = delete;
 
-      void declare(scope &scp) const override;
-      void refine(scope &) const override {}
-      void refine_predicates(scope &) const override {}
+      RIDDLE_EXPORT void declare(scope &scp) const override;
+      RIDDLE_EXPORT void refine(scope &) const override {}
+      RIDDLE_EXPORT void refine_predicates(scope &) const override {}
 
     protected:
       const id_token name;
@@ -542,9 +542,9 @@ namespace riddle
       enum_declaration(const id_token &n, std::vector<string_token> es, std::vector<std::vector<id_token>> trs) : name(n), enums(std::move(es)), type_refs(std::move(trs)) {}
       enum_declaration(const enum_declaration &orig) = delete;
 
-      void declare(scope &scp) const override;
-      void refine(scope &scp) const override;
-      void refine_predicates(scope &) const override {}
+      RIDDLE_EXPORT void declare(scope &scp) const override;
+      RIDDLE_EXPORT void refine(scope &scp) const override;
+      RIDDLE_EXPORT void refine_predicates(scope &) const override {}
 
     protected:
       const id_token name;
@@ -572,7 +572,7 @@ namespace riddle
       field_declaration(std::vector<id_token> tp, std::vector<variable_declaration_ptr> ds) : field_type(std::move(tp)), declarations(std::move(ds)) {}
       field_declaration(const field_declaration &orig) = delete;
 
-      void refine(scope &scp) const;
+      RIDDLE_EXPORT void refine(scope &scp) const;
 
     protected:
       const std::vector<id_token> field_type;
@@ -586,7 +586,7 @@ namespace riddle
       constructor_declaration(std::vector<std::pair<const std::vector<id_token>, const id_token>> pars, std::vector<id_token> ins, std::vector<std::vector<expression_ptr>> ivs, std::vector<statement_ptr> stmnts) : parameters(std::move(pars)), init_names(std::move(ins)), init_vals(std::move(ivs)), body(std::move(stmnts)) {}
       constructor_declaration(const constructor_declaration &orig) = delete;
 
-      void refine(scope &scp) const;
+      RIDDLE_EXPORT void refine(scope &scp) const;
 
     protected:
       const std::vector<std::pair<const std::vector<id_token>, const id_token>> parameters;
@@ -602,9 +602,9 @@ namespace riddle
       class_declaration(const id_token &n, std::vector<std::vector<id_token>> bcs, std::vector<field_declaration_ptr> fs, std::vector<constructor_declaration_ptr> cs, std::vector<method_declaration_ptr> ms, std::vector<predicate_declaration_ptr> ps, std::vector<type_declaration_ptr> ts) : name(n), base_classes(std::move(bcs)), fields(std::move(fs)), constructors(std::move(cs)), methods(std::move(ms)), predicates(std::move(ps)), types(std::move(ts)) {}
       class_declaration(const class_declaration &orig) = delete;
 
-      void declare(scope &scp) const override;
-      void refine(scope &scp) const override;
-      void refine_predicates(scope &scp) const override;
+      RIDDLE_EXPORT void declare(scope &scp) const override;
+      RIDDLE_EXPORT void refine(scope &scp) const override;
+      RIDDLE_EXPORT void refine_predicates(scope &scp) const override;
 
     protected:
       const id_token name;
@@ -622,10 +622,10 @@ namespace riddle
       compilation_unit(std::vector<method_declaration_ptr> ms, std::vector<predicate_declaration_ptr> ps, std::vector<type_declaration_ptr> ts, std::vector<statement_ptr> stmnts) : methods(std::move(ms)), predicates(std::move(ps)), types(std::move(ts)), body(std::move(stmnts)) {}
       compilation_unit(const compilation_unit &orig) = delete;
 
-      void declare(scope &scp) const;
-      void refine(scope &scp) const;
-      void refine_predicates(scope &scp) const;
-      void execute(scope &scp, env &ctx) const;
+      RIDDLE_EXPORT void declare(scope &scp) const;
+      RIDDLE_EXPORT void refine(scope &scp) const;
+      RIDDLE_EXPORT void refine_predicates(scope &scp) const;
+      RIDDLE_EXPORT void execute(scope &scp, env &ctx) const;
 
     protected:
       const std::vector<method_declaration_ptr> methods;

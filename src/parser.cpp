@@ -11,19 +11,19 @@ namespace riddle
 {
     using namespace ast;
 
-    expr bool_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_bool(literal.val); }
-    expr int_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_int(literal.val); }
-    expr real_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_real(literal.val); }
-    expr string_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_string(literal.str); }
+    RIDDLE_EXPORT expr bool_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_bool(literal.val); }
+    RIDDLE_EXPORT expr int_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_int(literal.val); }
+    RIDDLE_EXPORT expr real_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_real(literal.val); }
+    RIDDLE_EXPORT expr string_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_string(literal.str); }
 
-    expr cast_expression::evaluate(scope &scp, env &ctx) const { return xpr->evaluate(scp, ctx); }
+    RIDDLE_EXPORT expr cast_expression::evaluate(scope &scp, env &ctx) const { return xpr->evaluate(scp, ctx); }
 
-    expr plus_expression::evaluate(scope &scp, env &ctx) const { return xpr->evaluate(scp, ctx); }
-    expr minus_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().minus(xpr->evaluate(scp, ctx)); }
+    RIDDLE_EXPORT expr plus_expression::evaluate(scope &scp, env &ctx) const { return xpr->evaluate(scp, ctx); }
+    RIDDLE_EXPORT expr minus_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().minus(xpr->evaluate(scp, ctx)); }
 
-    expr not_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().negate(xpr->evaluate(scp, ctx)); }
+    RIDDLE_EXPORT expr not_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().negate(xpr->evaluate(scp, ctx)); }
 
-    expr constructor_expression::evaluate(scope &scp, env &ctx) const
+    RIDDLE_EXPORT expr constructor_expression::evaluate(scope &scp, env &ctx) const
     {
         complex_type *t = dynamic_cast<complex_type *>(&scp.get_type(instance_type.front().id));
         if (!t)
@@ -50,15 +50,15 @@ namespace riddle
         return inst;
     }
 
-    expr eq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().eq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
-    expr neq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().negate(scp.get_core().eq(left->evaluate(scp, ctx), right->evaluate(scp, ctx))); }
+    RIDDLE_EXPORT expr eq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().eq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
+    RIDDLE_EXPORT expr neq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().negate(scp.get_core().eq(left->evaluate(scp, ctx), right->evaluate(scp, ctx))); }
 
-    expr lt_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().lt(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
-    expr leq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().leq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
-    expr gt_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().gt(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
-    expr geq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().geq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
+    RIDDLE_EXPORT expr lt_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().lt(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
+    RIDDLE_EXPORT expr leq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().leq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
+    RIDDLE_EXPORT expr gt_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().gt(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
+    RIDDLE_EXPORT expr geq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().geq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
 
-    expr function_expression::evaluate(scope &scp, env &ctx) const
+    RIDDLE_EXPORT expr function_expression::evaluate(scope &scp, env &ctx) const
     {
         auto self = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
@@ -85,7 +85,7 @@ namespace riddle
             throw std::runtime_error("cannot find function");
     }
 
-    expr id_expression::evaluate(scope &, env &ctx) const
+    RIDDLE_EXPORT expr id_expression::evaluate(scope &, env &ctx) const
     {
         auto e = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
@@ -96,9 +96,9 @@ namespace riddle
         return e;
     }
 
-    expr implication_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().disj({scp.get_core().negate(left->evaluate(scp, ctx)), right->evaluate(scp, ctx)}); }
+    RIDDLE_EXPORT expr implication_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().disj({scp.get_core().negate(left->evaluate(scp, ctx)), right->evaluate(scp, ctx)}); }
 
-    expr disjunction_expression::evaluate(scope &scp, env &ctx) const
+    RIDDLE_EXPORT expr disjunction_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
         args.reserve(expressions.size());
@@ -107,7 +107,7 @@ namespace riddle
         return scp.get_core().disj(args);
     }
 
-    expr conjunction_expression::evaluate(scope &scp, env &ctx) const
+    RIDDLE_EXPORT expr conjunction_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
         args.reserve(expressions.size());
@@ -116,7 +116,7 @@ namespace riddle
         return scp.get_core().conj(args);
     }
 
-    expr exct_one_expression::evaluate(scope &scp, env &ctx) const
+    RIDDLE_EXPORT expr exct_one_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
         args.reserve(expressions.size());
@@ -125,7 +125,7 @@ namespace riddle
         return scp.get_core().exct_one(args);
     }
 
-    expr addition_expression::evaluate(scope &scp, env &ctx) const
+    RIDDLE_EXPORT expr addition_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
         args.reserve(expressions.size());
@@ -134,7 +134,7 @@ namespace riddle
         return scp.get_core().add(args);
     }
 
-    expr subtraction_expression::evaluate(scope &scp, env &ctx) const
+    RIDDLE_EXPORT expr subtraction_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
         args.reserve(expressions.size());
@@ -143,7 +143,7 @@ namespace riddle
         return scp.get_core().sub(args);
     }
 
-    expr multiplication_expression::evaluate(scope &scp, env &ctx) const
+    RIDDLE_EXPORT expr multiplication_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
         args.reserve(expressions.size());
@@ -152,7 +152,7 @@ namespace riddle
         return scp.get_core().mul(args);
     }
 
-    expr division_expression::evaluate(scope &scp, env &ctx) const
+    RIDDLE_EXPORT expr division_expression::evaluate(scope &scp, env &ctx) const
     {
         std::vector<expr> args;
         args.reserve(expressions.size());
@@ -161,7 +161,7 @@ namespace riddle
         return scp.get_core().div(args);
     }
 
-    void local_field_statement::execute(scope &scp, env &ctx) const
+    RIDDLE_EXPORT void local_field_statement::execute(scope &scp, env &ctx) const
     {
         for (size_t i = 0; i < names.size(); ++i)
             if (xprs[i])
@@ -209,7 +209,7 @@ namespace riddle
             }
     }
 
-    void assignment_statement::execute(scope &scp, env &ctx) const
+    RIDDLE_EXPORT void assignment_statement::execute(scope &scp, env &ctx) const
     {
         auto e = ctx.get(ids.front().id);
         for (auto it = ids.begin() + 1; it != ids.end(); ++it)
@@ -224,9 +224,9 @@ namespace riddle
             throw std::runtime_error("cannot find `" + id.id + "` item..");
     }
 
-    void expression_statement::execute(scope &scp, env &ctx) const { scp.get_core().assert_fact(xpr->evaluate(scp, ctx)); }
+    RIDDLE_EXPORT void expression_statement::execute(scope &scp, env &ctx) const { scp.get_core().assert_fact(xpr->evaluate(scp, ctx)); }
 
-    void disjunction_statement::execute(scope &scp, env &ctx) const
+    RIDDLE_EXPORT void disjunction_statement::execute(scope &scp, env &ctx) const
     {
         std::vector<conjunction_ptr> conjs;
         conjs.reserve(conjunctions.size());
@@ -237,7 +237,7 @@ namespace riddle
         scp.get_core().new_disjunction(std::move(conjs));
     }
 
-    void for_all_statement::execute(scope &scp, env &ctx) const
+    RIDDLE_EXPORT void for_all_statement::execute(scope &scp, env &ctx) const
     {
         type *t = &scp.get_type(field_type.front().id);
         for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
@@ -264,13 +264,13 @@ namespace riddle
             throw std::runtime_error("cannot iterate over type `" + t->get_name() + "`..");
     }
 
-    void conjunction_statement::execute(scope &scp, env &ctx) const
+    RIDDLE_EXPORT void conjunction_statement::execute(scope &scp, env &ctx) const
     {
         for (auto &stmnt : body)
             stmnt->execute(scp, ctx);
     }
 
-    void formula_statement::execute(scope &scp, env &ctx) const
+    RIDDLE_EXPORT void formula_statement::execute(scope &scp, env &ctx) const
     {
         predicate *p;
         std::map<std::string, expr> assgnments;
@@ -352,9 +352,9 @@ namespace riddle
         ctx.items.emplace(formula_name.id, atm_xpr);
     }
 
-    void return_statement::execute(scope &scp, env &ctx) const { ctx.items.emplace(RETURN_KW, xpr->evaluate(scp, ctx)); }
+    RIDDLE_EXPORT void return_statement::execute(scope &scp, env &ctx) const { ctx.items.emplace(RETURN_KW, xpr->evaluate(scp, ctx)); }
 
-    void method_declaration::refine(scope &scp) const
+    RIDDLE_EXPORT void method_declaration::refine(scope &scp) const
     {
         type *rt = nullptr; // the method's return type..
         if (!return_type.empty())
@@ -389,7 +389,7 @@ namespace riddle
             throw std::runtime_error("cannot add method");
     }
 
-    void predicate_declaration::declare(scope &scp) const
+    RIDDLE_EXPORT void predicate_declaration::declare(scope &scp) const
     { // we create the predicate and add it to the scope..
         auto p = new predicate(scp, name.id, std::vector<field_ptr>(), body);
         if (auto cr = dynamic_cast<core *>(&scp))
@@ -400,7 +400,7 @@ namespace riddle
             throw std::runtime_error("cannot add predicate");
     }
 
-    void predicate_declaration::refine(scope &scp) const
+    RIDDLE_EXPORT void predicate_declaration::refine(scope &scp) const
     {
         auto &p = scp.get_predicate(name.id); // the predicate to refine..
 
@@ -428,7 +428,7 @@ namespace riddle
         }
     }
 
-    void typedef_declaration::declare(scope &scp) const
+    RIDDLE_EXPORT void typedef_declaration::declare(scope &scp) const
     { // we create the typedef and add it to the scope..
         auto td = new typedef_type(scp, name.id, scp.get_type(primitive_type.id), xpr);
         if (auto cr = dynamic_cast<core *>(&scp))
@@ -439,7 +439,7 @@ namespace riddle
             throw std::runtime_error("cannot add typedef");
     }
 
-    void enum_declaration::declare(scope &scp) const
+    RIDDLE_EXPORT void enum_declaration::declare(scope &scp) const
     { // we create the enum and add it to the scope..
         auto en = new enum_type(scp, name.id);
 
@@ -455,7 +455,7 @@ namespace riddle
             throw std::runtime_error("cannot add enum");
     }
 
-    void enum_declaration::refine(scope &scp) const
+    RIDDLE_EXPORT void enum_declaration::refine(scope &scp) const
     {
         if (!type_refs.empty())
         {
@@ -478,7 +478,7 @@ namespace riddle
         }
     }
 
-    void field_declaration::refine(scope &scp) const
+    RIDDLE_EXPORT void field_declaration::refine(scope &scp) const
     {
         auto *tp = &scp.get_type(field_type.front().id);
         for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
@@ -499,7 +499,7 @@ namespace riddle
         }
     }
 
-    void constructor_declaration::refine(scope &scp) const
+    RIDDLE_EXPORT void constructor_declaration::refine(scope &scp) const
     {
         std::vector<field_ptr> args;
         args.reserve(parameters.size());
@@ -522,7 +522,7 @@ namespace riddle
             throw std::runtime_error("cannot add constructor");
     }
 
-    void class_declaration::declare(scope &scp) const
+    RIDDLE_EXPORT void class_declaration::declare(scope &scp) const
     { // we create the class and add it to the scope..
         auto cl = new complex_type(scp, name.id);
         if (auto cr = dynamic_cast<core *>(&scp))
@@ -537,7 +537,7 @@ namespace riddle
             t->declare(*cl);
     }
 
-    void class_declaration::refine(scope &scp) const
+    RIDDLE_EXPORT void class_declaration::refine(scope &scp) const
     {
         auto &tp = scp.get_type(name.id);
         if (auto c_tp = dynamic_cast<complex_type *>(&tp))
@@ -577,7 +577,7 @@ namespace riddle
             throw std::runtime_error("cannot refine non-class type");
     }
 
-    void class_declaration::refine_predicates(scope &scp) const
+    RIDDLE_EXPORT void class_declaration::refine_predicates(scope &scp) const
     {
         auto &tp = scp.get_type(name.id);
         if (auto c_tp = dynamic_cast<complex_type *>(&tp))
@@ -592,7 +592,7 @@ namespace riddle
             throw std::runtime_error("cannot refine non-class type");
     }
 
-    void compilation_unit::declare(scope &scp) const
+    RIDDLE_EXPORT void compilation_unit::declare(scope &scp) const
     {
         // we declare the types..
         for (const auto &t : types)
@@ -602,7 +602,7 @@ namespace riddle
             p->declare(scp);
     }
 
-    void compilation_unit::refine(scope &scp) const
+    RIDDLE_EXPORT void compilation_unit::refine(scope &scp) const
     {
         // we refine the types..
         for (const auto &t : types)
@@ -615,14 +615,14 @@ namespace riddle
             p->refine(scp);
     }
 
-    void compilation_unit::refine_predicates(scope &scp) const
+    RIDDLE_EXPORT void compilation_unit::refine_predicates(scope &scp) const
     {
         // we refine the types..
         for (const auto &t : types)
             t->refine_predicates(scp);
     }
 
-    void compilation_unit::execute(scope &scp, env &ctx) const
+    RIDDLE_EXPORT void compilation_unit::execute(scope &scp, env &ctx) const
     {
         // we execute the statements..
         for (const auto &s : body)

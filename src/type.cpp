@@ -9,7 +9,7 @@ namespace riddle
 {
     type::type(scope &scp, const std::string &name, bool primitive) : scp(scp), name(name), primitive(primitive) {}
 
-    bool type::is_assignable_from(const type &other) const
+    RIDDLE_EXPORT bool type::is_assignable_from(const type &other) const
     {
         std::queue<const type *> q;
         q.push(&other);

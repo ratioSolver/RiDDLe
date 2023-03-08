@@ -74,7 +74,7 @@ namespace riddle
      * @return true If this type is assignable from the other type.
      * @return false If this type is not assignable from the other type.
      */
-    bool is_assignable_from(const type &other) const;
+    RIDDLE_EXPORT bool is_assignable_from(const type &other) const;
     /**
      * @brief Check if this type is primitive (i.e. a built-in type).
      *
