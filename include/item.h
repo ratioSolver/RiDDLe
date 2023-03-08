@@ -68,7 +68,7 @@ namespace riddle
   class enum_item : public item, public env
   {
   public:
-    enum_item(type &tp);
+    RIDDLE_EXPORT enum_item(type &tp);
     virtual ~enum_item() = default;
 
     RIDDLE_EXPORT expr &get(const std::string &name) override;
@@ -81,7 +81,7 @@ namespace riddle
   class atom : public complex_item
   {
   public:
-    atom(predicate &p, bool is_fact = true);
+    RIDDLE_EXPORT atom(predicate &p, bool is_fact = true);
     virtual ~atom() = default;
 
     bool is_fact() const { return is_fact_; }

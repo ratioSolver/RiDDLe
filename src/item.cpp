@@ -9,7 +9,7 @@ namespace riddle
 
     RIDDLE_EXPORT complex_item::complex_item(type &tp) : item(tp), env(&tp.get_core()) {}
 
-    enum_item::enum_item(type &tp) : item(tp), env(&tp.get_core()) {}
+    RIDDLE_EXPORT enum_item::enum_item(type &tp) : item(tp), env(&tp.get_core()) {}
 
     RIDDLE_EXPORT expr &enum_item::get(const std::string &name)
     {
@@ -25,5 +25,5 @@ namespace riddle
         }
     }
 
-    atom::atom(predicate &p, bool is_fact) : complex_item(p), is_fact_(is_fact) {}
+    RIDDLE_EXPORT atom::atom(predicate &p, bool is_fact) : complex_item(p), is_fact_(is_fact) {}
 } // namespace riddle
