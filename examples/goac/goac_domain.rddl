@@ -37,7 +37,7 @@ class Visibility : StateVariable {
     }
 }
 
-class Robot {
+class Robot : Agent {
 
     Navigator navigator;
     ReusableResource antenna = new ReusableResource(1.0);
