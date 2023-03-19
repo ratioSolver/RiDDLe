@@ -263,6 +263,14 @@ namespace riddle
         throw std::out_of_range("predicate `" + p_name + "` not found");
     }
 
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<predicate>> complex_type::get_predicates() const
+    {
+        std::vector<std::reference_wrapper<predicate>> preds;
+        for (const auto &pred : predicates)
+            preds.emplace_back(*pred.second);
+        return preds;
+    }
+
     RIDDLE_EXPORT expr complex_type::new_instance()
     {
         auto inst = type::get_core().new_item(*this);
