@@ -39,6 +39,7 @@ namespace riddle
     friend class ast::typedef_declaration;
     friend class ast::enum_declaration;
     friend class ast::class_declaration;
+    friend class ast::formula_statement;
 #ifdef BUILD_LISTENERS
     friend class core_listener;
 #endif
@@ -293,6 +294,10 @@ namespace riddle
      */
     virtual expr new_goal(predicate &pred) = 0;
 
+  private:
+    virtual void new_atom(expr &atm) = 0;
+
+  public:
     /**
      * @brief Returns whether the given expression is a constant.
      *

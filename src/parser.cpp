@@ -349,6 +349,8 @@ namespace riddle
             q.pop();
         }
 
+        scp.get_core().new_atom(atm_xpr);
+
         ctx.items.emplace(formula_name.id, atm_xpr);
     }
 
@@ -370,7 +372,7 @@ namespace riddle
         std::vector<field_ptr> args; // the method's arguments..
         for (const auto &[tp_id_tkns, id_tkn] : parameters)
         {
-            auto *tp = &scp.get_type(tp_id_tkns.front().id);
+            auto tp = &scp.get_type(tp_id_tkns.front().id);
             for (auto it = tp_id_tkns.begin() + 1; it != tp_id_tkns.end(); ++it)
                 if (auto ci = dynamic_cast<complex_type *>(tp))
                     tp = &ci->get_type(it->id);
@@ -382,9 +384,9 @@ namespace riddle
         // we create the method and add it to the scope..
         auto mtd = new method(scp, name.id, std::move(args), body, rt);
         if (auto cr = dynamic_cast<core *>(&scp))
-            cr->add_method(std::move(mtd)); // we add the method to the core..
+            cr->add_method(mtd); // we add the method to the core..
         else if (auto ct = dynamic_cast<complex_type *>(&scp))
-            ct->add_method(std::move(mtd)); // we add the method to the complex type..
+            ct->add_method(mtd); // we add the method to the complex type..
         else
             throw std::runtime_error("cannot add method");
     }
@@ -393,9 +395,9 @@ namespace riddle
     { // we create the predicate and add it to the scope..
         auto p = new predicate(scp, name.id, std::vector<field_ptr>(), body);
         if (auto cr = dynamic_cast<core *>(&scp))
-            cr->add_predicate(std::move(p)); // we add the predicate to the core..
+            cr->add_predicate(p); // we add the predicate to the core..
         else if (auto ct = dynamic_cast<complex_type *>(&scp))
-            ct->add_predicate(std::move(p)); // we add the predicate to the complex type..
+            ct->add_predicate(p); // we add the predicate to the complex type..
         else
             throw std::runtime_error("cannot add predicate");
     }
@@ -407,7 +409,7 @@ namespace riddle
         // the predicate's arguments..
         for (const auto &[tp_id_tkns, id_tkn] : parameters)
         { // we find the type..
-            auto *tp = &scp.get_type(tp_id_tkns.front().id);
+            auto tp = &scp.get_type(tp_id_tkns.front().id);
             for (auto it = tp_id_tkns.begin() + 1; it != tp_id_tkns.end(); ++it)
                 if (auto ci = dynamic_cast<complex_type *>(tp))
                     tp = &ci->get_type(it->id);
@@ -462,7 +464,7 @@ namespace riddle
             if (auto en = dynamic_cast<enum_type *>(&scp.get_type(name.id))) // the enum to refine..
                 for (const auto &tr : type_refs)
                 {
-                    auto *tp = &scp.get_type(tr.front().id);
+                    auto tp = &scp.get_type(tr.front().id);
                     for (auto it = tr.begin() + 1; it != tr.end(); ++it)
                         if (auto ci = dynamic_cast<complex_type *>(tp))
                             tp = &ci->get_type(it->id);
@@ -480,7 +482,7 @@ namespace riddle
 
     RIDDLE_EXPORT void field_declaration::refine(scope &scp) const
     {
-        auto *tp = &scp.get_type(field_type.front().id);
+        auto tp = &scp.get_type(field_type.front().id);
         for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
             if (auto ci = dynamic_cast<complex_type *>(tp))
                 tp = &ci->get_type(it->id);
@@ -489,7 +491,7 @@ namespace riddle
 
         for (const auto &d : declarations)
         {
-            auto *fld = new field(*tp, d->name.id, d->xpr);
+            auto fld = new field(*tp, d->name.id, d->xpr);
             if (auto cr = dynamic_cast<core *>(&scp))
                 cr->add_field(fld); // we add the field to the core..
             else if (auto ct = dynamic_cast<complex_type *>(&scp))
@@ -505,7 +507,7 @@ namespace riddle
         args.reserve(parameters.size());
         for (const auto &[tp_id_tkns, id_tkn] : parameters)
         { // we find the type..
-            auto *tp = &scp.get_type(tp_id_tkns.front().id);
+            auto tp = &scp.get_type(tp_id_tkns.front().id);
             for (auto it = tp_id_tkns.begin() + 1; it != tp_id_tkns.end(); ++it)
                 if (auto ci = dynamic_cast<complex_type *>(tp))
                     tp = &ci->get_type(it->id);
@@ -544,7 +546,7 @@ namespace riddle
         { // we add the base classes..
             for (const auto &t : base_classes)
             { // we find the base class..
-                auto *bc = &scp.get_type(t.front().id);
+                auto bc = &scp.get_type(t.front().id);
                 for (auto it = t.begin() + 1; it != t.end(); ++it)
                     if (auto ci = dynamic_cast<complex_type *>(bc))
                         bc = &ci->get_type(it->id);

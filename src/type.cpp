@@ -70,7 +70,7 @@ namespace riddle
     }
     expr enum_type::new_instance() { return scp.get_core().new_enum(*this, get_all_values()); }
 
-    RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name, std::vector<field_ptr> as, const std::vector<ast::statement_ptr> &body) : scope(scp), type(scp.get_core(), name), body(body)
+    RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name, std::vector<field_ptr> as, const std::vector<ast::statement_ptr> &body) : scope(scp), type(scp, name), body(body)
     {
         if (!is_core(scp))
             add_field(new field(static_cast<complex_type &>(scp), THIS_KW, nullptr, true));
@@ -266,7 +266,21 @@ namespace riddle
     RIDDLE_EXPORT expr complex_type::new_instance()
     {
         auto inst = type::get_core().new_item(*this);
-        instances.push_back(inst);
+        if (parents.empty())
+        { // if this is a root type, we store the instance in this type..
+            instances.push_back(inst);
+            return inst;
+        } // otherwise, we store the instance in this type and in all the supertypes..
+        std::queue<complex_type *> q;
+        q.push(this);
+        while (!q.empty())
+        {
+            auto &tp = *q.front();
+            tp.instances.push_back(inst);
+            for (auto &parent : tp.parents)
+                q.push(&parent.get());
+            q.pop();
+        }
         return inst;
     }
 
