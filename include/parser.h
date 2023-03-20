@@ -41,6 +41,8 @@ namespace riddle
       virtual ~expression() = default;
 
       virtual expr evaluate(scope &scp, env &ctx) const = 0;
+
+      virtual std::string to_string() const = 0;
     };
     using expression_ptr = utils::u_ptr<const expression>;
 
@@ -51,6 +53,8 @@ namespace riddle
       bool_literal_expression(const bool_literal_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override { return literal.to_string(); }
 
     protected:
       const bool_token literal;
@@ -64,6 +68,8 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return literal.to_string(); }
+
     protected:
       const int_token literal;
     };
@@ -75,6 +81,8 @@ namespace riddle
       real_literal_expression(const real_literal_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override { return literal.to_string(); }
 
     protected:
       const real_token literal;
@@ -88,6 +96,8 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return literal.to_string(); }
+
     protected:
       const string_token literal;
     };
@@ -99,6 +109,15 @@ namespace riddle
       cast_expression(const cast_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = "(" + cast_to_type[0].to_string();
+        for (size_t i = 1; i < cast_to_type.size(); ++i)
+          result += "." + cast_to_type[i].to_string();
+        result += ") " + xpr->to_string();
+        return result;
+      }
 
     protected:
       const std::vector<id_token> cast_to_type;
@@ -113,6 +132,8 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return "+" + xpr->to_string(); }
+
     protected:
       const expression_ptr xpr;
     };
@@ -124,6 +145,8 @@ namespace riddle
       minus_expression(const minus_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override { return "-" + xpr->to_string(); }
 
     protected:
       const expression_ptr xpr;
@@ -137,6 +160,8 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return "!" + xpr->to_string(); }
+
     protected:
       const expression_ptr xpr;
     };
@@ -148,6 +173,22 @@ namespace riddle
       constructor_expression(const constructor_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = "new " + instance_type[0].to_string();
+        for (size_t i = 1; i < instance_type.size(); ++i)
+          result += "." + instance_type[i].to_string();
+        result += "(";
+        for (size_t i = 0; i < expressions.size(); ++i)
+        {
+          if (i > 0)
+            result += ", ";
+          result += expressions[i]->to_string();
+        }
+        result += ")";
+        return result;
+      }
 
     protected:
       const std::vector<id_token> instance_type;
@@ -162,6 +203,8 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return left->to_string() + " == " + right->to_string(); }
+
     protected:
       const expression_ptr left;
       const expression_ptr right;
@@ -174,6 +217,8 @@ namespace riddle
       neq_expression(const neq_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override { return left->to_string() + " != " + right->to_string(); }
 
     protected:
       const expression_ptr left;
@@ -188,6 +233,8 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return left->to_string() + " < " + right->to_string(); }
+
     protected:
       const expression_ptr left;
       const expression_ptr right;
@@ -200,6 +247,8 @@ namespace riddle
       leq_expression(const leq_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override { return left->to_string() + " <= " + right->to_string(); }
 
     protected:
       const expression_ptr left;
@@ -214,6 +263,8 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return left->to_string() + " >= " + right->to_string(); }
+
     protected:
       const expression_ptr left;
       const expression_ptr right;
@@ -227,6 +278,8 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return left->to_string() + " > " + right->to_string(); }
+
     protected:
       const expression_ptr left;
       const expression_ptr right;
@@ -239,6 +292,22 @@ namespace riddle
       function_expression(const function_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = ids[0].to_string();
+        for (size_t i = 1; i < ids.size(); ++i)
+          result += "." + ids[i].to_string();
+        result += "." + function_name.to_string() + "(";
+        for (size_t i = 0; i < expressions.size(); ++i)
+        {
+          if (i > 0)
+            result += ", ";
+          result += expressions[i]->to_string();
+        }
+        result += ")";
+        return result;
+      }
 
     protected:
       const std::vector<id_token> ids;
@@ -254,6 +323,14 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override
+      {
+        std::string result = ids[0].to_string();
+        for (size_t i = 1; i < ids.size(); ++i)
+          result += "." + ids[i].to_string();
+        return result;
+      }
+
     protected:
       const std::vector<id_token> ids;
     };
@@ -265,6 +342,8 @@ namespace riddle
       implication_expression(const implication_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override { return left->to_string() + " -> " + right->to_string(); }
 
     protected:
       const expression_ptr left;
@@ -279,6 +358,14 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override
+      {
+        std::string result = expressions[0]->to_string();
+        for (size_t i = 1; i < expressions.size(); ++i)
+          result += " | " + expressions[i]->to_string();
+        return result;
+      }
+
     protected:
       const std::vector<expression_ptr> expressions;
     };
@@ -290,6 +377,14 @@ namespace riddle
       conjunction_expression(const conjunction_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = expressions[0]->to_string();
+        for (size_t i = 1; i < expressions.size(); ++i)
+          result += " & " + expressions[i]->to_string();
+        return result;
+      }
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -303,6 +398,14 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override
+      {
+        std::string result = expressions[0]->to_string();
+        for (size_t i = 1; i < expressions.size(); ++i)
+          result += " ^ " + expressions[i]->to_string();
+        return result;
+      }
+
     protected:
       const std::vector<expression_ptr> expressions;
     };
@@ -314,6 +417,14 @@ namespace riddle
       addition_expression(const addition_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = expressions[0]->to_string();
+        for (size_t i = 1; i < expressions.size(); ++i)
+          result += " + " + expressions[i]->to_string();
+        return result;
+      }
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -327,6 +438,14 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override
+      {
+        std::string result = expressions[0]->to_string();
+        for (size_t i = 1; i < expressions.size(); ++i)
+          result += " - " + expressions[i]->to_string();
+        return result;
+      }
+
     protected:
       const std::vector<expression_ptr> expressions;
     };
@@ -338,6 +457,14 @@ namespace riddle
       multiplication_expression(const multiplication_expression &orig) = delete;
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = expressions[0]->to_string();
+        for (size_t i = 1; i < expressions.size(); ++i)
+          result += " * " + expressions[i]->to_string();
+        return result;
+      }
 
     protected:
       const std::vector<expression_ptr> expressions;
@@ -351,6 +478,14 @@ namespace riddle
 
       RIDDLE_EXPORT expr evaluate(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override
+      {
+        std::string result = expressions[0]->to_string();
+        for (size_t i = 1; i < expressions.size(); ++i)
+          result += " / " + expressions[i]->to_string();
+        return result;
+      }
+
     protected:
       const std::vector<expression_ptr> expressions;
     };
@@ -363,6 +498,8 @@ namespace riddle
       virtual ~statement() = default;
 
       virtual void execute(scope &scp, env &ctx) const = 0;
+
+      virtual std::string to_string() const = 0;
     };
     using statement_ptr = utils::u_ptr<const statement>;
 
@@ -373,6 +510,23 @@ namespace riddle
       local_field_statement(const local_field_statement &orig) = delete;
 
       RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = field_type[0].to_string();
+        for (size_t i = 1; i < field_type.size(); ++i)
+          result += "." + field_type[i].to_string();
+        result += " " + names[0].to_string();
+        if (xprs[0])
+          result += " = " + xprs[0]->to_string();
+        for (size_t i = 1; i < names.size(); ++i)
+        {
+          result += ", " + names[i].to_string();
+          if (xprs[i])
+            result += " = " + xprs[i]->to_string();
+        }
+        return result + ";";
+      }
 
     protected:
       const std::vector<id_token> field_type;
@@ -388,6 +542,18 @@ namespace riddle
 
       RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override
+      {
+        if (ids.empty())
+          return id.to_string() + " = " + xpr->to_string() + ";";
+        std::string result = ids[0].to_string();
+        for (size_t i = 1; i < ids.size(); ++i)
+          result += "." + ids[i].to_string();
+        result += "." + id.to_string();
+        result += " = " + xpr->to_string() + ";";
+        return result;
+      }
+
     protected:
       const std::vector<id_token> ids;
       const id_token id;
@@ -402,6 +568,8 @@ namespace riddle
 
       RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return xpr->to_string() + ";"; }
+
     protected:
       expression_ptr xpr;
     };
@@ -413,6 +581,26 @@ namespace riddle
       disjunction_statement(const disjunction_statement &orig) = delete;
 
       RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = "{\n";
+        for (size_t j = 0; j < conjunctions[0].size(); ++j)
+          result += "  " + conjunctions[0][j]->to_string() + "\n";
+        result += "}";
+        if (conjunction_costs[0])
+          result += " [" + conjunction_costs[0]->to_string() + "]";
+        for (size_t i = 1; i < conjunctions.size(); ++i)
+        {
+          result += " or {\n";
+          for (size_t j = 0; j < conjunctions[i].size(); ++j)
+            result += "  " + conjunctions[i][j]->to_string() + "\n";
+          result += "}";
+          if (conjunction_costs[i])
+            result += " [" + conjunction_costs[i]->to_string() + "]";
+        }
+        return result;
+      }
 
     protected:
       const std::vector<std::vector<statement_ptr>> conjunctions;
@@ -426,6 +614,17 @@ namespace riddle
       for_all_statement(const for_all_statement &orig) = delete;
 
       RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = "for  (" + field_type[0].to_string();
+        for (size_t i = 1; i < field_type.size(); ++i)
+          result += "." + field_type[i].to_string();
+        result += " " + id.to_string() + ") {\n";
+        for (size_t i = 0; i < body.size(); ++i)
+          result += "  " + body[i]->to_string() + "\n";
+        return result + "}";
+      }
 
     protected:
       const std::vector<id_token> field_type;
@@ -441,6 +640,14 @@ namespace riddle
 
       RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override
+      {
+        std::string result = "{\n";
+        for (size_t i = 0; i < body.size(); ++i)
+          result += "  " + body[i]->to_string() + "\n";
+        return result + "}";
+      }
+
     protected:
       const std::vector<statement_ptr> body;
     };
@@ -452,6 +659,25 @@ namespace riddle
       formula_statement(const formula_statement &orig) = delete;
 
       RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = (is_fact ? "fact" : "goal") + ' ' + formula_name.to_string();
+        if (!formula_scope.empty())
+        {
+          result += " = new " + formula_scope[0].to_string();
+          for (size_t i = 1; i < formula_scope.size(); ++i)
+            result += "." + formula_scope[i].to_string();
+        }
+        result += predicate_name.to_string() + "(";
+        if (!assignment_names.empty())
+        {
+          result += assignment_names[0].to_string() + " = " + assignment_values[0]->to_string();
+          for (size_t i = 1; i < assignment_names.size(); ++i)
+            result += ", " + assignment_names[i].to_string() + " = " + assignment_values[i]->to_string();
+        }
+        return result + ");";
+      }
 
     protected:
       const bool is_fact;
@@ -470,6 +696,8 @@ namespace riddle
 
       RIDDLE_EXPORT void execute(scope &scp, env &ctx) const override;
 
+      std::string to_string() const override { return "return " + xpr->to_string() + ";"; }
+
     protected:
       expression_ptr xpr;
     };
@@ -484,6 +712,8 @@ namespace riddle
       virtual RIDDLE_EXPORT void declare(scope &) const = 0;
       virtual RIDDLE_EXPORT void refine(scope &) const = 0;
       virtual RIDDLE_EXPORT void refine_predicates(scope &) const = 0;
+
+      virtual std::string to_string() const = 0;
     };
     using type_declaration_ptr = utils::u_ptr<const type_declaration>;
 
@@ -494,6 +724,32 @@ namespace riddle
       method_declaration(const method_declaration &orig) = delete;
 
       RIDDLE_EXPORT void refine(scope &scp) const;
+
+      std::string to_string() const
+      {
+        std::string result = return_type[0].to_string();
+        for (size_t i = 1; i < return_type.size(); ++i)
+          result += "." + return_type[i].to_string();
+        result += ' ' + name.to_string() + '(';
+        if (!parameters.empty())
+        {
+          result += parameters[0].first[0].to_string();
+          for (size_t i = 1; i < parameters[0].first.size(); ++i)
+            result += "." + parameters[0].first[i].to_string();
+          result += ' ' + parameters[0].second.to_string();
+          for (size_t i = 1; i < parameters.size(); ++i)
+          {
+            result += ", " + parameters[i].first[0].to_string();
+            for (size_t j = 1; j < parameters[i].first.size(); ++j)
+              result += "." + parameters[i].first[j].to_string();
+            result += ' ' + parameters[i].second.to_string();
+          }
+        }
+        result += ") {\n";
+        for (size_t i = 0; i < body.size(); ++i)
+          result += "  " + body[i]->to_string() + "\n";
+        return result + "}";
+      }
 
     protected:
       const std::vector<id_token> return_type;
@@ -511,6 +767,37 @@ namespace riddle
 
       RIDDLE_EXPORT void declare(scope &scp) const;
       RIDDLE_EXPORT void refine(scope &scp) const;
+
+      std::string to_string() const
+      {
+        std::string result = "predicate " + name.to_string() + '(';
+        if (!parameters.empty())
+        {
+          result += parameters[0].first[0].to_string();
+          for (size_t i = 1; i < parameters[0].first.size(); ++i)
+            result += "." + parameters[0].first[i].to_string();
+          result += ' ' + parameters[0].second.to_string();
+          for (size_t i = 1; i < parameters.size(); ++i)
+          {
+            result += ", " + parameters[i].first[0].to_string();
+            for (size_t j = 1; j < parameters[i].first.size(); ++j)
+              result += "." + parameters[i].first[j].to_string();
+            result += ' ' + parameters[i].second.to_string();
+          }
+        }
+        result += ")";
+        if (!predicate_list.empty())
+        {
+          result += " : ";
+          result += predicate_list[0][0].to_string();
+          for (size_t i = 1; i < predicate_list[0].size(); ++i)
+            result += ", " + predicate_list[0][i].to_string();
+        }
+        result += " {\n";
+        for (size_t i = 0; i < body.size(); ++i)
+          result += "  " + body[i]->to_string() + "\n";
+        return result + "}";
+      }
 
     protected:
       const id_token name;
@@ -530,6 +817,8 @@ namespace riddle
       RIDDLE_EXPORT void refine(scope &) const override {}
       RIDDLE_EXPORT void refine_predicates(scope &) const override {}
 
+      std::string to_string() const override { return "typedef " + primitive_type.to_string() + ' ' + name.to_string() + " = " + xpr->to_string() + ";"; }
+
     protected:
       const id_token name;
       const id_token primitive_type;
@@ -546,6 +835,32 @@ namespace riddle
       RIDDLE_EXPORT void refine(scope &scp) const override;
       RIDDLE_EXPORT void refine_predicates(scope &) const override {}
 
+      std::string to_string() const override
+      {
+        std::string result = "enum " + name.to_string() + " {";
+        if (!enums.empty())
+        {
+          result += '\"' + enums[0].to_string() + '\"';
+          for (size_t i = 1; i < enums.size(); ++i)
+            result += ", \"" + enums[i].to_string() + '\"';
+          if (!type_refs.empty())
+            result += ", ";
+        }
+        if (!type_refs.empty())
+        {
+          result += type_refs[0][0].to_string();
+          for (size_t i = 1; i < type_refs[0].size(); ++i)
+            result += "." + type_refs[0][i].to_string();
+          for (size_t i = 1; i < type_refs.size(); ++i)
+          {
+            result += ", " + type_refs[i][0].to_string();
+            for (size_t j = 1; j < type_refs[i].size(); ++j)
+              result += "." + type_refs[i][j].to_string();
+          }
+        }
+        return result + "}";
+      }
+
     protected:
       const id_token name;
       const std::vector<string_token> enums;
@@ -559,6 +874,8 @@ namespace riddle
     public:
       variable_declaration(const id_token &n, expression_ptr e = nullptr) : name(n), xpr(std::move(e)) {}
       variable_declaration(const variable_declaration &orig) = delete;
+
+      std::string to_string() const { return name.to_string() + (xpr ? " = " + xpr->to_string() : ""); }
 
     protected:
       const id_token name;
@@ -574,6 +891,17 @@ namespace riddle
 
       RIDDLE_EXPORT void refine(scope &scp) const;
 
+      std::string to_string() const
+      {
+        std::string result = field_type[0].to_string();
+        for (size_t i = 1; i < field_type.size(); ++i)
+          result += "." + field_type[i].to_string();
+        result += ' ' + declarations[0]->to_string();
+        for (size_t i = 1; i < declarations.size(); ++i)
+          result += ", " + declarations[i]->to_string();
+        return result + ";";
+      }
+
     protected:
       const std::vector<id_token> field_type;
       const std::vector<variable_declaration_ptr> declarations;
@@ -587,6 +915,54 @@ namespace riddle
       constructor_declaration(const constructor_declaration &orig) = delete;
 
       RIDDLE_EXPORT void refine(scope &scp) const;
+
+      std::string to_string() const
+      {
+        std::string result = "(";
+        if (!parameters.empty())
+        {
+          result += parameters[0].first[0].to_string() + ' ' + parameters[0].second.to_string();
+          for (size_t i = 1; i < parameters[0].first.size(); ++i)
+            result += "." + parameters[0].first[i].to_string();
+          for (size_t i = 1; i < parameters.size(); ++i)
+          {
+            result += ", " + parameters[i].first[0].to_string() + ' ' + parameters[i].second.to_string();
+            for (size_t j = 1; j < parameters[i].first.size(); ++j)
+              result += "." + parameters[i].first[j].to_string();
+          }
+        }
+        result += ")";
+        if (!init_names.empty())
+        {
+          result += " : " + init_names[0].to_string() + '(';
+          if (!init_vals[0].empty())
+          {
+            result += init_vals[0][0]->to_string();
+            for (size_t i = 1; i < init_vals[0].size(); ++i)
+              result += ", " + init_vals[0][i]->to_string();
+          }
+          result += ')';
+          for (size_t i = 1; i < init_names.size(); ++i)
+          {
+            result += ", " + init_names[i].to_string() + '(';
+            if (!init_vals[i].empty())
+            {
+              result += init_vals[i][0]->to_string();
+              for (size_t j = 1; j < init_vals[i].size(); ++j)
+                result += ", " + init_vals[i][j]->to_string();
+            }
+            result += ')';
+          }
+        }
+        result += " {";
+        if (!body.empty())
+        {
+          result += body[0]->to_string();
+          for (size_t i = 1; i < body.size(); ++i)
+            result += body[i]->to_string();
+        }
+        return result + "}";
+      }
 
     protected:
       const std::vector<std::pair<const std::vector<id_token>, const id_token>> parameters;
@@ -605,6 +981,55 @@ namespace riddle
       RIDDLE_EXPORT void declare(scope &scp) const override;
       RIDDLE_EXPORT void refine(scope &scp) const override;
       RIDDLE_EXPORT void refine_predicates(scope &scp) const override;
+
+      std::string to_string() const override
+      {
+        std::string result = "class " + name.to_string();
+        if (!base_classes.empty())
+        {
+          result += " : " + base_classes[0][0].to_string();
+          for (size_t i = 1; i < base_classes[0].size(); ++i)
+            result += "." + base_classes[0][i].to_string();
+          for (size_t i = 1; i < base_classes.size(); ++i)
+          {
+            result += ", " + base_classes[i][0].to_string();
+            for (size_t j = 1; j < base_classes[i].size(); ++j)
+              result += "." + base_classes[i][j].to_string();
+          }
+        }
+        result += " {";
+        if (!fields.empty())
+        {
+          result += fields[0]->to_string();
+          for (size_t i = 1; i < fields.size(); ++i)
+            result += fields[i]->to_string();
+        }
+        if (!constructors.empty())
+        {
+          result += constructors[0]->to_string();
+          for (size_t i = 1; i < constructors.size(); ++i)
+            result += constructors[i]->to_string();
+        }
+        if (!methods.empty())
+        {
+          result += methods[0]->to_string();
+          for (size_t i = 1; i < methods.size(); ++i)
+            result += methods[i]->to_string();
+        }
+        if (!predicates.empty())
+        {
+          result += predicates[0]->to_string();
+          for (size_t i = 1; i < predicates.size(); ++i)
+            result += predicates[i]->to_string();
+        }
+        if (!types.empty())
+        {
+          result += types[0]->to_string();
+          for (size_t i = 1; i < types.size(); ++i)
+            result += types[i]->to_string();
+        }
+        return result + "}";
+      }
 
     protected:
       const id_token name;
@@ -626,6 +1051,36 @@ namespace riddle
       RIDDLE_EXPORT void refine(scope &scp) const;
       RIDDLE_EXPORT void refine_predicates(scope &scp) const;
       RIDDLE_EXPORT void execute(scope &scp, env &ctx) const;
+
+      std::string to_string() const
+      {
+        std::string result = "";
+        if (!methods.empty())
+        {
+          result += methods[0]->to_string();
+          for (size_t i = 1; i < methods.size(); ++i)
+            result += methods[i]->to_string();
+        }
+        if (!predicates.empty())
+        {
+          result += predicates[0]->to_string();
+          for (size_t i = 1; i < predicates.size(); ++i)
+            result += predicates[i]->to_string();
+        }
+        if (!types.empty())
+        {
+          result += types[0]->to_string();
+          for (size_t i = 1; i < types.size(); ++i)
+            result += types[i]->to_string();
+        }
+        if (!body.empty())
+        {
+          result += body[0]->to_string();
+          for (size_t i = 1; i < body.size(); ++i)
+            result += body[i]->to_string();
+        }
+        return result;
+      }
 
     protected:
       const std::vector<method_declaration_ptr> methods;
