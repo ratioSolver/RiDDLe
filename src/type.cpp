@@ -11,21 +11,35 @@ namespace riddle
 
     RIDDLE_EXPORT bool type::is_assignable_from(const type &other) const
     {
-        std::queue<const type *> q;
-        q.push(&other);
-        while (!q.empty())
-        {
-            if (q.front() == this)
-                return true;
-            else if (auto ct = dynamic_cast<const complex_type *>(q.front()))
+        if (this == &other)
+            return true;
+        else if (auto ct = dynamic_cast<const complex_type *>(&other))
+        { // we are comparing a complex type with another type..
+            std::queue<const complex_type *> q;
+            q.push(ct);
+            while (!q.empty())
             {
-                for (const auto &st : ct->get_parents())
+                if (q.front() == this)
+                    return true;
+                for (const auto &st : q.front()->get_parents())
                     q.push(&st.get());
                 q.pop();
             }
-            else
-                return false;
         }
+        else if (auto pred = dynamic_cast<const predicate *>(&other))
+        { // we are comparing a predicate with another type..
+            std::queue<const predicate *> q;
+            q.push(pred);
+            while (!q.empty())
+            {
+                if (q.front() == this)
+                    return true;
+                for (const auto &st : q.front()->get_parents())
+                    q.push(&st.get());
+                q.pop();
+            }
+        }
+
         return false;
     }
 
