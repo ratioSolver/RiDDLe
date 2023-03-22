@@ -119,6 +119,9 @@ namespace riddle
     { // we create a new environment for the rule's body execution..
         if (auto a = dynamic_cast<atom *>(atm.operator->()))
         {
+            for (const auto &sp : parents)
+                sp.get().call(atm);
+
             env ctx(a);
             for (const auto &stmnt : body)
                 stmnt->execute(*this, ctx);
