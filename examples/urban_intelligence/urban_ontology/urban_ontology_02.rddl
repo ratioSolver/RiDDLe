@@ -1,0 +1,104 @@
+class System {}
+class SubSystem : System {}
+
+predicate Twin(System s) {
+    {
+        s == mobilita;
+        goal m_s = new Contains(ss: strade);
+        goal m_f = new Contains(ss: ferrovie);
+        goal m_c = new Contains(ss: ciclabili);
+        goal m_p = new Contains(ss: pedonali);
+        goal m_a = new Contains(ss: aeroporti);
+        goal m_po = new Contains(ss: porti);
+        goal m_as = new Contains(ss: autostrade);
+
+        goal m_c = new Involves(s: culturale);
+        goal m_i = new Involves(s: insediativo);
+        goal m_a = new Involves(s: ambientale);
+    } or {
+        s == produttivo;
+        goal p_a = new Contains(ss: agricoltura);
+        goal p_s = new Contains(ss: sanita);
+        goal p_c = new Contains(ss: commercio);
+        goal p_m = new Contains(ss: manifattura);
+
+        goal p_i = new Involves(s: insediativo);
+        goal p_a = new Involves(s: ambientale);
+    } or {
+        s == culturale;
+        goal c_m = new Contains(ss: musei);
+        goal c_t = new Contains(ss: teatri);
+        goal c_b = new Contains(ss: biblioteche);
+        goal c_c = new Contains(ss: cinema);
+        goal c_pc = new Contains(ss: patrimonio_culturale);
+        goal c_pi = new Contains(ss: patrimonio_immateriale);
+        goal c_i = new Contains(ss: istruzione);
+
+        goal c_m = new Involves(s: mobilita);
+        goal c_i = new Involves(s: insediativo);
+    } or {
+        s == insediativo;
+        goal i_q = new Contains(ss: quartieri);
+        goal i_a = new Contains(ss: architettura);
+        goal i_sp = new Contains(ss: spazi_publici);
+        goal i_u = new Contains(ss: urbanizzazione);
+
+        goal i_m = new Involves(s: mobilita);
+        goal i_c = new Involves(s: culturale);
+    } or {
+        s == ambientale;
+        goal a_p = new Contains(ss: parchi);
+        goal a_va = new Contains(ss: verde_attrezzato);
+        goal a_av = new Contains(ss: aree_verdi);
+        goal a_r = new Contains(ss: rifiuti);
+        goal a_a = new Contains(ss: acqua);
+        goal a_e = new Contains(ss: energia);
+
+        goal a_m = new Involves(s: mobilita);
+        goal a_p = new Involves(s: produttivo);
+    }
+}
+
+predicate Contains(SubSystem ss) {}
+predicate Involves(System s) {}
+
+System mobilita = new System();
+System produttivo = new System();
+System culturale = new System();
+System insediativo = new System();
+System ambientale = new System();
+
+SubSystem strade = new SubSystem();
+SubSystem ferrovie = new SubSystem();
+SubSystem ciclabili = new SubSystem();
+SubSystem pedonali = new SubSystem();
+SubSystem aeroporti = new SubSystem();
+SubSystem porti = new SubSystem();
+SubSystem autostrade = new SubSystem();
+
+SubSystem agricoltura = new SubSystem();
+SubSystem sanita = new SubSystem();
+SubSystem commercio = new SubSystem();
+SubSystem manifattura = new SubSystem();
+
+SubSystem musei = new SubSystem();
+SubSystem teatri = new SubSystem();
+SubSystem biblioteche = new SubSystem();
+SubSystem cinema = new SubSystem();
+SubSystem patrimonio_culturale = new SubSystem();
+SubSystem patrimonio_immateriale = new SubSystem();
+SubSystem istruzione = new SubSystem();
+
+SubSystem quartieri = new SubSystem();
+SubSystem architettura = new SubSystem();
+SubSystem spazi_publici = new SubSystem();
+SubSystem urbanizzazione = new SubSystem();
+
+SubSystem parchi = new SubSystem();
+SubSystem verde_attrezzato = new SubSystem();
+SubSystem aree_verdi = new SubSystem();
+SubSystem rifiuti = new SubSystem();
+SubSystem acqua = new SubSystem();
+SubSystem energia = new SubSystem();
+
+goal twin = new Twin(s: mobilita);
