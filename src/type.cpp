@@ -187,6 +187,14 @@ namespace riddle
         throw std::out_of_range("constructor not found");
     }
 
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<constructor>> complex_type::get_constructors() const
+    {
+        std::vector<std::reference_wrapper<constructor>> ctors;
+        for (const auto &c : constructors)
+            ctors.emplace_back(*c);
+        return ctors;
+    }
+
     RIDDLE_EXPORT type &complex_type::get_type(const std::string &tp_name) const
     {
         auto it = types.find(tp_name);

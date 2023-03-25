@@ -287,7 +287,7 @@ namespace riddle
     RIDDLE_EXPORT field &get_field(const std::string &name) const override;
 
     RIDDLE_EXPORT constructor &get_constructor(const std::vector<std::reference_wrapper<type>> &args);
-    bool has_type(const std::string &nm) const override { return types.find(nm) != types.end(); }
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<constructor>> get_constructors() const;
     RIDDLE_EXPORT type &get_type(const std::string &name) const override;
     RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> get_types() const override;
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) const override;

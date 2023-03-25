@@ -398,8 +398,6 @@ namespace riddle
 
     RIDDLE_EXPORT field &get_field(const std::string &name) const override;
 
-    bool has_type(const std::string &nm) const override { return types.find(nm) != types.end(); }
-
     /**
      * @brief Get the type of the given expressions. If the expressions are all integers, the integer type is returned. If the expressions are all reals, the real type is returned. If the expressions are all times or constants, the time type is returned. Otherwise, the real type is returned.
      *

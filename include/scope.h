@@ -46,14 +46,6 @@ namespace riddle
     const std::map<std::string, field_ptr> &get_fields() const { return fields; }
 
     /**
-     * @brief Check if the scope has a field with the given name.
-     *
-     * @param name The name of the field.
-     * @return true If the scope has a field with the given name.
-     * @return false If the scope has no field with the given name.
-     */
-    virtual bool has_type(const std::string &name) const { return scp.has_type(name); }
-    /**
      * @brief Get the type with the given name.
      *
      * @param name The name of the type.
