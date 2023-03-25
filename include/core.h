@@ -430,6 +430,12 @@ namespace riddle
      */
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) const override;
     /**
+     * @brief Returns all the methods in this core.
+     *
+     * @return std::vector<std::reference_wrapper<method>> All methods in this core.
+     */
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<method>> get_methods() const override;
+    /**
      * @brief Returns the predicate with the given name.
      *
      * @param name The name of the predicate to get.

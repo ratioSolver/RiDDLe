@@ -130,6 +130,16 @@ namespace riddle
         throw std::out_of_range("method `" + m_name + "` not found");
     }
 
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<method>> core::get_methods() const
+    {
+        std::vector<std::reference_wrapper<method>> res;
+        res.reserve(methods.size());
+        for (auto &m : methods)
+            for (auto &mth : m.second)
+                res.emplace_back(*mth);
+        return res;
+    }
+
     RIDDLE_EXPORT predicate &core::get_predicate(const std::string &name) const
     {
         auto it = predicates.find(name);

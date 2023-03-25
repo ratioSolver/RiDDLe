@@ -257,6 +257,15 @@ namespace riddle
         throw std::out_of_range("method `" + m_name + "` not found");
     }
 
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<method>> complex_type::get_methods() const
+    {
+        std::vector<std::reference_wrapper<method>> mths;
+        for (const auto &mth : methods)
+            for (const auto &m : mth.second)
+                mths.emplace_back(*m);
+        return mths;
+    }
+
     RIDDLE_EXPORT predicate &complex_type::get_predicate(const std::string &p_name) const
     {
         auto it = predicates.find(p_name);

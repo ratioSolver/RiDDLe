@@ -291,6 +291,7 @@ namespace riddle
     RIDDLE_EXPORT type &get_type(const std::string &name) const override;
     RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> get_types() const override;
     RIDDLE_EXPORT method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) const override;
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<method>> get_methods() const override;
     RIDDLE_EXPORT predicate &get_predicate(const std::string &name) const override;
     RIDDLE_EXPORT std::vector<std::reference_wrapper<predicate>> get_predicates() const override;
 

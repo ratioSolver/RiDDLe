@@ -23,6 +23,8 @@ namespace riddle
 
     RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> scope::get_types() const { return {}; }
 
+    RIDDLE_EXPORT std::vector<std::reference_wrapper<method>> scope::get_methods() const { return {}; }
+
     RIDDLE_EXPORT std::vector<std::reference_wrapper<predicate>> scope::get_predicates() const { return {}; }
 
     RIDDLE_EXPORT env::env(env_ptr parent) : parent(parent) {}

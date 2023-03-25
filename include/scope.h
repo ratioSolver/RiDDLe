@@ -78,6 +78,13 @@ namespace riddle
     virtual method &get_method(const std::string &name, const std::vector<std::reference_wrapper<type>> &args) const { return scp.get_method(name, args); }
 
     /**
+     * @brief Get the methods in the scope.
+     *
+     * @return std::vector<std::reference_wrapper<method>> The methods in the scope.
+     */
+    RIDDLE_EXPORT virtual std::vector<std::reference_wrapper<method>> get_methods() const;
+
+    /**
      * @brief Get the predicate with the given name.
      *
      * @param name The name of the predicate.
