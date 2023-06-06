@@ -1,0 +1,38 @@
+class Location {
+
+    real id;
+
+    Location(real id) : id(id) {}
+}
+
+predicate BusLink(Location from, Location to) { false; }
+predicate SubwayLink(Location from, Location to) { false; }
+predicate TrainLink(Location from, Location to) { false; }
+predicate PlaneLink(Location from, Location to) { false; }
+
+predicate At(Location loc) : Interval {
+    { goal bus = new TakeBus(to: loc, end: start); } or
+    { goal subway = new TakeSubway(to: loc, end: start); } or
+    { goal train = new TakeTrain(to: loc, end: start); } or
+    { goal plane = new TakePlane(to: loc, end: start); }
+}
+
+predicate TakeBus(Location from, Location to) : Interval {
+    goal link = new BusLink(from: from, to: to);
+    goal at = new At(loc: from, end: start);
+}
+
+predicate TakeSubway(Location from, Location to) : Interval {
+    goal link = new SubwayLink(from: from, to: to);
+    goal at = new At(loc: from, end: start);
+}
+
+predicate TakeTrain(Location from, Location to) : Interval {
+    goal link = new TrainLink(from: from, to: to);
+    goal at = new At(loc: from, end: start);
+}
+
+predicate TakePlane(Location from, Location to) : Interval {
+    goal link = new PlaneLink(from: from, to: to);
+    goal at = new At(loc: from, end: start);
+}
