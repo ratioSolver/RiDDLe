@@ -662,7 +662,8 @@ namespace riddle
 
       std::string to_string() const override
       {
-        std::string result = (is_fact ? "fact" : "goal") + ' ' + formula_name.to_string();
+        std::string result = (is_fact ? "fact" : "goal");
+        result += " " + formula_name.to_string();
         if (!formula_scope.empty())
         {
           result += " = new " + formula_scope[0].to_string();
@@ -817,7 +818,7 @@ namespace riddle
       RIDDLE_EXPORT void refine(scope &) const override {}
       RIDDLE_EXPORT void refine_predicates(scope &) const override {}
 
-      std::string to_string() const override { return "typedef " + primitive_type.to_string() + ' ' + name.to_string() + " = " + xpr->to_string() + ";"; }
+      std::string to_string() const override { return "typedef " + primitive_type.to_string() + " " + name.to_string() + " = " + xpr->to_string() + ";"; }
 
     protected:
       const id_token name;
@@ -921,12 +922,12 @@ namespace riddle
         std::string result = "(";
         if (!parameters.empty())
         {
-          result += parameters[0].first[0].to_string() + ' ' + parameters[0].second.to_string();
+          result += parameters[0].first[0].to_string() + " " + parameters[0].second.to_string();
           for (size_t i = 1; i < parameters[0].first.size(); ++i)
             result += "." + parameters[0].first[i].to_string();
           for (size_t i = 1; i < parameters.size(); ++i)
           {
-            result += ", " + parameters[i].first[0].to_string() + ' ' + parameters[i].second.to_string();
+            result += ", " + parameters[i].first[0].to_string() + " " + parameters[i].second.to_string();
             for (size_t j = 1; j < parameters[i].first.size(); ++j)
               result += "." + parameters[i].first[j].to_string();
           }
