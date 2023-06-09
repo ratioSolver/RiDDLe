@@ -7,9 +7,7 @@
 namespace riddle
 {
     RIDDLE_EXPORT constructor::constructor(complex_type &tp, std::vector<field_ptr> as, const std::vector<riddle::id_token> &ins, const std::vector<std::vector<ast::expression_ptr>> &ivs, const std::vector<ast::statement_ptr> &body) : scope(tp), init_names(ins), init_vals(ivs), body(body)
-    { // we add the "this" field..
-        add_field(new field(tp, THIS_KW, nullptr, true));
-        // ..and we add the arguments..
+    { // we add the arguments..
         args.reserve(as.size());
         for (auto &arg : as)
         {

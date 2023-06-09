@@ -35,7 +35,6 @@ class Hand : StateVariable {
         goal bot = new b.OnTable(end:start);
         goal bc = new b.clear.True(end:start);
         fact bnc = new b.clear.False(start:start); bnc.duration >= 1.0;
-        {} or { goal us_b = new UnStack(b1:b); us_b.end <= start; }
     }
 
     predicate UnStack(Block b0, Block b1) {
@@ -43,8 +42,7 @@ class Hand : StateVariable {
         goal b0ob1 = new b0.On(b:b1, end:start);
         goal b0c = new b0.clear.True(end:start);
         fact b0nc = new b0.clear.False(start:start); b0nc.duration >= 1.0;
-        fact b1c = new b1.clear.True(start:start); b0nc.duration >= 1.0;
-        {} or { goal us_b0 = new UnStack(b1:b0); us_b0.end <= start; }
+        fact b1c = new b1.clear.True(start:start); b1c.duration >= 1.0;
     }
 
     predicate Holding(Block b) {

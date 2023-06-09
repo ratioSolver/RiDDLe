@@ -144,7 +144,10 @@ namespace riddle
             throw std::runtime_error("invalid atom type");
     }
 
-    RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name) {}
+    RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name)
+    { // we add the "this" field..
+        add_field(new field(*this, THIS_KW, nullptr, true));
+    }
 
     RIDDLE_EXPORT field &complex_type::get_field(const std::string &f_name) const
     {
