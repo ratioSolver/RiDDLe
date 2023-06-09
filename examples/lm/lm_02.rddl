@@ -1,0 +1,28 @@
+Location a = new Location(1.0);
+Location b = new Location(2.0);
+Location c = new Location(3.0);
+Location d = new Location(4.0);
+Location e = new Location(5.0);
+
+fact bl_ab = new BusLink(from: a, to: b);
+fact bl_ba = new BusLink(from: b, to: a);
+fact bl_ae = new BusLink(from: a, to: e);
+fact bl_ea = new BusLink(from: e, to: a);
+fact bl_eb = new BusLink(from: e, to: b);
+fact bl_be = new BusLink(from: b, to: e);
+fact sl_ab = new SubwayLink(from: a, to: b);
+fact sl_ba = new SubwayLink(from: b, to: a);
+fact sl_ae = new SubwayLink(from: a, to: e);
+fact sl_ea = new SubwayLink(from: e, to: a);
+fact sl_eb = new SubwayLink(from: e, to: b);
+fact sl_be = new SubwayLink(from: b, to: e);
+fact tl_bc = new TrainLink(from: b, to: c);
+fact tl_cb = new TrainLink(from: c, to: b);
+fact pl_cd = new PlaneLink(from: c, to: d);
+fact pl_dc = new PlaneLink(from: d, to: c);
+fact tl_bd = new TrainLink(from: b, to: d);
+fact tl_db = new TrainLink(from: d, to: b);
+
+fact at_0 = new At(loc: a, start: 0.0); at_0.duration >= 1.0;
+
+goal at = new At(loc: d, end: horizon);
