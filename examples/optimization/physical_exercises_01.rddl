@@ -1,4 +1,0 @@
-PhysicalExerciseStateVariable sv = new PhysicalExerciseStateVariable();
-{
-    goal pe = new PhysicalExercise(id: 1.0);
-} or {} [50.0]

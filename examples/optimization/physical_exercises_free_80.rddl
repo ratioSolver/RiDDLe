@@ -224,3 +224,178 @@ PhysicalExerciseStateVariable sv = new PhysicalExerciseStateVariable();
 } or {
     goal noop = new NoOp(id: 45.0, lookahead : 10.0);
 } [50.0]
+{
+    goal pe46 = new PhysicalExercise(id: 46.0);
+} or {
+    goal noop = new NoOp(id: 46.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe47 = new PhysicalExercise(id: 47.0);
+} or {
+    goal noop = new NoOp(id: 47.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe48 = new PhysicalExercise(id: 48.0);
+} or {
+    goal noop = new NoOp(id: 48.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe49 = new PhysicalExercise(id: 49.0);
+} or {
+    goal noop = new NoOp(id: 49.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe50 = new PhysicalExercise(id: 50.0);
+} or {
+    goal noop = new NoOp(id: 50.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe51 = new PhysicalExercise(id: 51.0);
+} or {
+    goal noop = new NoOp(id: 51.0, lookahead : 10.0
+} [50.0]
+{
+    goal pe52 = new PhysicalExercise(id: 52.0);
+} or {
+    goal noop = new NoOp(id: 52.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe53 = new PhysicalExercise(id: 53.0);
+} or {
+    goal noop = new NoOp(id: 53.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe54 = new PhysicalExercise(id: 54.0);
+} or {
+    goal noop = new NoOp(id: 54.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe55 = new PhysicalExercise(id: 55.0);
+} or {
+    goal noop = new NoOp(id: 55.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe56 = new PhysicalExercise(id: 56.0);
+} or {
+    goal noop = new NoOp(id: 56.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe57 = new PhysicalExercise(id: 57.0);
+} or {
+    goal noop = new NoOp(id: 57.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe58 = new PhysicalExercise(id: 58.0);
+} or {
+    goal noop = new NoOp(id: 58.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe59 = new PhysicalExercise(id: 59.0);
+} or {
+    goal noop = new NoOp(id: 59.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe60 = new PhysicalExercise(id: 60.0);
+} or {
+    goal noop = new NoOp(id: 60.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe61 = new PhysicalExercise(id: 61.0);
+} or {
+    goal noop = new NoOp(id: 61.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe62 = new PhysicalExercise(id: 62.0);
+} or {
+    goal noop = new NoOp(id: 62.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe63 = new PhysicalExercise(id: 63.0);
+} or {
+    goal noop = new NoOp(id: 63.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe64 = new PhysicalExercise(id: 64.0);
+} or {
+    goal noop = new NoOp(id: 64.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe65 = new PhysicalExercise(id: 65.0);
+} or {
+    goal noop = new NoOp(id: 65.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe66 = new PhysicalExercise(id: 66.0);
+} or {
+    goal noop = new NoOp(id: 66.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe67 = new PhysicalExercise(id: 67.0);
+} or {
+    goal noop = new NoOp(id: 67.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe68 = new PhysicalExercise(id: 68.0);
+} or {
+    goal noop = new NoOp(id: 68.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe69 = new PhysicalExercise(id: 69.0);
+} or {
+    goal noop = new NoOp(id: 69.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe70 = new PhysicalExercise(id: 70.0);
+} or {
+    goal noop = new NoOp(id: 70.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe71 = new PhysicalExercise(id: 71.0);
+} or {
+    goal noop = new NoOp(id: 71.0, lookahead : 10.0
+} [50.0]
+{
+    goal pe72 = new PhysicalExercise(id: 72.0);
+} or {
+    goal noop = new NoOp(id: 72.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe73 = new PhysicalExercise(id: 73.0);
+} or {
+    goal noop = new NoOp(id: 73.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe74 = new PhysicalExercise(id: 74.0);
+} or {
+    goal noop = new NoOp(id: 74.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe75 = new PhysicalExercise(id: 75.0);
+} or {
+    goal noop = new NoOp(id: 75.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe76 = new PhysicalExercise(id: 76.0);
+} or {
+    goal noop = new NoOp(id: 76.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe77 = new PhysicalExercise(id: 77.0);
+} or {
+    goal noop = new NoOp(id: 77.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe78 = new PhysicalExercise(id: 78.0);
+} or {
+    goal noop = new NoOp(id: 78.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe79 = new PhysicalExercise(id: 79.0);
+} or {
+    goal noop = new NoOp(id: 79.0, lookahead : 10.0);
+} [50.0]
+{
+    goal pe80 = new PhysicalExercise(id: 80.0);
+} or {
+    goal noop = new NoOp(id: 80.0, lookahead : 10.0);
+} [50.0]
