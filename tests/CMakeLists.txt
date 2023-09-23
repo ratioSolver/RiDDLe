@@ -136,6 +136,10 @@ add_test(NAME RiddleOpt_06 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examp
 add_test(NAME RiddleOpt_07 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_30.rddl")
 add_test(NAME RiddleOpt_08 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_35.rddl")
 add_test(NAME RiddleOpt_09 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_40.rddl")
+add_test(NAME RiddleOpt_10 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_45.rddl")
+add_test(NAME RiddleOpt_11 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_50.rddl")
+add_test(NAME RiddleOpt_12 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_55.rddl")
+add_test(NAME RiddleOpt_13 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_60.rddl")
 
 add_test(NAME RiddleOptFree_01 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_free_01.rddl")
 add_test(NAME RiddleOptFree_02 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_free_05.rddl")
@@ -146,3 +150,7 @@ add_test(NAME RiddleOptFree_06 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/e
 add_test(NAME RiddleOptFree_07 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_free_30.rddl")
 add_test(NAME RiddleOptFree_08 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_free_35.rddl")
 add_test(NAME RiddleOptFree_09 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_free_40.rddl")
+add_test(NAME RiddleOptFree_10 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_free_45.rddl")
+add_test(NAME RiddleOptFree_11 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_free_50.rddl")
+add_test(NAME RiddleOptFree_12 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_free_55.rddl")
+add_test(NAME RiddleOptFree_13 COMMAND riddle_lib_tests "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_domain.rddl" "${PROJECT_SOURCE_DIR}/examples/optimization/physical_exercises_free_60.rddl")
