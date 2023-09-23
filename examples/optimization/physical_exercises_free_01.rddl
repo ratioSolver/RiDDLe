@@ -1,0 +1,7 @@
+PhysicalExerciseStateVariable sv = new PhysicalExerciseStateVariable();
+
+{
+    goal pe = new PhysicalExercise(id: 1.0);
+} or {
+    goal noop = new NoOp(id: 1.0, lookahead : 10.0);
+} [50.0]
