@@ -1,9 +1,9 @@
 MunicipalTechnician mt0 = new MunicipalTechnician();
 MunicipalTechnician mt1 = new MunicipalTechnician();
-fact mt0_rm = new DoesRoadMaintainance(mt:mt0);
-fact mt0_bm = new DoesBuildingMaintainance(mt:mt0);
-fact mt1_rm = new DoesRoadMaintainance(mt:mt1);
-fact mt1_gsm = new DoesGreenSpaceMaintainance(mt:mt1);
+fact mt0_rm = new DoesRoadMaintenance(mt:mt0);
+fact mt0_bm = new DoesBuildingMaintenance(mt:mt0);
+fact mt1_rm = new DoesRoadMaintenance(mt:mt1);
+fact mt1_gsm = new DoesGreenSpaceMaintenance(mt:mt1);
 
 Road r0 = new Road();
 Road r1 = new Road();
@@ -23,33 +23,33 @@ GreenSpace gs2 = new GreenSpace();
 GreenSpace gs3 = new GreenSpace();
 GreenSpace gs4 = new GreenSpace();
 
-Maintainance agnt = new Maintainance();
-goal bm0 = new agnt.BuildingMaintainance(b:b0);
-goal gm0 = new agnt.GreenSpacesMaintainance(gs:gs0);
-goal rm0 = new agnt.RoadMaintainance(r:r0);
+Maintenance agnt = new Maintenance();
+goal bm0 = new agnt.BuildingMaintenance(b:b0);
+goal gm0 = new agnt.GreenSpacesMaintenance(gs:gs0);
+goal rm0 = new agnt.RoadMaintenance(r:r0);
 rm0.start >= bm0.end;
 rm0.start >= gm0.end;
 
-goal bm1 = new agnt.BuildingMaintainance(b:b1);
-goal gm1 = new agnt.GreenSpacesMaintainance(gs:gs1);
-goal rm1 = new agnt.RoadMaintainance(r:r1);
+goal bm1 = new agnt.BuildingMaintenance(b:b1);
+goal gm1 = new agnt.GreenSpacesMaintenance(gs:gs1);
+goal rm1 = new agnt.RoadMaintenance(r:r1);
 rm1.start >= bm1.end;
 rm1.start >= gm1.end;
 
-goal bm2 = new agnt.BuildingMaintainance(b:b2);
-goal gm2 = new agnt.GreenSpacesMaintainance(gs:gs2);
-goal rm2 = new agnt.RoadMaintainance(r:r2);
+goal bm2 = new agnt.BuildingMaintenance(b:b2);
+goal gm2 = new agnt.GreenSpacesMaintenance(gs:gs2);
+goal rm2 = new agnt.RoadMaintenance(r:r2);
 rm2.start >= bm2.end;
 rm2.start >= gm2.end;
 
-goal bm3 = new agnt.BuildingMaintainance(b:b3);
-goal gm3 = new agnt.GreenSpacesMaintainance(gs:gs3);
-goal rm3 = new agnt.RoadMaintainance(r:r3);
+goal bm3 = new agnt.BuildingMaintenance(b:b3);
+goal gm3 = new agnt.GreenSpacesMaintenance(gs:gs3);
+goal rm3 = new agnt.RoadMaintenance(r:r3);
 rm3.start >= bm3.end;
 rm3.start >= gm3.end;
 
-goal bm4 = new agnt.BuildingMaintainance(b:b4);
-goal gm4 = new agnt.GreenSpacesMaintainance(gs:gs4);
-goal rm4 = new agnt.RoadMaintainance(r:r4);
+goal bm4 = new agnt.BuildingMaintenance(b:b4);
+goal gm4 = new agnt.GreenSpacesMaintenance(gs:gs4);
+goal rm4 = new agnt.RoadMaintenance(r:r4);
 rm4.start >= bm4.end;
 rm4.start >= gm4.end;
