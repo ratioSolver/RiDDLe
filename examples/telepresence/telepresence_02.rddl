@@ -57,11 +57,6 @@ class Robot : StateVariable {
 
         goal chck_usr = new CheckUserAround(end:start);
         chck_usr.start <= at.start;
-
-        goal going_at0 = new tau.nav.GoingTo(start:at.end, x:base_x, y:base_y);
-        goal at0 = new tau.nav.At(start:going_at0.end, x:base_x, y:base_y);
-        at0.start >= end;
-        at0.start <= end + 300.0;
     }
 
     predicate PhysicalExercize(int ex_id) {
@@ -73,11 +68,6 @@ class Robot : StateVariable {
 
         goal chck_usr = new CheckUserAround(end:start);
         chck_usr.start <= at.start;
-
-        goal going_at0 = new tau.nav.GoingTo(start:at.end, x:base_x, y:base_y);
-        goal at0 = new tau.nav.At(start:going_at0.end, x:base_x, y:base_y);
-        at0.start >= end;
-        at0.start <= end + 300.0;
     }
 }
 
@@ -93,3 +83,4 @@ fact at0 = new r0.nav.At(start:origin, x:base_x, y:base_y);
 at0.duration >= 10.0;
 
 goal keep_healthy = new KeepHealthy(r:r0);
+goal at0 = new r0.nav.At(end:horizon, x:base_x, y:base_y);

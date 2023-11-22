@@ -20,7 +20,7 @@ class Navigator : StateVariable {
     }
 }
 
-class Robot {
+class Robot : Agent {
 
     Navigator nav = new Navigator();
 
@@ -65,4 +65,4 @@ fact at0 = new r0.nav.At(start:origin, x:base_x, y:base_y);
 at0.duration >= 5.0;
 
 goal keep_healthy = new KeepHealthy(r:r0);
-
+goal at0 = new r0.nav.At(end:horizon, x:base_x, y:base_y);
