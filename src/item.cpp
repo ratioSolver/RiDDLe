@@ -7,7 +7,11 @@ namespace riddle
     RIDDLE_EXPORT core &item::get_core() { return tp.get_core(); }
     RIDDLE_EXPORT const core &item::get_core() const { return tp.get_core(); }
 
-    RIDDLE_EXPORT complex_item::complex_item(type &tp) : item(tp), env(&tp.get_core()) { items[THIS_KW] = this; }
+    RIDDLE_EXPORT complex_item::complex_item(type &tp) : item(tp), env(&tp.get_core())
+    {
+        if (!is_core(tp.get_scope()))
+            items[THIS_KW] = this;
+    }
 
     RIDDLE_EXPORT enum_item::enum_item(type &tp) : item(tp), env(&tp.get_core()) {}
 

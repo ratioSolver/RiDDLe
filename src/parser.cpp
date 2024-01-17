@@ -257,7 +257,7 @@ namespace riddle
                     env c_ctx(ctx);
                     c_ctx.items.emplace(id.id, ci);
                     for (auto &stmnt : body)
-                        stmnt->execute(scp, ctx);
+                        stmnt->execute(scp, c_ctx);
                 }
         }
         else
