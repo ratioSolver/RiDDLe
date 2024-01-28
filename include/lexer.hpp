@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include "rational.hpp"
 
 namespace riddle
 {
@@ -71,9 +72,24 @@ namespace riddle
   {
   public:
     bool_token(const bool &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(BOOL_ID, start_line, start_pos, end_line, end_pos), value(value) {}
-    virtual ~bool_token() = default;
 
     const bool value;
+  };
+
+  class int_token final : public token
+  {
+  public:
+    int_token(const INTEGER_TYPE &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(INT_ID, start_line, start_pos, end_line, end_pos), value(value) {}
+
+    const INTEGER_TYPE value;
+  };
+
+  class real_token final : public token
+  {
+  public:
+    real_token(const utils::rational &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(REAL_ID, start_line, start_pos, end_line, end_pos), value(value) {}
+
+    const utils::rational value;
   };
 
   class lexer

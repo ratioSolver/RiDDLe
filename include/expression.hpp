@@ -26,4 +26,26 @@ namespace riddle
   private:
     bool_token l;
   };
+
+  class int_expression final : public expression
+  {
+  public:
+    int_expression(const int_token &l) : l(l) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) override;
+
+  private:
+    int_token l;
+  };
+
+  class real_expression final : public expression
+  {
+  public:
+    real_expression(const real_token &l) : l(l) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) override;
+
+  private:
+    real_token l;
+  };
 } // namespace riddle

@@ -2,6 +2,7 @@
 
 #include "scope.hpp"
 #include "env.hpp"
+#include "rational.hpp"
 
 namespace riddle
 {
@@ -24,6 +25,34 @@ namespace riddle
      * @return std::shared_ptr<item> The bool expression.
      */
     virtual std::shared_ptr<item> new_bool(bool value) = 0;
+
+    /**
+     * @brief Create a new int expression.
+     *
+     * @return std::shared_ptr<item> The int expression.
+     */
+    virtual std::shared_ptr<item> new_int() = 0;
+    /**
+     * @brief Create a new int expression with a value.
+     *
+     * @param value The value of the int expression.
+     * @return std::shared_ptr<item> The int expression.
+     */
+    virtual std::shared_ptr<item> new_int(INTEGER_TYPE value) = 0;
+
+    /**
+     * @brief Create a new real expression.
+     *
+     * @return std::shared_ptr<item> The real expression.
+     */
+    virtual std::shared_ptr<item> new_real() = 0;
+    /**
+     * @brief Create a new real expression with a value.
+     *
+     * @param value The value of the real expression.
+     * @return std::shared_ptr<item> The real expression.
+     */
+    virtual std::shared_ptr<item> new_real(const utils::rational &value) = 0;
 
     /**
      * @brief Get a field by name.
