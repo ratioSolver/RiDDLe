@@ -12,6 +12,20 @@ namespace riddle
     virtual ~core() = default;
 
     /**
+     * @brief Create a new bool expression.
+     *
+     * @return std::shared_ptr<item> The bool expression.
+     */
+    virtual std::shared_ptr<item> new_bool() = 0;
+    /**
+     * @brief Create a new bool expression with a value.
+     *
+     * @param value The value of the bool expression.
+     * @return std::shared_ptr<item> The bool expression.
+     */
+    virtual std::shared_ptr<item> new_bool(bool value) = 0;
+
+    /**
      * @brief Get a field by name.
      *
      * @param name The name of the field.
