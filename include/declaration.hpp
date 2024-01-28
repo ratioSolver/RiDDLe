@@ -17,7 +17,14 @@ namespace riddle
   class typedef_declaration final : public type_declaration
   {
   public:
+    typedef_declaration(const id_token &name, const id_token &primitive_type, std::unique_ptr<expression> &&expr) : name(name), primitive_type(primitive_type), expr(std::move(expr)) {}
+
     std::string to_string() const override { return ""; }
+
+  private:
+    id_token name;
+    id_token primitive_type;
+    std::unique_ptr<expression> expr;
   };
 
   class enum_declaration final : public type_declaration

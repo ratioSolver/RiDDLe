@@ -71,7 +71,45 @@ namespace riddle
         return std::make_unique<compilation_unit>(std::move(types), std::move(methods), std::move(predicates), std::move(statements));
     }
 
-    std::unique_ptr<typedef_declaration> parser::parse_typedef_declaration() {}
+    std::unique_ptr<typedef_declaration> parser::parse_typedef_declaration()
+    {
+        std::unique_ptr<id_token> primitive_type;
+        std::unique_ptr<expression> expr;
+
+        switch (tk->sym)
+        {
+        case BOOL_ID:
+            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            break;
+        case INT_ID:
+            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            break;
+        case REAL_ID:
+            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            break;
+        case TIME_ID:
+            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            break;
+        case STRING_ID:
+            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            break;
+        default:
+            error("expected either `bool` or `int` or `real` or `time` or `string`..");
+        }
+        tk = next_token();
+
+        expr = parse_expression();
+
+        if (!match(ID_ID))
+            error("expected identifier..");
+
+        auto name = *static_cast<const id_token *>(tokens[pos - 2].get());
+
+        if (!match(SEMICOLON_ID))
+            error("expected `;`..");
+
+        return std::make_unique<typedef_declaration>(name, *primitive_type, std::move(expr));
+    }
     std::unique_ptr<enum_declaration> parser::parse_enum_declaration() {}
     std::unique_ptr<class_declaration> parser::parse_class_declaration() {}
     std::unique_ptr<field_declaration> parser::parse_field_declaration() {}
