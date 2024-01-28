@@ -13,7 +13,7 @@ namespace riddle
     expression() = default;
     virtual ~expression() = default;
 
-    virtual std::shared_ptr<item> evaluate(scope &scp, env &ctx) = 0;
+    virtual std::shared_ptr<item> evaluate(scope &scp, env &ctx) const = 0;
 
     virtual std::string to_string() const = 0;
   };
@@ -23,7 +23,7 @@ namespace riddle
   public:
     bool_expression(const bool_token &l) : l(l) {}
 
-    std::shared_ptr<item> evaluate(scope &scp, env &ctx) override;
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
 
     std::string to_string() const override { return l.to_string(); }
 
@@ -36,7 +36,7 @@ namespace riddle
   public:
     int_expression(const int_token &l) : l(l) {}
 
-    std::shared_ptr<item> evaluate(scope &scp, env &ctx) override;
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
 
     std::string to_string() const override { return l.to_string(); }
 
@@ -49,7 +49,7 @@ namespace riddle
   public:
     real_expression(const real_token &l) : l(l) {}
 
-    std::shared_ptr<item> evaluate(scope &scp, env &ctx) override;
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
 
     std::string to_string() const override { return l.to_string(); }
 
@@ -62,7 +62,7 @@ namespace riddle
   public:
     string_expression(const string_token &l) : l(l) {}
 
-    std::shared_ptr<item> evaluate(scope &scp, env &ctx) override;
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
 
     std::string to_string() const override { return l.to_string(); }
 
