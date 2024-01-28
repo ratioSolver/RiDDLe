@@ -1,2 +1,0 @@
-PurchasingOffice po = new PurchasingOffice();
-goal g = new po.Purchase(id: 1.0);
