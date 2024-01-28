@@ -4,7 +4,7 @@ project(RiDDLe VERSION 0.2.0 LANGUAGES C CXX)
 include(CTest)
 enable_testing()
 
-add_library(RiDDLe src/scope.cpp src/env.cpp src/core.cpp)
+add_library(RiDDLe src/scope.cpp src/env.cpp src/core.cpp src/type.cpp src/constructor.cpp src/method.cpp src/item.cpp)
 target_include_directories(RiDDLe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
