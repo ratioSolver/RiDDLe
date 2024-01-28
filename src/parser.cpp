@@ -110,7 +110,65 @@ namespace riddle
 
         return std::make_unique<typedef_declaration>(name, *primitive_type, std::move(expr));
     }
-    std::unique_ptr<enum_declaration> parser::parse_enum_declaration() {}
+    std::unique_ptr<enum_declaration> parser::parse_enum_declaration()
+    {
+        std::vector<string_token> values;
+        std::vector<std::vector<id_token>> enum_refs;
+
+        if (!match(ENUM_ID))
+            error("expected `enum`..");
+
+        if (!match(ID_ID))
+            error("expected identifier..");
+
+        auto name = *static_cast<const id_token *>(tokens[pos - 2].get());
+
+        do
+        {
+            switch (tk->sym)
+            {
+            case LBRACE_ID:
+            {
+                tk = next_token();
+                if (!match(StringLiteral_ID))
+                    error("expected string literal..");
+                values.emplace_back(*static_cast<const string_token *>(tokens[pos - 2].get()));
+
+                while (match(COMMA_ID))
+                {
+                    if (!match(StringLiteral_ID))
+                        error("expected string literal..");
+                    values.emplace_back(*static_cast<const string_token *>(tokens[pos - 2].get()));
+                }
+
+                if (!match(RBRACE_ID))
+                    error("expected `}`..");
+                break;
+            }
+            case ID_ID:
+            {
+                std::vector<id_token> ids;
+                ids.emplace_back(*static_cast<const id_token *>(tk));
+                tk = next_token();
+                while (match(DOT_ID))
+                {
+                    if (!match(ID_ID))
+                        error("expected identifier..");
+                    ids.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+                }
+                enum_refs.emplace_back(std::move(ids));
+                break;
+            }
+            default:
+                error("expected either `{` or identifier..");
+            }
+        } while (match(BAR_ID));
+
+        if (!match(SEMICOLON_ID))
+            error("expected `;`..");
+
+        return std::make_unique<enum_declaration>(name, std::move(values), std::move(enum_refs));
+    }
     std::unique_ptr<class_declaration> parser::parse_class_declaration() {}
     std::unique_ptr<field_declaration> parser::parse_field_declaration() {}
     std::unique_ptr<method_declaration> parser::parse_method_declaration() {}
