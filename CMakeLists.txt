@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.0)
-project(RiDDLe VERSION 0.2.0 LANGUAGES C CXX)
+project(RiDDLe VERSION 0.2.0 LANGUAGES CXX)
 
 include(CTest)
 enable_testing()
