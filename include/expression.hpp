@@ -48,4 +48,15 @@ namespace riddle
   private:
     real_token l;
   };
+
+  class string_expression final : public expression
+  {
+  public:
+    string_expression(const string_token &l) : l(l) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) override;
+
+  private:
+    string_token l;
+  };
 } // namespace riddle

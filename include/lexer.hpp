@@ -67,6 +67,113 @@ namespace riddle
     token(const symbol &sym, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : sym(sym), start_line(start_line), start_pos(start_pos), end_line(end_line), end_pos(end_pos) {}
     virtual ~token() = default;
 
+    virtual std::string to_string() const
+    {
+      switch (sym)
+      {
+      case BOOL_ID:
+        return "bool";
+      case INT_ID:
+        return "int";
+      case REAL_ID:
+        return "real";
+      case TIME_ID:
+        return "time";
+      case STRING_ID:
+        return "string";
+      case TYPEDEF_ID:
+        return "typedef";
+      case ENUM_ID:
+        return "enum";
+      case CLASS_ID:
+        return "class";
+      case GOAL_ID:
+        return "goal";
+      case FACT_ID:
+        return "fact";
+      case PREDICATE_ID:
+        return "predicate";
+      case NEW_ID:
+        return "new";
+      case OR_ID:
+        return "or";
+      case FOR_ID:
+        return "for";
+      case THIS_ID:
+        return "this";
+      case VOID_ID:
+        return "void";
+      case RETURN_ID:
+        return "return";
+      case DOT_ID:
+        return ".";
+      case COMMA_ID:
+        return ",";
+      case COLON_ID:
+        return ":";
+      case SEMICOLON_ID:
+        return ";";
+      case LPAREN_ID:
+        return "(";
+      case RPAREN_ID:
+        return ")";
+      case LBRACKET_ID:
+        return "[";
+      case RBRACKET_ID:
+        return "]";
+      case LBRACE_ID:
+        return "{";
+      case RBRACE_ID:
+        return "}";
+      case PLUS_ID:
+        return "+";
+      case MINUS_ID:
+        return "-";
+      case STAR_ID:
+        return "*";
+      case SLASH_ID:
+        return "/";
+      case AMP_ID:
+        return "&";
+      case BAR_ID:
+        return "|";
+      case EQ_ID:
+        return "=";
+      case GT_ID:
+        return ">";
+      case LT_ID:
+        return "<";
+      case BANG_ID:
+        return "!";
+      case EQEQ_ID:
+        return "==";
+      case LTEQ_ID:
+        return "<=";
+      case GTEQ_ID:
+        return ">=";
+      case BANGEQ_ID:
+        return "!=";
+      case IMPLICATION_ID:
+        return "->";
+      case CARET_ID:
+        return "^";
+      case ID_ID:
+        return "id";
+      case BoolLiteral_ID:
+        return "bool";
+      case IntLiteral_ID:
+        return "int";
+      case RealLiteral_ID:
+        return "real";
+      case StringLiteral_ID:
+        return "string";
+      case EOF_ID:
+        return "EOF";
+      default:
+        return "unknown";
+      }
+    }
+
     const symbol sym;
     const size_t start_line, start_pos, end_line, end_pos;
   };
@@ -74,9 +181,11 @@ namespace riddle
   class id_token final : public token
   {
   public:
-    id_token(const std::string &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(ID_ID, start_line, start_pos, end_line, end_pos), value(value) {}
+    id_token(const std::string &id, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(ID_ID, start_line, start_pos, end_line, end_pos), id(id) {}
 
-    const std::string value;
+    std::string to_string() const override { return id; }
+
+    const std::string id;
   };
 
   class bool_token final : public token
@@ -84,31 +193,39 @@ namespace riddle
   public:
     bool_token(const bool &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(BOOL_ID, start_line, start_pos, end_line, end_pos), value(value) {}
 
+    std::string to_string() const override { return value ? "true" : "false"; }
+
     const bool value;
   };
 
   class int_token final : public token
   {
   public:
-    int_token(const INTEGER_TYPE &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(INT_ID, start_line, start_pos, end_line, end_pos), value(value) {}
+    int_token(const INTEGER_TYPE &val, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(INT_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
-    const INTEGER_TYPE value;
+    std::string to_string() const override { return std::to_string(val); }
+
+    const INTEGER_TYPE val;
   };
 
   class real_token final : public token
   {
   public:
-    real_token(const utils::rational &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(REAL_ID, start_line, start_pos, end_line, end_pos), value(value) {}
+    real_token(const utils::rational &val, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(REAL_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
-    const utils::rational value;
+    std::string to_string() const override { return std::to_string(static_cast<double>(val.numerator()) / val.denominator()); }
+
+    const utils::rational val;
   };
 
   class string_token final : public token
   {
   public:
-    string_token(const std::string &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(STRING_ID, start_line, start_pos, end_line, end_pos), value(value) {}
+    string_token(const std::string &str, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(STRING_ID, start_line, start_pos, end_line, end_pos), str(str) {}
 
-    const std::string value;
+    std::string to_string() const override { return '\"' + str + '\"'; }
+
+    const std::string str;
   };
 
   class lexer final

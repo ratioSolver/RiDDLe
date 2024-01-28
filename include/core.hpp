@@ -55,6 +55,20 @@ namespace riddle
     virtual std::shared_ptr<item> new_real(const utils::rational &value) = 0;
 
     /**
+     * @brief Create a new string expression.
+     *
+     * @return std::shared_ptr<item> The string expression.
+     */
+    virtual std::shared_ptr<item> new_string() = 0;
+    /**
+     * @brief Create a new string expression with a value.
+     *
+     * @param value The value of the string expression.
+     * @return std::shared_ptr<item> The string expression.
+     */
+    virtual std::shared_ptr<item> new_string(const std::string &value) = 0;
+
+    /**
      * @brief Get a field by name.
      *
      * @param name The name of the field.

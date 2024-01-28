@@ -133,7 +133,7 @@ namespace riddle
                         dec += ch;
                         break;
                     case '.':
-                        error("invalid numeric literal..");
+                        error("Invalid numeric literal..");
                         return nullptr;
                     default:
                         return make_real_token("", dec);
@@ -215,7 +215,7 @@ namespace riddle
                             dcml += ch;
                             break;
                         case '.':
-                            error("invalid numeric literal..");
+                            error("Invalid numeric literal..");
                             return nullptr;
                         default:
                             return make_real_token(intgr, dcml);
