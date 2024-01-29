@@ -50,7 +50,7 @@ namespace riddle
                 while (match(DOT_ID))
                 {
                     if (!match(ID_ID))
-                        error("expected identifier..");
+                        error("Expected identifier..");
                 }
                 if (match(ID_ID) && match(LPAREN_ID))
                 {
@@ -65,7 +65,7 @@ namespace riddle
                 break;
             }
             default:
-                error("expected either `typedef` or `enum` or `class` or `predicate` or `void` or identifier..");
+                error("Expected either `typedef` or `enum` or `class` or `predicate` or `void` or identifier..");
             }
 
         return std::make_unique<compilation_unit>(std::move(types), std::move(methods), std::move(predicates), std::move(statements));
@@ -79,34 +79,34 @@ namespace riddle
         switch (tk->sym)
         {
         case BOOL_ID:
-            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            primitive_type = std::make_unique<id_token>(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
             break;
         case INT_ID:
-            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            primitive_type = std::make_unique<id_token>(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
             break;
         case REAL_ID:
-            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            primitive_type = std::make_unique<id_token>(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
             break;
         case TIME_ID:
-            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            primitive_type = std::make_unique<id_token>(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
             break;
         case STRING_ID:
-            primitive_type = std::make_unique<id_token>(tk->start_line, tk->start_pos, tk->end_line, tk->end_pos, tk->to_string());
+            primitive_type = std::make_unique<id_token>(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
             break;
         default:
-            error("expected either `bool` or `int` or `real` or `time` or `string`..");
+            error("Expected either `bool` or `int` or `real` or `time` or `string`..");
         }
         tk = next_token();
 
         expr = parse_expression();
 
         if (!match(ID_ID))
-            error("expected identifier..");
+            error("Expected identifier..");
 
         auto name = *static_cast<const id_token *>(tokens[pos - 2].get());
 
         if (!match(SEMICOLON_ID))
-            error("expected `;`..");
+            error("Expected `;`..");
 
         return std::make_unique<typedef_declaration>(name, *primitive_type, std::move(expr));
     }
@@ -116,10 +116,10 @@ namespace riddle
         std::vector<std::vector<id_token>> enum_refs;
 
         if (!match(ENUM_ID))
-            error("expected `enum`..");
+            error("Expected `enum`..");
 
         if (!match(ID_ID))
-            error("expected identifier..");
+            error("Expected identifier..");
 
         auto name = *static_cast<const id_token *>(tokens[pos - 2].get());
 
@@ -131,18 +131,18 @@ namespace riddle
             {
                 tk = next_token();
                 if (!match(StringLiteral_ID))
-                    error("expected string literal..");
+                    error("Expected string literal..");
                 values.emplace_back(*static_cast<const string_token *>(tokens[pos - 2].get()));
 
                 while (match(COMMA_ID))
                 {
                     if (!match(StringLiteral_ID))
-                        error("expected string literal..");
+                        error("Expected string literal..");
                     values.emplace_back(*static_cast<const string_token *>(tokens[pos - 2].get()));
                 }
 
                 if (!match(RBRACE_ID))
-                    error("expected `}`..");
+                    error("Expected `}`..");
                 break;
             }
             case ID_ID:
@@ -153,19 +153,19 @@ namespace riddle
                 while (match(DOT_ID))
                 {
                     if (!match(ID_ID))
-                        error("expected identifier..");
+                        error("Expected identifier..");
                     ids.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
                 }
                 enum_refs.emplace_back(std::move(ids));
                 break;
             }
             default:
-                error("expected either `{` or identifier..");
+                error("Expected either `{` or identifier..");
             }
         } while (match(BAR_ID));
 
         if (!match(SEMICOLON_ID))
-            error("expected `;`..");
+            error("Expected `;`..");
 
         return std::make_unique<enum_declaration>(name, std::move(values), std::move(enum_refs));
     }
