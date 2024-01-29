@@ -39,7 +39,7 @@ namespace riddle
     std::unique_ptr<compilation_unit> parse();
 
   private:
-    token *next_token();
+    const token *next_token();
     bool match(const symbol &sym);
     void backtrack(const size_t &p) noexcept;
 
@@ -56,9 +56,9 @@ namespace riddle
     void error(const std::string &err);
 
   private:
-    lexer lex;                                  // The lexer.
-    const token *tk = nullptr;                  // The current lookahead token..
-    std::vector<std::unique_ptr<token>> tokens; // The tokens.
-    std::size_t pos = 0;                        // The current position in the tokens.
+    lexer lex;                                        // The lexer.
+    const token *tk = nullptr;                        // The current lookahead token..
+    std::vector<std::unique_ptr<const token>> tokens; // The tokens.
+    std::size_t pos = 0;                              // The current position in the tokens.
   };
 } // namespace riddle

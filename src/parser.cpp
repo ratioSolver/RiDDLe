@@ -73,9 +73,6 @@ namespace riddle
 
     std::unique_ptr<typedef_declaration> parser::parse_typedef_declaration()
     {
-        std::unique_ptr<id_token> primitive_type; // the primitive type..
-        std::unique_ptr<expression> expr;         // the expression..
-
         switch (tk->sym)
         {
         case BOOL_ID:
@@ -83,24 +80,26 @@ namespace riddle
         case REAL_ID:
         case TIME_ID:
         case STRING_ID:
-            primitive_type = std::make_unique<id_token>(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
+        {
+            id_token primitive_type(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
             tk = next_token();
-            break;
+
+            std::unique_ptr<expression> expr = parse_expression();
+
+            if (!match(ID_ID))
+                error("Expected identifier..");
+
+            auto name = *static_cast<const id_token *>(tokens[pos - 2].get());
+
+            if (!match(SEMICOLON_ID))
+                error("Expected `;`..");
+
+            return std::make_unique<typedef_declaration>(std::move(name), std::move(primitive_type), std::move(expr));
+        }
         default:
             error("Expected either `bool` or `int` or `real` or `time` or `string`..");
+            return nullptr;
         }
-
-        expr = parse_expression();
-
-        if (!match(ID_ID))
-            error("Expected identifier..");
-
-        auto name = *static_cast<const id_token *>(tokens[pos - 2].get());
-
-        if (!match(SEMICOLON_ID))
-            error("Expected `;`..");
-
-        return std::make_unique<typedef_declaration>(name, *primitive_type, std::move(expr));
     }
     std::unique_ptr<enum_declaration> parser::parse_enum_declaration()
     {
@@ -159,7 +158,7 @@ namespace riddle
         if (!match(SEMICOLON_ID))
             error("Expected `;`..");
 
-        return std::make_unique<enum_declaration>(name, std::move(values), std::move(enum_refs));
+        return std::make_unique<enum_declaration>(std::move(name), std::move(values), std::move(enum_refs));
     }
     std::unique_ptr<class_declaration> parser::parse_class_declaration() {}
     std::unique_ptr<field_declaration> parser::parse_field_declaration() {}
@@ -238,7 +237,7 @@ namespace riddle
                         error("Expected `)`..");
                 }
 
-                inits.emplace_back(name, std::move(args));
+                inits.emplace_back(std::move(name), std::move(args));
             } while (match(COMMA_ID));
 
         if (!match(LBRACE_ID))
@@ -253,7 +252,7 @@ namespace riddle
     std::unique_ptr<statement> parser::parse_statement() {}
     std::unique_ptr<expression> parser::parse_expression(const size_t &pr) {}
 
-    token *parser::next_token()
+    const token *parser::next_token()
     {
         while (pos >= tokens.size())
         {

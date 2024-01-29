@@ -17,7 +17,7 @@ namespace riddle
   class typedef_declaration final : public type_declaration
   {
   public:
-    typedef_declaration(const id_token &name, const id_token &primitive_type, std::unique_ptr<expression> &&expr) : name(name), primitive_type(primitive_type), expr(std::move(expr)) {}
+    typedef_declaration(const id_token &&name, const id_token &&primitive_type, std::unique_ptr<expression> &&expr) : name(std::move(name)), primitive_type(std::move(primitive_type)), expr(std::move(expr)) {}
 
     std::string to_string() const override { return "typedef " + primitive_type.to_string() + " " + name.to_string() + " = " + expr->to_string() + ";"; }
 
@@ -30,32 +30,32 @@ namespace riddle
   class enum_declaration final : public type_declaration
   {
   public:
-    enum_declaration(const id_token &name, std::vector<string_token> &&values, std::vector<std::vector<id_token>> &&enum_refs) : name(name), values(std::move(values)), enum_refs(std::move(enum_refs)) {}
+    enum_declaration(const id_token &&name, std::vector<string_token> &&values, std::vector<std::vector<id_token>> &&enum_refs) : name(std::move(name)), values(std::move(values)), enum_refs(std::move(enum_refs)) {}
 
     std::string to_string() const override
     {
-      std::string result = "enum " + name.to_string() + " {";
+      std::string res = "enum " + name.to_string() + " {";
       if (!values.empty())
       {
-        result += '\"' + values[0].to_string() + '\"';
+        res += '\"' + values[0].to_string() + '\"';
         for (size_t i = 1; i < values.size(); ++i)
-          result += ", \"" + values[i].to_string() + '\"';
+          res += ", \"" + values[i].to_string() + '\"';
         if (!enum_refs.empty())
-          result += ", ";
+          res += ", ";
       }
       if (!enum_refs.empty())
       {
-        result += enum_refs[0][0].to_string();
+        res += enum_refs[0][0].to_string();
         for (size_t i = 1; i < enum_refs[0].size(); ++i)
-          result += "." + enum_refs[0][i].to_string();
+          res += "." + enum_refs[0][i].to_string();
         for (size_t i = 1; i < enum_refs.size(); ++i)
         {
-          result += ", " + enum_refs[i][0].to_string();
+          res += ", " + enum_refs[i][0].to_string();
           for (size_t j = 1; j < enum_refs[i].size(); ++j)
-            result += "." + enum_refs[i][j].to_string();
+            res += "." + enum_refs[i][j].to_string();
         }
       }
-      return result + "}";
+      return res + "}";
     }
 
   private:
@@ -67,19 +67,19 @@ namespace riddle
   class init_element
   {
   public:
-    init_element(const id_token &name, std::vector<std::unique_ptr<expression>> &&args) : name(name), args(std::move(args)) {}
+    init_element(const id_token &&name, std::vector<std::unique_ptr<expression>> &&args) : name(std::move(name)), args(std::move(args)) {}
     init_element(init_element &&other) noexcept : name(std::move(other.name)), args(std::move(other.args)) {}
 
     std::string to_string() const
     {
-      std::string result = name.to_string() + '(';
+      std::string res = name.to_string() + '(';
       if (!args.empty())
       {
-        result += args[0]->to_string();
+        res += args[0]->to_string();
         for (size_t i = 1; i < args.size(); ++i)
-          result += ", " + args[i]->to_string();
+          res += ", " + args[i]->to_string();
       }
-      return result + ')';
+      return res + ')';
     }
 
   private:
@@ -94,18 +94,18 @@ namespace riddle
 
     std::string to_string() const
     {
-      std::string result;
+      std::string res;
       if (!type_parameters.empty())
       {
-        result += type_parameters[0].to_string();
+        res += type_parameters[0].to_string();
         for (size_t i = 1; i < type_parameters.size(); ++i)
-          result += ", " + type_parameters[i].to_string();
-        result += " ";
+          res += ", " + type_parameters[i].to_string();
+        res += " ";
       }
-      result += inits[0].to_string();
+      res += inits[0].to_string();
       for (size_t i = 1; i < inits.size(); ++i)
-        result += ", " + inits[i].to_string();
-      return result + ";";
+        res += ", " + inits[i].to_string();
+      return res + ";";
     }
 
   private:
@@ -129,28 +129,28 @@ namespace riddle
   class method_declaration
   {
   public:
-    method_declaration(std::vector<id_token> &&rt, const id_token &name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : return_type(std::move(rt)), name(name), parameters(std::move(params)), body(std::move(stmts)) {}
+    method_declaration(std::vector<id_token> &&rt, const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : return_type(std::move(rt)), name(std::move(name)), parameters(std::move(params)), body(std::move(stmts)) {}
 
     std::string to_string() const
     {
-      std::string result = "method " + name.to_string() + '(';
+      std::string res = "method " + name.to_string() + '(';
       if (!parameters.empty())
       {
-        result += parameters[0].first[0].to_string() + " " + parameters[0].second.to_string();
+        res += parameters[0].first[0].to_string() + " " + parameters[0].second.to_string();
         for (size_t i = 1; i < parameters.size(); ++i)
-          result += ", " + parameters[i].first[0].to_string() + " " + parameters[i].second.to_string();
+          res += ", " + parameters[i].first[0].to_string() + " " + parameters[i].second.to_string();
       }
-      result += ") : ";
+      res += ") : ";
       if (!return_type.empty())
       {
-        result += return_type[0].to_string();
+        res += return_type[0].to_string();
         for (size_t i = 1; i < return_type.size(); ++i)
-          result += ", " + return_type[i].to_string();
+          res += ", " + return_type[i].to_string();
       }
-      result += " {\n";
+      res += " {\n";
       for (const auto &stmt : body)
-        result += stmt->to_string() + "\n";
-      return result + "}";
+        res += stmt->to_string() + "\n";
+      return res + "}";
     }
 
   private:
@@ -163,34 +163,34 @@ namespace riddle
   class predicate_declaration
   {
   public:
-    predicate_declaration(const id_token &name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : name(name), parameters(std::move(params)), body(std::move(stmts)) {}
+    predicate_declaration(const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : name(std::move(name)), parameters(std::move(params)), body(std::move(stmts)) {}
 
     std::string to_string() const
     {
-      std::string result = "predicate " + name.to_string() + '(';
+      std::string res = "predicate " + name.to_string() + '(';
       if (!parameters.empty())
       {
-        result += parameters[0].first[0].to_string() + " " + parameters[0].second.to_string();
+        res += parameters[0].first[0].to_string() + " " + parameters[0].second.to_string();
         for (size_t i = 1; i < parameters.size(); ++i)
-          result += ", " + parameters[i].first[0].to_string() + " " + parameters[i].second.to_string();
+          res += ", " + parameters[i].first[0].to_string() + " " + parameters[i].second.to_string();
       }
-      result += ")";
+      res += ")";
       if (!base_predicates.empty())
       {
-        result += " : " + base_predicates[0][0].to_string();
+        res += " : " + base_predicates[0][0].to_string();
         for (size_t i = 1; i < base_predicates[0].size(); ++i)
-          result += "." + base_predicates[0][i].to_string();
+          res += "." + base_predicates[0][i].to_string();
         for (size_t i = 1; i < base_predicates.size(); ++i)
         {
-          result += ", " + base_predicates[i][0].to_string();
+          res += ", " + base_predicates[i][0].to_string();
           for (size_t j = 1; j < base_predicates[i].size(); ++j)
-            result += "." + base_predicates[i][j].to_string();
+            res += "." + base_predicates[i][j].to_string();
         }
       }
-      result += " {\n";
+      res += " {\n";
       for (const auto &stmt : body)
-        result += stmt->to_string() + "\n";
-      return result + "}";
+        res += stmt->to_string() + "\n";
+      return res + "}";
     }
 
   private:
@@ -203,49 +203,49 @@ namespace riddle
   class class_declaration final : public type_declaration
   {
   public:
-    class_declaration(const id_token &name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_classes, std::vector<std::unique_ptr<field_declaration>> &&fields, std::vector<std::unique_ptr<constructor_declaration>> &&constructors, std::vector<std::unique_ptr<method_declaration>> &&methods, std::vector<std::unique_ptr<predicate_declaration>> &&predicates, std::vector<std::unique_ptr<type_declaration>> &&types) : name(name), parameters(std::move(params)), base_classes(std::move(base_classes)), fields(std::move(fields)), constructors(std::move(constructors)), methods(std::move(methods)), predicates(std::move(predicates)), types(std::move(types)) {}
+    class_declaration(const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_classes, std::vector<std::unique_ptr<field_declaration>> &&fields, std::vector<std::unique_ptr<constructor_declaration>> &&constructors, std::vector<std::unique_ptr<method_declaration>> &&methods, std::vector<std::unique_ptr<predicate_declaration>> &&predicates, std::vector<std::unique_ptr<type_declaration>> &&types) : name(std::move(name)), parameters(std::move(params)), base_classes(std::move(base_classes)), fields(std::move(fields)), constructors(std::move(constructors)), methods(std::move(methods)), predicates(std::move(predicates)), types(std::move(types)) {}
 
     std::string to_string() const override
     {
-      std::string result = "class " + name.to_string();
+      std::string res = "class " + name.to_string();
       if (!parameters.empty())
       {
-        result += '<' + parameters[0].first[0].to_string();
+        res += '<' + parameters[0].first[0].to_string();
         for (size_t i = 1; i < parameters[0].first.size(); ++i)
-          result += ", " + parameters[0].first[i].to_string();
-        result += "> " + parameters[0].second.to_string();
+          res += ", " + parameters[0].first[i].to_string();
+        res += "> " + parameters[0].second.to_string();
         for (size_t i = 1; i < parameters.size(); ++i)
         {
-          result += ", <" + parameters[i].first[0].to_string();
+          res += ", <" + parameters[i].first[0].to_string();
           for (size_t j = 1; j < parameters[i].first.size(); ++j)
-            result += ", " + parameters[i].first[j].to_string();
-          result += "> " + parameters[i].second.to_string();
+            res += ", " + parameters[i].first[j].to_string();
+          res += "> " + parameters[i].second.to_string();
         }
       }
       if (!base_classes.empty())
       {
-        result += " : " + base_classes[0][0].to_string();
+        res += " : " + base_classes[0][0].to_string();
         for (size_t i = 1; i < base_classes[0].size(); ++i)
-          result += "." + base_classes[0][i].to_string();
+          res += "." + base_classes[0][i].to_string();
         for (size_t i = 1; i < base_classes.size(); ++i)
         {
-          result += ", " + base_classes[i][0].to_string();
+          res += ", " + base_classes[i][0].to_string();
           for (size_t j = 1; j < base_classes[i].size(); ++j)
-            result += "." + base_classes[i][j].to_string();
+            res += "." + base_classes[i][j].to_string();
         }
       }
-      result += " {\n";
+      res += " {\n";
       for (const auto &field : fields)
-        result += field->to_string() + "\n";
+        res += field->to_string() + "\n";
       for (const auto &constructor : constructors)
-        result += constructor->to_string() + "\n";
+        res += constructor->to_string() + "\n";
       for (const auto &method : methods)
-        result += method->to_string() + "\n";
+        res += method->to_string() + "\n";
       for (const auto &predicate : predicates)
-        result += predicate->to_string() + "\n";
+        res += predicate->to_string() + "\n";
       for (const auto &type : types)
-        result += type->to_string() + "\n";
-      return result + "}";
+        res += type->to_string() + "\n";
+      return res + "}";
     }
 
   private:
