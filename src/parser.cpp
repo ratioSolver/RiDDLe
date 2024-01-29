@@ -160,9 +160,301 @@ namespace riddle
 
         return std::make_unique<enum_declaration>(std::move(name), std::move(values), std::move(enum_refs));
     }
-    std::unique_ptr<class_declaration> parser::parse_class_declaration() {}
-    std::unique_ptr<field_declaration> parser::parse_field_declaration() {}
-    std::unique_ptr<method_declaration> parser::parse_method_declaration() {}
+    std::unique_ptr<class_declaration> parser::parse_class_declaration()
+    {
+        std::vector<std::vector<id_token>> base_classes;                    // the base classes of the class..
+        std::vector<std::unique_ptr<field_declaration>> fields;             // the fields of the class..
+        std::vector<std::unique_ptr<constructor_declaration>> constructors; // the constructors of the class..
+        std::vector<std::unique_ptr<method_declaration>> methods;           // the methods of the class..
+        std::vector<std::unique_ptr<predicate_declaration>> predicates;     // the predicates of the class..
+        std::vector<std::unique_ptr<type_declaration>> types;               // the types of the class..
+
+        if (!match(CLASS_ID))
+            error("Expected `class`..");
+
+        if (!match(ID_ID))
+            error("Expected identifier..");
+
+        auto name = *static_cast<const id_token *>(tokens[pos - 2].get());
+
+        if (match(COLON_ID))
+            do
+            {
+                std::vector<id_token> ids;
+                do
+                {
+                    if (!match(ID_ID))
+                        error("Expected identifier..");
+                    ids.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+                } while (match(DOT_ID));
+                base_classes.emplace_back(std::move(ids));
+            } while (match(COMMA_ID));
+
+        if (!match(LBRACE_ID))
+            error("Expected `{`..");
+
+        while (!match(RBRACE_ID))
+            switch (tk->sym)
+            {
+            case TYPEDEF_ID:
+                types.emplace_back(parse_typedef_declaration());
+                break;
+            case ENUM_ID:
+                types.emplace_back(parse_enum_declaration());
+                break;
+            case CLASS_ID:
+                types.emplace_back(parse_class_declaration());
+                break;
+            case PREDICATE_ID:
+                predicates.emplace_back(parse_predicate_declaration());
+                break;
+            case VOID_ID:
+                methods.emplace_back(parse_method_declaration());
+                break;
+            case BOOL_ID:
+            case INT_ID:
+            case REAL_ID:
+            case TIME_ID:
+            case STRING_ID: // either a primitive type method or a field declaration..
+            {
+                size_t c_pos = pos;
+                tk = next_token();
+                if (!match(ID_ID))
+                    error("expected identifier..");
+                switch (tk->sym)
+                {
+                case LPAREN_ID:
+                    backtrack(c_pos);
+                    methods.emplace_back(parse_method_declaration());
+                    break;
+                case EQ_ID:
+                case COMMA_ID:
+                case SEMICOLON_ID:
+                    backtrack(c_pos);
+                    fields.emplace_back(parse_field_declaration());
+                    break;
+                default:
+                    error("expected either `(` or `=` or `;`..");
+                }
+                break;
+            }
+            case ID_ID: // either a constructor, a method or a field declaration..
+            {
+                size_t c_pos = pos;
+                tk = next_token();
+                switch (tk->sym)
+                {
+                case LPAREN_ID:
+                    backtrack(c_pos);
+                    constructors.emplace_back(parse_constructor_declaration());
+                    break;
+                case DOT_ID:
+                    while (match(DOT_ID))
+                        if (!match(ID_ID))
+                            error("expected identifier..");
+                    if (!match(ID_ID))
+                        error("expected identifier..");
+                    switch (tk->sym)
+                    {
+                    case LPAREN_ID:
+                        backtrack(c_pos);
+                        methods.emplace_back(parse_method_declaration());
+                        break;
+                    case EQ_ID:
+                    case SEMICOLON_ID:
+                        backtrack(c_pos);
+                        fields.emplace_back(parse_field_declaration());
+                        break;
+                    default:
+                        error("expected either `(` or `=` or `;`..");
+                    }
+                    break;
+                case ID_ID:
+                    tk = next_token();
+                    switch (tk->sym)
+                    {
+                    case LPAREN_ID:
+                        backtrack(c_pos);
+                        methods.emplace_back(parse_method_declaration());
+                        break;
+                    case EQ_ID:
+                    case SEMICOLON_ID:
+                        backtrack(c_pos);
+                        fields.emplace_back(parse_field_declaration());
+                        break;
+                    default:
+                        error("expected either `(` or `=` or `;`..");
+                    }
+                    break;
+                default:
+                    error("expected either `(` or `.` or an identifier..");
+                }
+                break;
+            }
+            default:
+                error("expected either `typedef` or `enum` or `class` or `predicate` or `void` or identifier..");
+            }
+
+        if (constructors.empty())
+        {
+            std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
+            std::vector<init_element> inits;                                    // the initializations of the fields..
+            std::vector<std::unique_ptr<statement>> body;                       // the body of the constructor..
+            constructors.emplace_back(std::make_unique<constructor_declaration>(std::move(parameters), std::move(inits), std::move(body)));
+        }
+
+        return std::make_unique<class_declaration>(std::move(name), std::move(base_classes), std::move(fields), std::move(constructors), std::move(methods), std::move(predicates), std::move(types));
+    }
+    std::unique_ptr<field_declaration> parser::parse_field_declaration()
+    {
+        std::vector<id_token> tp;
+        std::vector<init_element> inits;
+
+        switch (tk->sym)
+        {
+        case BOOL_ID:
+        case INT_ID:
+        case REAL_ID:
+        case TIME_ID:
+        case STRING_ID:
+            tp.emplace_back(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
+            tk = next_token();
+            break;
+        case ID_ID:
+            tp.emplace_back(*static_cast<const id_token *>(tk));
+            tk = next_token();
+            while (match(DOT_ID))
+            {
+                if (!match(ID_ID))
+                    error("Expected identifier..");
+                tp.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+            }
+            break;
+        default:
+            error("Expected either `bool` or `int` or `real` or `time` or `string`..");
+        }
+
+        do
+        {
+            if (!match(ID_ID))
+                error("Expected identifier..");
+
+            auto name = *static_cast<const id_token *>(tokens[pos - 2].get()); // the name of the field..
+
+            if (match(EQ_ID))
+            {
+                std::vector<std::unique_ptr<expression>> args; // the arguments of the constructor..
+                args.emplace_back(parse_expression());
+                inits.emplace_back(std::move(name), std::move(args));
+            }
+            else if (match(LPAREN_ID))
+            {
+                std::vector<std::unique_ptr<expression>> args; // the arguments of the constructor..
+                if (!match(RPAREN_ID))
+                {
+                    args.emplace_back(parse_expression());
+                    while (match(COMMA_ID))
+                        args.emplace_back(parse_expression());
+                    if (!match(RPAREN_ID))
+                        error("Expected `)`..");
+                }
+                inits.emplace_back(std::move(name), std::move(args));
+            }
+            else
+                inits.emplace_back(std::move(name), std::vector<std::unique_ptr<expression>>());
+        } while (match(COMMA_ID));
+
+        if (!match(SEMICOLON_ID))
+            error("Expected `;`..");
+
+        return std::make_unique<field_declaration>(std::move(tp), std::move(inits));
+    }
+    std::unique_ptr<method_declaration> parser::parse_method_declaration()
+    {
+        std::vector<id_token> rt;
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::unique_ptr<statement>> stmts;
+
+        switch (tk->sym)
+        {
+        case VOID_ID:
+        case BOOL_ID:
+        case INT_ID:
+        case REAL_ID:
+        case TIME_ID:
+        case STRING_ID:
+            rt.emplace_back(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
+            tk = next_token();
+            break;
+        case ID_ID:
+            rt.emplace_back(*static_cast<const id_token *>(tk));
+            tk = next_token();
+            while (match(DOT_ID))
+            {
+                if (!match(ID_ID))
+                    error("Expected identifier..");
+                rt.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+            }
+            break;
+        default:
+            error("Expected either `void` or `bool` or `int` or `real` or `time` or `string` or identifier..");
+        }
+
+        if (!match(ID_ID))
+            error("Expected identifier..");
+
+        auto name = *static_cast<const id_token *>(tokens[pos - 2].get());
+
+        if (!match(LPAREN_ID))
+            error("Expected `(`..");
+
+        if (!match(RPAREN_ID))
+            do
+            {
+                std::vector<id_token> ids; // the identifiers of the type..
+                switch (tk->sym)
+                {
+                case ID_ID:
+                    ids.emplace_back(*static_cast<const id_token *>(tk));
+                    tk = next_token();
+                    while (match(DOT_ID))
+                    {
+                        if (!match(ID_ID))
+                            error("Expected identifier..");
+                        ids.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+                    }
+                    break;
+                case BOOL_ID:
+                case INT_ID:
+                case REAL_ID:
+                case TIME_ID:
+                case STRING_ID:
+                    ids.emplace_back(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
+                    tk = next_token();
+                    break;
+                default:
+                    error("Expected either identifier or `bool` or `int` or `real` or `time` or `string`..");
+                }
+
+                if (!match(ID_ID))
+                    error("Expected identifier..");
+
+                auto name = *static_cast<const id_token *>(tokens[pos - 2].get()); // the name of the parameter..
+
+                params.emplace_back(std::move(ids), std::move(name));
+            } while (match(COMMA_ID));
+
+        if (!match(RPAREN_ID))
+            error("Expected `)`..");
+
+        if (!match(LBRACE_ID))
+            error("Expected `{`..");
+
+        while (!match(RBRACE_ID))
+            stmts.emplace_back(parse_statement());
+
+        return std::make_unique<method_declaration>(std::move(rt), std::move(name), std::move(params), std::move(stmts));
+    }
     std::unique_ptr<constructor_declaration> parser::parse_constructor_declaration()
     {
         std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
@@ -197,7 +489,7 @@ namespace riddle
                 case REAL_ID:
                 case TIME_ID:
                 case STRING_ID:
-                    ids.emplace_back(*static_cast<const id_token *>(tk));
+                    ids.emplace_back(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
                     tk = next_token();
                     break;
                 default:

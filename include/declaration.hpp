@@ -203,25 +203,11 @@ namespace riddle
   class class_declaration final : public type_declaration
   {
   public:
-    class_declaration(const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_classes, std::vector<std::unique_ptr<field_declaration>> &&fields, std::vector<std::unique_ptr<constructor_declaration>> &&constructors, std::vector<std::unique_ptr<method_declaration>> &&methods, std::vector<std::unique_ptr<predicate_declaration>> &&predicates, std::vector<std::unique_ptr<type_declaration>> &&types) : name(std::move(name)), parameters(std::move(params)), base_classes(std::move(base_classes)), fields(std::move(fields)), constructors(std::move(constructors)), methods(std::move(methods)), predicates(std::move(predicates)), types(std::move(types)) {}
+    class_declaration(const id_token &&name, std::vector<std::vector<id_token>> &&base_classes, std::vector<std::unique_ptr<field_declaration>> &&fields, std::vector<std::unique_ptr<constructor_declaration>> &&constructors, std::vector<std::unique_ptr<method_declaration>> &&methods, std::vector<std::unique_ptr<predicate_declaration>> &&predicates, std::vector<std::unique_ptr<type_declaration>> &&types) : name(std::move(name)), base_classes(std::move(base_classes)), fields(std::move(fields)), constructors(std::move(constructors)), methods(std::move(methods)), predicates(std::move(predicates)), types(std::move(types)) {}
 
     std::string to_string() const override
     {
       std::string res = "class " + name.to_string();
-      if (!parameters.empty())
-      {
-        res += '<' + parameters[0].first[0].to_string();
-        for (size_t i = 1; i < parameters[0].first.size(); ++i)
-          res += ", " + parameters[0].first[i].to_string();
-        res += "> " + parameters[0].second.to_string();
-        for (size_t i = 1; i < parameters.size(); ++i)
-        {
-          res += ", <" + parameters[i].first[0].to_string();
-          for (size_t j = 1; j < parameters[i].first.size(); ++j)
-            res += ", " + parameters[i].first[j].to_string();
-          res += "> " + parameters[i].second.to_string();
-        }
-      }
       if (!base_classes.empty())
       {
         res += " : " + base_classes[0][0].to_string();
@@ -250,7 +236,6 @@ namespace riddle
 
   private:
     id_token name;                                                      // the name of the class..
-    std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the type parameters of the class..
     std::vector<std::vector<id_token>> base_classes;                    // the base classes of the class..
     std::vector<std::unique_ptr<field_declaration>> fields;             // the fields of the class..
     std::vector<std::unique_ptr<constructor_declaration>> constructors; // the constructors of the class..
