@@ -540,7 +540,83 @@ namespace riddle
 
         return std::make_unique<constructor_declaration>(std::move(parameters), std::move(inits), std::move(body));
     }
-    std::unique_ptr<predicate_declaration> parser::parse_predicate_declaration() {}
+    std::unique_ptr<predicate_declaration> parser::parse_predicate_declaration()
+    {
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::vector<id_token>> base_predicates;
+        std::vector<std::unique_ptr<statement>> stmts;
+
+        if (!match(PREDICATE_ID))
+            error("Expected `predicate`..");
+
+        if (!match(ID_ID))
+            error("Expected identifier..");
+
+        auto name = *static_cast<const id_token *>(tokens[pos - 2].get());
+
+        if (!match(LPAREN_ID))
+            error("Expected `(`..");
+
+        if (!match(RPAREN_ID))
+            do
+            {
+                std::vector<id_token> ids; // the identifiers of the type..
+                switch (tk->sym)
+                {
+                case ID_ID:
+                    ids.emplace_back(*static_cast<const id_token *>(tk));
+                    tk = next_token();
+                    while (match(DOT_ID))
+                    {
+                        if (!match(ID_ID))
+                            error("Expected identifier..");
+                        ids.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+                    }
+                    break;
+                case BOOL_ID:
+                case INT_ID:
+                case REAL_ID:
+                case TIME_ID:
+                case STRING_ID:
+                    ids.emplace_back(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
+                    tk = next_token();
+                    break;
+                default:
+                    error("Expected either identifier or `bool` or `int` or `real` or `time` or `string`..");
+                }
+
+                if (!match(ID_ID))
+                    error("Expected identifier..");
+
+                auto name = *static_cast<const id_token *>(tokens[pos - 2].get()); // the name of the parameter..
+
+                params.emplace_back(std::move(ids), name);
+            } while (match(COMMA_ID));
+
+        if (!match(RPAREN_ID))
+            error("Expected `)`..");
+
+        if (match(COLON_ID))
+            do
+            {
+                std::vector<id_token> ids;
+                do
+                {
+                    if (!match(ID_ID))
+                        error("Expected identifier..");
+                    ids.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+                } while (match(DOT_ID));
+                base_predicates.emplace_back(std::move(ids));
+            } while (match(COMMA_ID));
+
+        if (!match(LBRACE_ID))
+            error("Expected `{`..");
+
+        while (!match(RBRACE_ID))
+            stmts.emplace_back(parse_statement());
+
+        return std::make_unique<predicate_declaration>(std::move(name), std::move(params), std::move(base_predicates), std::move(stmts));
+    }
     std::unique_ptr<statement> parser::parse_statement() {}
     std::unique_ptr<expression> parser::parse_expression(const size_t &pr) {}
 

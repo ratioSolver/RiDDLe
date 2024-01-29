@@ -163,7 +163,7 @@ namespace riddle
   class predicate_declaration
   {
   public:
-    predicate_declaration(const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : name(std::move(name)), parameters(std::move(params)), body(std::move(stmts)) {}
+    predicate_declaration(const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_predicates, std::vector<std::unique_ptr<statement>> &&stmts) : name(std::move(name)), parameters(std::move(params)), base_predicates(std::move(base_predicates)), body(std::move(stmts)) {}
 
     std::string to_string() const
     {
