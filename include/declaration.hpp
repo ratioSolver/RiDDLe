@@ -70,6 +70,9 @@ namespace riddle
     init_element(const id_token &&name, std::vector<std::unique_ptr<expression>> &&args) : name(std::move(name)), args(std::move(args)) {}
     init_element(init_element &&other) noexcept : name(std::move(other.name)), args(std::move(other.args)) {}
 
+    const id_token &get_name() const { return name; }
+    const std::vector<std::unique_ptr<expression>> &get_args() const { return args; }
+
     std::string to_string() const
     {
       std::string res = name.to_string() + '(';

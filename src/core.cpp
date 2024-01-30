@@ -1,13 +1,21 @@
 #include "core.hpp"
+#include "type.hpp"
 
 namespace riddle
 {
-    core::core() : scope(*this), env(*this) {}
+    core::core() : scope(*this), env(*this)
+    {
+        types.emplace("bool", std::make_unique<bool_type>(*this));
+        types.emplace("int", std::make_unique<int_type>(*this));
+        types.emplace("real", std::make_unique<real_type>(*this));
+        types.emplace("time", std::make_unique<time_type>(*this));
+        types.emplace("string", std::make_unique<string_type>(*this));
+    }
 
-    std::optional<field> core::get_field(const std::string &name) const
+    std::optional<std::reference_wrapper<field>> core::get_field(const std::string &name) const
     {
         if (auto it = fields.find(name); it != fields.end())
-            return std::optional<field>(*it->second.get());
+            return *it->second.get();
         else
             return std::nullopt;
     }

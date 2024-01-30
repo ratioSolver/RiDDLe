@@ -8,6 +8,7 @@ namespace riddle
 {
   class core;
   class item;
+  class constructor;
 
   /**
    * @brief The environment class.
@@ -16,6 +17,8 @@ namespace riddle
    */
   class env : public std::enable_shared_from_this<env>
   {
+    friend class constructor;
+
   public:
     env(core &c, std::shared_ptr<env> parent = nullptr);
     virtual ~env() = default;

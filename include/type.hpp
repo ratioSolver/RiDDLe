@@ -5,6 +5,9 @@
 
 namespace riddle
 {
+  class item;
+  class constructor;
+
   /**
    * @brief The base class for all types.
    */
@@ -45,6 +48,13 @@ namespace riddle
      */
     bool is_assignable_from(const type &other) const;
 
+    /**
+     * @brief Create a new instance of this type.
+     *
+     * @return std::shared_ptr<item> The new instance.
+     */
+    virtual std::shared_ptr<item> new_instance() = 0;
+
   protected:
     scope &scp;
 
@@ -60,6 +70,9 @@ namespace riddle
   {
   public:
     bool_type(core &c);
+
+  private:
+    std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -69,6 +82,9 @@ namespace riddle
   {
   public:
     int_type(core &c);
+
+  private:
+    std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -78,6 +94,9 @@ namespace riddle
   {
   public:
     real_type(core &c);
+
+  private:
+    std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -87,6 +106,9 @@ namespace riddle
   {
   public:
     time_type(core &c);
+
+  private:
+    std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -96,6 +118,9 @@ namespace riddle
   {
   public:
     string_type(core &c);
+
+  private:
+    std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -107,8 +132,24 @@ namespace riddle
     component_type(std::shared_ptr<scope> parent, const std::string &name);
     virtual ~component_type() = default;
 
+    /**
+     * @brief Get the parent types.
+     *
+     * @return const std::vector<std::shared_ptr<component_type>>& The parent types.
+     */
+    const std::vector<std::shared_ptr<component_type>> &get_parents() const { return parents; }
+
+    /**
+     * @brief Get the constructors of the type that match the given argument types.
+     *
+     * @param argument_types The argument types.
+     * @return constructor& The constructor.
+     */
+    constructor &get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const;
+
   private:
-    std::vector<std::shared_ptr<component_type>> parents; // the base types (i.e. the types this type inherits from)..
+    std::vector<std::shared_ptr<component_type>> parents;   // the base types (i.e. the types this type inherits from)..
+    std::vector<std::unique_ptr<constructor>> constructors; // the constructors of the type..
   };
 
   class predicate : public type, public scope
