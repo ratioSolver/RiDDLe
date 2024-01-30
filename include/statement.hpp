@@ -15,10 +15,29 @@ namespace riddle
     virtual std::string to_string() const = 0;
   };
 
+  class field_argument final
+  {
+  public:
+    field_argument(id_token &&object_id, std::unique_ptr<expression> &&expr = nullptr) : object_id(std::move(object_id)), expr(std::move(expr)) {}
+
+    void execute(scope &scp, env &ctx) const;
+
+    std::string to_string() const
+    {
+      if (expr)
+        return object_id.to_string() + " = " + expr->to_string();
+      return object_id.to_string();
+    }
+
+  private:
+    id_token object_id;
+    std::unique_ptr<expression> expr;
+  };
+
   class local_field_statement final : public statement
   {
   public:
-    local_field_statement(std::vector<id_token> &&field_type, std::vector<id_token> &&fields, std::vector<std::unique_ptr<expression>> &&initializers) : field_type(std::move(field_type)), fields(std::move(fields)), initializers(std::move(initializers)) {}
+    local_field_statement(std::vector<id_token> &&field_type, std::vector<field_argument> &&fields) : field_type(std::move(field_type)), fields(std::move(fields)) {}
 
     void execute(scope &scp, env &ctx) const override;
 
@@ -28,43 +47,36 @@ namespace riddle
       for (size_t i = 1; i < field_type.size(); ++i)
         result += "." + field_type[i].to_string();
       result += " " + fields[0].to_string();
-      if (initializers[0])
-        result += " = " + initializers[0]->to_string();
       for (size_t i = 1; i < fields.size(); ++i)
-      {
         result += ", " + fields[i].to_string();
-        if (initializers[i])
-          result += " = " + initializers[i]->to_string();
-      }
       return result + ";";
     }
 
   private:
     std::vector<id_token> field_type;
-    std::vector<id_token> fields;
-    std::vector<std::unique_ptr<expression>> initializers;
+    std::vector<field_argument> fields;
   };
 
   class assignment_statement final : public statement
   {
   public:
-    assignment_statement(std::vector<id_token> &&lhs, id_token &&object_id, std::unique_ptr<expression> &&rhs) : lhs(std::move(lhs)), object_id(std::move(object_id)), rhs(std::move(rhs)) {}
+    assignment_statement(std::vector<id_token> &&object_id, id_token &&field_name, std::unique_ptr<expression> &&rhs) : object_id(std::move(object_id)), field_name(std::move(field_name)), rhs(std::move(rhs)) {}
 
     void execute(scope &scp, env &ctx) const override;
 
     std::string to_string() const override
     {
-      if (lhs.empty())
-        return object_id.to_string() + " = " + rhs->to_string() + ";";
-      std::string result = lhs[0].to_string();
-      for (size_t i = 1; i < lhs.size(); ++i)
-        result += "." + lhs[i].to_string();
-      return result + object_id.to_string() + " = " + rhs->to_string() + ";";
+      if (object_id.empty())
+        return field_name.to_string() + " = " + rhs->to_string() + ";";
+      std::string result = object_id[0].to_string();
+      for (size_t i = 1; i < object_id.size(); ++i)
+        result += "." + object_id[i].to_string();
+      return result + field_name.to_string() + " = " + rhs->to_string() + ";";
     }
 
   private:
-    std::vector<id_token> lhs;
-    id_token object_id;
+    std::vector<id_token> object_id;
+    id_token field_name;
     std::unique_ptr<expression> rhs;
   };
 
@@ -107,20 +119,20 @@ namespace riddle
   class disjunction_statement final : public statement
   {
   public:
-    disjunction_statement(std::vector<conjunction_statement> &&blocks) : blocks(std::move(blocks)) {}
+    disjunction_statement(std::vector<std::unique_ptr<conjunction_statement>> &&blocks) : blocks(std::move(blocks)) {}
 
     void execute(scope &scp, env &ctx) const override;
 
     std::string to_string() const override
     {
-      std::string result = blocks[0].to_string();
+      std::string result = blocks[0]->to_string();
       for (size_t i = 1; i < blocks.size(); ++i)
-        result += " or " + blocks[i].to_string();
+        result += " or " + blocks[i]->to_string();
       return result;
     }
 
   private:
-    std::vector<conjunction_statement> blocks;
+    std::vector<std::unique_ptr<conjunction_statement>> blocks;
   };
 
   class for_all_statement final : public statement
@@ -147,25 +159,6 @@ namespace riddle
     std::vector<std::unique_ptr<statement>> statements;
   };
 
-  class formula_argument final
-  {
-  public:
-    formula_argument(id_token &&object_id, std::unique_ptr<expression> &&expr) : object_id(std::move(object_id)), expr(std::move(expr)) {}
-
-    void execute(scope &scp, env &ctx) const;
-
-    std::string to_string() const
-    {
-      if (expr)
-        return object_id.to_string() + " = " + expr->to_string();
-      return object_id.to_string();
-    }
-
-  private:
-    id_token object_id;
-    std::unique_ptr<expression> expr;
-  };
-
   class return_statement final : public statement
   {
   public:
@@ -187,7 +180,7 @@ namespace riddle
   class formula_statement final : public statement
   {
   public:
-    formula_statement(bool is_fact, id_token &&formula_name, std::vector<id_token> &&formula_scope, id_token &&predicate_name, std::vector<formula_argument> &&arguments) : is_fact(is_fact), formula_name(std::move(formula_name)), formula_scope(std::move(formula_scope)), predicate_name(std::move(predicate_name)), arguments(std::move(arguments)) {}
+    formula_statement(bool is_fact, id_token &&formula_name, std::vector<id_token> &&formula_scope, id_token &&predicate_name, std::vector<field_argument> &&arguments) : is_fact(is_fact), formula_name(std::move(formula_name)), formula_scope(std::move(formula_scope)), predicate_name(std::move(predicate_name)), arguments(std::move(arguments)) {}
 
     void execute(scope &scp, env &ctx) const override;
 
@@ -217,6 +210,6 @@ namespace riddle
     id_token formula_name;
     std::vector<id_token> formula_scope;
     id_token predicate_name;
-    std::vector<formula_argument> arguments;
+    std::vector<field_argument> arguments;
   };
 } // namespace riddle
