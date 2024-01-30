@@ -22,7 +22,7 @@ namespace riddle
   class bool_expression final : public expression
   {
   public:
-    bool_expression(const bool_token &&l) : l(std::move(l)) {}
+    bool_expression(const bool_token &l) : l(l) {}
 
     std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
 
@@ -35,7 +35,7 @@ namespace riddle
   class int_expression final : public expression
   {
   public:
-    int_expression(const int_token &&l) : l(std::move(l)) {}
+    int_expression(const int_token &l) : l(l) {}
 
     std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
 
@@ -48,7 +48,7 @@ namespace riddle
   class real_expression final : public expression
   {
   public:
-    real_expression(const real_token &&l) : l(std::move(l)) {}
+    real_expression(const real_token &l) : l(l) {}
 
     std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
 
@@ -61,7 +61,7 @@ namespace riddle
   class string_expression final : public expression
   {
   public:
-    string_expression(const string_token &&l) : l(std::move(l)) {}
+    string_expression(const string_token &l) : l(l) {}
 
     std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
 
@@ -266,6 +266,172 @@ namespace riddle
   private:
     std::vector<id_token> object_id;
     id_token function_name;
+    std::vector<std::unique_ptr<expression>> args;
+  };
+
+  class id_expression final : public expression
+  {
+  public:
+    id_expression(std::vector<id_token> &&obj_id) : object_id(std::move(obj_id)) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
+
+    std::string to_string() const override
+    {
+      std::string res = object_id[0].to_string();
+      for (size_t i = 1; i < object_id.size(); ++i)
+        res += "." + object_id[i].to_string();
+      return res;
+    }
+
+  private:
+    std::vector<id_token> object_id;
+  };
+
+  class implication_expression final : public expression
+  {
+  public:
+    implication_expression(std::unique_ptr<expression> &&l, std::unique_ptr<expression> &&r) : l(std::move(l)), r(std::move(r)) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
+
+    std::string to_string() const override { return l->to_string() + " -> " + r->to_string(); }
+
+  private:
+    std::unique_ptr<expression> l;
+    std::unique_ptr<expression> r;
+  };
+
+  class disjunction_expression final : public expression
+  {
+  public:
+    disjunction_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
+
+    std::string to_string() const override
+    {
+      std::string res = args[0]->to_string();
+      for (size_t i = 1; i < args.size(); ++i)
+        res += " | " + args[i]->to_string();
+      return res;
+    }
+
+  private:
+    std::vector<std::unique_ptr<expression>> args;
+  };
+
+  class conjunction_expression final : public expression
+  {
+  public:
+    conjunction_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
+
+    std::string to_string() const override
+    {
+      std::string res = args[0]->to_string();
+      for (size_t i = 1; i < args.size(); ++i)
+        res += " & " + args[i]->to_string();
+      return res;
+    }
+
+  private:
+    std::vector<std::unique_ptr<expression>> args;
+  };
+
+  class xor_expression final : public expression
+  {
+  public:
+    xor_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
+
+    std::string to_string() const override
+    {
+      std::string res = args[0]->to_string();
+      for (size_t i = 1; i < args.size(); ++i)
+        res += " ^ " + args[i]->to_string();
+      return res;
+    }
+
+  private:
+    std::vector<std::unique_ptr<expression>> args;
+  };
+
+  class addition_expression final : public expression
+  {
+  public:
+    addition_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
+
+    std::string to_string() const override
+    {
+      std::string res = args[0]->to_string();
+      for (size_t i = 1; i < args.size(); ++i)
+        res += " + " + args[i]->to_string();
+      return res;
+    }
+
+  private:
+    std::vector<std::unique_ptr<expression>> args;
+  };
+
+  class subtraction_expression final : public expression
+  {
+  public:
+    subtraction_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
+
+    std::string to_string() const override
+    {
+      std::string res = args[0]->to_string();
+      for (size_t i = 1; i < args.size(); ++i)
+        res += " - " + args[i]->to_string();
+      return res;
+    }
+
+  private:
+    std::vector<std::unique_ptr<expression>> args;
+  };
+
+  class multiplication_expression final : public expression
+  {
+  public:
+    multiplication_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
+
+    std::string to_string() const override
+    {
+      std::string res = args[0]->to_string();
+      for (size_t i = 1; i < args.size(); ++i)
+        res += " * " + args[i]->to_string();
+      return res;
+    }
+
+  private:
+    std::vector<std::unique_ptr<expression>> args;
+  };
+
+  class division_expression final : public expression
+  {
+  public:
+    division_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
+
+    std::shared_ptr<item> evaluate(scope &scp, env &ctx) const override;
+
+    std::string to_string() const override
+    {
+      std::string res = args[0]->to_string();
+      for (size_t i = 1; i < args.size(); ++i)
+        res += " / " + args[i]->to_string();
+      return res;
+    }
+
+  private:
     std::vector<std::unique_ptr<expression>> args;
   };
 } // namespace riddle

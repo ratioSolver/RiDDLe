@@ -1,3 +1,4 @@
+#include <cassert>
 #include "parser.hpp"
 
 namespace riddle
@@ -618,7 +619,312 @@ namespace riddle
         return std::make_unique<predicate_declaration>(std::move(name), std::move(params), std::move(base_predicates), std::move(stmts));
     }
     std::unique_ptr<statement> parser::parse_statement() {}
-    std::unique_ptr<expression> parser::parse_expression(const size_t &pr) {}
+    std::unique_ptr<expression> parser::parse_expression(const size_t &pr)
+    {
+        std::unique_ptr<expression> expr;
+        switch (tk->sym)
+        {
+        case BoolLiteral_ID:
+            expr = std::make_unique<bool_expression>(*static_cast<const bool_token *>(tk));
+            tk = next_token();
+            break;
+        case IntLiteral_ID:
+            expr = std::make_unique<int_expression>(*static_cast<const int_token *>(tk));
+            tk = next_token();
+            break;
+        case RealLiteral_ID:
+            expr = std::make_unique<real_expression>(*static_cast<const real_token *>(tk));
+            tk = next_token();
+            break;
+        case StringLiteral_ID:
+            expr = std::make_unique<string_expression>(*static_cast<const string_token *>(tk));
+            tk = next_token();
+            break;
+        case LPAREN_ID: // either a parenthesys expression or a cast..
+        {
+            tk = next_token();
+            size_t c_pos = pos;
+            do
+            {
+                if (!match(ID_ID))
+                    error("Expected identifier..");
+            } while (match(DOT_ID));
+
+            if (match(RPAREN_ID))
+            { // cast..
+                backtrack(c_pos);
+                std::vector<id_token> tp;
+                switch (tk->sym)
+                {
+                case BOOL_ID:
+                case INT_ID:
+                case REAL_ID:
+                case TIME_ID:
+                case STRING_ID:
+                    tp.emplace_back(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
+                    tk = next_token();
+                    break;
+                case ID_ID:
+                    tp.emplace_back(*static_cast<const id_token *>(tk));
+                    tk = next_token();
+                    while (match(DOT_ID))
+                    {
+                        if (!match(ID_ID))
+                            error("Expected identifier..");
+                        tp.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+                    }
+                    break;
+                default:
+                    error("Expected either `bool` or `int` or `real` or `time` or `string` or identifier..");
+                }
+
+                if (!match(RPAREN_ID))
+                    error("Expected `)`..");
+
+                expr = std::make_unique<cast_expression>(std::move(tp), parse_expression(0));
+            }
+            else
+            { // parenthesys expression..
+                backtrack(c_pos);
+                expr = parse_expression(0);
+                if (!match(RPAREN_ID))
+                    error("Expected `)`..");
+            }
+        }
+        case PLUS_ID:
+            tk = next_token();
+            expr = std::make_unique<plus_expression>(parse_expression(4));
+            break;
+        case MINUS_ID:
+            tk = next_token();
+            expr = std::make_unique<minus_expression>(parse_expression(4));
+            break;
+        case BANG_ID:
+            tk = next_token();
+            expr = std::make_unique<not_expression>(parse_expression(4));
+            break;
+        case NEW_ID:
+        {
+            tk = next_token();
+            std::vector<id_token> tp;
+            switch (tk->sym)
+            {
+            case BOOL_ID:
+            case INT_ID:
+            case REAL_ID:
+            case TIME_ID:
+            case STRING_ID:
+                tp.emplace_back(tk->to_string(), tk->start_line, tk->start_pos, tk->end_line, tk->end_pos);
+                tk = next_token();
+                break;
+            case ID_ID:
+                tp.emplace_back(*static_cast<const id_token *>(tk));
+                tk = next_token();
+                while (match(DOT_ID))
+                {
+                    if (!match(ID_ID))
+                        error("Expected identifier..");
+                    tp.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+                }
+                break;
+            default:
+                error("Expected either `bool` or `int` or `real` or `time` or `string` or identifier..");
+            }
+
+            if (!match(LPAREN_ID))
+                error("Expected `(`..");
+
+            std::vector<std::unique_ptr<expression>> args;
+            if (!match(RPAREN_ID))
+            {
+                args.emplace_back(parse_expression());
+                while (match(COMMA_ID))
+                    args.emplace_back(parse_expression());
+                if (!match(RPAREN_ID))
+                    error("Expected `)`..");
+            }
+
+            expr = std::make_unique<constructor_expression>(std::move(tp), std::move(args));
+            break;
+        }
+        case ID_ID:
+        {
+            std::vector<id_token> object_id;
+            object_id.emplace_back(*static_cast<const id_token *>(tk));
+            tk = next_token();
+            while (match(DOT_ID))
+            {
+                if (!match(ID_ID))
+                    error("Expected identifier..");
+                object_id.emplace_back(*static_cast<const id_token *>(tokens[pos - 2].get()));
+            }
+            if (match(LPAREN_ID))
+            {
+                std::vector<std::unique_ptr<expression>> args;
+                if (!match(RPAREN_ID))
+                {
+                    args.emplace_back(parse_expression());
+                    while (match(COMMA_ID))
+                        args.emplace_back(parse_expression());
+                    if (!match(RPAREN_ID))
+                        error("Expected `)`..");
+                }
+                id_token name = object_id.back();
+                object_id.pop_back();
+                expr = std::make_unique<function_expression>(std::move(object_id), std::move(name), std::move(args));
+            }
+            else
+                expr = std::make_unique<id_expression>(std::move(object_id));
+            break;
+        }
+        default:
+            error("Expected either a literal or `(` or `+` or `-` or `!` or `new` or identifier..");
+        }
+
+        while (
+            ((tk->sym == EQEQ_ID || tk->sym == BANGEQ_ID) && 0 >= pr) ||
+            ((tk->sym == LT_ID || tk->sym == LTEQ_ID || tk->sym == GTEQ_ID || tk->sym == GT_ID || tk->sym == IMPLICATION_ID || tk->sym == BAR_ID || tk->sym == AMP_ID || tk->sym == CARET_ID) && 1 >= pr) ||
+            ((tk->sym == PLUS_ID || tk->sym == MINUS_ID) && 2 >= pr) ||
+            ((tk->sym == STAR_ID || tk->sym == SLASH_ID) && 3 >= pr))
+        {
+            switch (tk->sym)
+            {
+            case EQEQ_ID:
+                assert(0 >= pr);
+                tk = next_token();
+                expr = std::make_unique<eq_expression>(std::move(expr), parse_expression(1));
+                break;
+            case BANGEQ_ID:
+                assert(0 >= pr);
+                tk = next_token();
+                expr = std::make_unique<neq_expression>(std::move(expr), parse_expression(1));
+                break;
+            case LT_ID:
+            {
+                assert(1 >= pr);
+                tk = next_token();
+                expr = std::make_unique<lt_expression>(std::move(expr), parse_expression(1));
+                break;
+            }
+            case LTEQ_ID:
+            {
+                assert(1 >= pr);
+                tk = next_token();
+                expr = std::make_unique<leq_expression>(std::move(expr), parse_expression(1));
+                break;
+            }
+            case GTEQ_ID:
+            {
+                assert(1 >= pr);
+                tk = next_token();
+                expr = std::make_unique<geq_expression>(std::move(expr), parse_expression(1));
+                break;
+            }
+            case GT_ID:
+            {
+                assert(1 >= pr);
+                tk = next_token();
+                expr = std::make_unique<gt_expression>(std::move(expr), parse_expression(1));
+                break;
+            }
+            case IMPLICATION_ID:
+            {
+                assert(1 >= pr);
+                tk = next_token();
+                expr = std::make_unique<implication_expression>(std::move(expr), parse_expression(1));
+                break;
+            }
+            case BAR_ID:
+            {
+                assert(1 >= pr);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+
+                while (match(BAR_ID))
+                    xprs.emplace_back(parse_expression(2));
+
+                expr = std::make_unique<disjunction_expression>(std::move(xprs));
+                break;
+            }
+            case AMP_ID:
+            {
+                assert(1 >= pr);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+
+                while (match(AMP_ID))
+                    xprs.emplace_back(parse_expression(2));
+
+                expr = std::make_unique<conjunction_expression>(std::move(xprs));
+                break;
+            }
+            case CARET_ID:
+            {
+                assert(1 >= pr);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+
+                while (match(CARET_ID))
+                    xprs.emplace_back(parse_expression(2));
+
+                expr = std::make_unique<xor_expression>(std::move(xprs));
+                break;
+            }
+            case PLUS_ID:
+            {
+                assert(2 >= pr);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+
+                while (match(PLUS_ID))
+                    xprs.emplace_back(parse_expression(3));
+
+                expr = std::make_unique<addition_expression>(std::move(xprs));
+                break;
+            }
+            case MINUS_ID:
+            {
+                assert(2 >= pr);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+
+                while (match(MINUS_ID))
+                    xprs.emplace_back(parse_expression(3));
+
+                expr = std::make_unique<subtraction_expression>(std::move(xprs));
+                break;
+            }
+            case STAR_ID:
+            {
+                assert(3 >= pr);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+
+                while (match(STAR_ID))
+                    xprs.emplace_back(parse_expression(4));
+
+                expr = std::make_unique<multiplication_expression>(std::move(xprs));
+                break;
+            }
+            case SLASH_ID:
+            {
+                assert(3 >= pr);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+
+                while (match(SLASH_ID))
+                    xprs.emplace_back(parse_expression(4));
+
+                expr = std::make_unique<division_expression>(std::move(xprs));
+                break;
+            }
+            default:
+                error("Expected either `==` or `!=` or `<` or `<=` or `>=` or `>` or `=>` or `|` or `&` or `^` or `+` or `-` or `*` or `/`..");
+            }
+        }
+
+        return expr;
+    }
 
     const token *parser::next_token()
     {
