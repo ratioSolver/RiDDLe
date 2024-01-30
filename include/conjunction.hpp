@@ -9,7 +9,7 @@ namespace riddle
   class conjunction : public scope
   {
   public:
-    conjunction(std::shared_ptr<scope> parent, std::shared_ptr<env> ctx, const utils::rational cst);
+    conjunction(std::shared_ptr<scope> parent, std::shared_ptr<env> ctx, const utils::rational &cst);
 
     /**
      * @brief Get the cost of the conjunction.
