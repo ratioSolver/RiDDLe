@@ -7,7 +7,7 @@
 
 namespace riddle
 {
-    constructor::constructor(std::shared_ptr<scope> parent, std::vector<std::unique_ptr<field>> &&args, std::vector<init_element> &inits, std::vector<std::unique_ptr<statement>> &stmts) : scope(parent->get_core(), parent), args(std::move(args)), inits(inits), stmts(stmts) {}
+    constructor::constructor(std::shared_ptr<scope> parent, std::vector<std::unique_ptr<field>> &&args, std::vector<init_element> &&inits, std::vector<std::unique_ptr<statement>> &&body) : scope(parent->get_core(), parent), args(std::move(args)), inits(std::move(inits)), body(std::move(body)) {}
 
     std::shared_ptr<item> constructor::invoke(std::vector<std::shared_ptr<item>> &&arguments)
     {
@@ -85,7 +85,7 @@ namespace riddle
             }
 
         // we execute the constructor statements
-        for (const auto &stmt : stmts)
+        for (const auto &stmt : body)
             stmt->execute(*this, ctx);
 
         return instance;

@@ -7,6 +7,7 @@ namespace riddle
 {
   class item;
   class constructor;
+  class statement;
 
   /**
    * @brief The base class for all types.
@@ -181,10 +182,20 @@ namespace riddle
   class predicate : public type, public scope
   {
   public:
-    predicate(std::shared_ptr<scope> parent, const std::string &name);
+    predicate(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&stmts);
     virtual ~predicate() = default;
+
+    /**
+     * @brief Get the parent predicates.
+     *
+     * @return const std::vector<std::shared_ptr<predicate>>& The parent predicates.
+     */
+    const std::vector<std::shared_ptr<predicate>> &get_parents() const { return parents; }
 
   private:
     std::vector<std::shared_ptr<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
+    std::vector<std::reference_wrapper<field>> args; // the arguments of the predicate..
+    std::vector<std::unique_ptr<statement>> body;    // the body of the predicate..
+    std::vector<std::shared_ptr<item>> atoms;        // the atoms having this predicate as their predicate..
   };
 } // namespace riddle

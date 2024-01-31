@@ -1,6 +1,7 @@
 #include "type.hpp"
 #include "core.hpp"
 #include "constructor.hpp"
+#include "declaration.hpp"
 
 namespace riddle
 {
@@ -40,9 +41,9 @@ namespace riddle
                 vals.push_back(val);
         return vals;
     }
-    std::shared_ptr<item> enum_type::new_instance() { scp.get_core().new_enum(*this, get_values()); }
+    std::shared_ptr<item> enum_type::new_instance() { return scp.get_core().new_enum(*this, get_values()); }
 
     component_type::component_type(std::shared_ptr<scope> parent, const std::string &name) : type(*parent, name), scope(parent->get_core(), parent) {}
 
-    predicate::predicate(std::shared_ptr<scope> parent, const std::string &name) : type(*parent, name), scope(parent->get_core(), parent) {}
+    predicate::predicate(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) : type(*parent, name), scope(parent->get_core(), parent), body(std::move(body)) {}
 } // namespace riddle
