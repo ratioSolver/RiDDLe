@@ -5,6 +5,7 @@
 
 namespace riddle
 {
+  class component_type;
   class predicate;
 
   /**
@@ -85,6 +86,23 @@ namespace riddle
      * @return std::shared_ptr<item> The string expression.
      */
     virtual std::shared_ptr<item> new_string(const std::string &value) = 0;
+
+    /**
+     * @brief Create a new item.
+     *
+     * @param tp The type of the item.
+     * @return std::shared_ptr<item> The item.
+     */
+    virtual std::shared_ptr<item> new_item(component_type &tp);
+
+    /**
+     * @brief Create a new enum.
+     *
+     * @param tp The type of the enum.
+     * @param values The values of the enum.
+     * @return std::shared_ptr<item> The enum.
+     */
+    virtual std::shared_ptr<item> new_enum(type &tp, const std::vector<std::shared_ptr<item>> &values) = 0;
 
     /**
      * @brief Return the opposite of the numeric expression.

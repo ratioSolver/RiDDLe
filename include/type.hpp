@@ -123,6 +123,32 @@ namespace riddle
     std::shared_ptr<item> new_instance() override;
   };
 
+  class typedef_type final : public type
+  {
+  public:
+    typedef_type(core &c, const std::string &name, type &base_type, std::unique_ptr<expression> &&value);
+
+  private:
+    std::shared_ptr<item> new_instance() override;
+
+    type &base_type;
+    std::unique_ptr<expression> value;
+  };
+
+  class enum_type final : public type
+  {
+  public:
+    enum_type(core &c, const std::string &name, std::vector<std::shared_ptr<item>> &&values);
+
+    std::vector<std::shared_ptr<item>> get_values() const;
+
+  private:
+    std::shared_ptr<item> new_instance() override;
+
+    std::vector<std::shared_ptr<item>> values;
+    std::vector<std::reference_wrapper<enum_type>> enums;
+  };
+
   /**
    * @brief The component type.
    */

@@ -12,6 +12,8 @@ namespace riddle
         types.emplace("string", std::make_unique<string_type>(*this));
     }
 
+    std::shared_ptr<item> core::new_item(component_type &tp) { return std::make_shared<component>(tp); }
+
     std::optional<std::reference_wrapper<field>> core::get_field(const std::string &name) const noexcept
     {
         if (auto it = fields.find(name); it != fields.end())
