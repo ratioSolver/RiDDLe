@@ -231,7 +231,7 @@ namespace riddle
      * @param name The name of the field.
      * @return std::optional<std::reference_wrapper<field>> The field.
      */
-    virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const override;
+    virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept override;
 
     const type &get_bool_type() const { return *types.at("bool"); }
     const type &get_int_type() const { return *types.at("int"); }
@@ -245,7 +245,7 @@ namespace riddle
      * @param name The name of the item.
      * @return std::shared_ptr<item> The item.
      */
-    virtual std::shared_ptr<item> get(const std::string &name) const override;
+    virtual std::shared_ptr<item> get(const std::string &name) const noexcept override;
 
   private:
     std::map<std::string, std::unique_ptr<type>> types;

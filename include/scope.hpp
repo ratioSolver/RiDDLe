@@ -38,39 +38,39 @@ namespace riddle
      * @param name The name of the field.
      * @return std::optional<std::reference_wrapper<field>> The field.
      */
-    virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const;
+    virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept;
 
     /**
      * @brief Get the fields in this scope.
      *
      * @return const std::map<std::string, std::unique_ptr<field>>& The fields.
      */
-    const std::map<std::string, std::unique_ptr<field>> &get_fields() const { return fields; }
+    const std::map<std::string, std::unique_ptr<field>> &get_fields() const noexcept { return fields; }
 
     /**
      * @brief Get a type by name.
      *
      * @param name The name of the type.
-     * @return type& The type.
+     * @return std::optional<std::reference_wrapper<type>> The type.
      */
-    virtual type &get_type(const std::string &name) const { return parent->get_type(name); }
+    virtual std::optional<std::reference_wrapper<type>> &get_type(const std::string &name) const { return parent->get_type(name); }
 
     /**
      * @brief Get a method by name and argument types.
      *
      * @param name The name of the method.
      * @param argument_types The argument types.
-     * @return method& The method.
+     * @return std::optional<std::reference_wrapper<method>> The method.
      */
-    virtual method &get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent->get_method(name, argument_types); }
+    virtual std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent->get_method(name, argument_types); }
 
     /**
      * @brief Get a predicate by name.
      *
      * @param name The name of the predicate.
-     * @return predicate& The predicate.
+     * @return std::optional<std::reference_wrapper<predicate>> The predicate.
      */
-    virtual predicate &get_predicate(const std::string &name) const { return parent->get_predicate(name); }
+    virtual std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const { return parent->get_predicate(name); }
 
   private:
     core &c;

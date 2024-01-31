@@ -26,7 +26,7 @@ namespace riddle
             ctx.items.emplace(args.at(i)->get_name(), arguments.at(i));
 
         // we initialize the instance
-        for (auto &init : inits)
+        for (const auto &init : inits)
         {
             auto f = get_field(init.get_name().id);
             if (f) // the field is declared in the component type
@@ -42,7 +42,7 @@ namespace riddle
                     std::vector<std::reference_wrapper<const type>> arg_types;
                     std::vector<std::shared_ptr<item>> arguments;
 
-                    for (auto &arg : init.get_args())
+                    for (const auto &arg : init.get_args())
                     {
                         auto xpr = arg->evaluate(*this, ctx);
                         arg_types.push_back(xpr->get_type());
@@ -59,7 +59,7 @@ namespace riddle
                 std::vector<std::reference_wrapper<const type>> arg_types;
                 std::vector<std::shared_ptr<item>> arguments;
 
-                for (auto &arg : init.get_args())
+                for (const auto &arg : init.get_args())
                 {
                     auto xpr = arg->evaluate(*this, ctx);
                     arg_types.push_back(xpr->get_type());
@@ -85,7 +85,7 @@ namespace riddle
             }
 
         // we execute the constructor statements
-        for (auto &stmt : stmts)
+        for (const auto &stmt : stmts)
             stmt->execute(*this, ctx);
 
         return instance;

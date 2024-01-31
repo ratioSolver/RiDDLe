@@ -31,6 +31,15 @@ namespace riddle
      */
     const std::vector<std::unique_ptr<field>> &get_args() const { return args; }
 
+    /**
+     * @brief Invoke the method.
+     *
+     * @param ctx The environment.
+     * @param arguments The arguments.
+     * @return std::shared_ptr<item> The result of the method.
+     */
+    std::shared_ptr<item> invoke(env &ctx, std::vector<std::shared_ptr<item>> &&arguments);
+
   private:
     std::shared_ptr<type> return_type;
     std::string name;

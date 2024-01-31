@@ -42,7 +42,7 @@ namespace riddle
      * @param name The name of the item.
      * @return std::shared_ptr<item> The item.
      */
-    virtual std::shared_ptr<item> get(const std::string &name) const;
+    virtual std::shared_ptr<item> get(const std::string &name) const noexcept;
 
   private:
     core &cr;

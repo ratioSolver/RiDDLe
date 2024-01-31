@@ -5,7 +5,7 @@ namespace riddle
 {
     env::env(core &c, std::shared_ptr<env> parent) : cr(c), parent(parent) {}
 
-    std::shared_ptr<item> env::get(const std::string &name) const
+    std::shared_ptr<item> env::get(const std::string &name) const noexcept
     {
         if (auto it = items.find(name); it != items.end())
             return it->second;

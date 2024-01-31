@@ -12,7 +12,7 @@ namespace riddle
         types.emplace("string", std::make_unique<string_type>(*this));
     }
 
-    std::optional<std::reference_wrapper<field>> core::get_field(const std::string &name) const
+    std::optional<std::reference_wrapper<field>> core::get_field(const std::string &name) const noexcept
     {
         if (auto it = fields.find(name); it != fields.end())
             return *it->second.get();
@@ -20,7 +20,7 @@ namespace riddle
             return std::nullopt;
     }
 
-    std::shared_ptr<item> core::get(const std::string &name) const
+    std::shared_ptr<item> core::get(const std::string &name) const noexcept
     {
         if (auto it = items.find(name); it != items.end())
             return it->second;
