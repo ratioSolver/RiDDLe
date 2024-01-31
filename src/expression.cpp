@@ -62,10 +62,10 @@ namespace riddle
         auto c_env = &ctx;
         for (const auto &id : object_id)
         {
-            auto it = c_env->get(id.id);
-            if (!it)
+            auto itm = c_env->get(id.id);
+            if (!itm)
                 throw std::runtime_error("Cannot find object " + id.id);
-            if (auto cmp = dynamic_cast<component *>(it.get()))
+            if (auto cmp = dynamic_cast<component *>(itm.get()))
                 c_env = cmp;
             else
                 throw std::runtime_error("Object " + id.id + " is not a component");
@@ -86,5 +86,81 @@ namespace riddle
             throw std::runtime_error("Cannot find method " + function_name.id);
 
         return method_opt.value().get().invoke(*c_env, std::move(arguments));
+    }
+
+    std::shared_ptr<item> id_expression::evaluate(scope &scp, env &ctx) const
+    {
+        auto c_env = ctx.get(object_id.front().id);
+        if (!c_env)
+            throw std::runtime_error("Cannot find object " + object_id.front().id);
+        for (auto it = object_id.begin() + 1; it != object_id.end(); it++)
+            if (auto e = dynamic_cast<env *>(c_env.get()))
+            {
+                c_env = e->get(it->id);
+                if (!c_env)
+                    throw std::runtime_error("Cannot find object " + it->id);
+            }
+            else
+                throw std::runtime_error("Object " + it->id + " is not an environment");
+
+        return c_env;
+    }
+
+    std::shared_ptr<item> implication_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().disj({scp.get_core().negate(l->evaluate(scp, ctx)), r->evaluate(scp, ctx)}); }
+
+    std::shared_ptr<item> disjunction_expression::evaluate(scope &scp, env &ctx) const
+    {
+        std::vector<std::shared_ptr<item>> exprs;
+        for (const auto &arg : args)
+            exprs.push_back(arg->evaluate(scp, ctx));
+        return scp.get_core().disj(exprs);
+    }
+
+    std::shared_ptr<item> conjunction_expression::evaluate(scope &scp, env &ctx) const
+    {
+        std::vector<std::shared_ptr<item>> exprs;
+        for (const auto &arg : args)
+            exprs.push_back(arg->evaluate(scp, ctx));
+        return scp.get_core().conj(exprs);
+    }
+
+    std::shared_ptr<item> xor_expression::evaluate(scope &scp, env &ctx) const
+    {
+        std::vector<std::shared_ptr<item>> exprs;
+        for (const auto &arg : args)
+            exprs.push_back(arg->evaluate(scp, ctx));
+        return scp.get_core().exct_one(exprs);
+    }
+
+    std::shared_ptr<item> addition_expression::evaluate(scope &scp, env &ctx) const
+    {
+        std::vector<std::shared_ptr<item>> exprs;
+        for (const auto &arg : args)
+            exprs.push_back(arg->evaluate(scp, ctx));
+        return scp.get_core().add(exprs);
+    }
+
+    std::shared_ptr<item> subtraction_expression::evaluate(scope &scp, env &ctx) const
+    {
+        std::vector<std::shared_ptr<item>> exprs;
+        for (const auto &arg : args)
+            exprs.push_back(arg->evaluate(scp, ctx));
+        return scp.get_core().sub(exprs);
+    }
+
+    std::shared_ptr<item> multiplication_expression::evaluate(scope &scp, env &ctx) const
+    {
+        std::vector<std::shared_ptr<item>> exprs;
+        for (const auto &arg : args)
+            exprs.push_back(arg->evaluate(scp, ctx));
+        return scp.get_core().mul(exprs);
+    }
+
+    std::shared_ptr<item> division_expression::evaluate(scope &scp, env &ctx) const
+    {
+        std::vector<std::shared_ptr<item>> exprs;
+        for (const auto &arg : args)
+            exprs.push_back(arg->evaluate(scp, ctx));
+        return scp.get_core().div(exprs);
     }
 } // namespace riddle
