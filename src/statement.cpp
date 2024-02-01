@@ -23,7 +23,7 @@ namespace riddle
 
         for (const auto &field : fields)
             if (tp->is_primitive())
-                ctx->items.emplace(field.get_id().id, field.get_expression()->evaluate(*scp, *ctx));
+                ctx->items.emplace(field.get_id().id, field.get_expression()->evaluate(*scp, ctx));
             else if (auto ct = dynamic_cast<component_type *>(tp))
                 switch (ct->get_instances().size())
                 {
@@ -66,10 +66,10 @@ namespace riddle
             else
                 throw std::runtime_error("Object " + id.id + " is not an environment");
         }
-        static_cast<env &>(*c_env).items.emplace(field_name.id, rhs->evaluate(*scp, *ctx));
+        static_cast<env &>(*c_env).items.emplace(field_name.id, rhs->evaluate(*scp, ctx));
     }
 
-    void expression_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const { scp->get_core().assert_fact(expr->evaluate(*scp, *ctx)); }
+    void expression_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const { scp->get_core().assert_fact(expr->evaluate(*scp, ctx)); }
 
     void disjunction_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
     {
@@ -109,6 +109,6 @@ namespace riddle
     void return_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
     {
         if (expr)
-            ctx->items.emplace("return", expr->evaluate(*scp, *ctx));
+            ctx->items.emplace("return", expr->evaluate(*scp, ctx));
     }
 } // namespace riddle

@@ -9,6 +9,7 @@ namespace riddle
   class core;
   class item;
   class constructor;
+  class method;
   class local_field_statement;
   class assignment_statement;
   class for_all_statement;
@@ -22,6 +23,7 @@ namespace riddle
   class env : public std::enable_shared_from_this<env>
   {
     friend class constructor;
+    friend class method;
     friend class local_field_statement;
     friend class assignment_statement;
     friend class for_all_statement;

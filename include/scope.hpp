@@ -72,6 +72,9 @@ namespace riddle
      */
     virtual std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const { return parent->get_predicate(name); }
 
+  protected:
+    void add_field(std::unique_ptr<field> &&field);
+
   private:
     core &c;
     std::shared_ptr<scope> parent;

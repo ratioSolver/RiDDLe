@@ -26,7 +26,7 @@ namespace riddle
     std::shared_ptr<item> typedef_type::new_instance()
     {
         // we create a new environment for the expression evaluation..
-        env ctx(scp.get_core());
+        auto ctx = std::make_shared<env>(scp.get_core());
         return value->evaluate(scp, ctx);
     }
 

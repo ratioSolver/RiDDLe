@@ -12,6 +12,11 @@ namespace riddle
     virtual ~type_declaration() = default;
 
     virtual std::string to_string() const = 0;
+
+  private:
+    virtual void declare(scope &) const = 0;
+    virtual void refine(scope &) const = 0;
+    virtual void refine_predicates(scope &) const = 0;
   };
 
   class typedef_declaration final : public type_declaration
@@ -20,6 +25,11 @@ namespace riddle
     typedef_declaration(const id_token &&name, const id_token &&primitive_type, std::unique_ptr<expression> &&expr) : name(std::move(name)), primitive_type(std::move(primitive_type)), expr(std::move(expr)) {}
 
     std::string to_string() const override { return "typedef " + primitive_type.to_string() + " " + name.to_string() + " = " + expr->to_string() + ";"; }
+
+  private:
+    void declare(scope &) const override;
+    void refine(scope &) const override;
+    void refine_predicates(scope &) const override;
 
   private:
     id_token name;
@@ -57,6 +67,11 @@ namespace riddle
       }
       return res + "}";
     }
+
+  private:
+    void declare(scope &) const override;
+    void refine(scope &) const override;
+    void refine_predicates(scope &) const override;
 
   private:
     id_token name;
@@ -157,6 +172,9 @@ namespace riddle
     }
 
   private:
+    void refine(scope &scp) const;
+
+  private:
     std::vector<id_token> return_type;                                  // the return type of the method..
     id_token name;                                                      // the name of the method..
     std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the method..
@@ -195,6 +213,10 @@ namespace riddle
         res += stmt->to_string() + "\n";
       return res + "}";
     }
+
+  private:
+    void declare(scope &scp) const;
+    void refine(scope &scp) const;
 
   private:
     id_token name;                                                      // the name of the class..
@@ -236,6 +258,11 @@ namespace riddle
         res += type->to_string() + "\n";
       return res + "}";
     }
+
+  private:
+    void declare(scope &) const override;
+    void refine(scope &) const override;
+    void refine_predicates(scope &) const override;
 
   private:
     id_token name;                                                      // the name of the class..

@@ -13,4 +13,10 @@ namespace riddle
         else
             return std::nullopt;
     }
+
+    void scope::add_field(std::unique_ptr<field> &&field)
+    {
+        if (!fields.emplace(field->get_name(), std::move(field)).second)
+            throw std::runtime_error("Field already exists.");
+    }
 } // namespace riddle

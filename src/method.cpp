@@ -1,6 +1,44 @@
 #include "method.hpp"
+#include "type.hpp"
+#include "statement.hpp"
 
 namespace riddle
 {
-    method::method(std::shared_ptr<scope> parent, std::shared_ptr<type> return_type, const std::string &name, std::vector<std::unique_ptr<field>> &&args) : scope(parent->get_core(), parent), return_type(return_type), name(name), args(std::move(args)) {}
+    method::method(std::shared_ptr<scope> parent, std::optional<std::reference_wrapper<type>> return_type, const std::string &name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) : scope(parent->get_core(), parent), return_type(return_type), name(name), body(std::move(body))
+    {
+        arguments.reserve(args.size());
+        for (auto &arg : args)
+        {
+            arguments.push_back(*arg);
+            add_field(std::move(arg));
+        }
+    }
+
+    std::shared_ptr<item> method::invoke(std::shared_ptr<env> &ctx, std::vector<std::shared_ptr<item>> &&args)
+    {
+        if (args.size() != arguments.size())
+            throw std::runtime_error("Invalid number of arguments.");
+
+        // we create a new environment for the method
+        auto c_env = std::make_shared<env>(get_core(), ctx);
+
+        // we add the arguments to the environment
+        for (size_t i = 0; i < args.size(); i++)
+        {
+            if (!arguments.at(i).get().get_type().is_assignable_from(args.at(i)->get_type()))
+                throw std::runtime_error("Invalid argument type: " + arguments.at(i).get().get_type().get_name() + " is not assignable from " + args.at(i)->get_type().get_name() + ".");
+            c_env->items.emplace(arguments.at(i).get().get_name(), args.at(i));
+        }
+
+        // we execute the method body
+        auto scp = shared_from_this();
+        for (const auto &stmt : body)
+            stmt->execute(scp, c_env);
+
+        // we return the result
+        if (return_type)
+            return c_env->items.at("return");
+        else
+            return nullptr;
+    }
 } // namespace riddle
