@@ -12,6 +12,7 @@ namespace riddle
   class local_field_statement;
   class assignment_statement;
   class for_all_statement;
+  class return_statement;
 
   /**
    * @brief The environment class.
@@ -24,6 +25,7 @@ namespace riddle
     friend class local_field_statement;
     friend class assignment_statement;
     friend class for_all_statement;
+    friend class return_statement;
 
   public:
     env(core &c, std::shared_ptr<env> parent = nullptr);

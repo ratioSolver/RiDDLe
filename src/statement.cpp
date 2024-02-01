@@ -105,4 +105,10 @@ namespace riddle
                 stmn->execute(scp, c_env);
         }
     }
+
+    void return_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    {
+        if (expr)
+            ctx->items.emplace("return", expr->evaluate(*scp, *ctx));
+    }
 } // namespace riddle
