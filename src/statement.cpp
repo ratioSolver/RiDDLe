@@ -111,4 +111,48 @@ namespace riddle
         if (expr)
             ctx->items.emplace("return", expr->evaluate(*scp, ctx));
     }
+
+    void formula_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    {
+        auto c_env = ctx;
+        for (const auto &id : formula_scope)
+        {
+            auto itm = c_env->get(id.id);
+            if (!itm)
+                throw std::runtime_error("Cannot find object " + id.id);
+            if (auto cmp = std::dynamic_pointer_cast<component>(itm))
+                c_env = cmp;
+            else
+                throw std::runtime_error("Object " + id.id + " is not a component");
+        }
+
+        std::optional<std::reference_wrapper<predicate>> pred_opt;
+        if (c_env) // the formula's scope is explicitely declared..
+            pred_opt = static_cast<component_type &>(static_cast<component &>(*c_env).get_type()).get_predicate(predicate_name.id);
+        else // ..or it is implicitely declared
+            pred_opt = scp->get_predicate(predicate_name.id);
+
+        if (!pred_opt)
+            throw std::runtime_error("Cannot find predicate " + predicate_name.id);
+
+        auto &pred = pred_opt.value().get();
+
+        std::map<std::string, std::shared_ptr<item>> args;
+        for (const auto &arg : arguments)
+        {
+            auto tp_opt = pred.get_field(arg.get_id().id);
+            if (!tp_opt)
+                throw std::runtime_error("Cannot find field " + arg.get_id().id);
+            auto &tp = tp_opt.value().get().get_type();
+            auto val = arg.get_expression()->evaluate(*scp, ctx);
+            if (tp.is_assignable_from(val->get_type())) // the target type is a superclass of the assignment..
+                args.emplace(arg.get_id().id, val);
+            else if (val->get_type().is_assignable_from(tp)) // ..or the assignment is a superclass of the target type
+            {
+                
+            }
+            else
+                throw std::runtime_error("Cannot assign " + val->get_type().get_name() + " to " + tp.get_name());
+        }
+    }
 } // namespace riddle

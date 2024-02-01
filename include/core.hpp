@@ -2,6 +2,8 @@
 
 #include <vector>
 #include "conjunction.hpp"
+#include "bool.hpp"
+#include "inf_rational.hpp"
 
 namespace riddle
 {
@@ -227,21 +229,72 @@ namespace riddle
     virtual void new_disjunction(const std::vector<std::unique_ptr<conjunction>> &disjuncts) = 0;
 
     /**
-     * @brief Create a new fact.
+     * @brief Create a new atom.
      *
+     * @param is_fact Whether the atom is a fact or a goal.
      * @param pred The predicate.
      * @param arguments The arguments.
-     * @return std::shared_ptr<item> The fact.
+     * @return std::shared_ptr<item> The atom.
      */
-    virtual std::shared_ptr<item> new_fact(predicate &pred, const std::vector<std::pair<std::string, std::shared_ptr<item>>> &arguments) = 0;
+    virtual std::shared_ptr<item> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments) = 0;
+
     /**
-     * @brief Create a new goal.
+     * @brief Check if the expression is constant.
      *
-     * @param pred The predicate.
-     * @param arguments The arguments.
-     * @return std::shared_ptr<item> The goal.
+     * @param expr The expression.
+     * @return true If the expression is constant.
+     * @return false If the expression is not constant.
      */
-    virtual std::shared_ptr<item> new_goal(predicate &pred, const std::vector<std::pair<std::string, std::shared_ptr<item>>> &arguments) = 0;
+    virtual bool is_constant(const std::shared_ptr<item> &expr) const noexcept = 0;
+
+    /**
+     * @brief Get the bool value of the expression.
+     *
+     * @param expr The expression.
+     * @return utils::lbool The bool value.
+     */
+    virtual utils::lbool bool_value(const std::shared_ptr<item> &expr) const noexcept = 0;
+
+    /**
+     * @brief Get the arithmetic value of the expression.
+     *
+     * @param expr The expression.
+     * @return utils::inf_rational The arithmetic value.
+     */
+    virtual utils::inf_rational arithmetic_value(const std::shared_ptr<item> &expr) const noexcept = 0;
+
+    /**
+     * @brief Get the bounds of the arithmetic expression.
+     *
+     * @param expr The expression.
+     * @return std::pair<utils::inf_rational, utils::inf_rational> The bounds.
+     */
+    virtual std::pair<utils::inf_rational, utils::inf_rational> bounds(const std::shared_ptr<item> &expr) const noexcept = 0;
+
+    /**
+     * @brief Check if the expression is an enum.
+     *
+     * @param expr The expression.
+     * @return true If the expression is an enum.
+     * @return false If the expression is not an enum.
+     */
+    virtual bool is_enum(const std::shared_ptr<item> &expr) const noexcept = 0;
+
+    /**
+     * @brief Get the domain of the expression.
+     *
+     * @param expr The expression.
+     * @return std::vector<std::shared_ptr<item>> The domain.
+     */
+    virtual std::vector<std::shared_ptr<item>> domain(const std::shared_ptr<item> &expr) const noexcept = 0;
+
+    /**
+     * @brief Remove the expression from the domain.
+     *
+     * @param expr The expression whose domain is modified.
+     * @param value The value to remove.
+     */
+    virtual void remove(const std::shared_ptr<item> &expr, const std::shared_ptr<item> &value) = 0;
 
     /**
      * @brief Get a field by name.
