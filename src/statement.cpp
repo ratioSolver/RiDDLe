@@ -52,4 +52,20 @@ namespace riddle
             else
                 throw std::runtime_error("Cannot create instance of type " + tp->get_name());
     }
+
+    void assignment_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    {
+        auto c_env = ctx;
+        for (const auto &id : object_id)
+        {
+            auto itm = c_env->get(id.id);
+            if (!itm)
+                throw std::runtime_error("Cannot find object " + id.id);
+            if (auto cmp = std::dynamic_pointer_cast<env>(itm))
+                c_env = cmp;
+            else
+                throw std::runtime_error("Object " + id.id + " is not an environment");
+        }
+        static_cast<env &>(*c_env).items.emplace(field_name.id, rhs->evaluate(scp, *ctx));
+    }
 } // namespace riddle

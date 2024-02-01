@@ -841,6 +841,13 @@ namespace riddle
 
             return std::make_unique<formula_statement>(is_fact, std::move(name), std::move(formula_scope), std::move(predicate_name), std::move(arguments));
         }
+        default:
+        {
+            auto xpr = parse_expression();
+            if (!match(SEMICOLON_ID))
+                error("Expected `;`..");
+            return std::make_unique<expression_statement>(std::move(xpr));
+        }
         }
     }
     std::unique_ptr<expression> parser::parse_expression(const size_t &pr)
