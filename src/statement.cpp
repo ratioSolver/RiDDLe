@@ -1,1 +1,55 @@
 #include "statement.hpp"
+#include "type.hpp"
+#include "core.hpp"
+
+namespace riddle
+{
+    void local_field_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    {
+        auto tp_opt = scp.get_type(field_type.front().id);
+        if (!tp_opt)
+            throw std::runtime_error("Cannot find class " + field_type.front().id);
+        auto tp = &tp_opt.value().get();
+        if (!tp)
+            throw std::runtime_error("Class " + field_type.front().id + " is not a component type");
+        for (auto it = field_type.begin() + 1; it != field_type.end(); it++)
+            if (auto cmp_tp = dynamic_cast<component_type *>(tp))
+            {
+                tp_opt = cmp_tp->get_type(it->id);
+                if (!tp_opt)
+                    throw std::runtime_error("Cannot find class " + it->id);
+                tp = &tp_opt.value().get();
+            }
+
+        for (const auto &field : fields)
+            if (tp->is_primitive())
+                ctx->items.emplace(field.get_id().id, field.get_expression()->evaluate(scp, *ctx));
+            else if (auto ct = dynamic_cast<component_type *>(tp))
+                switch (ct->get_instances().size())
+                {
+                case 0:
+                    throw inconsistency_exception();
+                case 1:
+                    ctx->items.emplace(field.get_id().id, ct->get_instances().front());
+                default:
+                    ctx->items.emplace(field.get_id().id, scp.get_core().new_enum(*ct, ct->get_instances()));
+                }
+            else if (auto et = dynamic_cast<enum_type *>(tp))
+            {
+                auto values = et->get_values();
+                switch (values.size())
+                {
+                case 0:
+                    throw inconsistency_exception();
+                case 1:
+                    ctx->items.emplace(field.get_id().id, values.front());
+                default:
+                    ctx->items.emplace(field.get_id().id, scp.get_core().new_enum(*et, values));
+                }
+            }
+            else if (auto td = dynamic_cast<typedef_type *>(tp))
+                ctx->items.emplace(field.get_id().id, td->new_instance());
+            else
+                throw std::runtime_error("Cannot create instance of type " + tp->get_name());
+    }
+} // namespace riddle

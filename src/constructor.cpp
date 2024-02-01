@@ -21,9 +21,9 @@ namespace riddle
         // we create a new instance of the type
         auto instance = std::static_pointer_cast<component>(tp.new_instance());
         // we create a new environment for the constructor
-        env ctx(get_core(), instance);
+        auto ctx = std::make_shared<env>(get_core(), instance);
         for (size_t i = 0; i < args.size(); i++)
-            ctx.items.emplace(args.at(i)->get_name(), arguments.at(i));
+            ctx->items.emplace(args.at(i)->get_name(), arguments.at(i));
 
         // we initialize the instance
         for (const auto &init : inits)
@@ -32,7 +32,7 @@ namespace riddle
             if (f) // the field is declared in the component type
             {
                 if (f->get().get_type().is_primitive()) // we initialize a primitive field
-                    instance->items.emplace(init.get_name().id, init.get_args().at(0)->evaluate(*this, ctx));
+                    instance->items.emplace(init.get_name().id, init.get_args().at(0)->evaluate(*this, *ctx));
                 else // we initialize a component field by invoking its constructor
                 {
                     auto tp = dynamic_cast<component_type *>(&f->get().get_type());
@@ -44,7 +44,7 @@ namespace riddle
 
                     for (const auto &arg : init.get_args())
                     {
-                        auto xpr = arg->evaluate(*this, ctx);
+                        auto xpr = arg->evaluate(*this, *ctx);
                         arg_types.push_back(xpr->get_type());
                         arguments.push_back(xpr);
                     }
@@ -61,7 +61,7 @@ namespace riddle
 
                 for (const auto &arg : init.get_args())
                 {
-                    auto xpr = arg->evaluate(*this, ctx);
+                    auto xpr = arg->evaluate(*this, *ctx);
                     arg_types.push_back(xpr->get_type());
                     arguments.push_back(xpr);
                 }
@@ -77,7 +77,7 @@ namespace riddle
             if (!f->is_synthetic() && instance->items.find(f_name) == instance->items.end())
             { // the field is not initialized
                 if (f->get_init())
-                    instance->items.emplace(f_name, f->get_init()->evaluate(*this, ctx));
+                    instance->items.emplace(f_name, f->get_init()->evaluate(*this, *ctx));
                 else if (auto c_tp = dynamic_cast<component_type *>(&f->get_type()))
                     instance->items.emplace(f_name, f->get_type().new_instance());
                 else

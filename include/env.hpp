@@ -9,6 +9,7 @@ namespace riddle
   class core;
   class item;
   class constructor;
+  class local_field_statement;
 
   /**
    * @brief The environment class.
@@ -18,6 +19,7 @@ namespace riddle
   class env : public std::enable_shared_from_this<env>
   {
     friend class constructor;
+    friend class local_field_statement;
 
   public:
     env(core &c, std::shared_ptr<env> parent = nullptr);

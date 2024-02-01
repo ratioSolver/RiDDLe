@@ -129,9 +129,9 @@ namespace riddle
   public:
     typedef_type(core &c, const std::string &name, type &base_type, std::unique_ptr<expression> &&value);
 
-  private:
     std::shared_ptr<item> new_instance() override;
 
+  private:
     type &base_type;
     std::unique_ptr<expression> value;
   };
@@ -143,9 +143,9 @@ namespace riddle
 
     std::vector<std::shared_ptr<item>> get_values() const;
 
-  private:
     std::shared_ptr<item> new_instance() override;
 
+  private:
     std::vector<std::shared_ptr<item>> values;
     std::vector<std::reference_wrapper<enum_type>> enums;
   };
@@ -174,9 +174,17 @@ namespace riddle
      */
     constructor &get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const;
 
+    /**
+     * @brief Get the instances of the type.
+     *
+     * @return const std::vector<std::shared_ptr<item>>& The instances of the type.
+     */
+    const std::vector<std::shared_ptr<item>> &get_instances() const { return instances; }
+
   private:
     std::vector<std::shared_ptr<component_type>> parents;   // the base types (i.e. the types this type inherits from)..
     std::vector<std::unique_ptr<constructor>> constructors; // the constructors of the type..
+    std::vector<std::shared_ptr<item>> instances;           // the instances of the type..
   };
 
   class predicate : public type, public scope
