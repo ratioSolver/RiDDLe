@@ -3,11 +3,11 @@
 
 namespace riddle
 {
-    conjunction::conjunction(std::shared_ptr<scope> parent, std::shared_ptr<env> ctx, const utils::rational &cst, std::vector<std::unique_ptr<statement>> &&body) : scope(parent->get_core(), parent), ctx(ctx), cst(cst), body(std::move(body)) {}
+    conjunction::conjunction(std::shared_ptr<scope> parent, std::shared_ptr<env> ctx, const conjunction_statement &conj) : scope(parent->get_core(), parent), ctx(ctx), conj(conj) {}
 
     void conjunction::execute()
-    { // execute the body of the conjunction..
-        for (const auto &stmt : body)
-            stmt->execute(*this, ctx);
+    {
+        auto scp = shared_from_this();
+        conj.execute(scp, ctx);
     }
 } // namespace riddle

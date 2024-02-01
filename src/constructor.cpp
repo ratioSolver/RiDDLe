@@ -85,8 +85,9 @@ namespace riddle
             }
 
         // we execute the constructor statements
+        auto scp = shared_from_this();
         for (const auto &stmt : body)
-            stmt->execute(*this, ctx);
+            stmt->execute(scp, ctx);
 
         return instance;
     }

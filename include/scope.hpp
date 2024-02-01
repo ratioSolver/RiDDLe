@@ -12,7 +12,7 @@ namespace riddle
   class method;
   class predicate;
 
-  class scope
+  class scope : public std::enable_shared_from_this<scope>
   {
   public:
     scope(core &c, std::shared_ptr<scope> parent = nullptr);

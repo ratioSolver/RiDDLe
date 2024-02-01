@@ -6,19 +6,12 @@
 
 namespace riddle
 {
-  class statement;
+  class conjunction_statement;
 
   class conjunction : public scope
   {
   public:
-    conjunction(std::shared_ptr<scope> parent, std::shared_ptr<env> ctx, const utils::rational &cst, std::vector<std::unique_ptr<statement>> &&body);
-
-    /**
-     * @brief Get the cost of the conjunction.
-     *
-     * @return utils::rational The cost of the conjunction.
-     */
-    utils::rational get_cost() const { return cst; }
+    conjunction(std::shared_ptr<scope> parent, std::shared_ptr<env> ctx, const conjunction_statement &conj);
 
     /**
      * @brief Execute the conjunction.
@@ -28,7 +21,6 @@ namespace riddle
 
   private:
     std::shared_ptr<env> ctx;
-    const utils::rational cst;
-    const std::vector<std::unique_ptr<statement>> body;
+    const conjunction_statement &conj;
   };
 } // namespace riddle
