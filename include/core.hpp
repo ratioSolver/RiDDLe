@@ -304,11 +304,11 @@ namespace riddle
      */
     virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept override;
 
-    const type &get_bool_type() const { return *types.at("bool"); }
-    const type &get_int_type() const { return *types.at("int"); }
-    const type &get_real_type() const { return *types.at("real"); }
-    const type &get_time_type() const { return *types.at("time"); }
-    const type &get_string_type() const { return *types.at("string"); }
+    const type &get_bool_type() const { return bool_tp; }
+    const type &get_int_type() const { return int_tp; }
+    const type &get_real_type() const { return real_tp; }
+    const type &get_time_type() const { return time_tp; }
+    const type &get_string_type() const { return string_tp; }
 
     /**
      * @brief Get an item by name.
@@ -320,5 +320,6 @@ namespace riddle
 
   private:
     std::map<std::string, std::unique_ptr<type>> types;
+    type &bool_tp, &int_tp, &real_tp, &time_tp, &string_tp;
   };
 } // namespace riddle

@@ -3,14 +3,7 @@
 
 namespace riddle
 {
-    core::core() : scope(*this), env(*this)
-    {
-        types.emplace("bool", std::make_unique<bool_type>(*this));
-        types.emplace("int", std::make_unique<int_type>(*this));
-        types.emplace("real", std::make_unique<real_type>(*this));
-        types.emplace("time", std::make_unique<time_type>(*this));
-        types.emplace("string", std::make_unique<string_type>(*this));
-    }
+    core::core() : scope(*this), env(*this), bool_tp(*types.emplace("bool", std::make_unique<bool_type>(*this)).first->second), int_tp(*types.emplace("int", std::make_unique<int_type>(*this)).first->second), real_tp(*types.emplace("real", std::make_unique<real_type>(*this)).first->second), time_tp(*types.emplace("time", std::make_unique<time_type>(*this)).first->second), string_tp(*types.emplace("string", std::make_unique<string_type>(*this)).first->second) {}
 
     std::shared_ptr<item> core::new_item(component_type &tp) { return std::make_shared<component>(tp); }
 
