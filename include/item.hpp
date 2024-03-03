@@ -1,12 +1,13 @@
 #pragma once
 
 #include "env.hpp"
+#include "enum.hpp"
 
 namespace riddle
 {
   class type;
 
-  class item
+  class item : public utils::enum_val
   {
   public:
     item(type &t) : tp(t) {}

@@ -32,7 +32,12 @@ namespace riddle
                 case 1:
                     ctx->items.emplace(field.get_id().id, ct->get_instances().front());
                 default:
-                    ctx->items.emplace(field.get_id().id, scp->get_core().new_enum(*ct, ct->get_instances()));
+                {
+                    std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
+                    for (const auto &instance : ct->get_instances())
+                        enum_vals.push_back(*instance);
+                    ctx->items.emplace(field.get_id().id, scp->get_core().new_enum(*ct, std::move(enum_vals)));
+                }
                 }
             else if (auto et = dynamic_cast<enum_type *>(tp))
             {
@@ -44,7 +49,12 @@ namespace riddle
                 case 1:
                     ctx->items.emplace(field.get_id().id, values.front());
                 default:
-                    ctx->items.emplace(field.get_id().id, scp->get_core().new_enum(*et, values));
+                {
+                    std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
+                    for (const auto &value : et->get_values())
+                        enum_vals.push_back(*value);
+                    ctx->items.emplace(field.get_id().id, scp->get_core().new_enum(*et, std::move(enum_vals)));
+                }
                 }
             }
             else if (auto td = dynamic_cast<typedef_type *>(tp))
@@ -149,7 +159,6 @@ namespace riddle
                 args.emplace(arg.get_id().id, val);
             else if (val->get_type().is_assignable_from(tp)) // ..or the assignment is a superclass of the target type
             {
-                
             }
             else
                 throw std::runtime_error("Cannot assign " + val->get_type().get_name() + " to " + tp.get_name());

@@ -1,5 +1,4 @@
 #include "core.hpp"
-#include "type.hpp"
 
 namespace riddle
 {

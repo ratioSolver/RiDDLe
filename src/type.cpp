@@ -41,7 +41,13 @@ namespace riddle
                 vals.push_back(val);
         return vals;
     }
-    std::shared_ptr<item> enum_type::new_instance() { return scp.get_core().new_enum(*this, get_values()); }
+    std::shared_ptr<item> enum_type::new_instance()
+    {
+        std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
+        for (const auto &value : get_values())
+            enum_vals.push_back(*value);
+        return scp.get_core().new_enum(*this, std::move(enum_vals));
+    }
 
     component_type::component_type(std::shared_ptr<scope> parent, const std::string &name) : type(*parent, name), scope(parent->get_core(), parent) {}
 

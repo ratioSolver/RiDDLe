@@ -3,7 +3,9 @@
 #include <vector>
 #include "conjunction.hpp"
 #include "bool.hpp"
+#include "type.hpp"
 #include "inf_rational.hpp"
+#include "enum.hpp"
 
 namespace riddle
 {
@@ -104,7 +106,7 @@ namespace riddle
      * @param values The values of the enum.
      * @return std::shared_ptr<item> The enum.
      */
-    virtual std::shared_ptr<item> new_enum(type &tp, const std::vector<std::shared_ptr<item>> &values) = 0;
+    virtual std::shared_ptr<item> new_enum(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
 
     /**
      * @brief Return the opposite of the numeric expression.
@@ -304,11 +306,11 @@ namespace riddle
      */
     virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept override;
 
-    const type &get_bool_type() const { return bool_tp; }
-    const type &get_int_type() const { return int_tp; }
-    const type &get_real_type() const { return real_tp; }
-    const type &get_time_type() const { return time_tp; }
-    const type &get_string_type() const { return string_tp; }
+    bool_type &get_bool_type() const { return static_cast<bool_type &>(bool_tp); }
+    int_type &get_int_type() const { return static_cast<int_type &>(int_tp); }
+    real_type &get_real_type() const { return static_cast<real_type &>(real_tp); }
+    time_type &get_time_type() const { return static_cast<time_type &>(time_tp); }
+    string_type &get_string_type() const { return static_cast<string_type &>(string_tp); }
 
     /**
      * @brief Get an item by name.
