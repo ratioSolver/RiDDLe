@@ -247,7 +247,7 @@ namespace riddle
      * @return true If the expression is constant.
      * @return false If the expression is not constant.
      */
-    virtual bool is_constant(const std::shared_ptr<item> &expr) const noexcept = 0;
+    virtual bool is_constant(const item &expr) const noexcept = 0;
 
     /**
      * @brief Get the bool value of the expression.
@@ -255,7 +255,7 @@ namespace riddle
      * @param expr The expression.
      * @return utils::lbool The bool value.
      */
-    virtual utils::lbool bool_value(const std::shared_ptr<item> &expr) const noexcept = 0;
+    virtual utils::lbool bool_value(const item &expr) const noexcept = 0;
 
     /**
      * @brief Get the arithmetic value of the expression.
@@ -263,7 +263,7 @@ namespace riddle
      * @param expr The expression.
      * @return utils::inf_rational The arithmetic value.
      */
-    virtual utils::inf_rational arithmetic_value(const std::shared_ptr<item> &expr) const noexcept = 0;
+    virtual utils::inf_rational arithmetic_value(const item &expr) const noexcept = 0;
 
     /**
      * @brief Get the bounds of the arithmetic expression.
@@ -271,7 +271,7 @@ namespace riddle
      * @param expr The expression.
      * @return std::pair<utils::inf_rational, utils::inf_rational> The bounds.
      */
-    virtual std::pair<utils::inf_rational, utils::inf_rational> bounds(const std::shared_ptr<item> &expr) const noexcept = 0;
+    virtual std::pair<utils::inf_rational, utils::inf_rational> bounds(const item &expr) const noexcept = 0;
 
     /**
      * @brief Check if the expression is an enum.
@@ -280,7 +280,7 @@ namespace riddle
      * @return true If the expression is an enum.
      * @return false If the expression is not an enum.
      */
-    virtual bool is_enum(const std::shared_ptr<item> &expr) const noexcept = 0;
+    virtual bool is_enum(const item &expr) const noexcept = 0;
 
     /**
      * @brief Get the domain of the expression.
@@ -288,7 +288,7 @@ namespace riddle
      * @param expr The expression.
      * @return std::vector<std::shared_ptr<item>> The domain.
      */
-    virtual std::vector<std::shared_ptr<item>> domain(const std::shared_ptr<item> &expr) const noexcept = 0;
+    virtual std::vector<std::shared_ptr<item>> domain(const item &expr) const noexcept = 0;
 
     /**
      * @brief Remove the expression from the domain.
@@ -296,7 +296,7 @@ namespace riddle
      * @param expr The expression whose domain is modified.
      * @param value The value to remove.
      */
-    virtual void remove(const std::shared_ptr<item> &expr, const std::shared_ptr<item> &value) = 0;
+    virtual void remove(const std::shared_ptr<item> &expr, const utils::enum_val &value) = 0;
 
     /**
      * @brief Get a field by name.
@@ -324,4 +324,11 @@ namespace riddle
     std::map<std::string, std::unique_ptr<type>> types;
     type &bool_tp, &int_tp, &real_tp, &time_tp, &string_tp;
   };
+
+  bool is_int(const riddle::item &x) noexcept;
+  bool is_real(const riddle::item &x) noexcept;
+  bool is_time(const riddle::item &x) noexcept;
+  inline bool is_arith(const riddle::item &x) noexcept { return is_int(x) || is_real(x) || is_time(x); }
+
+  type &determine_type(const std::vector<std::shared_ptr<item>> &xprs);
 } // namespace riddle
