@@ -228,7 +228,7 @@ namespace riddle
      *
      * @param disjuncts The disjuncts.
      */
-    virtual void new_disjunction(const std::vector<std::unique_ptr<conjunction>> &disjuncts) = 0;
+    virtual void new_disjunction(std::vector<std::unique_ptr<riddle::conjunction>> &&disjuncts) = 0;
 
     /**
      * @brief Create a new atom.
@@ -286,9 +286,9 @@ namespace riddle
      * @brief Get the domain of the expression.
      *
      * @param expr The expression.
-     * @return std::vector<std::shared_ptr<item>> The domain.
+     * @return std::vector<std::reference_wrapper<utils::enum_val>> The domain.
      */
-    virtual std::vector<std::shared_ptr<item>> domain(const item &expr) const noexcept = 0;
+    virtual std::vector<std::reference_wrapper<utils::enum_val>> domain(const item &expr) const noexcept = 0;
 
     /**
      * @brief Remove the expression from the domain.
@@ -325,10 +325,16 @@ namespace riddle
     type &bool_tp, &int_tp, &real_tp, &time_tp, &string_tp;
   };
 
+  bool is_bool(const riddle::item &x) noexcept;
   bool is_int(const riddle::item &x) noexcept;
   bool is_real(const riddle::item &x) noexcept;
   bool is_time(const riddle::item &x) noexcept;
   inline bool is_arith(const riddle::item &x) noexcept { return is_int(x) || is_real(x) || is_time(x); }
 
   type &determine_type(const std::vector<std::shared_ptr<item>> &xprs);
+
+  class unsolvable_exception : public std::exception
+  {
+    const char *what() const noexcept override { return "the problem is unsolvable.."; }
+  };
 } // namespace riddle

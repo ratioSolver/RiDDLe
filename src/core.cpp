@@ -23,6 +23,7 @@ namespace riddle
             return nullptr;
     }
 
+    bool is_bool(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_bool_type() == &x.get_type(); }
     bool is_int(const riddle::item &x) noexcept
     {
         if (&x.get_type().get_scope().get_core().get_int_type() == &x.get_type())
