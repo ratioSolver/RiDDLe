@@ -291,12 +291,22 @@ namespace riddle
     virtual std::vector<std::reference_wrapper<utils::enum_val>> domain(const item &expr) const noexcept = 0;
 
     /**
-     * @brief Remove the expression from the domain.
+     * @brief Assign a value to the expression.
      *
-     * @param expr The expression whose domain is modified.
+     * @param expr The expression.
+     * @param val The value to assign.
+     * @return true If the assignment is successful.
+     * @return false If the assignment is not successful.
+     */
+    virtual bool assign(const item &expr, const utils::enum_val &val) = 0;
+
+    /**
+     * @brief Remove a value from the domain of the expression.
+     *
+     * @param expr The expression.
      * @param value The value to remove.
      */
-    virtual void remove(const std::shared_ptr<item> &expr, const utils::enum_val &value) = 0;
+    virtual void forbid(const item &expr, const utils::enum_val &value) = 0;
 
     /**
      * @brief Get a field by name.
