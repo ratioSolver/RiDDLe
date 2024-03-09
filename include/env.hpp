@@ -38,13 +38,13 @@ namespace riddle
      *
      * @return core& The core object.
      */
-    core &get_core() const { return cr; }
+    [[nodiscard]] core &get_core() const { return cr; }
     /**
      * @brief Get the enclosing environment.
      *
      * @return std::shared_ptr<env> The enclosing environment.
      */
-    std::shared_ptr<env> get_parent() const { return parent; }
+    [[nodiscard]] std::shared_ptr<env> get_parent() const { return parent; }
 
     /**
      * @brief Get an item by name.
@@ -52,7 +52,7 @@ namespace riddle
      * @param name The name of the item.
      * @return std::shared_ptr<item> The item.
      */
-    virtual std::shared_ptr<item> get(const std::string &name) const noexcept;
+    [[nodiscard]] virtual std::shared_ptr<item> get(const std::string &name) const noexcept;
 
   private:
     core &cr;

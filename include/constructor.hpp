@@ -19,7 +19,7 @@ namespace riddle
      *
      * @return const std::vector<std::unique_ptr<field>>& The arguments of the constructor.
      */
-    const std::vector<std::unique_ptr<field>> &get_args() const { return args; }
+    [[nodiscard]] const std::vector<std::unique_ptr<field>> &get_args() const { return args; }
 
     /**
      * @brief Invoke the constructor.

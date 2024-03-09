@@ -23,14 +23,14 @@ namespace riddle
      *
      * @return scope& The scope of the type.
      */
-    scope &get_scope() const { return scp; }
+    [[nodiscard]] scope &get_scope() const { return scp; }
 
     /**
      * @brief Get the name of the type.
      *
      * @return const std::string& The name of the type.
      */
-    const std::string &get_name() const { return name; }
+    [[nodiscard]] const std::string &get_name() const { return name; }
 
     /**
      * @brief Check if this type is primitive (i.e. a built-in type).
@@ -38,7 +38,7 @@ namespace riddle
      * @return true If this type is primitive.
      * @return false If this type is not primitive.
      */
-    bool is_primitive() const { return primitive; }
+    [[nodiscard]] bool is_primitive() const { return primitive; }
 
     /**
      * @brief Check if this type is assignable from another type.
@@ -47,14 +47,14 @@ namespace riddle
      * @return true If this type is assignable from the other type.
      * @return false If this type is not assignable from the other type.
      */
-    bool is_assignable_from(const type &other) const;
+    [[nodiscard]] bool is_assignable_from(const type &other) const;
 
     /**
      * @brief Create a new instance of this type.
      *
      * @return std::shared_ptr<item> The new instance.
      */
-    virtual std::shared_ptr<item> new_instance() = 0;
+    [[nodiscard]] virtual std::shared_ptr<item> new_instance() = 0;
 
   protected:
     scope &scp;
@@ -73,7 +73,7 @@ namespace riddle
     bool_type(core &c);
 
   private:
-    std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -85,7 +85,7 @@ namespace riddle
     int_type(core &c);
 
   private:
-    std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -97,7 +97,7 @@ namespace riddle
     real_type(core &c);
 
   private:
-    std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -109,7 +109,7 @@ namespace riddle
     time_type(core &c);
 
   private:
-    std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -121,7 +121,7 @@ namespace riddle
     string_type(core &c);
 
   private:
-    std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   class typedef_type final : public type
@@ -129,7 +129,7 @@ namespace riddle
   public:
     typedef_type(core &c, const std::string &name, type &base_type, std::unique_ptr<expression> &&value);
 
-    std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
   private:
     type &base_type;
@@ -141,9 +141,9 @@ namespace riddle
   public:
     enum_type(core &c, const std::string &name, std::vector<std::shared_ptr<item>> &&values);
 
-    std::vector<std::shared_ptr<item>> get_values() const;
+    [[nodiscard]] std::vector<std::shared_ptr<item>> get_values() const;
 
-    std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
   private:
     std::vector<std::shared_ptr<item>> values;
@@ -164,7 +164,7 @@ namespace riddle
      *
      * @return const std::vector<std::shared_ptr<component_type>>& The parent types.
      */
-    const std::vector<std::shared_ptr<component_type>> &get_parents() const { return parents; }
+    [[nodiscard]] const std::vector<std::shared_ptr<component_type>> &get_parents() const { return parents; }
 
     /**
      * @brief Get the constructors of the type that match the given argument types.
@@ -172,14 +172,14 @@ namespace riddle
      * @param argument_types The argument types.
      * @return constructor& The constructor.
      */
-    constructor &get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const;
+    [[nodiscard]] constructor &get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const;
 
     /**
      * @brief Get the instances of the type.
      *
      * @return const std::vector<std::shared_ptr<item>>& The instances of the type.
      */
-    const std::vector<std::shared_ptr<item>> &get_instances() const { return instances; }
+    [[nodiscard]] const std::vector<std::shared_ptr<item>> &get_instances() const { return instances; }
 
   private:
     std::vector<std::shared_ptr<component_type>> parents;   // the base types (i.e. the types this type inherits from)..
@@ -198,7 +198,7 @@ namespace riddle
      *
      * @return const std::vector<std::shared_ptr<predicate>>& The parent predicates.
      */
-    const std::vector<std::shared_ptr<predicate>> &get_parents() const { return parents; }
+    [[nodiscard]] const std::vector<std::shared_ptr<predicate>> &get_parents() const { return parents; }
 
   private:
     std::vector<std::shared_ptr<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..

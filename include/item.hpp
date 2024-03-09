@@ -18,7 +18,7 @@ namespace riddle
      *
      * @return type& The type of the item.
      */
-    type &get_type() const { return tp; }
+    [[nodiscard]] type &get_type() const { return tp; }
 
   private:
     type &tp;

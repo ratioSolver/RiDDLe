@@ -17,26 +17,26 @@ namespace riddle
      *
      * @return The type.
      */
-    type &get_type() const noexcept { return t; }
+    [[nodiscard]] type &get_type() const noexcept { return t; }
     /**
      * @brief Get the name.
      *
      * @return The name.
      */
-    const std::string &get_name() const noexcept { return name; }
+    [[nodiscard]] const std::string &get_name() const noexcept { return name; }
     /**
      * @brief Get the initializer.
      *
      * @return The initializer.
      */
-    const std::unique_ptr<expression> &get_init() const noexcept { return init; }
+    [[nodiscard]] const std::unique_ptr<expression> &get_init() const noexcept { return init; }
     /**
      * @brief Check if this field is synthetic.
      *
      * @return true If this field is synthetic.
      * @return false If this field is not synthetic.
      */
-    bool is_synthetic() const noexcept { return synthetic; }
+    [[nodiscard]] bool is_synthetic() const noexcept { return synthetic; }
 
   private:
     type &t;

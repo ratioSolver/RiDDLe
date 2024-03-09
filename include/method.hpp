@@ -17,21 +17,21 @@ namespace riddle
      *
      * @return std::shared_ptr<type> The return type of the method.
      */
-    const std::optional<std::reference_wrapper<type>> &get_return_type() const { return return_type; }
+    [[nodiscard]] const std::optional<std::reference_wrapper<type>> &get_return_type() const { return return_type; }
 
     /**
      * @brief Get the name of the method.
      *
      * @return const std::string& The name of the method.
      */
-    const std::string &get_name() const { return name; }
+    [[nodiscard]] const std::string &get_name() const { return name; }
 
     /**
      * @brief Get the arguments of the method.
      *
      * @return const std::vector<std::reference_wrapper<field>>& The arguments of the method.
      */
-    const std::vector<std::reference_wrapper<field>> &get_arguments() const { return arguments; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<field>> &get_arguments() const { return arguments; }
 
     /**
      * @brief Invoke the method.
@@ -40,7 +40,7 @@ namespace riddle
      * @param arguments The arguments.
      * @return std::shared_ptr<item> The result of the method.
      */
-    std::shared_ptr<item> invoke(std::shared_ptr<env> &ctx, std::vector<std::shared_ptr<item>> &&args);
+    [[nodiscard]] std::shared_ptr<item> invoke(std::shared_ptr<env> &ctx, std::vector<std::shared_ptr<item>> &&args);
 
   private:
     std::optional<std::reference_wrapper<type>> return_type;

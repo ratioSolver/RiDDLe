@@ -23,14 +23,14 @@ namespace riddle
      *
      * @return core& The core object.
      */
-    core &get_core() const { return c; }
+    [[nodiscard]] core &get_core() const { return c; }
 
     /**
      * @brief Get the enclosing scope.
      *
      * @return std::shared_ptr<scope> The enclosing scope.
      */
-    std::shared_ptr<scope> get_parent() const { return parent; }
+    [[nodiscard]] std::shared_ptr<scope> get_parent() const { return parent; }
 
     /**
      * @brief Get a field by name.
@@ -38,14 +38,14 @@ namespace riddle
      * @param name The name of the field.
      * @return std::optional<std::reference_wrapper<field>> The field.
      */
-    virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept;
+    [[nodiscard]] virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept;
 
     /**
      * @brief Get the fields in this scope.
      *
      * @return const std::map<std::string, std::unique_ptr<field>>& The fields.
      */
-    const std::map<std::string, std::unique_ptr<field>> &get_fields() const noexcept { return fields; }
+    [[nodiscard]] const std::map<std::string, std::unique_ptr<field>> &get_fields() const noexcept { return fields; }
 
     /**
      * @brief Get a type by name.
@@ -53,7 +53,7 @@ namespace riddle
      * @param name The name of the type.
      * @return std::optional<std::reference_wrapper<type>> The type.
      */
-    virtual std::optional<std::reference_wrapper<type>> &get_type(const std::string &name) const { return parent->get_type(name); }
+    [[nodiscard]] virtual std::optional<std::reference_wrapper<type>> &get_type(const std::string &name) const { return parent->get_type(name); }
 
     /**
      * @brief Get a method by name and argument types.
@@ -62,7 +62,7 @@ namespace riddle
      * @param argument_types The argument types.
      * @return std::optional<std::reference_wrapper<method>> The method.
      */
-    virtual std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent->get_method(name, argument_types); }
+    [[nodiscard]] virtual std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent->get_method(name, argument_types); }
 
     /**
      * @brief Get a predicate by name.
@@ -70,7 +70,7 @@ namespace riddle
      * @param name The name of the predicate.
      * @return std::optional<std::reference_wrapper<predicate>> The predicate.
      */
-    virtual std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const { return parent->get_predicate(name); }
+    [[nodiscard]] virtual std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const { return parent->get_predicate(name); }
 
   protected:
     void add_field(std::unique_ptr<field> &&field);
