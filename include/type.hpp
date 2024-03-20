@@ -47,7 +47,7 @@ namespace riddle
      * @return true If this type is assignable from the other type.
      * @return false If this type is not assignable from the other type.
      */
-    [[nodiscard]] bool is_assignable_from(const type &other) const;
+    [[nodiscard]] virtual bool is_assignable_from(const type &other) const { return this == &other; }
 
     /**
      * @brief Create a new instance of this type.
@@ -142,6 +142,9 @@ namespace riddle
     enum_type(core &c, const std::string &name, std::vector<std::shared_ptr<item>> &&values);
 
     [[nodiscard]] std::vector<std::shared_ptr<item>> get_values() const;
+    [[nodiscard]] std::vector<std::reference_wrapper<enum_type>> get_enums() const { return enums; }
+
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
@@ -181,6 +184,8 @@ namespace riddle
      */
     [[nodiscard]] const std::vector<std::shared_ptr<item>> &get_instances() const { return instances; }
 
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
+
   private:
     std::vector<std::shared_ptr<component_type>> parents;   // the base types (i.e. the types this type inherits from)..
     std::vector<std::unique_ptr<constructor>> constructors; // the constructors of the type..
@@ -199,6 +204,8 @@ namespace riddle
      * @return const std::vector<std::shared_ptr<predicate>>& The parent predicates.
      */
     [[nodiscard]] const std::vector<std::shared_ptr<predicate>> &get_parents() const { return parents; }
+
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
   private:
     std::vector<std::shared_ptr<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..

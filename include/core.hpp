@@ -6,6 +6,7 @@
 #include "type.hpp"
 #include "inf_rational.hpp"
 #include "enum.hpp"
+#include "compilation_unit.hpp"
 
 namespace riddle
 {
@@ -20,6 +21,19 @@ namespace riddle
   public:
     core();
     virtual ~core() = default;
+
+    /**
+     * @brief Read a RiDDLe script.
+     *
+     * @param script The RiDDLe script.
+     */
+    virtual void read(const std::string &script);
+    /**
+     * @brief Read a list of RiDDLe files.
+     *
+     * @param files The list of RiDDLe files.
+     */
+    virtual void read(const std::vector<std::string> &files);
 
     /**
      * @brief Create a new bool expression.
@@ -333,6 +347,7 @@ namespace riddle
   private:
     std::map<std::string, std::unique_ptr<type>> types;
     type &bool_tp, &int_tp, &real_tp, &time_tp, &string_tp;
+    std::vector<std::unique_ptr<compilation_unit>> cus; // the compilation units..
   };
 
   [[nodiscard]] bool is_bool(const riddle::item &x) noexcept;

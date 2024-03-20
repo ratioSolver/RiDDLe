@@ -1,3 +1,4 @@
+#include <queue>
 #include "type.hpp"
 #include "core.hpp"
 #include "constructor.hpp"
@@ -41,6 +42,26 @@ namespace riddle
                 vals.push_back(val);
         return vals;
     }
+    bool enum_type::is_assignable_from(const type &other) const
+    {
+        if (this == &other)
+            return true;
+        else if (auto et = dynamic_cast<const enum_type *>(&other))
+        {
+            std::queue<const enum_type *> q;
+            q.push(et);
+            while (!q.empty())
+            {
+                auto tp = q.front();
+                q.pop();
+                if (tp == this)
+                    return true;
+                for (const auto &e : tp->get_enums())
+                    q.push(&e.get());
+            }
+        }
+        return false;
+    }
     std::shared_ptr<item> enum_type::new_instance()
     {
         std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
@@ -50,6 +71,46 @@ namespace riddle
     }
 
     component_type::component_type(std::shared_ptr<scope> parent, const std::string &name) : type(*parent, name), scope(parent->get_core(), parent) {}
+    bool component_type::is_assignable_from(const type &other) const
+    {
+        if (this == &other)
+            return true;
+        else if (auto ct = dynamic_cast<const component_type *>(&other))
+        {
+            std::queue<const component_type *> q;
+            q.push(ct);
+            while (!q.empty())
+            {
+                auto tp = q.front();
+                q.pop();
+                if (tp == this)
+                    return true;
+                for (const auto &p : tp->get_parents())
+                    q.push(p.get());
+            }
+        }
+        return false;
+    }
 
     predicate::predicate(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) : type(*parent, name), scope(parent->get_core(), parent), body(std::move(body)) {}
+    bool predicate::is_assignable_from(const type &other) const
+    {
+        if (this == &other)
+            return true;
+        else if (auto pt = dynamic_cast<const predicate *>(&other))
+        {
+            std::queue<const predicate *> q;
+            q.push(pt);
+            while (!q.empty())
+            {
+                auto tp = q.front();
+                q.pop();
+                if (tp == this)
+                    return true;
+                for (const auto &p : tp->get_parents())
+                    q.push(p.get());
+            }
+        }
+        return false;
+    }
 } // namespace riddle
