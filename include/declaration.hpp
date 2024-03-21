@@ -5,8 +5,12 @@
 
 namespace riddle
 {
+  class class_declaration;
+
   class type_declaration
   {
+    friend class class_declaration;
+
   public:
     type_declaration() = default;
     virtual ~type_declaration() = default;
@@ -14,9 +18,9 @@ namespace riddle
     virtual std::string to_string() const = 0;
 
   private:
-    virtual void declare(std::shared_ptr<scope> &) const {}
-    virtual void refine(std::shared_ptr<scope> &) const {}
-    virtual void refine_predicates(std::shared_ptr<scope> &) const {}
+    virtual void declare(scope &) const {}
+    virtual void refine(scope &) const {}
+    virtual void refine_predicates(scope &) const {}
   };
 
   class typedef_declaration final : public type_declaration
@@ -27,7 +31,7 @@ namespace riddle
     std::string to_string() const override { return "typedef " + primitive_type.to_string() + " " + name.to_string() + " = " + expr->to_string() + ";"; }
 
   private:
-    void declare(std::shared_ptr<scope> &scp) const override;
+    void declare(scope &scp) const override;
 
   private:
     id_token name;
@@ -67,8 +71,8 @@ namespace riddle
     }
 
   private:
-    void declare(std::shared_ptr<scope> &scp) const override;
-    void refine(std::shared_ptr<scope> &scp) const override;
+    void declare(scope &scp) const override;
+    void refine(scope &scp) const override;
 
   private:
     id_token name;
@@ -104,6 +108,8 @@ namespace riddle
 
   class field_declaration
   {
+    friend class class_declaration;
+
   public:
     field_declaration(std::vector<id_token> &&tp, std::vector<init_element> &&inits) : type_ids(std::move(tp)), inits(std::move(inits)) {}
 
@@ -124,7 +130,7 @@ namespace riddle
     }
 
   private:
-    void refine(std::shared_ptr<scope> &scp) const;
+    void refine(scope &scp) const;
 
   private:
     std::vector<id_token> type_ids;
@@ -133,13 +139,15 @@ namespace riddle
 
   class constructor_declaration
   {
+    friend class class_declaration;
+
   public:
     constructor_declaration(std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<init_element> &&inits, std::vector<std::unique_ptr<statement>> &&stmts) : parameters(std::move(params)), inits(std::move(inits)), body(std::move(stmts)) {}
 
     std::string to_string() const { return ""; }
 
   private:
-    void refine(std::shared_ptr<scope> &scp) const;
+    void refine(scope &scp) const;
 
   private:
     std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
@@ -149,6 +157,8 @@ namespace riddle
 
   class method_declaration
   {
+    friend class class_declaration;
+
   public:
     method_declaration(std::vector<id_token> &&rt, const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : return_type(std::move(rt)), name(std::move(name)), parameters(std::move(params)), body(std::move(stmts)) {}
 
@@ -175,7 +185,7 @@ namespace riddle
     }
 
   private:
-    void refine(std::shared_ptr<scope> &scp) const;
+    void refine(scope &scp) const;
 
   private:
     std::vector<id_token> return_type;                                  // the return type of the method..
@@ -186,6 +196,8 @@ namespace riddle
 
   class predicate_declaration
   {
+    friend class class_declaration;
+
   public:
     predicate_declaration(const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_predicates, std::vector<std::unique_ptr<statement>> &&stmts) : name(std::move(name)), parameters(std::move(params)), base_predicates(std::move(base_predicates)), body(std::move(stmts)) {}
 
@@ -218,8 +230,8 @@ namespace riddle
     }
 
   private:
-    void declare(std::shared_ptr<scope> &scp) const;
-    void refine(std::shared_ptr<scope> &scp) const;
+    void declare(scope &scp) const;
+    void refine(scope &scp) const;
 
   private:
     id_token name;                                                      // the name of the class..
@@ -263,9 +275,9 @@ namespace riddle
     }
 
   private:
-    void declare(std::shared_ptr<scope> &scp) const override;
-    void refine(std::shared_ptr<scope> &scp) const override;
-    void refine_predicates(std::shared_ptr<scope> &scp) const override;
+    void declare(scope &scp) const override;
+    void refine(scope &scp) const override;
+    void refine_predicates(scope &scp) const override;
 
   private:
     id_token name;                                                      // the name of the class..

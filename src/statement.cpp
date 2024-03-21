@@ -4,9 +4,9 @@
 
 namespace riddle
 {
-    void local_field_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    void local_field_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
-        auto tp_opt = scp->get_type(field_type.front().id);
+        auto tp_opt = scp.get_type(field_type.front().id);
         if (!tp_opt)
             throw std::runtime_error("Cannot find class " + field_type.front().id);
         auto tp = &tp_opt.value().get();
@@ -23,7 +23,7 @@ namespace riddle
 
         for (const auto &field : fields)
             if (tp->is_primitive())
-                ctx->items.emplace(field.get_id().id, field.get_expression()->evaluate(*scp, ctx));
+                ctx->items.emplace(field.get_id().id, field.get_expression()->evaluate(scp, ctx));
             else if (auto ct = dynamic_cast<component_type *>(tp))
                 switch (ct->get_instances().size())
                 {
@@ -36,7 +36,7 @@ namespace riddle
                     std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
                     for (const auto &instance : ct->get_instances())
                         enum_vals.push_back(*instance);
-                    ctx->items.emplace(field.get_id().id, scp->get_core().new_enum(*ct, std::move(enum_vals)));
+                    ctx->items.emplace(field.get_id().id, scp.get_core().new_enum(*ct, std::move(enum_vals)));
                 }
                 }
             else if (auto et = dynamic_cast<enum_type *>(tp))
@@ -53,7 +53,7 @@ namespace riddle
                     std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
                     for (const auto &value : et->get_values())
                         enum_vals.push_back(*value);
-                    ctx->items.emplace(field.get_id().id, scp->get_core().new_enum(*et, std::move(enum_vals)));
+                    ctx->items.emplace(field.get_id().id, scp.get_core().new_enum(*et, std::move(enum_vals)));
                 }
                 }
             }
@@ -63,7 +63,7 @@ namespace riddle
                 throw std::runtime_error("Cannot create instance of type " + tp->get_name());
     }
 
-    void assignment_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    void assignment_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
         auto c_env = ctx;
         for (const auto &id : object_id)
@@ -76,28 +76,28 @@ namespace riddle
             else
                 throw std::runtime_error("Object " + id.id + " is not an environment");
         }
-        static_cast<env &>(*c_env).items.emplace(field_name.id, rhs->evaluate(*scp, ctx));
+        static_cast<env &>(*c_env).items.emplace(field_name.id, rhs->evaluate(scp, ctx));
     }
 
-    void expression_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const { scp->get_core().assert_fact(expr->evaluate(*scp, ctx)); }
+    void expression_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const { scp.get_core().assert_fact(expr->evaluate(scp, ctx)); }
 
-    void conjunction_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    void conjunction_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
         for (const auto &stm : statements)
             stm->execute(scp, ctx);
     }
 
-    void disjunction_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    void disjunction_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
         std::vector<std::unique_ptr<conjunction>> conjs;
         for (const auto &block : blocks)
             conjs.push_back(std::make_unique<conjunction>(scp, ctx, *block));
-        scp->get_core().new_disjunction(std::move(conjs));
+        scp.get_core().new_disjunction(std::move(conjs));
     }
 
-    void for_all_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    void for_all_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
-        auto tp_opt = scp->get_type(enum_type.front().id);
+        auto tp_opt = scp.get_type(enum_type.front().id);
         if (!tp_opt)
             throw std::runtime_error("Cannot find class " + enum_type.front().id);
         auto tp = dynamic_cast<component_type *>(&tp_opt.value().get());
@@ -115,20 +115,20 @@ namespace riddle
 
         for (auto instance : tp->get_instances())
         {
-            auto c_env = std::make_shared<env>(scp->get_core(), ctx);
+            auto c_env = std::make_shared<env>(scp.get_core(), ctx);
             c_env->items.emplace(enum_id.id, instance);
             for (const auto &stmn : statements)
                 stmn->execute(scp, c_env);
         }
     }
 
-    void return_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    void return_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
         if (expr)
-            ctx->items.emplace("return", expr->evaluate(*scp, ctx));
+            ctx->items.emplace("return", expr->evaluate(scp, ctx));
     }
 
-    void formula_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    void formula_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
         auto c_env = ctx;
         for (const auto &id : formula_scope)
@@ -146,7 +146,7 @@ namespace riddle
         if (c_env) // the formula's scope is explicitely declared..
             pred_opt = static_cast<component_type &>(static_cast<component &>(*c_env).get_type()).get_predicate(predicate_name.id);
         else // ..or it is implicitely declared
-            pred_opt = scp->get_predicate(predicate_name.id);
+            pred_opt = scp.get_predicate(predicate_name.id);
 
         if (!pred_opt)
             throw std::runtime_error("Cannot find predicate " + predicate_name.id);
@@ -160,7 +160,7 @@ namespace riddle
             if (!tp_opt)
                 throw std::runtime_error("Cannot find field " + arg.get_id().id);
             auto &tp = tp_opt.value().get().get_type();
-            auto val = arg.get_expression()->evaluate(*scp, ctx);
+            auto val = arg.get_expression()->evaluate(scp, ctx);
             if (tp.is_assignable_from(val->get_type())) // the target type is a superclass of the assignment..
                 args.emplace(arg.get_id().id, val);
             else if (val->get_type().is_assignable_from(tp)) // ..or the assignment is a superclass of the target type

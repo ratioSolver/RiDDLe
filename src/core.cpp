@@ -4,23 +4,21 @@
 
 namespace riddle
 {
-    core::core() : scope(*this), env(*this), bool_tp(*types.emplace("bool", std::make_unique<bool_type>(*this)).first->second), int_tp(*types.emplace("int", std::make_unique<int_type>(*this)).first->second), real_tp(*types.emplace("real", std::make_unique<real_type>(*this)).first->second), time_tp(*types.emplace("time", std::make_unique<time_type>(*this)).first->second), string_tp(*types.emplace("string", std::make_unique<string_type>(*this)).first->second) {}
+    core::core() : scope(*this, *this), env(*this), bool_tp(*types.emplace("bool", std::make_unique<bool_type>(*this)).first->second), int_tp(*types.emplace("int", std::make_unique<int_type>(*this)).first->second), real_tp(*types.emplace("real", std::make_unique<real_type>(*this)).first->second), time_tp(*types.emplace("time", std::make_unique<time_type>(*this)).first->second), string_tp(*types.emplace("string", std::make_unique<string_type>(*this)).first->second) {}
 
     void core::read(const std::string &script)
     {
-        auto scp = scope::shared_from_this();
         auto ctx = env::shared_from_this();
         parser p(script);
         auto cu = p.parse();
-        cu->declare(scp);
-        cu->refine(scp);
-        cu->refine_predicates(scp);
-        cu->execute(scp, ctx);
+        cu->declare(*this);
+        cu->refine(*this);
+        cu->refine_predicates(*this);
+        cu->execute(*this, ctx);
         cus.emplace_back(std::move(cu));
     }
     void core::read(const std::vector<std::string> &files)
     {
-        auto scp = scope::shared_from_this();
         auto ctx = env::shared_from_this();
         std::vector<std::unique_ptr<compilation_unit>> c_cus;
         c_cus.reserve(files.size());
@@ -28,10 +26,10 @@ namespace riddle
         {
             parser p(file);
             auto cu = p.parse();
-            cu->declare(scp);
-            cu->refine(scp);
-            cu->refine_predicates(scp);
-            cu->execute(scp, ctx);
+            cu->declare(*this);
+            cu->refine(*this);
+            cu->refine_predicates(*this);
+            cu->execute(*this, ctx);
             c_cus.emplace_back(std::move(cu));
         }
 

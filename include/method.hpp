@@ -10,7 +10,7 @@ namespace riddle
   class method : public scope
   {
   public:
-    method(std::shared_ptr<scope> parent, std::optional<std::reference_wrapper<type>> return_type, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body);
+    method(scope &parent, std::optional<std::reference_wrapper<type>> return_type, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body);
 
     /**
      * @brief Get the return type of the method.

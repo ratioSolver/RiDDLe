@@ -135,7 +135,7 @@ namespace riddle
   class typedef_type final : public type
   {
   public:
-    typedef_type(std::shared_ptr<scope> parent, const std::string &name, type &base_type, expression &value);
+    typedef_type(scope &parent, const std::string &name, type &base_type, expression &value);
 
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
@@ -149,7 +149,7 @@ namespace riddle
     friend class enum_declaration;
 
   public:
-    enum_type(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::shared_ptr<item>> &&values);
+    enum_type(scope &parent, const std::string &name, std::vector<std::shared_ptr<item>> &&values);
 
     [[nodiscard]] std::vector<std::shared_ptr<item>> get_values() const;
     [[nodiscard]] std::vector<std::reference_wrapper<enum_type>> get_enums() const { return enums; }
@@ -177,15 +177,15 @@ namespace riddle
     friend class predicate_declaration;
 
   public:
-    component_type(std::shared_ptr<scope> parent, const std::string &name);
+    component_type(scope &parent, const std::string &name);
     virtual ~component_type() = default;
 
     /**
      * @brief Get the parent types.
      *
-     * @return const std::vector<std::shared_ptr<component_type>>& The parent types.
+     * @return const std::vector<std::reference_wrapper<component_type>>& The parent types.
      */
-    [[nodiscard]] const std::vector<std::shared_ptr<component_type>> &get_parents() const { return parents; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<component_type>> &get_parents() const { return parents; }
 
     /**
      * @brief Get the constructors of the type that match the given argument types.
@@ -219,7 +219,7 @@ namespace riddle
     void add_predicate(std::unique_ptr<predicate> &&pred);
 
   private:
-    std::vector<std::shared_ptr<component_type>> parents;                // the base types (i.e. the types this type inherits from)..
+    std::vector<std::reference_wrapper<component_type>> parents;         // the base types (i.e. the types this type inherits from)..
     std::vector<std::unique_ptr<constructor>> constructors;              // the constructors of the type..
     std::map<std::string, std::vector<std::unique_ptr<method>>> methods; // the methods declared in the scope of the type..
     std::map<std::string, std::unique_ptr<type>> types;                  // the types declared in the scope of the type..
@@ -230,15 +230,15 @@ namespace riddle
   class predicate : public type, public scope
   {
   public:
-    predicate(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body);
+    predicate(scope &parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body);
     virtual ~predicate() = default;
 
     /**
      * @brief Get the parent predicates.
      *
-     * @return const std::vector<std::shared_ptr<predicate>>& The parent predicates.
+     * @return const std::vector<std::reference_wrapper<predicate>>& The parent predicates.
      */
-    [[nodiscard]] const std::vector<std::shared_ptr<predicate>> &get_parents() const { return parents; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const { return parents; }
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
@@ -246,9 +246,9 @@ namespace riddle
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
   private:
-    std::vector<std::shared_ptr<predicate>> parents;     // the base predicates (i.e. the predicates this predicate inherits from)..
-    std::vector<std::reference_wrapper<field>> args;     // the arguments of the predicate..
-    const std::vector<std::unique_ptr<statement>> &body; // the body of the predicate..
-    std::vector<std::shared_ptr<item>> atoms;            // the atoms having this predicate as their predicate..
+    std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
+    std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
+    const std::vector<std::unique_ptr<statement>> &body;    // the body of the predicate..
+    std::vector<std::shared_ptr<item>> atoms;               // the atoms having this predicate as their predicate..
   };
 } // namespace riddle

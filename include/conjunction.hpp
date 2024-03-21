@@ -11,7 +11,7 @@ namespace riddle
   class conjunction : public scope
   {
   public:
-    conjunction(std::shared_ptr<scope> parent, std::shared_ptr<env> ctx, const conjunction_statement &conj);
+    conjunction(scope &parent, std::shared_ptr<env> ctx, const conjunction_statement &conj);
 
     /**
      * @brief Execute the conjunction.

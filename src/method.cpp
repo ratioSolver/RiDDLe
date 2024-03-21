@@ -4,7 +4,7 @@
 
 namespace riddle
 {
-    method::method(std::shared_ptr<scope> parent, std::optional<std::reference_wrapper<type>> return_type, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : scope(parent->get_core(), parent), return_type(return_type), name(name), body(body)
+    method::method(scope &parent, std::optional<std::reference_wrapper<type>> return_type, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : scope(parent.get_core(), parent), return_type(return_type), name(name), body(body)
     {
         arguments.reserve(args.size());
         for (auto &arg : args)
@@ -31,9 +31,8 @@ namespace riddle
         }
 
         // we execute the method body
-        auto scp = shared_from_this();
         for (const auto &stmt : body)
-            stmt->execute(scp, c_env);
+            stmt->execute(*this, c_env);
 
         // we return the result
         if (return_type)

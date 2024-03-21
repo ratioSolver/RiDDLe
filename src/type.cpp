@@ -22,7 +22,7 @@ namespace riddle
     string_type::string_type(core &c) : type(c, "string", true) {}
     std::shared_ptr<item> string_type::new_instance() { return scp.get_core().new_string(); }
 
-    typedef_type::typedef_type(std::shared_ptr<scope> parent, const std::string &name, type &base_type, expression &value) : type(*parent, name), base_type(base_type), value(value) {}
+    typedef_type::typedef_type(scope &parent, const std::string &name, type &base_type, expression &value) : type(parent, name), base_type(base_type), value(value) {}
     std::shared_ptr<item> typedef_type::new_instance()
     {
         // we create a new environment for the expression evaluation..
@@ -30,7 +30,7 @@ namespace riddle
         return value.evaluate(scp, ctx);
     }
 
-    enum_type::enum_type(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::shared_ptr<item>> &&values) : type(*parent, name), values(std::move(values)) {}
+    enum_type::enum_type(scope &parent, const std::string &name, std::vector<std::shared_ptr<item>> &&values) : type(parent, name), values(std::move(values)) {}
     std::vector<std::shared_ptr<item>> enum_type::get_values() const
     {
         std::vector<std::shared_ptr<item>> vals;
@@ -69,7 +69,7 @@ namespace riddle
         return scp.get_core().new_enum(*this, std::move(enum_vals));
     }
 
-    component_type::component_type(std::shared_ptr<scope> parent, const std::string &name) : type(*parent, name), scope(parent->get_core(), parent) {}
+    component_type::component_type(scope &parent, const std::string &name) : type(parent, name), scope(parent.get_core(), parent) {}
     bool component_type::is_assignable_from(const type &other) const
     {
         if (this == &other)
@@ -85,7 +85,7 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &p : tp->get_parents())
-                    q.push(p.get());
+                    q.push(&p.get());
             }
         }
         return false;
@@ -134,7 +134,7 @@ namespace riddle
             return m;
         // if not in any enclosing scope, check any superclass
         for (const auto &p : get_parents())
-            if (auto m = p->get_method(name, argument_types))
+            if (auto m = p.get().get_method(name, argument_types))
                 return m;
         return std::nullopt;
     }
@@ -148,7 +148,7 @@ namespace riddle
             return t;
         // if not in any enclosing scope, check any superclass
         for (const auto &p : get_parents())
-            if (auto t = p->get_type(name))
+            if (auto t = p.get().get_type(name))
                 return t;
         return std::nullopt;
     }
@@ -161,7 +161,7 @@ namespace riddle
             return p;
         // if not in any enclosing scope, check any superclass
         for (const auto &par : get_parents())
-            if (auto p = par->get_predicate(name))
+            if (auto p = par.get().get_predicate(name))
                 return p;
         return std::nullopt;
     }
@@ -197,7 +197,7 @@ namespace riddle
             throw std::runtime_error("predicate `" + pred->get_name() + "` already exists");
     }
 
-    predicate::predicate(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : type(*parent, name), scope(parent->get_core(), parent), body(body) {}
+    predicate::predicate(scope &parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : type(parent, name), scope(parent.get_core(), parent), body(body) {}
     bool predicate::is_assignable_from(const type &other) const
     {
         if (this == &other)
@@ -213,7 +213,7 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &p : tp->get_parents())
-                    q.push(p.get());
+                    q.push(&p.get());
             }
         }
         return false;

@@ -7,7 +7,7 @@
 
 namespace riddle
 {
-    constructor::constructor(std::shared_ptr<scope> parent, std::vector<std::unique_ptr<field>> &&args, const std::vector<init_element> &inits, const std::vector<std::unique_ptr<statement>> &body) : scope(parent->get_core(), parent), args(std::move(args)), inits(inits), body(body) {}
+    constructor::constructor(scope &parent, std::vector<std::unique_ptr<field>> &&args, const std::vector<init_element> &inits, const std::vector<std::unique_ptr<statement>> &body) : scope(parent.get_core(), parent), args(std::move(args)), inits(inits), body(body) {}
 
     std::shared_ptr<item> constructor::invoke(std::vector<std::shared_ptr<item>> &&arguments)
     {
@@ -17,7 +17,7 @@ namespace riddle
             if (args.at(i)->get_type().is_assignable_from(arguments.at(i)->get_type()))
                 throw std::runtime_error("Invalid argument type: " + args.at(i)->get_type().get_name() + " is not assignable from " + arguments.at(i)->get_type().get_name() + ".");
 
-        auto &tp = *std::static_pointer_cast<component_type>(get_parent());
+        auto &tp = static_cast<component_type &>(get_parent());
         // we create a new instance of the type
         auto instance = std::static_pointer_cast<component>(tp.new_instance());
         // we create a new environment for the constructor
@@ -53,8 +53,8 @@ namespace riddle
                         throw std::runtime_error("Cannot find constructor for class " + init.get_name().id);
                 }
             }
-            else if (auto st = std::find_if(tp.get_parents().begin(), tp.get_parents().end(), [&init](const std::shared_ptr<component_type> &tp)
-                                            { return tp->get_name() == init.get_name().id; });
+            else if (auto st = std::find_if(tp.get_parents().begin(), tp.get_parents().end(), [&init](const std::reference_wrapper<component_type> &tp)
+                                            { return tp.get().get_name() == init.get_name().id; });
                      st != tp.get_parents().end())
             { // we invoke a supertype constructor
                 std::vector<std::reference_wrapper<const type>> arg_types;
@@ -67,7 +67,7 @@ namespace riddle
                     arguments.push_back(xpr);
                 }
 
-                if (auto c = (*st)->get_constructor(arg_types))
+                if (auto c = (*st).get().get_constructor(arg_types))
                     instance->items.emplace(init.get_name().id, c.value().get().invoke(std::move(arguments)));
                 else
                     throw std::runtime_error("Cannot find supertype " + init.get_name().id + ".");
@@ -87,9 +87,9 @@ namespace riddle
                         instance->items.emplace(f_name, f->get_type().new_instance());
                     break;
                 case 1:
-                    if (f->get_inits().at(0).get_args().size() == 1)
+                    if (f->get_inits().size() == 1)
                     {
-                        auto xpr = f->get_inits().at(0).get_args().at(0)->evaluate(*this, ctx);
+                        auto xpr = f->get_inits().at(0)->evaluate(*this, ctx);
                         if (f->get_type().is_assignable_from(xpr->get_type()))
                             instance->items.emplace(f_name, xpr);
                         else if (auto c_tp = dynamic_cast<component_type *>(&f->get_type()))
@@ -105,7 +105,7 @@ namespace riddle
                     std::vector<std::reference_wrapper<const type>> arg_types;
                     std::vector<std::shared_ptr<item>> arguments;
 
-                    for (const auto &arg : f->get_inits().at(0).get_args())
+                    for (const auto &arg : f->get_inits())
                     {
                         auto xpr = arg->evaluate(*this, ctx);
                         arg_types.push_back(xpr->get_type());
@@ -123,9 +123,8 @@ namespace riddle
                 }
 
         // we execute the constructor statements
-        auto scp = shared_from_this();
         for (const auto &stmt : body)
-            stmt->execute(scp, ctx);
+            stmt->execute(*this, ctx);
 
         return instance;
     }

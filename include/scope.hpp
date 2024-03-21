@@ -11,14 +11,16 @@ namespace riddle
   class core;
   class method;
   class predicate;
+  class field_declaration;
   class predicate_declaration;
 
-  class scope : public std::enable_shared_from_this<scope>
+  class scope
   {
+    friend class field_declaration;
     friend class predicate_declaration;
 
   public:
-    scope(core &c, std::shared_ptr<scope> parent = nullptr);
+    scope(core &c, scope &parent);
     virtual ~scope() = default;
 
     /**
@@ -31,9 +33,9 @@ namespace riddle
     /**
      * @brief Get the enclosing scope.
      *
-     * @return std::shared_ptr<scope> The enclosing scope.
+     * @return scope& The enclosing scope.
      */
-    [[nodiscard]] std::shared_ptr<scope> get_parent() const { return parent; }
+    [[nodiscard]] scope &get_parent() const { return parent; }
 
     /**
      * @brief Get a field by name.
@@ -57,7 +59,7 @@ namespace riddle
      * @param argument_types The argument types.
      * @return std::optional<std::reference_wrapper<method>> The method.
      */
-    [[nodiscard]] virtual std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent->get_method(name, argument_types); }
+    [[nodiscard]] virtual std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent.get_method(name, argument_types); }
 
     /**
      * @brief Get a type by name.
@@ -65,7 +67,7 @@ namespace riddle
      * @param name The name of the type.
      * @return std::optional<std::reference_wrapper<type>> The type.
      */
-    [[nodiscard]] virtual std::optional<std::reference_wrapper<type>> get_type(const std::string &name) const { return parent->get_type(name); }
+    [[nodiscard]] virtual std::optional<std::reference_wrapper<type>> get_type(const std::string &name) const { return parent.get_type(name); }
 
     /**
      * @brief Get a predicate by name.
@@ -73,14 +75,14 @@ namespace riddle
      * @param name The name of the predicate.
      * @return std::optional<std::reference_wrapper<predicate>> The predicate.
      */
-    [[nodiscard]] virtual std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const { return parent->get_predicate(name); }
+    [[nodiscard]] virtual std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const { return parent.get_predicate(name); }
 
   protected:
     void add_field(std::unique_ptr<field> &&field);
 
   private:
     core &c;
-    std::shared_ptr<scope> parent;
+    scope &parent;
 
   protected:
     std::map<std::string, std::unique_ptr<field>> fields;

@@ -12,7 +12,7 @@ namespace riddle
   class constructor : public scope
   {
   public:
-    constructor(std::shared_ptr<scope> parent, std::vector<std::unique_ptr<field>> &&args, const std::vector<init_element> &inits, const std::vector<std::unique_ptr<statement>> &body);
+    constructor(scope &parent, std::vector<std::unique_ptr<field>> &&args, const std::vector<init_element> &inits, const std::vector<std::unique_ptr<statement>> &body);
 
     /**
      * @brief Get the arguments of the constructor.
