@@ -12,12 +12,23 @@ namespace riddle
 {
   class component_type;
   class predicate;
+  class typedef_declaration;
+  class enum_declaration;
+  class method_declaration;
+  class class_declaration;
+  class predicate_declaration;
 
   /**
    * @brief The core of the language.
    */
   class core : public scope, public env
   {
+    friend class typedef_declaration;
+    friend class enum_declaration;
+    friend class method_declaration;
+    friend class class_declaration;
+    friend class predicate_declaration;
+
   public:
     core();
     virtual ~core() = default;
@@ -252,7 +263,7 @@ namespace riddle
      * @param arguments The arguments.
      * @return std::shared_ptr<item> The atom.
      */
-    [[nodiscard]] virtual std::shared_ptr<item> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments) = 0;
+    [[nodiscard]] virtual std::shared_ptr<item> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {}) = 0;
 
     /**
      * @brief Check if the expression is constant.
@@ -330,6 +341,11 @@ namespace riddle
      */
     [[nodiscard]] virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept override;
 
+    [[nodiscard]] std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
+
+    [[nodiscard]] std::optional<std::reference_wrapper<type>> get_type(const std::string &name) const override;
+    [[nodiscard]] std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const override;
+
     [[nodiscard]] bool_type &get_bool_type() const { return static_cast<bool_type &>(bool_tp); }
     [[nodiscard]] int_type &get_int_type() const { return static_cast<int_type &>(int_tp); }
     [[nodiscard]] real_type &get_real_type() const { return static_cast<real_type &>(real_tp); }
@@ -345,9 +361,16 @@ namespace riddle
     [[nodiscard]] virtual std::shared_ptr<item> get(const std::string &name) const noexcept override;
 
   private:
-    std::map<std::string, std::unique_ptr<type>> types;
-    type &bool_tp, &int_tp, &real_tp, &time_tp, &string_tp;
-    std::vector<std::unique_ptr<compilation_unit>> cus; // the compilation units..
+    void add_type(std::unique_ptr<type> &&tp);
+    void add_predicate(std::unique_ptr<predicate> &&pred);
+    void add_method(std::unique_ptr<method> &&mthd);
+
+  private:
+    std::map<std::string, std::unique_ptr<type>> types;                  // the types..
+    std::map<std::string, std::unique_ptr<predicate>> predicates;        // the predicates..
+    std::map<std::string, std::vector<std::unique_ptr<method>>> methods; // the methods..
+    type &bool_tp, &int_tp, &real_tp, &time_tp, &string_tp;              // the primitive types..
+    std::vector<std::unique_ptr<compilation_unit>> cus;                  // the compilation units..
   };
 
   [[nodiscard]] bool is_bool(const riddle::item &x) noexcept;

@@ -7,7 +7,7 @@
 
 namespace riddle
 {
-    constructor::constructor(std::shared_ptr<scope> parent, std::vector<std::unique_ptr<field>> &&args, std::vector<init_element> &&inits, std::vector<std::unique_ptr<statement>> &&body) : scope(parent->get_core(), parent), args(std::move(args)), inits(std::move(inits)), body(std::move(body)) {}
+    constructor::constructor(std::shared_ptr<scope> parent, std::vector<std::unique_ptr<field>> &&args, const std::vector<init_element> &inits, const std::vector<std::unique_ptr<statement>> &body) : scope(parent->get_core(), parent), args(std::move(args)), inits(inits), body(body) {}
 
     std::shared_ptr<item> constructor::invoke(std::vector<std::shared_ptr<item>> &&arguments)
     {
@@ -27,9 +27,7 @@ namespace riddle
 
         // we initialize the instance
         for (const auto &init : inits)
-        {
-            auto f = get_field(init.get_name().id);
-            if (f) // the field is declared in the component type
+            if (auto f = get_field(init.get_name().id)) // the field is declared in the component type
             {
                 if (f->get().get_type().is_primitive()) // we initialize a primitive field
                     instance->items.emplace(init.get_name().id, init.get_args().at(0)->evaluate(*this, ctx));
@@ -49,7 +47,10 @@ namespace riddle
                         arguments.push_back(xpr);
                     }
 
-                    instance->items.emplace(init.get_name().id, tp->get_constructor(arg_types).invoke(std::move(arguments)));
+                    if (auto c = tp->get_constructor(arg_types))
+                        instance->items.emplace(init.get_name().id, c.value().get().invoke(std::move(arguments)));
+                    else
+                        throw std::runtime_error("Cannot find constructor for class " + init.get_name().id);
                 }
             }
             else if (auto st = std::find_if(tp.get_parents().begin(), tp.get_parents().end(), [&init](const std::shared_ptr<component_type> &tp)
@@ -66,23 +67,60 @@ namespace riddle
                     arguments.push_back(xpr);
                 }
 
-                (*st)->get_constructor(arg_types).invoke(std::move(arguments));
+                if (auto c = (*st)->get_constructor(arg_types))
+                    instance->items.emplace(init.get_name().id, c.value().get().invoke(std::move(arguments)));
+                else
+                    throw std::runtime_error("Cannot find supertype " + init.get_name().id + ".");
             }
             else
                 throw std::runtime_error("Cannot find supertype " + init.get_name().id + ".");
-        }
 
         // we initialize the uninitialized fields
         for (const auto &[f_name, f] : tp.get_fields())
-            if (!f->is_synthetic() && instance->items.find(f_name) == instance->items.end())
-            { // the field is not initialized
-                if (f->get_init())
-                    instance->items.emplace(f_name, f->get_init()->evaluate(*this, ctx));
-                else if (auto c_tp = dynamic_cast<component_type *>(&f->get_type()))
-                    instance->items.emplace(f_name, f->get_type().new_instance());
-                else
-                    instance->items.emplace(f_name, f->get_type().new_instance());
-            }
+            if (!f->is_synthetic() && instance->items.find(f_name) == instance->items.end()) // the field is not initialized
+                switch (f->get_inits().size())
+                {
+                case 0:
+                    if (auto c_tp = dynamic_cast<component_type *>(&f->get_type()))
+                        instance->items.emplace(f_name, f->get_type().new_instance());
+                    else
+                        instance->items.emplace(f_name, f->get_type().new_instance());
+                    break;
+                case 1:
+                    if (f->get_inits().at(0).get_args().size() == 1)
+                    {
+                        auto xpr = f->get_inits().at(0).get_args().at(0)->evaluate(*this, ctx);
+                        if (f->get_type().is_assignable_from(xpr->get_type()))
+                            instance->items.emplace(f_name, xpr);
+                        else if (auto c_tp = dynamic_cast<component_type *>(&f->get_type()))
+                        {
+                            if (auto c = c_tp->get_constructor({xpr->get_type()}))
+                                instance->items.emplace(f_name, c.value().get().invoke({xpr}));
+                            else
+                                throw std::runtime_error("Cannot find constructor for class " + f->get_type().get_name());
+                        }
+                    }
+                default:
+                {
+                    std::vector<std::reference_wrapper<const type>> arg_types;
+                    std::vector<std::shared_ptr<item>> arguments;
+
+                    for (const auto &arg : f->get_inits().at(0).get_args())
+                    {
+                        auto xpr = arg->evaluate(*this, ctx);
+                        arg_types.push_back(xpr->get_type());
+                        arguments.push_back(xpr);
+                    }
+
+                    if (auto c_tp = dynamic_cast<component_type *>(&f->get_type()))
+                    {
+                        if (auto c = c_tp->get_constructor(arg_types))
+                            instance->items.emplace(f_name, c.value().get().invoke(std::move(arguments)));
+                        else
+                            throw std::runtime_error("Cannot find constructor for class " + f->get_type().get_name());
+                    }
+                }
+                }
 
         // we execute the constructor statements
         auto scp = shared_from_this();

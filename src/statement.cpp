@@ -81,6 +81,12 @@ namespace riddle
 
     void expression_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const { scp->get_core().assert_fact(expr->evaluate(*scp, ctx)); }
 
+    void conjunction_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
+    {
+        for (const auto &stm : statements)
+            stm->execute(scp, ctx);
+    }
+
     void disjunction_statement::execute(std::shared_ptr<scope> &scp, std::shared_ptr<env> &ctx) const
     {
         std::vector<std::unique_ptr<conjunction>> conjs;

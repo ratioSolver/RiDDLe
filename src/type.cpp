@@ -1,7 +1,6 @@
 #include <queue>
 #include "type.hpp"
 #include "core.hpp"
-#include "constructor.hpp"
 #include "declaration.hpp"
 
 namespace riddle
@@ -23,15 +22,15 @@ namespace riddle
     string_type::string_type(core &c) : type(c, "string", true) {}
     std::shared_ptr<item> string_type::new_instance() { return scp.get_core().new_string(); }
 
-    typedef_type::typedef_type(core &c, const std::string &name, type &base_type, std::unique_ptr<expression> &&value) : type(c, name), base_type(base_type), value(std::move(value)) {}
+    typedef_type::typedef_type(std::shared_ptr<scope> parent, const std::string &name, type &base_type, expression &value) : type(*parent, name), base_type(base_type), value(value) {}
     std::shared_ptr<item> typedef_type::new_instance()
     {
         // we create a new environment for the expression evaluation..
         auto ctx = std::make_shared<env>(scp.get_core());
-        return value->evaluate(scp, ctx);
+        return value.evaluate(scp, ctx);
     }
 
-    enum_type::enum_type(core &c, const std::string &name, std::vector<std::shared_ptr<item>> &&values) : type(c, name), values(std::move(values)) {}
+    enum_type::enum_type(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::shared_ptr<item>> &&values) : type(*parent, name), values(std::move(values)) {}
     std::vector<std::shared_ptr<item>> enum_type::get_values() const
     {
         std::vector<std::shared_ptr<item>> vals;
@@ -92,7 +91,113 @@ namespace riddle
         return false;
     }
 
-    predicate::predicate(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) : type(*parent, name), scope(parent->get_core(), parent), body(std::move(body)) {}
+    std::optional<std::reference_wrapper<constructor>> component_type::get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const
+    {
+        for (const auto &c : constructors)
+        {
+            if (c->get_args().size() == argument_types.size())
+            {
+                bool match = true;
+                for (size_t i = 0; i < argument_types.size(); ++i)
+                    if (!c->get_args()[i]->get_type().is_assignable_from(argument_types[i].get()))
+                    {
+                        match = false;
+                        break;
+                    }
+                if (match)
+                    return *c;
+            }
+        }
+        return std::nullopt;
+    }
+
+    std::optional<std::reference_wrapper<method>> component_type::get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
+    {
+        if (auto it = methods.find(name); it != methods.end())
+            for (const auto &m : it->second)
+            {
+                if (m->get_arguments().size() == argument_types.size())
+                {
+                    bool match = true;
+                    for (size_t i = 0; i < argument_types.size(); ++i)
+                        if (!m->get_arguments()[i].get().get_type().is_assignable_from(argument_types[i].get()))
+                        {
+                            match = false;
+                            break;
+                        }
+                    if (match)
+                        return *m;
+                }
+            }
+        // first check in any enclosing scope
+        if (auto m = scp.get_core().get_method(name, argument_types))
+            return m;
+        // if not in any enclosing scope, check any superclass
+        for (const auto &p : get_parents())
+            if (auto m = p->get_method(name, argument_types))
+                return m;
+        return std::nullopt;
+    }
+
+    std::optional<std::reference_wrapper<type>> component_type::get_type(const std::string &name) const
+    {
+        if (auto it = types.find(name); it != types.end())
+            return *it->second;
+        // first check in any enclosing scope
+        if (auto t = scp.get_core().get_type(name))
+            return t;
+        // if not in any enclosing scope, check any superclass
+        for (const auto &p : get_parents())
+            if (auto t = p->get_type(name))
+                return t;
+        return std::nullopt;
+    }
+    std::optional<std::reference_wrapper<predicate>> component_type::get_predicate(const std::string &name) const
+    {
+        if (auto it = predicates.find(name); it != predicates.end())
+            return *it->second;
+        // first check in any enclosing scope
+        if (auto p = scp.get_core().get_predicate(name))
+            return p;
+        // if not in any enclosing scope, check any superclass
+        for (const auto &par : get_parents())
+            if (auto p = par->get_predicate(name))
+                return p;
+        return std::nullopt;
+    }
+
+    std::shared_ptr<item> component_type::new_instance() { return scp.get_core().new_item(*this); }
+
+    void component_type::add_constructor(std::unique_ptr<constructor> &&ctor)
+    {
+        std::vector<std::reference_wrapper<const type>> args;
+        for (const auto &arg : ctor->get_args())
+            args.push_back(arg->get_type());
+        if (get_constructor(args))
+            throw std::runtime_error("constructor with the same arguments already exists");
+        constructors.emplace_back(std::move(ctor));
+    }
+    void component_type::add_method(std::unique_ptr<method> &&meth)
+    {
+        std::vector<std::reference_wrapper<const type>> args;
+        for (const auto &arg : meth->get_arguments())
+            args.push_back(arg.get().get_type());
+        if (get_method(meth->get_name(), args))
+            throw std::runtime_error("method `" + meth->get_name() + "` with the same arguments already exists");
+        methods[meth->get_name()].emplace_back(std::move(meth));
+    }
+    void component_type::add_type(std::unique_ptr<type> &&tp)
+    {
+        if (!types.emplace(tp->get_name(), std::move(tp)).second)
+            throw std::runtime_error("type `" + tp->get_name() + "` already exists");
+    }
+    void component_type::add_predicate(std::unique_ptr<predicate> &&pred)
+    {
+        if (!predicates.emplace(pred->get_name(), std::move(pred)).second)
+            throw std::runtime_error("predicate `" + pred->get_name() + "` already exists");
+    }
+
+    predicate::predicate(std::shared_ptr<scope> parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : type(*parent, name), scope(parent->get_core(), parent), body(body) {}
     bool predicate::is_assignable_from(const type &other) const
     {
         if (this == &other)
@@ -113,4 +218,5 @@ namespace riddle
         }
         return false;
     }
+    std::shared_ptr<item> predicate::new_instance() { return scp.get_core().new_atom(true, *this); }
 } // namespace riddle

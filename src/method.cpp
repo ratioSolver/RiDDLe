@@ -4,7 +4,7 @@
 
 namespace riddle
 {
-    method::method(std::shared_ptr<scope> parent, std::optional<std::reference_wrapper<type>> return_type, const std::string &name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) : scope(parent->get_core(), parent), return_type(return_type), name(name), body(std::move(body))
+    method::method(std::shared_ptr<scope> parent, std::optional<std::reference_wrapper<type>> return_type, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : scope(parent->get_core(), parent), return_type(return_type), name(name), body(body)
     {
         arguments.reserve(args.size());
         for (auto &arg : args)

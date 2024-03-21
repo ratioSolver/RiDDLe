@@ -5,12 +5,13 @@
 
 namespace riddle
 {
+  class init_element;
   class type;
 
   class field
   {
   public:
-    field(type &t, const std::string &name, std::unique_ptr<expression> &&init = nullptr, bool synthetic = false) : t(t), name(name), init(std::move(init)), synthetic(synthetic) {}
+    field(type &t, const std::string &name, const std::vector<init_element> &inits = {}, bool synthetic = false) : t(t), name(name), inits(inits), synthetic(synthetic) {}
 
     /**
      * @brief Get the type.
@@ -25,11 +26,11 @@ namespace riddle
      */
     [[nodiscard]] const std::string &get_name() const noexcept { return name; }
     /**
-     * @brief Get the initializer.
+     * @brief Get the initializations.
      *
-     * @return The initializer.
+     * @return The initializations.
      */
-    [[nodiscard]] const std::unique_ptr<expression> &get_init() const noexcept { return init; }
+    [[nodiscard]] const std::vector<init_element> &get_inits() const noexcept { return inits; }
     /**
      * @brief Check if this field is synthetic.
      *
@@ -41,7 +42,7 @@ namespace riddle
   private:
     type &t;
     std::string name;
-    std::unique_ptr<expression> init;
+    const std::vector<init_element> &inits;
     bool synthetic;
   };
 } // namespace riddle

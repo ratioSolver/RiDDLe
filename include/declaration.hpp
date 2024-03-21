@@ -14,9 +14,9 @@ namespace riddle
     virtual std::string to_string() const = 0;
 
   private:
-    virtual void declare(scope &) const = 0;
-    virtual void refine(scope &) const = 0;
-    virtual void refine_predicates(scope &) const = 0;
+    virtual void declare(std::shared_ptr<scope> &) const {}
+    virtual void refine(std::shared_ptr<scope> &) const {}
+    virtual void refine_predicates(std::shared_ptr<scope> &) const {}
   };
 
   class typedef_declaration final : public type_declaration
@@ -27,9 +27,7 @@ namespace riddle
     std::string to_string() const override { return "typedef " + primitive_type.to_string() + " " + name.to_string() + " = " + expr->to_string() + ";"; }
 
   private:
-    void declare(scope &) const override;
-    void refine(scope &) const override;
-    void refine_predicates(scope &) const override;
+    void declare(std::shared_ptr<scope> &scp) const override;
 
   private:
     id_token name;
@@ -69,9 +67,8 @@ namespace riddle
     }
 
   private:
-    void declare(scope &) const override;
-    void refine(scope &) const override;
-    void refine_predicates(scope &) const override;
+    void declare(std::shared_ptr<scope> &scp) const override;
+    void refine(std::shared_ptr<scope> &scp) const override;
 
   private:
     id_token name;
@@ -108,16 +105,16 @@ namespace riddle
   class field_declaration
   {
   public:
-    field_declaration(std::vector<id_token> &&tp, std::vector<init_element> &&inits) : type_parameters(std::move(tp)), inits(std::move(inits)) {}
+    field_declaration(std::vector<id_token> &&tp, std::vector<init_element> &&inits) : type_ids(std::move(tp)), inits(std::move(inits)) {}
 
     std::string to_string() const
     {
       std::string res;
-      if (!type_parameters.empty())
+      if (!type_ids.empty())
       {
-        res += type_parameters[0].to_string();
-        for (size_t i = 1; i < type_parameters.size(); ++i)
-          res += ", " + type_parameters[i].to_string();
+        res += type_ids[0].to_string();
+        for (size_t i = 1; i < type_ids.size(); ++i)
+          res += ", " + type_ids[i].to_string();
         res += " ";
       }
       res += inits[0].to_string();
@@ -127,7 +124,10 @@ namespace riddle
     }
 
   private:
-    std::vector<id_token> type_parameters;
+    void refine(std::shared_ptr<scope> &scp) const;
+
+  private:
+    std::vector<id_token> type_ids;
     std::vector<init_element> inits;
   };
 
@@ -137,6 +137,9 @@ namespace riddle
     constructor_declaration(std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<init_element> &&inits, std::vector<std::unique_ptr<statement>> &&stmts) : parameters(std::move(params)), inits(std::move(inits)), body(std::move(stmts)) {}
 
     std::string to_string() const { return ""; }
+
+  private:
+    void refine(std::shared_ptr<scope> &scp) const;
 
   private:
     std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
@@ -172,7 +175,7 @@ namespace riddle
     }
 
   private:
-    void refine(scope &scp) const;
+    void refine(std::shared_ptr<scope> &scp) const;
 
   private:
     std::vector<id_token> return_type;                                  // the return type of the method..
@@ -215,8 +218,8 @@ namespace riddle
     }
 
   private:
-    void declare(scope &scp) const;
-    void refine(scope &scp) const;
+    void declare(std::shared_ptr<scope> &scp) const;
+    void refine(std::shared_ptr<scope> &scp) const;
 
   private:
     id_token name;                                                      // the name of the class..
@@ -260,9 +263,9 @@ namespace riddle
     }
 
   private:
-    void declare(scope &) const override;
-    void refine(scope &) const override;
-    void refine_predicates(scope &) const override;
+    void declare(std::shared_ptr<scope> &scp) const override;
+    void refine(std::shared_ptr<scope> &scp) const override;
+    void refine_predicates(std::shared_ptr<scope> &scp) const override;
 
   private:
     id_token name;                                                      // the name of the class..

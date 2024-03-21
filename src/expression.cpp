@@ -46,7 +46,10 @@ namespace riddle
             arguments.push_back(xpr);
         }
 
-        return tp->get_constructor(arg_types).invoke(std::move(arguments));
+        if (auto c = tp->get_constructor(arg_types))
+            return c.value().get().invoke(std::move(arguments));
+        else
+            throw std::runtime_error("Cannot find constructor for class " + instance_type.front().id);
     }
 
     std::shared_ptr<item> eq_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().eq(l->evaluate(scp, ctx), r->evaluate(scp, ctx)); }

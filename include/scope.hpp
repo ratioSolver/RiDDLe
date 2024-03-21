@@ -11,9 +11,12 @@ namespace riddle
   class core;
   class method;
   class predicate;
+  class predicate_declaration;
 
   class scope : public std::enable_shared_from_this<scope>
   {
+    friend class predicate_declaration;
+
   public:
     scope(core &c, std::shared_ptr<scope> parent = nullptr);
     virtual ~scope() = default;
@@ -48,14 +51,6 @@ namespace riddle
     [[nodiscard]] const std::map<std::string, std::unique_ptr<field>> &get_fields() const noexcept { return fields; }
 
     /**
-     * @brief Get a type by name.
-     *
-     * @param name The name of the type.
-     * @return std::optional<std::reference_wrapper<type>> The type.
-     */
-    [[nodiscard]] virtual std::optional<std::reference_wrapper<type>> &get_type(const std::string &name) const { return parent->get_type(name); }
-
-    /**
      * @brief Get a method by name and argument types.
      *
      * @param name The name of the method.
@@ -63,6 +58,14 @@ namespace riddle
      * @return std::optional<std::reference_wrapper<method>> The method.
      */
     [[nodiscard]] virtual std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent->get_method(name, argument_types); }
+
+    /**
+     * @brief Get a type by name.
+     *
+     * @param name The name of the type.
+     * @return std::optional<std::reference_wrapper<type>> The type.
+     */
+    [[nodiscard]] virtual std::optional<std::reference_wrapper<type>> get_type(const std::string &name) const { return parent->get_type(name); }
 
     /**
      * @brief Get a predicate by name.
