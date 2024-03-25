@@ -1,0 +1,95 @@
+class System {}
+
+class SubSystem : System {}
+
+predicate Contains(System s, SubSystem ss) {}
+
+predicate Influences(System s1, System s2) {}
+
+System mobilita = new System();
+System produttivo = new System();
+System culturale = new System();
+System insediativo = new System();
+System ambientale = new System();
+
+fact inf_m_c = new Influences(s1: mobilita, s2: culturale);
+fact inf_m_i = new Influences(s1: mobilita, s2: insediativo);
+fact inf_m_a = new Influences(s1: mobilita, s2: ambientale);
+
+fact inf_p_i = new Influences(s1: produttivo, s2: insediativo);
+fact inf_p_a = new Influences(s1: produttivo, s2: ambientale);
+
+fact inf_c_m = new Influences(s1: culturale, s2: mobilita);
+fact inf_c_i = new Influences(s1: culturale, s2: insediativo);
+
+fact inf_i_m = new Influences(s1: insediativo, s2: mobilita);
+fact inf_i_c = new Influences(s1: insediativo, s2: culturale);
+
+fact inf_a_m = new Influences(s1: ambientale, s2: mobilita);
+fact inf_a_a = new Influences(s1: ambientale, s2: ambientale);
+
+SubSystem strade = new SubSystem();
+SubSystem ferrovie = new SubSystem();
+SubSystem ciclabili = new SubSystem();
+SubSystem pedonali = new SubSystem();
+SubSystem aeroporti = new SubSystem();
+SubSystem porti = new SubSystem();
+SubSystem autostrade = new SubSystem();
+
+SubSystem agricoltura = new SubSystem();
+SubSystem sanita = new SubSystem();
+SubSystem commercio = new SubSystem();
+SubSystem manifattura = new SubSystem();
+
+SubSystem musei = new SubSystem();
+SubSystem teatri = new SubSystem();
+SubSystem biblioteche = new SubSystem();
+SubSystem cinema = new SubSystem();
+SubSystem patrimonio_culturale = new SubSystem();
+SubSystem patrimonio_immateriale = new SubSystem();
+SubSystem istruzione = new SubSystem();
+
+SubSystem quartieri = new SubSystem();
+SubSystem architettura = new SubSystem();
+SubSystem spazi_publici = new SubSystem();
+SubSystem urbanizzazione = new SubSystem();
+
+SubSystem parchi = new SubSystem();
+SubSystem verde_attrezzato = new SubSystem();
+SubSystem aree_verdi = new SubSystem();
+SubSystem rifiuti = new SubSystem();
+SubSystem acqua = new SubSystem();
+SubSystem energia = new SubSystem();
+
+fact cont_m_s = new Contains(s: mobilita, ss: strade);
+fact cont_m_f = new Contains(s: mobilita, ss: ferrovie);
+fact cont_m_c = new Contains(s: mobilita, ss: ciclabili);
+fact cont_m_p = new Contains(s: mobilita, ss: pedonali);
+fact cont_m_a = new Contains(s: mobilita, ss: aeroporti);
+fact cont_m_po = new Contains(s: mobilita, ss: porti);
+fact cont_m_a = new Contains(s: mobilita, ss: autostrade);
+
+fact cont_p_a = new Contains(s: produttivo, ss: agricoltura);
+fact cont_p_s = new Contains(s: produttivo, ss: sanita);
+fact cont_p_c = new Contains(s: produttivo, ss: commercio);
+fact cont_p_m = new Contains(s: produttivo, ss: manifattura);
+
+fact cont_c_m = new Contains(s: culturale, ss: musei);
+fact cont_c_t = new Contains(s: culturale, ss: teatri);
+fact cont_c_b = new Contains(s: culturale, ss: biblioteche);
+fact cont_c_c = new Contains(s: culturale, ss: cinema);
+fact cont_c_pc = new Contains(s: culturale, ss: patrimonio_culturale);
+fact cont_c_pi = new Contains(s: culturale, ss: patrimonio_immateriale);
+fact cont_c_i = new Contains(s: culturale, ss: istruzione);
+
+fact cont_i_q = new Contains(s: insediativo, ss: quartieri);
+fact cont_i_a = new Contains(s: insediativo, ss: architettura);
+fact cont_i_sp = new Contains(s: insediativo, ss: spazi_publici);
+fact cont_i_u = new Contains(s: insediativo, ss: urbanizzazione);
+
+fact cont_a_p = new Contains(s: ambientale, ss: parchi);
+fact cont_a_v = new Contains(s: ambientale, ss: verde_attrezzato);
+fact cont_a_a = new Contains(s: ambientale, ss: aree_verdi);
+fact cont_a_r = new Contains(s: ambientale, ss: rifiuti);
+fact cont_a_a = new Contains(s: ambientale, ss: acqua);
+fact cont_a_e = new Contains(s: ambientale, ss: energia);

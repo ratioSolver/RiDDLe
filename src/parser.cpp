@@ -559,6 +559,7 @@ namespace riddle
             error("Expected `(`..");
 
         if (!match(RPAREN_ID))
+        {
             do
             {
                 std::vector<id_token> ids; // the identifiers of the type..
@@ -594,8 +595,9 @@ namespace riddle
                 params.emplace_back(std::move(ids), name);
             } while (match(COMMA_ID));
 
-        if (!match(RPAREN_ID))
-            error("Expected `)`..");
+            if (!match(RPAREN_ID))
+                error("Expected `)`..");
+        }
 
         if (match(COLON_ID))
             do
@@ -683,11 +685,17 @@ namespace riddle
                     else
                         fields.emplace_back(std::move(name));
                 } while (match(COMMA_ID));
+
+                if (!match(SEMICOLON_ID))
+                    error("expected `;`..");
+
+                return std::make_unique<local_field_statement>(std::move(object_id), std::move(fields));
             }
             case EQ_ID:
             { // an assignment..
                 id_token field_name = object_id.back();
                 object_id.pop_back();
+                tk = next_token();
                 std::unique_ptr<expression> expr = parse_expression();
 
                 if (!match(SEMICOLON_ID))
@@ -724,7 +732,6 @@ namespace riddle
         case LBRACE_ID:
         { // either a block or a disjunction..
             std::vector<std::unique_ptr<conjunction_statement>> conjuncts;
-            backtrack(pos - 1);
             do
             {
                 std::vector<std::unique_ptr<statement>> stmts;
@@ -791,7 +798,8 @@ namespace riddle
         case FACT_ID:
         case GOAL_ID:
         { // either a fact or a goal..
-            bool is_fact = match(FACT_ID);
+            bool is_fact = tk->sym == FACT_ID;
+            tk = next_token();
             std::vector<id_token> formula_scope;
             std::vector<field_argument> arguments;
 
@@ -820,6 +828,7 @@ namespace riddle
                 error("Expected `(`..");
 
             if (!match(RPAREN_ID))
+            {
                 do // the arguments..
                 {
                     if (!match(ID_ID))
@@ -827,14 +836,15 @@ namespace riddle
 
                     auto name = *static_cast<const id_token *>(tokens[pos - 2].get()); // the name of the argument..
 
-                    if (match(EQ_ID))
+                    if (match(COLON_ID))
                         arguments.emplace_back(std::move(name), parse_expression());
                     else
                         arguments.emplace_back(std::move(name));
                 } while (match(COMMA_ID));
 
-            if (!match(RPAREN_ID))
-                error("Expected `)`..");
+                if (!match(RPAREN_ID))
+                    error("Expected `)`..");
+            }
 
             if (!match(SEMICOLON_ID))
                 error("Expected `;`..");

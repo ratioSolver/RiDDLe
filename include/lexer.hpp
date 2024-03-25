@@ -191,7 +191,7 @@ namespace riddle
   class bool_token final : public token
   {
   public:
-    bool_token(const bool &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(BOOL_ID, start_line, start_pos, end_line, end_pos), value(value) {}
+    bool_token(const bool &value, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(BoolLiteral_ID, start_line, start_pos, end_line, end_pos), value(value) {}
 
     std::string to_string() const override { return value ? "true" : "false"; }
 
@@ -201,7 +201,7 @@ namespace riddle
   class int_token final : public token
   {
   public:
-    int_token(const INTEGER_TYPE &val, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(INT_ID, start_line, start_pos, end_line, end_pos), val(val) {}
+    int_token(const INTEGER_TYPE &val, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(IntLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
     std::string to_string() const override { return std::to_string(val); }
 
@@ -211,7 +211,7 @@ namespace riddle
   class real_token final : public token
   {
   public:
-    real_token(const utils::rational &val, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(REAL_ID, start_line, start_pos, end_line, end_pos), val(val) {}
+    real_token(const utils::rational &val, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(RealLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
     std::string to_string() const override { return std::to_string(static_cast<double>(val.numerator()) / val.denominator()); }
 
@@ -221,7 +221,7 @@ namespace riddle
   class string_token final : public token
   {
   public:
-    string_token(const std::string &str, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(STRING_ID, start_line, start_pos, end_line, end_pos), str(str) {}
+    string_token(const std::string &str, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(StringLiteral_ID, start_line, start_pos, end_line, end_pos), str(str) {}
 
     std::string to_string() const override { return '\"' + str + '\"'; }
 
