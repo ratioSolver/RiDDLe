@@ -381,6 +381,8 @@ namespace riddle
 
   [[nodiscard]] type &determine_type(const std::vector<std::shared_ptr<item>> &xprs);
 
+  inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }
+
   class unsolvable_exception : public std::exception
   {
     const char *what() const noexcept override { return "the problem is unsolvable.."; }

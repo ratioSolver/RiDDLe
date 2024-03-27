@@ -82,7 +82,7 @@ namespace riddle
                 {
                 case 0:
                     if (auto c_tp = dynamic_cast<component_type *>(&f->get_type()))
-                        instance->items.emplace(f_name, f->get_type().new_instance());
+                        instance->items.emplace(f_name, c_tp->new_instance());
                     else
                         instance->items.emplace(f_name, f->get_type().new_instance());
                     break;
@@ -100,6 +100,7 @@ namespace riddle
                                 throw std::runtime_error("Cannot find constructor for class " + f->get_type().get_name());
                         }
                     }
+                    break;
                 default:
                 {
                     std::vector<std::reference_wrapper<const type>> arg_types;
