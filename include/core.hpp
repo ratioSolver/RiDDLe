@@ -388,10 +388,10 @@ namespace riddle
     std::vector<std::unique_ptr<compilation_unit>> cus;                  // the compilation units..
   };
 
-  [[nodiscard]] bool is_bool(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_bool_type() == &x.get_type(); }
-  [[nodiscard]] bool is_int(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_int_type() == &x.get_type(); }
-  [[nodiscard]] bool is_real(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_real_type() == &x.get_type(); }
-  [[nodiscard]] bool is_time(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_time_type() == &x.get_type(); }
+  [[nodiscard]] inline bool is_bool(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_bool_type() == &x.get_type(); }
+  [[nodiscard]] inline bool is_int(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_int_type() == &x.get_type(); }
+  [[nodiscard]] inline bool is_real(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_real_type() == &x.get_type(); }
+  [[nodiscard]] inline bool is_time(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_time_type() == &x.get_type(); }
   [[nodiscard]] inline bool is_arith(const riddle::item &x) noexcept { return is_int(x) || is_real(x) || is_time(x); }
   [[nodiscard]] inline bool is_string(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_string_type() == &x.get_type(); }
 
