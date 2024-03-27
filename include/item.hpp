@@ -94,12 +94,15 @@ namespace riddle
   class atom : public item, public env
   {
   public:
-    atom(predicate &t, bool is_fact, std::map<std::string, std::shared_ptr<item>> &&args = {});
+    atom(predicate &t, bool is_fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>> &&args = {});
     virtual ~atom() = default;
 
     [[nodiscard]] bool is_fact() const { return fact; }
+    [[nodiscard]] utils::lit &get_sigma() { return sigma; }
+    [[nodiscard]] const utils::lit &get_sigma() const { return sigma; }
 
   private:
-    bool fact; // whether the atom is a fact or a goal..
+    bool fact;        // whether the atom is a fact or a goal..
+    utils::lit sigma; // the literal indicating the status of the atom (i.e., true if active, false if unified, undefined if inactive)..
   };
 } // namespace riddle

@@ -108,7 +108,7 @@ namespace riddle
      *
      * @return std::shared_ptr<string_item> The string expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<string_item> new_string() = 0;
+    [[nodiscard]] std::shared_ptr<string_item> new_string();
     /**
      * @brief Create a new string expression with a value.
      *
