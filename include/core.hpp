@@ -256,14 +256,14 @@ namespace riddle
     virtual void new_disjunction(std::vector<std::unique_ptr<riddle::conjunction>> &&disjuncts) = 0;
 
     /**
-     * @brief Create a new atom.
+     * @brief Create a new fact or goal atom with the given predicate and arguments.
      *
      * @param is_fact Whether the atom is a fact or a goal.
      * @param pred The predicate.
      * @param arguments The arguments.
-     * @return std::shared_ptr<item> The atom.
+     * @return std::shared_ptr<atom> The atom.
      */
-    [[nodiscard]] virtual std::shared_ptr<item> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {}) = 0;
+    [[nodiscard]] virtual std::shared_ptr<atom> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {}) = 0;
 
     /**
      * @brief Check if the expression is constant.
