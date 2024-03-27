@@ -1,11 +1,13 @@
 #include "statement.hpp"
 #include "type.hpp"
 #include "core.hpp"
+#include "logging.hpp"
 
 namespace riddle
 {
     void local_field_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
+        LOG_TRACE(to_string());
         auto tp_opt = scp.get_type(field_type.front().id);
         if (!tp_opt)
             throw std::runtime_error("Cannot find class " + field_type.front().id);
@@ -23,7 +25,7 @@ namespace riddle
 
         for (const auto &field : fields)
             if (tp->is_primitive())
-                ctx->items.emplace(field.get_id().id, field.get_expression()->evaluate(scp, ctx));
+                ctx->items.emplace(field.get_id().id, field.get_expression() ? field.get_expression()->evaluate(scp, ctx) : tp->new_instance());
             else if (auto ct = dynamic_cast<component_type *>(tp))
                 switch (ct->get_instances().size())
                 {
@@ -31,6 +33,7 @@ namespace riddle
                     throw inconsistency_exception();
                 case 1:
                     ctx->items.emplace(field.get_id().id, ct->get_instances().front());
+                    break;
                 default:
                 {
                     std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
@@ -48,6 +51,7 @@ namespace riddle
                     throw inconsistency_exception();
                 case 1:
                     ctx->items.emplace(field.get_id().id, values.front());
+                    break;
                 default:
                 {
                     std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
@@ -65,6 +69,7 @@ namespace riddle
 
     void assignment_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
+        LOG_TRACE(to_string());
         auto c_env = ctx;
         for (const auto &id : object_id)
         {
@@ -79,16 +84,22 @@ namespace riddle
         static_cast<env &>(*c_env).items.emplace(field_name.id, rhs->evaluate(scp, ctx));
     }
 
-    void expression_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const { scp.get_core().assert_fact(expr->evaluate(scp, ctx)); }
+    void expression_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    {
+        LOG_TRACE(to_string());
+        scp.get_core().assert_fact(expr->evaluate(scp, ctx));
+    }
 
     void conjunction_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
+        LOG_TRACE(to_string());
         for (const auto &stm : statements)
             stm->execute(scp, ctx);
     }
 
     void disjunction_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
+        LOG_TRACE(to_string());
         std::vector<std::unique_ptr<conjunction>> conjs;
         for (const auto &block : blocks)
             conjs.push_back(std::make_unique<conjunction>(scp, ctx, *block));
@@ -97,6 +108,7 @@ namespace riddle
 
     void for_all_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
+        LOG_TRACE(to_string());
         auto tp_opt = scp.get_type(enum_type.front().id);
         if (!tp_opt)
             throw std::runtime_error("Cannot find class " + enum_type.front().id);
@@ -124,12 +136,14 @@ namespace riddle
 
     void return_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
+        LOG_TRACE(to_string());
         if (expr)
             ctx->items.emplace("return", expr->evaluate(scp, ctx));
     }
 
     void formula_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
+        LOG_TRACE(to_string());
         auto c_env = ctx;
         for (const auto &id : formula_scope)
         {
