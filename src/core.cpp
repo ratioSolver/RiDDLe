@@ -118,17 +118,14 @@ namespace riddle
         methods[meth->get_name()].emplace_back(std::move(meth));
     }
 
-    type &determine_type(const std::vector<std::shared_ptr<item>> &xprs)
+    type &determine_type(const std::vector<std::shared_ptr<arith_item>> &xprs)
     {
         if (std::all_of(xprs.begin(), xprs.end(), [](const auto &x)
-                        { return is_int(*x); }))
-            return xprs[0]->get_type().get_scope().get_core().get_int_type();
-        if (std::all_of(xprs.begin(), xprs.end(), [](const auto &x)
-                        { return is_int(*x) || is_real(*x); }))
-            return xprs[0]->get_type().get_scope().get_core().get_real_type();
-        if (std::all_of(xprs.begin(), xprs.end(), [](const auto &x)
-                        { return is_time(*x); }))
+                        { return is_time(*x) || is_constant(*x); }))
             return xprs[0]->get_type().get_scope().get_core().get_time_type();
-        return xprs[0]->get_type();
+        if (std::all_of(xprs.begin(), xprs.end(), [](const auto &x)
+                        { return is_int(*x) || (is_real(*x) && is_constant(*x) && is_integer(x->get_type().get_scope().get_core().arithmetic_value(static_cast<arith_item &>(*x)))); }))
+            return xprs[0]->get_type().get_scope().get_core().get_int_type();
+        return xprs[0]->get_type().get_scope().get_core().get_real_type();
     }
 } // namespace riddle

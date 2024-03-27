@@ -267,21 +267,12 @@ namespace riddle
     [[nodiscard]] virtual std::shared_ptr<atom> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {}) = 0;
 
     /**
-     * @brief Check if the expression is constant.
-     *
-     * @param expr The expression.
-     * @return true If the expression is constant.
-     * @return false If the expression is not constant.
-     */
-    [[nodiscard]] virtual bool is_constant(const item &expr) const noexcept = 0;
-
-    /**
      * @brief Get the bool value of the expression.
      *
      * @param expr The expression.
      * @return utils::lbool The bool value.
      */
-    [[nodiscard]] virtual utils::lbool bool_value(const item &expr) const noexcept = 0;
+    [[nodiscard]] virtual utils::lbool bool_value(const bool_item &expr) const noexcept = 0;
 
     /**
      * @brief Get the arithmetic value of the expression.
@@ -289,7 +280,7 @@ namespace riddle
      * @param expr The expression.
      * @return utils::inf_rational The arithmetic value.
      */
-    [[nodiscard]] virtual utils::inf_rational arithmetic_value(const item &expr) const noexcept = 0;
+    [[nodiscard]] virtual utils::inf_rational arithmetic_value(const arith_item &expr) const noexcept = 0;
 
     /**
      * @brief Get the bounds of the arithmetic expression.
@@ -297,16 +288,7 @@ namespace riddle
      * @param expr The expression.
      * @return std::pair<utils::inf_rational, utils::inf_rational> The bounds.
      */
-    [[nodiscard]] virtual std::pair<utils::inf_rational, utils::inf_rational> bounds(const item &expr) const noexcept = 0;
-
-    /**
-     * @brief Check if the expression is an enum.
-     *
-     * @param expr The expression.
-     * @return true If the expression is an enum.
-     * @return false If the expression is not an enum.
-     */
-    [[nodiscard]] virtual bool is_enum(const item &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::pair<utils::inf_rational, utils::inf_rational> bounds(const arith_item &expr) const noexcept = 0;
 
     /**
      * @brief Get the domain of the expression.
@@ -314,7 +296,7 @@ namespace riddle
      * @param expr The expression.
      * @return std::vector<std::reference_wrapper<utils::enum_val>> The domain.
      */
-    [[nodiscard]] virtual std::vector<std::reference_wrapper<utils::enum_val>> domain(const item &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::vector<std::reference_wrapper<utils::enum_val>> domain(const enum_item &expr) const noexcept = 0;
 
     /**
      * @brief Assign a value to the expression.
@@ -324,7 +306,7 @@ namespace riddle
      * @return true If the assignment is successful.
      * @return false If the assignment is not successful.
      */
-    virtual bool assign(const item &expr, utils::enum_val &val) = 0;
+    virtual bool assign(const enum_item &expr, utils::enum_val &val) = 0;
 
     /**
      * @brief Remove a value from the domain of the expression.
@@ -332,7 +314,7 @@ namespace riddle
      * @param expr The expression.
      * @param val The value to remove.
      */
-    virtual void forbid(const item &expr, utils::enum_val &val) = 0;
+    virtual void forbid(const enum_item &expr, utils::enum_val &val) = 0;
 
     /**
      * @brief Get a field by name.
@@ -388,14 +370,90 @@ namespace riddle
     std::vector<std::unique_ptr<compilation_unit>> cus;                  // the compilation units..
   };
 
+  /**
+   * @brief Determine if the expression is a boolean.
+   *
+   * @param x The expression.
+   * @return true If the expression is a boolean.
+   * @return false If the expression is not a boolean.
+   */
   [[nodiscard]] inline bool is_bool(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_bool_type() == &x.get_type(); }
+  /**
+   * @brief Determine if the expression is an integer.
+   *
+   * @param x The expression.
+   * @return true If the expression is an integer.
+   * @return false If the expression is not an integer.
+   */
   [[nodiscard]] inline bool is_int(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_int_type() == &x.get_type(); }
+  /**
+   * @brief Determine if the expression is a real.
+   *
+   * @param x The expression.
+   * @return true If the expression is a real.
+   * @return false If the expression is not a real.
+   */
   [[nodiscard]] inline bool is_real(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_real_type() == &x.get_type(); }
+  /**
+   * @brief Determine if the expression is a time.
+   *
+   * @param x The expression.
+   * @return true If the expression is a time.
+   * @return false If the expression is not a time.
+   */
   [[nodiscard]] inline bool is_time(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_time_type() == &x.get_type(); }
+  /**
+   * @brief Determine if the expression is an arithmetic value.
+   *
+   * @param x The expression.
+   * @return true If the expression is an arithmetic value.
+   * @return false If the expression is not an arithmetic value.
+   */
   [[nodiscard]] inline bool is_arith(const riddle::item &x) noexcept { return is_int(x) || is_real(x) || is_time(x); }
+  /**
+   * @brief Determine if the expression is a string.
+   *
+   * @param x The expression.
+   * @return true If the expression is a string.
+   * @return false If the expression is not a string.
+   */
   [[nodiscard]] inline bool is_string(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_string_type() == &x.get_type(); }
+  /**
+   * @brief Determine if the expression is an enumeration.
+   *
+   * @param x The expression.
+   * @return true If the expression is an enumeration.
+   * @return false If the expression is not an enumeration.
+   */
+  [[nodiscard]] inline bool is_enum(const riddle::item &x) noexcept { return dynamic_cast<const enum_item *>(&x) != nullptr; }
+  /**
+   * @brief Determine if the expression is a constant.
+   *
+   * A constant is an expression that has a single value.
+   * For example, a boolean expression with a value of true or false.
+   * An arithmetic expression with a lower bound equal to the upper bound.
+   * An enumeration expression with a single value.
+   *
+   * @param x The expression.
+   * @return true If the expression is a constant.
+   * @return false If the expression is not a constant.
+   */
+  [[nodiscard]] inline bool is_constant(const riddle::item &x) noexcept
+  {
+    if (is_bool(x)) // the expression is a boolean..
+      return x.get_type().get_scope().get_core().bool_value(static_cast<const bool_item &>(x)) != utils::Undefined;
+    else if (is_arith(x))
+    { // the expression is an arithmetic value..
+      auto [lb, ub] = x.get_type().get_scope().get_core().bounds(static_cast<const arith_item &>(x));
+      return lb == ub;
+    }
+    else if (is_enum(x)) // the expression is an enumeration value..
+      return x.get_type().get_scope().get_core().domain(static_cast<const enum_item &>(x)).size() == 1;
+    else // the expression is a single value..
+      return true;
+  }
 
-  [[nodiscard]] type &determine_type(const std::vector<std::shared_ptr<item>> &xprs);
+  [[nodiscard]] type &determine_type(const std::vector<std::shared_ptr<arith_item>> &xprs);
 
   inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }
 
