@@ -4,7 +4,7 @@
 
 namespace riddle
 {
-    core::core() : scope(*this, *this), env(*this), bool_tp(*types.emplace("bool", std::make_unique<bool_type>(*this)).first->second), int_tp(*types.emplace("int", std::make_unique<int_type>(*this)).first->second), real_tp(*types.emplace("real", std::make_unique<real_type>(*this)).first->second), time_tp(*types.emplace("time", std::make_unique<time_type>(*this)).first->second), string_tp(*types.emplace("string", std::make_unique<string_type>(*this)).first->second) {}
+    core::core() : scope(*this, *this), env(*this), bool_tp(static_cast<bool_type &>(*types.emplace("bool", std::make_unique<bool_type>(*this)).first->second)), int_tp(static_cast<int_type &>(*types.emplace("int", std::make_unique<int_type>(*this)).first->second)), real_tp(static_cast<real_type &>(*types.emplace("real", std::make_unique<real_type>(*this)).first->second)), time_tp(static_cast<time_type &>(*types.emplace("time", std::make_unique<time_type>(*this)).first->second)), string_tp(static_cast<string_type &>(*types.emplace("string", std::make_unique<string_type>(*this)).first->second)) {}
 
     void core::read(const std::string &script)
     {
@@ -38,7 +38,9 @@ namespace riddle
             cus.emplace_back(std::move(cu));
     }
 
-    std::shared_ptr<item> core::new_item(component_type &tp) { return std::make_shared<component>(tp); }
+    std::shared_ptr<bool_item> core::new_bool(bool value) { return std::make_shared<bool_item>(bool_tp, value ? utils::TRUE_lit : utils::FALSE_lit); }
+
+    std::shared_ptr<component> core::new_item(component_type &tp) { return std::make_shared<component>(tp); }
 
     std::optional<std::reference_wrapper<field>> core::get_field(const std::string &name) const noexcept
     {
@@ -82,7 +84,7 @@ namespace riddle
             return std::nullopt;
     }
 
-    std::shared_ptr<item> core::get(const std::string &name) const noexcept
+    std::shared_ptr<item> core::get(const std::string &name)
     {
         if (auto it = items.find(name); it != items.end())
             return it->second;
@@ -109,11 +111,6 @@ namespace riddle
             throw std::runtime_error("method `" + meth->get_name() + "` with the same arguments already exists");
         methods[meth->get_name()].emplace_back(std::move(meth));
     }
-
-    bool is_bool(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_bool_type() == &x.get_type(); }
-    bool is_int(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_int_type() == &x.get_type(); }
-    bool is_real(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_real_type() == &x.get_type() || x.get_type().get_scope().get_core().is_constant(x); }
-    bool is_time(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_time_type() == &x.get_type() || x.get_type().get_scope().get_core().is_constant(x); }
 
     type &determine_type(const std::vector<std::shared_ptr<item>> &xprs)
     {

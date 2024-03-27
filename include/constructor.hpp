@@ -7,7 +7,6 @@ namespace riddle
 {
   class init_element;
   class statement;
-  class item;
 
   class constructor : public scope
   {

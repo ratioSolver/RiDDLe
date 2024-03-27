@@ -87,7 +87,7 @@ namespace riddle
     void expression_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
     {
         LOG_TRACE(to_string());
-        scp.get_core().assert_fact(expr->evaluate(scp, ctx));
+        scp.get_core().assert_fact(std::static_pointer_cast<bool_item>(expr->evaluate(scp, ctx)));
     }
 
     void conjunction_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const

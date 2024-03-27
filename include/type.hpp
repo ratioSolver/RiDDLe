@@ -7,7 +7,6 @@
 
 namespace riddle
 {
-  class item;
   class constructor;
   class statement;
   class constructor_declaration;

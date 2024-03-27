@@ -14,9 +14,9 @@ namespace riddle
     std::shared_ptr<item> cast_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return expr->evaluate(scp, ctx); }
 
     std::shared_ptr<item> plus_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return expr->evaluate(scp, ctx); }
-    std::shared_ptr<item> minus_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().minus(expr->evaluate(scp, ctx)); }
+    std::shared_ptr<item> minus_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().minus(std::static_pointer_cast<arith_item>(expr->evaluate(scp, ctx))); }
 
-    std::shared_ptr<item> not_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().negate(expr->evaluate(scp, ctx)); }
+    std::shared_ptr<item> not_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().negate(std::static_pointer_cast<bool_item>(expr->evaluate(scp, ctx))); }
 
     std::shared_ptr<item> constructor_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
     {
@@ -55,10 +55,10 @@ namespace riddle
     std::shared_ptr<item> eq_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().eq(l->evaluate(scp, ctx), r->evaluate(scp, ctx)); }
     std::shared_ptr<item> neq_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().negate(scp.get_core().eq(l->evaluate(scp, ctx), r->evaluate(scp, ctx))); }
 
-    std::shared_ptr<item> lt_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().lt(l->evaluate(scp, ctx), r->evaluate(scp, ctx)); }
-    std::shared_ptr<item> gt_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().gt(l->evaluate(scp, ctx), r->evaluate(scp, ctx)); }
-    std::shared_ptr<item> leq_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().leq(l->evaluate(scp, ctx), r->evaluate(scp, ctx)); }
-    std::shared_ptr<item> geq_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().geq(l->evaluate(scp, ctx), r->evaluate(scp, ctx)); }
+    std::shared_ptr<item> lt_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().lt(std::static_pointer_cast<arith_item>(l->evaluate(scp, ctx)), std::static_pointer_cast<arith_item>(r->evaluate(scp, ctx))); }
+    std::shared_ptr<item> gt_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().gt(std::static_pointer_cast<arith_item>(l->evaluate(scp, ctx)), std::static_pointer_cast<arith_item>(r->evaluate(scp, ctx))); }
+    std::shared_ptr<item> leq_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().leq(std::static_pointer_cast<arith_item>(l->evaluate(scp, ctx)), std::static_pointer_cast<arith_item>(r->evaluate(scp, ctx))); }
+    std::shared_ptr<item> geq_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().geq(std::static_pointer_cast<arith_item>(l->evaluate(scp, ctx)), std::static_pointer_cast<arith_item>(r->evaluate(scp, ctx))); }
 
     std::shared_ptr<item> function_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
     {
@@ -109,61 +109,67 @@ namespace riddle
         return c_env;
     }
 
-    std::shared_ptr<item> implication_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().disj({scp.get_core().negate(l->evaluate(scp, ctx)), r->evaluate(scp, ctx)}); }
+    std::shared_ptr<item> implication_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
+    {
+        std::vector<std::shared_ptr<bool_item>> exprs;
+        exprs.push_back(scp.get_core().negate(std::static_pointer_cast<bool_item>(l->evaluate(scp, ctx))));
+        exprs.push_back(std::static_pointer_cast<bool_item>(r->evaluate(scp, ctx)));
+        return scp.get_core().disj(exprs);
+    }
 
     std::shared_ptr<item> disjunction_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
     {
-        std::vector<std::shared_ptr<item>> exprs;
+        std::vector<std::shared_ptr<bool_item>> exprs;
         for (const auto &arg : args)
-            exprs.push_back(arg->evaluate(scp, ctx));
+            exprs.push_back(std::static_pointer_cast<bool_item>(arg->evaluate(scp, ctx)));
         return scp.get_core().disj(exprs);
     }
 
     std::shared_ptr<item> conjunction_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
     {
-        std::vector<std::shared_ptr<item>> exprs;
+        std::vector<std::shared_ptr<bool_item>> exprs;
         for (const auto &arg : args)
-            exprs.push_back(arg->evaluate(scp, ctx));
+            exprs.push_back(std::static_pointer_cast<bool_item>(arg->evaluate(scp, ctx)));
         return scp.get_core().conj(exprs);
     }
 
     std::shared_ptr<item> xor_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
     {
-        std::vector<std::shared_ptr<item>> exprs;
+        std::vector<std::shared_ptr<bool_item>> exprs;
         for (const auto &arg : args)
-            exprs.push_back(arg->evaluate(scp, ctx));
+            exprs.push_back(std::static_pointer_cast<bool_item>(arg->evaluate(scp, ctx)));
         return scp.get_core().exct_one(exprs);
     }
 
     std::shared_ptr<item> addition_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
     {
-        std::vector<std::shared_ptr<item>> exprs;
+        std::vector<std::shared_ptr<arith_item>> exprs;
         for (const auto &arg : args)
-            exprs.push_back(arg->evaluate(scp, ctx));
+            exprs.push_back(std::static_pointer_cast<arith_item>(arg->evaluate(scp, ctx)));
         return scp.get_core().add(exprs);
     }
 
     std::shared_ptr<item> subtraction_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
     {
-        std::vector<std::shared_ptr<item>> exprs;
+        std::vector<std::shared_ptr<arith_item>> exprs;
         for (const auto &arg : args)
-            exprs.push_back(arg->evaluate(scp, ctx));
+            exprs.push_back(std::static_pointer_cast<arith_item>(arg->evaluate(scp, ctx)));
         return scp.get_core().sub(exprs);
     }
 
     std::shared_ptr<item> multiplication_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
     {
-        std::vector<std::shared_ptr<item>> exprs;
+        std::vector<std::shared_ptr<arith_item>> exprs;
         for (const auto &arg : args)
-            exprs.push_back(arg->evaluate(scp, ctx));
+            exprs.push_back(std::static_pointer_cast<arith_item>(arg->evaluate(scp, ctx)));
         return scp.get_core().mul(exprs);
     }
 
     std::shared_ptr<item> division_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
     {
-        std::vector<std::shared_ptr<item>> exprs;
+        std::vector<std::shared_ptr<arith_item>> exprs;
         for (const auto &arg : args)
-            exprs.push_back(arg->evaluate(scp, ctx));
+            exprs.push_back(std::static_pointer_cast<arith_item>(arg->evaluate(scp, ctx)));
         return scp.get_core().div(exprs);
     }
 } // namespace riddle
