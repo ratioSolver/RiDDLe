@@ -20,7 +20,7 @@ namespace riddle
     friend class predicate_declaration;
 
   public:
-    scope(core &c, scope &parent);
+    scope(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args = {});
     virtual ~scope() = default;
 
     /**

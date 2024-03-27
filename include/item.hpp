@@ -6,6 +6,7 @@
 namespace riddle
 {
   class type;
+  class predicate;
 
   class item : public utils::enum_val
   {
@@ -29,5 +30,17 @@ namespace riddle
   public:
     component(type &t, std::shared_ptr<env> parent = nullptr);
     virtual ~component() = default;
+  };
+
+  class atom : public item, public env
+  {
+  public:
+    atom(predicate &t, bool is_fact, std::map<std::string, std::shared_ptr<item>> &&args = {});
+    virtual ~atom() = default;
+
+    [[nodiscard]] bool is_fact() const { return fact; }
+
+  private:
+    bool fact; // whether the atom is a fact or a goal..
   };
 } // namespace riddle

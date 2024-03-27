@@ -94,12 +94,11 @@ namespace riddle
     std::optional<std::reference_wrapper<constructor>> component_type::get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const
     {
         for (const auto &c : constructors)
-        {
             if (c->get_args().size() == argument_types.size())
             {
                 bool match = true;
                 for (size_t i = 0; i < argument_types.size(); ++i)
-                    if (!c->get_args()[i]->get_type().is_assignable_from(argument_types[i].get()))
+                    if (!c->get_args()[i].get().get_type().is_assignable_from(argument_types[i].get()))
                     {
                         match = false;
                         break;
@@ -107,7 +106,6 @@ namespace riddle
                 if (match)
                     return *c;
             }
-        }
         return std::nullopt;
     }
 
@@ -115,7 +113,6 @@ namespace riddle
     {
         if (auto it = methods.find(name); it != methods.end())
             for (const auto &m : it->second)
-            {
                 if (m->get_arguments().size() == argument_types.size())
                 {
                     bool match = true;
@@ -128,7 +125,6 @@ namespace riddle
                     if (match)
                         return *m;
                 }
-            }
         // first check in any enclosing scope
         if (auto m = scp.get_core().get_method(name, argument_types))
             return m;
@@ -172,7 +168,7 @@ namespace riddle
     {
         std::vector<std::reference_wrapper<const type>> args;
         for (const auto &arg : ctor->get_args())
-            args.push_back(arg->get_type());
+            args.push_back(arg.get().get_type());
         if (get_constructor(args))
             throw std::runtime_error("constructor with the same arguments already exists");
         constructors.emplace_back(std::move(ctor));
@@ -197,7 +193,7 @@ namespace riddle
             throw std::runtime_error("predicate `" + pred->get_name() + "` already exists");
     }
 
-    predicate::predicate(scope &parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : type(parent, name), scope(parent.get_core(), parent), body(body) {}
+    predicate::predicate(scope &parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : type(parent, name), scope(parent.get_core(), parent, std::move(args)), body(body) {}
     bool predicate::is_assignable_from(const type &other) const
     {
         if (this == &other)

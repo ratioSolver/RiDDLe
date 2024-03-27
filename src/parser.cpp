@@ -728,6 +728,7 @@ namespace riddle
             default:
                 error("Expected either identifier or `=` or `+` or `-` or `*` or `/` or `<` or `<=` or `==` or `>=` or `>` or `!=` or `=>` or `|` or `&` or `^` or `;` or identifier..");
             }
+            break;
         }
         case LBRACE_ID:
         { // either a block or a disjunction..
@@ -859,6 +860,7 @@ namespace riddle
             return std::make_unique<expression_statement>(std::move(xpr));
         }
         }
+        throw std::runtime_error("Unreachable code..");
     }
     std::unique_ptr<expression> parser::parse_expression(const size_t &pr)
     {
@@ -931,6 +933,7 @@ namespace riddle
                 if (!match(RPAREN_ID))
                     error("Expected `)`..");
             }
+            break;
         }
         case PLUS_ID:
             tk = next_token();

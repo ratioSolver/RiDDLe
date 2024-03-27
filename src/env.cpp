@@ -3,7 +3,7 @@
 
 namespace riddle
 {
-    env::env(core &c, std::shared_ptr<env> parent) : cr(c), parent(parent) {}
+    env::env(core &c, std::shared_ptr<env> parent, std::map<std::string, std::shared_ptr<item>> &&items) : cr(c), parent(parent), items(std::move(items)) {}
 
     std::shared_ptr<item> env::get(const std::string &name) const noexcept
     {

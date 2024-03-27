@@ -6,10 +6,10 @@
 
 namespace riddle
 {
-    std::shared_ptr<item> bool_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().new_bool(l.value); }
-    std::shared_ptr<item> int_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().new_int(l.val); }
-    std::shared_ptr<item> real_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().new_real(l.val); }
-    std::shared_ptr<item> string_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return scp.get_core().new_string(l.str); }
+    std::shared_ptr<item> bool_expression::evaluate(scope &scp, std::shared_ptr<env> &) const { return scp.get_core().new_bool(l.value); }
+    std::shared_ptr<item> int_expression::evaluate(scope &scp, std::shared_ptr<env> &) const { return scp.get_core().new_int(l.val); }
+    std::shared_ptr<item> real_expression::evaluate(scope &scp, std::shared_ptr<env> &) const { return scp.get_core().new_real(l.val); }
+    std::shared_ptr<item> string_expression::evaluate(scope &scp, std::shared_ptr<env> &) const { return scp.get_core().new_string(l.str); }
 
     std::shared_ptr<item> cast_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const { return expr->evaluate(scp, ctx); }
 
@@ -91,7 +91,7 @@ namespace riddle
         return method_opt.value().get().invoke(c_env, std::move(arguments));
     }
 
-    std::shared_ptr<item> id_expression::evaluate(scope &scp, std::shared_ptr<env> &ctx) const
+    std::shared_ptr<item> id_expression::evaluate(scope &, std::shared_ptr<env> &ctx) const
     {
         auto c_env = ctx->get(object_id.front().id);
         if (!c_env)

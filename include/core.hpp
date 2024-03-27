@@ -323,15 +323,15 @@ namespace riddle
      * @return true If the assignment is successful.
      * @return false If the assignment is not successful.
      */
-    virtual bool assign(const item &expr, const utils::enum_val &val) = 0;
+    virtual bool assign(const item &expr, utils::enum_val &val) = 0;
 
     /**
      * @brief Remove a value from the domain of the expression.
      *
      * @param expr The expression.
-     * @param value The value to remove.
+     * @param val The value to remove.
      */
-    virtual void forbid(const item &expr, const utils::enum_val &value) = 0;
+    virtual void forbid(const item &expr, utils::enum_val &val) = 0;
 
     /**
      * @brief Get a field by name.
@@ -378,6 +378,7 @@ namespace riddle
   [[nodiscard]] bool is_real(const riddle::item &x) noexcept;
   [[nodiscard]] bool is_time(const riddle::item &x) noexcept;
   [[nodiscard]] inline bool is_arith(const riddle::item &x) noexcept { return is_int(x) || is_real(x) || is_time(x); }
+  [[nodiscard]] inline bool is_string(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_string_type() == &x.get_type(); }
 
   [[nodiscard]] type &determine_type(const std::vector<std::shared_ptr<item>> &xprs);
 

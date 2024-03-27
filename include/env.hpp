@@ -30,7 +30,7 @@ namespace riddle
     friend class return_statement;
 
   public:
-    env(core &c, std::shared_ptr<env> parent = nullptr);
+    env(core &c, std::shared_ptr<env> parent = nullptr, std::map<std::string, std::shared_ptr<item>> &&items = {});
     virtual ~env() = default;
 
     /**

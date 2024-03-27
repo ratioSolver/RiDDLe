@@ -17,9 +17,9 @@ namespace riddle
     /**
      * @brief Get the arguments of the constructor.
      *
-     * @return const std::vector<std::unique_ptr<field>>& The arguments of the constructor.
+     * @return const std::vector<std::reference_wrapper<field>>& The arguments of the constructor.
      */
-    [[nodiscard]] const std::vector<std::unique_ptr<field>> &get_args() const { return args; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<field>> &get_args() const { return args; }
 
     /**
      * @brief Invoke the constructor.
@@ -30,7 +30,7 @@ namespace riddle
     std::shared_ptr<item> invoke(std::vector<std::shared_ptr<item>> &&args);
 
   private:
-    std::vector<std::unique_ptr<field>> args;            // the arguments of the constructor..
+    std::vector<std::reference_wrapper<field>> args;     // the arguments of the constructor..
     const std::vector<init_element> &inits;              // the initializations of the constructor..
     const std::vector<std::unique_ptr<statement>> &body; // the body of the constructor..
   };

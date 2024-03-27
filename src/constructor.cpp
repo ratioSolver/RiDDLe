@@ -7,15 +7,24 @@
 
 namespace riddle
 {
-    constructor::constructor(scope &parent, std::vector<std::unique_ptr<field>> &&args, const std::vector<init_element> &inits, const std::vector<std::unique_ptr<statement>> &body) : scope(parent.get_core(), parent), args(std::move(args)), inits(inits), body(body) {}
+    constructor::constructor(scope &parent, std::vector<std::unique_ptr<field>> &&ctr_args, const std::vector<init_element> &inits, const std::vector<std::unique_ptr<statement>> &body) : scope(parent.get_core(), parent), inits(inits), body(body)
+    {
+        args.reserve(ctr_args.size());
+        for (auto &arg : ctr_args)
+        {
+            args.push_back(*arg);
+            add_field(std::move(arg));
+        }
+        add_field(std::make_unique<field>(static_cast<component_type &>(get_parent()), "this", std::vector<std::unique_ptr<expression>>{}, true));
+    }
 
     std::shared_ptr<item> constructor::invoke(std::vector<std::shared_ptr<item>> &&arguments)
     {
         if (arguments.size() != args.size())
             throw std::runtime_error("Invalid number of arguments.");
         for (size_t i = 0; i < args.size(); i++)
-            if (args.at(i)->get_type().is_assignable_from(arguments.at(i)->get_type()))
-                throw std::runtime_error("Invalid argument type: " + args.at(i)->get_type().get_name() + " is not assignable from " + arguments.at(i)->get_type().get_name() + ".");
+            if (args.at(i).get().get_type().is_assignable_from(arguments.at(i)->get_type()))
+                throw std::runtime_error("Invalid argument type: " + args.at(i).get().get_type().get_name() + " is not assignable from " + arguments.at(i)->get_type().get_name() + ".");
 
         auto &tp = static_cast<component_type &>(get_parent());
         // we create a new instance of the type
@@ -23,7 +32,7 @@ namespace riddle
         // we create a new environment for the constructor
         auto ctx = std::make_shared<env>(get_core(), instance);
         for (size_t i = 0; i < args.size(); i++)
-            ctx->items.emplace(args.at(i)->get_name(), arguments.at(i));
+            ctx->items.emplace(args.at(i).get().get_name(), arguments.at(i));
 
         // we initialize the instance
         for (const auto &init : inits)

@@ -1,6 +1,7 @@
 #include "method.hpp"
 #include "type.hpp"
 #include "statement.hpp"
+#include "core.hpp"
 
 namespace riddle
 {
@@ -12,6 +13,8 @@ namespace riddle
             arguments.push_back(*arg);
             add_field(std::move(arg));
         }
+        if (!is_core(parent))
+            add_field(std::make_unique<field>(static_cast<component_type &>(get_parent()), "this", std::vector<std::unique_ptr<expression>>{}, true));
     }
 
     std::shared_ptr<item> method::invoke(std::shared_ptr<env> &ctx, std::vector<std::shared_ptr<item>> &&args)
