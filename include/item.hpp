@@ -14,6 +14,7 @@ namespace riddle
   class time_type;
   class string_type;
   class predicate;
+  class bool_item;
 
   class item : public utils::enum_val
   {
@@ -28,6 +29,9 @@ namespace riddle
      */
     [[nodiscard]] type &get_type() const { return tp; }
 
+    friend std::shared_ptr<bool_item> operator==(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) noexcept;
+    friend std::shared_ptr<bool_item> operator!=(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) noexcept;
+
   private:
     type &tp;
   };
@@ -39,6 +43,10 @@ namespace riddle
 
     [[nodiscard]] utils::lit &get_value() { return value; }
     [[nodiscard]] const utils::lit &get_value() const { return value; }
+
+    friend std::shared_ptr<bool_item> operator&&(std::shared_ptr<bool_item> lhs, std::shared_ptr<bool_item> rhs) noexcept;
+    friend std::shared_ptr<bool_item> operator||(std::shared_ptr<bool_item> lhs, std::shared_ptr<bool_item> rhs) noexcept;
+    friend std::shared_ptr<bool_item> operator!(std::shared_ptr<bool_item> lhs) noexcept;
 
   private:
     utils::lit value;
@@ -53,6 +61,16 @@ namespace riddle
 
     [[nodiscard]] utils::lin &get_value() { return value; }
     [[nodiscard]] const utils::lin &get_value() const { return value; }
+
+    friend std::shared_ptr<arith_item> operator+(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept;
+    friend std::shared_ptr<arith_item> operator-(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept;
+    friend std::shared_ptr<arith_item> operator*(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept;
+    friend std::shared_ptr<arith_item> operator/(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept;
+
+    friend std::shared_ptr<bool_item> operator<(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept;
+    friend std::shared_ptr<bool_item> operator<=(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept;
+    friend std::shared_ptr<bool_item> operator>(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept;
+    friend std::shared_ptr<bool_item> operator>=(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept;
 
   private:
     utils::lin value;

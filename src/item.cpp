@@ -6,11 +6,28 @@ namespace riddle
 {
     item::item(type &t) : tp(t) {}
 
+    [[nodiscard]] std::shared_ptr<bool_item> operator==(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) noexcept { return lhs->get_type().get_scope().get_core().eq(lhs, rhs); }
+    [[nodiscard]] std::shared_ptr<bool_item> operator!=(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) noexcept { return !(lhs == rhs); }
+
     bool_item::bool_item(bool_type &t, const utils::lit &l) : item(t), value(l) {}
+
+    [[nodiscard]] std::shared_ptr<bool_item> operator&&(std::shared_ptr<bool_item> lhs, std::shared_ptr<bool_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().conj({lhs, rhs}); }
+    [[nodiscard]] std::shared_ptr<bool_item> operator||(std::shared_ptr<bool_item> lhs, std::shared_ptr<bool_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().disj({lhs, rhs}); }
+    [[nodiscard]] std::shared_ptr<bool_item> operator!(std::shared_ptr<bool_item> lhs) noexcept { return lhs->get_type().get_scope().get_core().negate(lhs); }
 
     arith_item::arith_item(int_type &t, const utils::lin &l) : item(t), value(l) {}
     arith_item::arith_item(real_type &t, const utils::lin &l) : item(t), value(l) {}
     arith_item::arith_item(time_type &t, const utils::lin &l) : item(t), value(l) {}
+
+    [[nodiscard]] std::shared_ptr<arith_item> operator+(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().add({lhs, rhs}); }
+    [[nodiscard]] std::shared_ptr<arith_item> operator-(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().sub({lhs, rhs}); }
+    [[nodiscard]] std::shared_ptr<arith_item> operator*(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().mul({lhs, rhs}); }
+    [[nodiscard]] std::shared_ptr<arith_item> operator/(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().div({lhs, rhs}); }
+
+    [[nodiscard]] std::shared_ptr<bool_item> operator<(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().lt(lhs, rhs); }
+    [[nodiscard]] std::shared_ptr<bool_item> operator<=(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().leq(lhs, rhs); }
+    [[nodiscard]] std::shared_ptr<bool_item> operator>(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().gt(lhs, rhs); }
+    [[nodiscard]] std::shared_ptr<bool_item> operator>=(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) noexcept { return lhs->get_type().get_scope().get_core().geq(lhs, rhs); }
 
     string_item::string_item(string_type &t, const std::string &s) : item(t), value(s) {}
 
