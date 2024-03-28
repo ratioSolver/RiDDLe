@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <fstream>
 #include "core.hpp"
 #include "parser.hpp"
 
@@ -23,15 +24,23 @@ namespace riddle
         std::vector<std::unique_ptr<compilation_unit>> c_cus;
         c_cus.reserve(files.size());
         for (const auto &file : files)
-        {
-            parser p(file);
-            auto cu = p.parse();
+            if (std::ifstream ifs(file); ifs)
+            {
+                parser p(ifs);
+                auto cu = p.parse();
+                c_cus.emplace_back(std::move(cu));
+            }
+            else
+                throw std::invalid_argument("file `" + file + "` not found");
+
+        for (auto &cu : c_cus)
             cu->declare(*this);
+        for (auto &cu : c_cus)
             cu->refine(*this);
+        for (auto &cu : c_cus)
             cu->refine_predicates(*this);
+        for (auto &cu : c_cus)
             cu->execute(*this, ctx);
-            c_cus.emplace_back(std::move(cu));
-        }
 
         cus.reserve(cus.size() + c_cus.size());
         for (auto &cu : c_cus)
