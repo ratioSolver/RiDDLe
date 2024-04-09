@@ -2,7 +2,6 @@
 
 #include <vector>
 #include "statement.hpp"
-#include "pair.hpp"
 
 namespace riddle
 {
@@ -145,7 +144,7 @@ namespace riddle
     friend class class_declaration;
 
   public:
-    constructor_declaration(std::vector<utils::pair<std::vector<id_token>, id_token>> &&params, std::vector<init_element> &&inits, std::vector<std::unique_ptr<statement>> &&stmts) : parameters(std::move(params)), inits(std::move(inits)), body(std::move(stmts)) {}
+    constructor_declaration(std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<init_element> &&inits, std::vector<std::unique_ptr<statement>> &&stmts) : parameters(std::move(params)), inits(std::move(inits)), body(std::move(stmts)) {}
 
     std::string to_string() const { return ""; }
 
@@ -153,7 +152,7 @@ namespace riddle
     void refine(scope &scp) const;
 
   private:
-    std::vector<utils::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
+    std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
     std::vector<init_element> inits;                                      // the initializations of the fields..
     std::vector<std::unique_ptr<statement>> body;                         // the body of the constructor..
   };
@@ -164,7 +163,7 @@ namespace riddle
     friend class compilation_unit;
 
   public:
-    method_declaration(std::vector<id_token> &&rt, const id_token &&name, std::vector<utils::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : return_type(std::move(rt)), name(std::move(name)), parameters(std::move(params)), body(std::move(stmts)) {}
+    method_declaration(std::vector<id_token> &&rt, const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : return_type(std::move(rt)), name(std::move(name)), parameters(std::move(params)), body(std::move(stmts)) {}
 
     std::string to_string() const
     {
@@ -194,7 +193,7 @@ namespace riddle
   private:
     std::vector<id_token> return_type;                                    // the return type of the method..
     id_token name;                                                        // the name of the method..
-    std::vector<utils::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the method..
+    std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the method..
     std::vector<std::unique_ptr<statement>> body;                         // the body of the method..
   };
 
@@ -204,7 +203,7 @@ namespace riddle
     friend class compilation_unit;
 
   public:
-    predicate_declaration(const id_token &&name, std::vector<utils::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_predicates, std::vector<std::unique_ptr<statement>> &&stmts) : name(std::move(name)), parameters(std::move(params)), base_predicates(std::move(base_predicates)), body(std::move(stmts)) {}
+    predicate_declaration(const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_predicates, std::vector<std::unique_ptr<statement>> &&stmts) : name(std::move(name)), parameters(std::move(params)), base_predicates(std::move(base_predicates)), body(std::move(stmts)) {}
 
     std::string to_string() const
     {
@@ -240,7 +239,7 @@ namespace riddle
 
   private:
     id_token name;                                                        // the name of the class..
-    std::vector<utils::pair<std::vector<id_token>, id_token>> parameters; // the type parameters of the class..
+    std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the type parameters of the class..
     std::vector<std::vector<id_token>> base_predicates;                   // the base predicates of the class..
     std::vector<std::unique_ptr<statement>> body;                         // the body of the rule..
   };

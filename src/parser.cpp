@@ -298,7 +298,7 @@ namespace riddle
 
         if (constructors.empty())
         {
-            std::vector<utils::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
+            std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
             std::vector<init_element> inits;                                    // the initializations of the fields..
             std::vector<std::unique_ptr<statement>> body;                       // the body of the constructor..
             constructors.emplace_back(std::make_unique<constructor_declaration>(std::move(parameters), std::move(inits), std::move(body)));
@@ -373,7 +373,7 @@ namespace riddle
     std::unique_ptr<method_declaration> parser::parse_method_declaration()
     {
         std::vector<id_token> rt;
-        std::vector<utils::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
         std::vector<std::unique_ptr<statement>> stmts;
 
         switch (tk->sym)
@@ -458,7 +458,7 @@ namespace riddle
     }
     std::unique_ptr<constructor_declaration> parser::parse_constructor_declaration()
     {
-        std::vector<utils::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
+        std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
         std::vector<init_element> inits;                                    // the initializations of the fields..
         std::vector<std::unique_ptr<statement>> body;                       // the body of the constructor..
 
@@ -543,7 +543,7 @@ namespace riddle
     }
     std::unique_ptr<predicate_declaration> parser::parse_predicate_declaration()
     {
-        std::vector<utils::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
         std::vector<std::vector<id_token>> base_predicates;
         std::vector<std::unique_ptr<statement>> stmts;
 
