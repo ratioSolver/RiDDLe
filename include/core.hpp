@@ -286,9 +286,9 @@ namespace riddle
      * @brief Get the bounds of the arithmetic expression.
      *
      * @param expr The expression.
-     * @return std::pair<utils::inf_rational, utils::inf_rational> The bounds.
+     * @return utils::pair<utils::inf_rational, utils::inf_rational> The bounds.
      */
-    [[nodiscard]] virtual std::pair<utils::inf_rational, utils::inf_rational> bounds(const arith_item &expr) const noexcept = 0;
+    [[nodiscard]] virtual utils::pair<utils::inf_rational, utils::inf_rational> bounds(const arith_item &expr) const noexcept = 0;
 
     /**
      * @brief Get the domain of the expression.
