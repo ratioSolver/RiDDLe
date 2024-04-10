@@ -40,7 +40,7 @@ namespace riddle
      * @param arguments The arguments.
      * @return std::shared_ptr<item> The result of the method.
      */
-    [[nodiscard]] std::shared_ptr<item> invoke(std::shared_ptr<env> &ctx, std::vector<std::shared_ptr<item>> &&args);
+    [[nodiscard]] std::shared_ptr<item> invoke(std::shared_ptr<env> ctx, std::vector<std::shared_ptr<item>> &&args);
 
   private:
     std::optional<std::reference_wrapper<type>> return_type; // the return type of the method..

@@ -17,7 +17,7 @@ namespace riddle
             add_field(std::make_unique<field>(static_cast<component_type &>(get_parent()), "this", std::vector<std::unique_ptr<expression>>{}, true));
     }
 
-    std::shared_ptr<item> method::invoke(std::shared_ptr<env> &ctx, std::vector<std::shared_ptr<item>> &&args)
+    std::shared_ptr<item> method::invoke(std::shared_ptr<env> ctx, std::vector<std::shared_ptr<item>> &&args)
     {
         if (args.size() != arguments.size())
             throw std::runtime_error("Invalid number of arguments.");

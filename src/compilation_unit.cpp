@@ -32,7 +32,7 @@ namespace riddle
             t->refine_predicates(scp);
     }
 
-    void compilation_unit::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    void compilation_unit::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         // we execute the statements..
         for (const auto &stmt : body)

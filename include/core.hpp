@@ -21,7 +21,7 @@ namespace riddle
   /**
    * @brief The core of the language.
    */
-  class core : public scope, public env
+  class core : public scope, public env, public std::enable_shared_from_this<core>
   {
     friend class typedef_declaration;
     friend class enum_declaration;

@@ -5,7 +5,7 @@
 
 namespace riddle
 {
-    void local_field_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    void local_field_statement::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         LOG_TRACE(to_string());
         auto tp_opt = scp.get_type(field_type.front().id);
@@ -67,7 +67,7 @@ namespace riddle
                 throw std::runtime_error("Cannot create instance of type " + tp->get_name());
     }
 
-    void assignment_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    void assignment_statement::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         LOG_TRACE(to_string());
         auto c_env = ctx;
@@ -84,20 +84,20 @@ namespace riddle
         static_cast<env &>(*c_env).items.emplace(field_name.id, rhs->evaluate(scp, ctx));
     }
 
-    void expression_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    void expression_statement::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         LOG_TRACE(to_string());
         scp.get_core().assert_fact(std::static_pointer_cast<bool_item>(expr->evaluate(scp, ctx)));
     }
 
-    void conjunction_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    void conjunction_statement::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         LOG_TRACE(to_string());
         for (const auto &stm : statements)
             stm->execute(scp, ctx);
     }
 
-    void disjunction_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    void disjunction_statement::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         LOG_TRACE(to_string());
         std::vector<std::unique_ptr<conjunction>> conjs;
@@ -106,7 +106,7 @@ namespace riddle
         scp.get_core().new_disjunction(std::move(conjs));
     }
 
-    void for_all_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    void for_all_statement::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         LOG_TRACE(to_string());
         auto tp_opt = scp.get_type(enum_type.front().id);
@@ -134,14 +134,14 @@ namespace riddle
         }
     }
 
-    void return_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    void return_statement::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         LOG_TRACE(to_string());
         if (expr)
             ctx->items.emplace("return", expr->evaluate(scp, ctx));
     }
 
-    void formula_statement::execute(scope &scp, std::shared_ptr<env> &ctx) const
+    void formula_statement::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         LOG_TRACE(to_string());
         auto c_env = ctx;

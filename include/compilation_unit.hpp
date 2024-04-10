@@ -26,7 +26,7 @@ namespace riddle
     void declare(scope &scp) const;
     void refine(scope &scp) const;
     void refine_predicates(scope &scp) const;
-    void execute(scope &scp, std::shared_ptr<env> &ctx) const;
+    void execute(scope &scp, std::shared_ptr<env> ctx) const;
 
   private:
     std::vector<std::unique_ptr<type_declaration>> types;           // The type declarations.

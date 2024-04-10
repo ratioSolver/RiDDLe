@@ -9,7 +9,7 @@ namespace riddle
 
     void core::read(const std::string &script)
     {
-        auto ctx = env::shared_from_this();
+        auto ctx = shared_from_this();
         parser p(script);
         auto cu = p.parse();
         cu->declare(*this);
@@ -20,7 +20,7 @@ namespace riddle
     }
     void core::read(const std::vector<std::string> &files)
     {
-        auto ctx = env::shared_from_this();
+        auto ctx = shared_from_this();
         std::vector<std::unique_ptr<compilation_unit>> c_cus;
         c_cus.reserve(files.size());
         for (const auto &file : files)

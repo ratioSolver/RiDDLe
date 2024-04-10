@@ -20,7 +20,7 @@ namespace riddle
    *
    * An environment is a collection of items.
    */
-  class env : public std::enable_shared_from_this<env>
+  class env
   {
     friend class constructor;
     friend class method;
