@@ -101,6 +101,8 @@ namespace riddle
 
     void execute(scope &scp, std::shared_ptr<env> ctx) const override;
 
+    const std::unique_ptr<expression> &get_cost() const { return cst; }
+
     std::string to_string() const override
     {
       std::string result = "{\n";

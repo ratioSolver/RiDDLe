@@ -14,7 +14,7 @@ namespace riddle
     expression() = default;
     virtual ~expression() = default;
 
-    [[nodiscard]] virtual std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const = 0;
+    [[nodiscard]] virtual std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const = 0;
 
     virtual std::string to_string() const = 0;
   };
@@ -24,7 +24,7 @@ namespace riddle
   public:
     bool_expression(const bool_token &l) : l(l) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l.to_string(); }
 
@@ -37,7 +37,7 @@ namespace riddle
   public:
     int_expression(const int_token &l) : l(l) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l.to_string(); }
 
@@ -50,7 +50,7 @@ namespace riddle
   public:
     real_expression(const real_token &l) : l(l) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l.to_string(); }
 
@@ -63,7 +63,7 @@ namespace riddle
   public:
     string_expression(const string_token &l) : l(l) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l.to_string(); }
 
@@ -76,7 +76,7 @@ namespace riddle
   public:
     cast_expression(std::vector<id_token> &&tp, std::unique_ptr<expression> &&xpr) : cast_to_type(std::move(tp)), expr(std::move(xpr)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -96,7 +96,7 @@ namespace riddle
   public:
     plus_expression(std::unique_ptr<expression> &&xpr) : expr(std::move(xpr)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return "+" + expr->to_string(); }
 
@@ -109,7 +109,7 @@ namespace riddle
   public:
     minus_expression(std::unique_ptr<expression> &&xpr) : expr(std::move(xpr)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return "-" + expr->to_string(); }
 
@@ -122,7 +122,7 @@ namespace riddle
   public:
     not_expression(std::unique_ptr<expression> &&xpr) : expr(std::move(xpr)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return "!" + expr->to_string(); }
 
@@ -135,7 +135,7 @@ namespace riddle
   public:
     constructor_expression(std::vector<id_token> &&tp, std::vector<std::unique_ptr<expression>> &&args) : instance_type(std::move(tp)), args(std::move(args)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -162,7 +162,7 @@ namespace riddle
   public:
     eq_expression(std::unique_ptr<expression> &&l, std::unique_ptr<expression> &&r) : l(std::move(l)), r(std::move(r)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l->to_string() + " == " + r->to_string(); }
 
@@ -176,7 +176,7 @@ namespace riddle
   public:
     neq_expression(std::unique_ptr<expression> &&l, std::unique_ptr<expression> &&r) : l(std::move(l)), r(std::move(r)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l->to_string() + " != " + r->to_string(); }
 
@@ -190,7 +190,7 @@ namespace riddle
   public:
     lt_expression(std::unique_ptr<expression> &&l, std::unique_ptr<expression> &&r) : l(std::move(l)), r(std::move(r)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l->to_string() + " < " + r->to_string(); }
 
@@ -204,7 +204,7 @@ namespace riddle
   public:
     leq_expression(std::unique_ptr<expression> &&l, std::unique_ptr<expression> &&r) : l(std::move(l)), r(std::move(r)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l->to_string() + " <= " + r->to_string(); }
 
@@ -218,7 +218,7 @@ namespace riddle
   public:
     geq_expression(std::unique_ptr<expression> &&l, std::unique_ptr<expression> &&r) : l(std::move(l)), r(std::move(r)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l->to_string() + " >= " + r->to_string(); }
 
@@ -232,7 +232,7 @@ namespace riddle
   public:
     gt_expression(std::unique_ptr<expression> &&l, std::unique_ptr<expression> &&r) : l(std::move(l)), r(std::move(r)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l->to_string() + " > " + r->to_string(); }
 
@@ -246,7 +246,7 @@ namespace riddle
   public:
     function_expression(std::vector<id_token> &&obj_id, id_token &&fn_name, std::vector<std::unique_ptr<expression>> &&args) : object_id(std::move(obj_id)), function_name(std::move(fn_name)), args(std::move(args)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -274,7 +274,7 @@ namespace riddle
   public:
     id_expression(std::vector<id_token> &&obj_id) : object_id(std::move(obj_id)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -293,7 +293,7 @@ namespace riddle
   public:
     implication_expression(std::unique_ptr<expression> &&l, std::unique_ptr<expression> &&r) : l(std::move(l)), r(std::move(r)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override { return l->to_string() + " -> " + r->to_string(); }
 
@@ -307,7 +307,7 @@ namespace riddle
   public:
     disjunction_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -326,7 +326,7 @@ namespace riddle
   public:
     conjunction_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -345,7 +345,7 @@ namespace riddle
   public:
     xor_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -364,7 +364,7 @@ namespace riddle
   public:
     addition_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -383,7 +383,7 @@ namespace riddle
   public:
     subtraction_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -402,7 +402,7 @@ namespace riddle
   public:
     multiplication_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {
@@ -421,7 +421,7 @@ namespace riddle
   public:
     division_expression(std::vector<std::unique_ptr<expression>> &&args) : args(std::move(args)) {}
 
-    [[nodiscard]] std::shared_ptr<item> evaluate(scope &scp, std::shared_ptr<env> ctx) const override;
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, std::shared_ptr<env> ctx) const override;
 
     std::string to_string() const override
     {

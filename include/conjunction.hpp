@@ -15,9 +15,15 @@ namespace riddle
 
     /**
      * @brief Execute the conjunction.
-     *
      */
     void execute();
+
+    /**
+     * @brief Compute the cost of the conjunction.
+     *
+     * @return The cost of the conjunction.
+     */
+    [[nodiscard]] std::shared_ptr<arith_item> compute_cost() const noexcept;
 
   private:
     std::shared_ptr<env> ctx;
