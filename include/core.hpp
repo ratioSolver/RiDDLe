@@ -258,7 +258,7 @@ namespace riddle
      *
      * @param disjuncts The disjuncts.
      */
-    virtual void new_disjunction(std::vector<std::unique_ptr<riddle::conjunction>> &&disjuncts) = 0;
+    virtual void new_disjunction(std::vector<std::unique_ptr<conjunction>> &&disjuncts) = 0;
 
     /**
      * @brief Create a new fact or goal atom with the given predicate and arguments.
@@ -396,7 +396,7 @@ namespace riddle
    * @return true If the expression is a boolean.
    * @return false If the expression is not a boolean.
    */
-  [[nodiscard]] inline bool is_bool(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_bool_type() == &x.get_type(); }
+  [[nodiscard]] inline bool is_bool(const item &x) noexcept { return &x.get_type().get_scope().get_core().get_bool_type() == &x.get_type(); }
   /**
    * @brief Determine if the expression is an integer.
    *
@@ -404,7 +404,7 @@ namespace riddle
    * @return true If the expression is an integer.
    * @return false If the expression is not an integer.
    */
-  [[nodiscard]] inline bool is_int(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_int_type() == &x.get_type(); }
+  [[nodiscard]] inline bool is_int(const item &x) noexcept { return &x.get_type().get_scope().get_core().get_int_type() == &x.get_type(); }
   /**
    * @brief Determine if the expression is a real.
    *
@@ -412,7 +412,7 @@ namespace riddle
    * @return true If the expression is a real.
    * @return false If the expression is not a real.
    */
-  [[nodiscard]] inline bool is_real(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_real_type() == &x.get_type(); }
+  [[nodiscard]] inline bool is_real(const item &x) noexcept { return &x.get_type().get_scope().get_core().get_real_type() == &x.get_type(); }
   /**
    * @brief Determine if the expression is a time.
    *
@@ -420,7 +420,7 @@ namespace riddle
    * @return true If the expression is a time.
    * @return false If the expression is not a time.
    */
-  [[nodiscard]] inline bool is_time(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_time_type() == &x.get_type(); }
+  [[nodiscard]] inline bool is_time(const item &x) noexcept { return &x.get_type().get_scope().get_core().get_time_type() == &x.get_type(); }
   /**
    * @brief Determine if the expression is an arithmetic value.
    *
@@ -428,7 +428,7 @@ namespace riddle
    * @return true If the expression is an arithmetic value.
    * @return false If the expression is not an arithmetic value.
    */
-  [[nodiscard]] inline bool is_arith(const riddle::item &x) noexcept { return is_int(x) || is_real(x) || is_time(x); }
+  [[nodiscard]] inline bool is_arith(const item &x) noexcept { return is_int(x) || is_real(x) || is_time(x); }
   /**
    * @brief Determine if the expression is a string.
    *
@@ -436,7 +436,7 @@ namespace riddle
    * @return true If the expression is a string.
    * @return false If the expression is not a string.
    */
-  [[nodiscard]] inline bool is_string(const riddle::item &x) noexcept { return &x.get_type().get_scope().get_core().get_string_type() == &x.get_type(); }
+  [[nodiscard]] inline bool is_string(const item &x) noexcept { return &x.get_type().get_scope().get_core().get_string_type() == &x.get_type(); }
   /**
    * @brief Determine if the expression is an enumeration.
    *
@@ -444,7 +444,7 @@ namespace riddle
    * @return true If the expression is an enumeration.
    * @return false If the expression is not an enumeration.
    */
-  [[nodiscard]] inline bool is_enum(const riddle::item &x) noexcept { return dynamic_cast<const enum_item *>(&x) != nullptr; }
+  [[nodiscard]] inline bool is_enum(const item &x) noexcept { return dynamic_cast<const enum_item *>(&x) != nullptr; }
   /**
    * @brief Determine if the expression is a constant.
    *
@@ -457,7 +457,7 @@ namespace riddle
    * @return true If the expression is a constant.
    * @return false If the expression is not a constant.
    */
-  [[nodiscard]] inline bool is_constant(const riddle::item &x) noexcept
+  [[nodiscard]] inline bool is_constant(const item &x) noexcept
   {
     if (is_bool(x)) // the expression is a boolean..
       return x.get_type().get_scope().get_core().bool_value(static_cast<const bool_item &>(x)) != utils::Undefined;

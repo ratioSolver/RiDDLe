@@ -115,12 +115,43 @@ namespace riddle
     atom(predicate &t, bool is_fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>> &&args = {});
     virtual ~atom() = default;
 
+    /**
+     * @brief Checks if the item is a fact.
+     *
+     * @return true if the item is a fact, false otherwise.
+     */
     [[nodiscard]] bool is_fact() const { return fact; }
+    /**
+     * @brief Get the status of the atom as a literal.
+     *
+     * @return const utils::lit& the status of the atom.
+     * @note the literal assumes the following values:
+     * - `True` if the atom is `Active`.
+     * - `False` if the atom is `Unified`.
+     * - `Undefined` if the atom is `Inactive`.
+     */
     [[nodiscard]] utils::lit &get_sigma() { return sigma; }
+    /**
+     * @brief Get the status of the atom as a literal.
+     *
+     * @return const utils::lit& the status of the atom.
+     * @note the literal assumes the following values:
+     * - `True` if the atom is `Active`.
+     * - `False` if the atom is `Unified`.
+     * - `Undefined` if the atom is `Inactive`.
+     */
     [[nodiscard]] const utils::lit &get_sigma() const { return sigma; }
 
   private:
     bool fact;        // whether the atom is a fact or a goal..
     utils::lit sigma; // the literal indicating the status of the atom (i.e., true if active, false if unified, undefined if inactive)..
   };
+
+  /**
+   * @brief Gets the unique identifier of the given item.
+   *
+   * @param f the item to get the unique identifier of.
+   * @return uintptr_t the unique identifier of the given item.
+   */
+  inline uintptr_t get_id(const item &itm) noexcept { return reinterpret_cast<uintptr_t>(&itm); }
 } // namespace riddle
