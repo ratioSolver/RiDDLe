@@ -7,10 +7,18 @@ enable_testing()
 
 add_subdirectory(extern/utils)
 
+option(ENABLE_VISUALIZATION "Enable visualization features" OFF)
+
 add_library(RiDDLe src/scope.cpp src/env.cpp src/core.cpp src/type.cpp src/constructor.cpp src/method.cpp src/conjunction.cpp src/item.cpp src/lexer.cpp src/parser.cpp src/expression.cpp src/statement.cpp src/declaration.cpp src/compilation_unit.cpp)
 add_dependencies(RiDDLe utils)
 target_link_libraries(RiDDLe PUBLIC utils)
 target_include_directories(RiDDLe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
+message(STATUS "Enable visualization features: ${ENABLE_VISUALIZATION}")
+
+if(ENABLE_VISUALIZATION)
+    target_compile_definitions(RiDDLe PUBLIC ENABLE_VISUALIZATION)
+endif()
 
 if(BUILD_TESTING)
     add_subdirectory(tests)

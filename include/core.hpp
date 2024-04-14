@@ -8,6 +8,10 @@
 #include "enum.hpp"
 #include "compilation_unit.hpp"
 
+#ifdef ENABLE_VISUALIZATION
+#include <unordered_map>
+#endif
+
 namespace riddle
 {
   class component_type;
@@ -357,6 +361,21 @@ namespace riddle
     void add_type(std::unique_ptr<type> &&tp);
     void add_predicate(std::unique_ptr<predicate> &&pred);
     void add_method(std::unique_ptr<method> &&mthd);
+
+#ifdef ENABLE_VISUALIZATION
+  public:
+    std::string guess_name(const item &itm) const noexcept
+    {
+      if (const auto at_f = expr_names.find(&itm); at_f != expr_names.cend())
+        return at_f->second;
+      return "";
+    }
+
+  private:
+    void recompute_names() noexcept;
+
+    std::unordered_map<const item *, const std::string> expr_names;
+#endif
 
   private:
     std::map<std::string, std::unique_ptr<type>> types;                  // the types..

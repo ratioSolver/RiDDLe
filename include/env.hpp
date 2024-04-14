@@ -54,6 +54,13 @@ namespace riddle
      */
     [[nodiscard]] virtual std::shared_ptr<item> get(const std::string &name);
 
+    /**
+     * @brief Get the items of the environment.
+     *
+     * @return const std::map<std::string, std::shared_ptr<item>>& The items of the environment.
+     */
+    const std::map<std::string, std::shared_ptr<item>> &get_items() const { return items; }
+
   private:
     core &cr;
     std::shared_ptr<env> parent;

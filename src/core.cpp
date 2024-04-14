@@ -3,6 +3,14 @@
 #include "core.hpp"
 #include "parser.hpp"
 
+#ifdef ENABLE_VISUALIZATION
+#include <queue>
+
+#define RECOMPUTE_NAMES() recompute_names()
+#else
+#define RECOMPUTE_NAMES()
+#endif
+
 namespace riddle
 {
     core::core() : scope(*this, *this), env(*this), bool_tp(static_cast<bool_type &>(*types.emplace("bool", std::make_unique<bool_type>(*this)).first->second)), int_tp(static_cast<int_type &>(*types.emplace("int", std::make_unique<int_type>(*this)).first->second)), real_tp(static_cast<real_type &>(*types.emplace("real", std::make_unique<real_type>(*this)).first->second)), time_tp(static_cast<time_type &>(*types.emplace("time", std::make_unique<time_type>(*this)).first->second)), string_tp(static_cast<string_type &>(*types.emplace("string", std::make_unique<string_type>(*this)).first->second)) {}
@@ -138,4 +146,30 @@ namespace riddle
             return xprs[0]->get_type().get_scope().get_core().get_int_type();
         return xprs[0]->get_type().get_scope().get_core().get_real_type();
     }
+
+#ifdef ENABLE_VISUALIZATION
+    void core::recompute_names() noexcept
+    {
+        expr_names.clear();
+
+        std::queue<std::pair<std::string, std::shared_ptr<item>>> q;
+        for (const auto &xpr : get_items())
+        {
+            expr_names.emplace(xpr.second.get(), xpr.first);
+            if (!xpr.second->get_type().is_primitive())
+                q.push(xpr);
+        }
+
+        while (!q.empty())
+        {
+            const auto &c_xpr = q.front();
+            if (const auto *c_env = dynamic_cast<env *>(c_xpr.second.get()))
+                for (const auto &xpr : c_env->get_items())
+                    if (expr_names.emplace(xpr.second.get(), expr_names.at(c_xpr.second.get()) + '.' + xpr.first).second)
+                        if (!xpr.second->get_type().is_primitive())
+                            q.push(xpr);
+            q.pop();
+        }
+    }
+#endif
 } // namespace riddle
