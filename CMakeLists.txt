@@ -14,8 +14,7 @@ add_dependencies(RiDDLe utils)
 target_link_libraries(RiDDLe PUBLIC utils)
 target_include_directories(RiDDLe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 
-message(STATUS "Enable visualization features: ${ENABLE_VISUALIZATION}")
-
+message(STATUS "Enable RiDDLe visualization features: ${ENABLE_VISUALIZATION}")
 if(ENABLE_VISUALIZATION)
     target_compile_definitions(RiDDLe PUBLIC ENABLE_VISUALIZATION)
 endif()
