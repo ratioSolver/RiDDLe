@@ -214,5 +214,5 @@ namespace riddle
         }
         return false;
     }
-    std::shared_ptr<item> predicate::new_instance() { return scp.get_core().new_atom(true, *this); }
+    std::shared_ptr<item> predicate::new_instance() { return scp.get_core().new_fact(*this); }
 } // namespace riddle

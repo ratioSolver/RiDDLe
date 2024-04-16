@@ -261,14 +261,21 @@ namespace riddle
     virtual void new_disjunction(std::vector<std::unique_ptr<conjunction>> &&disjuncts) = 0;
 
     /**
-     * @brief Create a new fact or goal atom with the given predicate and arguments.
+     * @brief Create a new fact atom with the given predicate and arguments.
      *
-     * @param is_fact Whether the atom is a fact or a goal.
      * @param pred The predicate.
      * @param arguments The arguments.
      * @return std::shared_ptr<atom> The atom.
      */
-    [[nodiscard]] virtual std::shared_ptr<atom> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {}) = 0;
+    [[nodiscard]] virtual std::shared_ptr<atom> new_fact(predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {});
+    /**
+     * @brief Create a new goal atom with the given predicate and arguments.
+     *
+     * @param pred The predicate.
+     * @param arguments The arguments.
+     * @return std::shared_ptr<atom> The atom.
+     */
+    [[nodiscard]] virtual std::shared_ptr<atom> new_goal(predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {});
 
     /**
      * @brief Get the bool value of the expression.
@@ -348,6 +355,16 @@ namespace riddle
     [[nodiscard]] virtual std::shared_ptr<item> get(const std::string &name) override;
 
   private:
+    /**
+     * @brief Create a new fact or goal atom with the given predicate and arguments.
+     *
+     * @param is_fact Whether the atom is a fact or a goal.
+     * @param pred The predicate.
+     * @param arguments The arguments.
+     * @return std::shared_ptr<atom> The atom.
+     */
+    [[nodiscard]] virtual std::shared_ptr<atom> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {}) = 0;
+
     /**
      * @brief Returns the expression with the given name in the given enum.
      *

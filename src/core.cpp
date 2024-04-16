@@ -64,7 +64,30 @@ namespace riddle
     std::shared_ptr<string_item> core::new_string() { return std::make_shared<string_item>(string_tp); }
     std::shared_ptr<string_item> core::new_string(const std::string &value) { return std::make_shared<string_item>(string_tp, value); }
 
-    std::shared_ptr<component> core::new_item(component_type &tp) { return std::make_shared<component>(tp); }
+    std::shared_ptr<component> core::new_item(component_type &tp)
+    {
+        auto itm = std::make_shared<component>(tp);
+        tp.instances.emplace_back(itm);
+        for (const auto &parent : tp.get_parents())
+            parent.get().instances.emplace_back(itm);
+        return itm;
+    }
+    std::shared_ptr<atom> core::new_fact(predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments)
+    {
+        auto fact = new_atom(true, pred, std::move(arguments));
+        pred.atoms.emplace_back(fact);
+        for (const auto &parent : pred.get_parents())
+            parent.get().atoms.emplace_back(fact);
+        return fact;
+    }
+    std::shared_ptr<atom> core::new_goal(predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments)
+    {
+        auto goal = new_atom(false, pred, std::move(arguments));
+        pred.atoms.emplace_back(goal);
+        for (const auto &parent : pred.get_parents())
+            parent.get().atoms.emplace_back(goal);
+        return goal;
+    }
 
     std::optional<std::reference_wrapper<field>> core::get_field(const std::string &name) const noexcept
     {

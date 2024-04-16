@@ -167,6 +167,7 @@ namespace riddle
    */
   class component_type : public type, public scope
   {
+    friend class core;
     friend class constructor;
     friend class constructor_declaration;
     friend class method_declaration;
@@ -228,6 +229,8 @@ namespace riddle
 
   class predicate : public type, public scope
   {
+    friend class core;
+
   public:
     predicate(scope &parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body);
     virtual ~predicate() = default;

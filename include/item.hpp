@@ -13,6 +13,7 @@ namespace riddle
   class real_type;
   class time_type;
   class string_type;
+  class component_type;
   class predicate;
   class bool_item;
 
@@ -105,7 +106,7 @@ namespace riddle
   class component : public item, public env
   {
   public:
-    component(type &t, std::shared_ptr<env> parent = nullptr);
+    component(component_type &t, std::shared_ptr<env> parent = nullptr);
     virtual ~component() = default;
   };
 

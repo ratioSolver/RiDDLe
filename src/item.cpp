@@ -34,7 +34,7 @@ namespace riddle
     enum_item::enum_item(type &t, VARIABLE_TYPE v) : item(t), env(t.get_scope().get_core()), value(v) {}
     std::shared_ptr<item> enum_item::get(const std::string &name) { return get_core().get(*this, name); }
 
-    component::component(type &t, std::shared_ptr<env> parent) : item(t), env(t.get_scope().get_core(), parent) {}
+    component::component(component_type &t, std::shared_ptr<env> parent) : item(t), env(t.get_scope().get_core(), parent) {}
 
     atom::atom(predicate &t, bool is_fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>> &&args) : item(t), env(t.get_scope().get_core(), nullptr, std::move(args)), fact(is_fact), sigma(sigma) {}
 } // namespace riddle
