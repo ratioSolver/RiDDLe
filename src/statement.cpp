@@ -11,7 +11,7 @@ namespace riddle
         auto tp_opt = scp.get_type(field_type.front().id);
         if (!tp_opt)
             throw std::runtime_error("Cannot find class " + field_type.front().id);
-        auto tp = &tp_opt.value().get();
+        auto tp = &tp_opt->get();
         if (!tp)
             throw std::runtime_error("Class " + field_type.front().id + " is not a component type");
         for (auto it = field_type.begin() + 1; it != field_type.end(); it++)
@@ -20,7 +20,7 @@ namespace riddle
                 tp_opt = cmp_tp->get_type(it->id);
                 if (!tp_opt)
                     throw std::runtime_error("Cannot find class " + it->id);
-                tp = &tp_opt.value().get();
+                tp = &tp_opt->get();
             }
 
         for (const auto &field : fields)
@@ -112,7 +112,7 @@ namespace riddle
         auto tp_opt = scp.get_type(enum_type.front().id);
         if (!tp_opt)
             throw std::runtime_error("Cannot find class " + enum_type.front().id);
-        auto tp = dynamic_cast<component_type *>(&tp_opt.value().get());
+        auto tp = dynamic_cast<component_type *>(&tp_opt->get());
         if (!tp)
             throw std::runtime_error("Class " + enum_type.front().id + " is not a component type");
         for (auto it = enum_type.begin() + 1; it != enum_type.end(); it++)
@@ -120,7 +120,7 @@ namespace riddle
             tp_opt = tp->get_type(it->id);
             if (!tp_opt)
                 throw std::runtime_error("Cannot find class " + it->id);
-            tp = dynamic_cast<component_type *>(&tp_opt.value().get());
+            tp = dynamic_cast<component_type *>(&tp_opt->get());
             if (!tp)
                 throw std::runtime_error("Class " + it->id + " is not a component type");
         }
@@ -165,7 +165,7 @@ namespace riddle
         if (!pred_opt)
             throw std::runtime_error("Cannot find predicate " + predicate_name.id);
 
-        auto &pred = pred_opt.value().get();
+        auto &pred = pred_opt->get();
 
         std::map<std::string, std::shared_ptr<item>> args;
         for (const auto &arg : arguments)
@@ -173,7 +173,7 @@ namespace riddle
             auto tp_opt = pred.get_field(arg.get_id().id);
             if (!tp_opt)
                 throw std::runtime_error("Cannot find field " + arg.get_id().id);
-            auto &tp = tp_opt.value().get().get_type();
+            auto &tp = tp_opt->get().get_type();
             auto val = arg.get_expression()->evaluate(scp, ctx);
             if (tp.is_assignable_from(val->get_type())) // the target type is a superclass of the assignment..
                 args.emplace(arg.get_id().id, val);

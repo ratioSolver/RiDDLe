@@ -57,7 +57,7 @@ namespace riddle
                     }
 
                     if (auto c = tp->get_constructor(arg_types))
-                        instance->items.emplace(init.get_name().id, c.value().get().invoke(std::move(arguments)));
+                        instance->items.emplace(init.get_name().id, c->get().invoke(std::move(arguments)));
                     else
                         throw std::runtime_error("Cannot find constructor for class " + init.get_name().id);
                 }
@@ -77,7 +77,7 @@ namespace riddle
                 }
 
                 if (auto c = (*st).get().get_constructor(arg_types))
-                    instance->items.emplace(init.get_name().id, c.value().get().invoke(std::move(arguments)));
+                    instance->items.emplace(init.get_name().id, c->get().invoke(std::move(arguments)));
                 else
                     throw std::runtime_error("Cannot find supertype " + init.get_name().id + ".");
             }
@@ -104,7 +104,7 @@ namespace riddle
                         else if (auto c_tp = dynamic_cast<component_type *>(&f->get_type()))
                         {
                             if (auto c = c_tp->get_constructor({xpr->get_type()}))
-                                instance->items.emplace(f_name, c.value().get().invoke({xpr}));
+                                instance->items.emplace(f_name, c->get().invoke({xpr}));
                             else
                                 throw std::runtime_error("Cannot find constructor for class " + f->get_type().get_name());
                         }
@@ -125,7 +125,7 @@ namespace riddle
                     if (auto c_tp = dynamic_cast<component_type *>(&f->get_type()))
                     {
                         if (auto c = c_tp->get_constructor(arg_types))
-                            instance->items.emplace(f_name, c.value().get().invoke(std::move(arguments)));
+                            instance->items.emplace(f_name, c->get().invoke(std::move(arguments)));
                         else
                             throw std::runtime_error("Cannot find constructor for class " + f->get_type().get_name());
                     }

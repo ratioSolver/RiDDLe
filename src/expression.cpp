@@ -23,7 +23,7 @@ namespace riddle
         auto tp_opt = scp.get_type(instance_type.front().id);
         if (!tp_opt)
             throw std::runtime_error("Cannot find class " + instance_type.front().id);
-        auto tp = dynamic_cast<component_type *>(&tp_opt.value().get());
+        auto tp = dynamic_cast<component_type *>(&tp_opt->get());
         if (!tp)
             throw std::runtime_error("Class " + instance_type.front().id + " is not a component type");
         for (auto it = instance_type.begin() + 1; it != instance_type.end(); it++)
@@ -31,7 +31,7 @@ namespace riddle
             tp_opt = tp->get_type(it->id);
             if (!tp_opt)
                 throw std::runtime_error("Cannot find class " + it->id);
-            tp = dynamic_cast<component_type *>(&tp_opt.value().get());
+            tp = dynamic_cast<component_type *>(&tp_opt->get());
             if (!tp)
                 throw std::runtime_error("Class " + it->id + " is not a component type");
         }
@@ -47,7 +47,7 @@ namespace riddle
         }
 
         if (auto c = tp->get_constructor(arg_types))
-            return c.value().get().invoke(std::move(arguments));
+            return c->get().invoke(std::move(arguments));
         else
             throw std::runtime_error("Cannot find constructor for class " + instance_type.front().id);
     }
@@ -88,7 +88,7 @@ namespace riddle
         if (!method_opt)
             throw std::runtime_error("Cannot find method " + function_name.id);
 
-        return method_opt.value().get().invoke(c_env, std::move(arguments));
+        return method_opt->get().invoke(c_env, std::move(arguments));
     }
 
     std::shared_ptr<item> id_expression::evaluate(const scope &, std::shared_ptr<env> ctx) const

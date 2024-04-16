@@ -32,14 +32,14 @@ namespace riddle
     }
     void enum_declaration::refine(scope &scp) const
     {
-        auto et = static_cast<enum_type *>(&scp.get_type(name.id).value().get()); // cast is safe because the type was declared in the same scope
+        auto et = static_cast<enum_type *>(&scp.get_type(name.id)->get()); // cast is safe because the type was declared in the same scope
         for (const auto &er : enum_refs)
         {
             auto t = scp.get_type(er[0].id);
             if (!t)
                 throw std::invalid_argument("[" + std::to_string(er[0].start_line) + ", " + std::to_string(er[0].start_pos) + "] type `" + er[0].id + "` not found");
             for (size_t i = 1; i < er.size(); ++i)
-                if (auto ct = dynamic_cast<component_type *>(&t.value().get()))
+                if (auto ct = dynamic_cast<component_type *>(&t->get()))
                 {
                     t = ct->get_type(er[i].id);
                     if (!t)
@@ -47,7 +47,7 @@ namespace riddle
                 }
                 else
                     throw std::invalid_argument("[" + std::to_string(er[i].start_line) + ", " + std::to_string(er[i].start_pos) + "] `" + er[i].id + "` is not a component type");
-            if (auto c_et = dynamic_cast<enum_type *>(&t.value().get()))
+            if (auto c_et = dynamic_cast<enum_type *>(&t->get()))
                 et->enums.emplace_back(*c_et);
             else
                 throw std::invalid_argument("[" + std::to_string(er[er.size() - 1].start_line) + ", " + std::to_string(er[er.size() - 1].start_pos) + "] `" + er[er.size() - 1].id + "` is not an enum type");
@@ -60,7 +60,7 @@ namespace riddle
         if (!t)
             throw std::invalid_argument("[" + std::to_string(type_ids[0].start_line) + ", " + std::to_string(type_ids[0].start_pos) + "] type `" + type_ids[0].id + "` not found");
         for (size_t i = 1; i < type_ids.size(); ++i)
-            if (auto ct = dynamic_cast<component_type *>(&t.value().get()))
+            if (auto ct = dynamic_cast<component_type *>(&t->get()))
             {
                 t = ct->get_type(type_ids[i].id);
                 if (!t)
@@ -71,7 +71,7 @@ namespace riddle
 
         for (const auto &init : inits)
         { // we create the field and add it to the scope..
-            auto f = std::make_unique<field>(t.value().get(), init.get_name().id, init.get_args());
+            auto f = std::make_unique<field>(t->get(), init.get_name().id, init.get_args());
             if (auto ct = dynamic_cast<component_type *>(&scp))
                 ct->add_field(std::move(f));
             else if (auto cr = dynamic_cast<core *>(&scp))
@@ -91,7 +91,7 @@ namespace riddle
             if (!t)
                 throw std::invalid_argument("[" + std::to_string(tp_ids[0].start_line) + ", " + std::to_string(tp_ids[0].start_pos) + "] type `" + tp_ids[0].id + "` not found");
             for (size_t i = 1; i < tp_ids.size(); ++i)
-                if (auto ct = dynamic_cast<component_type *>(&t.value().get()))
+                if (auto ct = dynamic_cast<component_type *>(&t->get()))
                 {
                     t = ct->get_type(tp_ids[i].id);
                     if (!t)
@@ -99,7 +99,7 @@ namespace riddle
                 }
                 else
                     throw std::invalid_argument("[" + std::to_string(tp_ids[i].start_line) + ", " + std::to_string(tp_ids[i].start_pos) + "] `" + tp_ids[i].id + "` is not a component type");
-            args.push_back(std::make_unique<field>(t.value().get(), id.id));
+            args.push_back(std::make_unique<field>(t->get(), id.id));
         }
 
         // we create the constructor and add it to the scope..
@@ -119,7 +119,7 @@ namespace riddle
             if (!t)
                 throw std::invalid_argument("[" + std::to_string(return_type[0].start_line) + ", " + std::to_string(return_type[0].start_pos) + "] type `" + return_type[0].id + "` not found");
             for (size_t i = 1; i < return_type.size(); ++i)
-                if (auto ct = dynamic_cast<component_type *>(&t.value().get()))
+                if (auto ct = dynamic_cast<component_type *>(&t->get()))
                 {
                     t = ct->get_type(return_type[i].id);
                     if (!t)
@@ -127,7 +127,7 @@ namespace riddle
                 }
                 else
                     throw std::invalid_argument("[" + std::to_string(return_type[i].start_line) + ", " + std::to_string(return_type[i].start_pos) + "] `" + return_type[i].id + "` is not a component type");
-            rt = t.value().get();
+            rt = t->get();
         }
 
         std::vector<std::unique_ptr<field>> pars; // the method's arguments
@@ -138,7 +138,7 @@ namespace riddle
             if (!t)
                 throw std::invalid_argument("[" + std::to_string(tp_ids[0].start_line) + ", " + std::to_string(tp_ids[0].start_pos) + "] type `" + tp_ids[0].id + "` not found");
             for (size_t i = 1; i < tp_ids.size(); ++i)
-                if (auto ct = dynamic_cast<component_type *>(&t.value().get()))
+                if (auto ct = dynamic_cast<component_type *>(&t->get()))
                 {
                     t = ct->get_type(tp_ids[i].id);
                     if (!t)
@@ -146,7 +146,7 @@ namespace riddle
                 }
                 else
                     throw std::invalid_argument("[" + std::to_string(tp_ids[i].start_line) + ", " + std::to_string(tp_ids[i].start_pos) + "] `" + tp_ids[i].id + "` is not a component type");
-            pars.push_back(std::make_unique<field>(t.value().get(), id.id));
+            pars.push_back(std::make_unique<field>(t->get(), id.id));
         }
 
         auto m = std::make_unique<method>(scp, rt, name.id, std::move(pars), std::move(body));
@@ -170,7 +170,7 @@ namespace riddle
     }
     void predicate_declaration::refine(scope &scp) const
     {
-        auto p = static_cast<predicate *>(&scp.get_predicate(name.id).value().get()); // cast is safe because the predicate was declared in the same scope
+        auto p = static_cast<predicate *>(&scp.get_predicate(name.id)->get()); // cast is safe because the predicate was declared in the same scope
 
         // the predicate's arguments
         for (const auto &[tp_ids, id] : parameters)
@@ -179,7 +179,7 @@ namespace riddle
             if (!t)
                 throw std::invalid_argument("[" + std::to_string(tp_ids[0].start_line) + ", " + std::to_string(tp_ids[0].start_pos) + "] type `" + tp_ids[0].id + "` not found");
             for (size_t i = 1; i < tp_ids.size(); ++i)
-                if (auto ct = dynamic_cast<component_type *>(&t.value().get()))
+                if (auto ct = dynamic_cast<component_type *>(&t->get()))
                 {
                     t = ct->get_type(tp_ids[i].id);
                     if (!t)
@@ -187,7 +187,7 @@ namespace riddle
                 }
                 else
                     throw std::invalid_argument("[" + std::to_string(tp_ids[i].start_line) + ", " + std::to_string(tp_ids[i].start_pos) + "] `" + tp_ids[i].id + "` is not a component type");
-            p->add_field(std::make_unique<field>(t.value().get(), id.id));
+            p->add_field(std::make_unique<field>(t->get(), id.id));
         }
     }
 
@@ -207,7 +207,7 @@ namespace riddle
     }
     void class_declaration::refine(scope &scp) const
     {
-        auto c_ct = static_cast<component_type *>(&scp.get_type(name.id).value().get()); // cast is safe because the type was declared in the same scope
+        auto c_ct = static_cast<component_type *>(&scp.get_type(name.id)->get()); // cast is safe because the type was declared in the same scope
 
         for (const auto &tp : base_classes)
         {
@@ -215,7 +215,7 @@ namespace riddle
             if (!t)
                 throw std::invalid_argument("[" + std::to_string(tp[0].start_line) + ", " + std::to_string(tp[0].start_pos) + "] type `" + tp[0].id + "` not found");
             for (size_t i = 1; i < tp.size(); ++i)
-                if (auto ct = dynamic_cast<component_type *>(&t.value().get()))
+                if (auto ct = dynamic_cast<component_type *>(&t->get()))
                 {
                     t = ct->get_type(tp[i].id);
                     if (!t)
@@ -224,7 +224,7 @@ namespace riddle
                 else
                     throw std::invalid_argument("[" + std::to_string(tp[i].start_line) + ", " + std::to_string(tp[i].start_pos) + "] `" + tp[i].id + "` is not a component type");
 
-            if (auto c_ct = dynamic_cast<component_type *>(&t.value().get()))
+            if (auto c_ct = dynamic_cast<component_type *>(&t->get()))
                 c_ct->parents.emplace_back(*c_ct);
             else
                 throw std::invalid_argument("[" + std::to_string(tp[tp.size() - 1].start_line) + ", " + std::to_string(tp[tp.size() - 1].start_pos) + "] `" + tp[tp.size() - 1].id + "` is not a component type");
@@ -248,7 +248,7 @@ namespace riddle
     }
     void class_declaration::refine_predicates(scope &scp) const
     {
-        auto c_ct = static_cast<component_type *>(&scp.get_type(name.id).value().get()); // cast is safe because the type was declared in the same scope
+        auto c_ct = static_cast<component_type *>(&scp.get_type(name.id)->get()); // cast is safe because the type was declared in the same scope
         // we refine the predicates..
         for (const auto &p : predicates)
             p->refine(*c_ct);
