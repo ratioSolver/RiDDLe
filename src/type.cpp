@@ -1,4 +1,5 @@
 #include <queue>
+#include <cassert>
 #include "type.hpp"
 #include "core.hpp"
 #include "declaration.hpp"
@@ -213,6 +214,15 @@ namespace riddle
             }
         }
         return false;
+    }
+    void predicate::call(std::shared_ptr<atom> &atm)
+    {
+        assert(is_assignable_from(atm->get_type()));
+        for (auto &p : parents)
+            p.get().call(atm);
+        auto ctx = std::make_shared<env>(scp.get_core(), atm);
+        for (const auto &stmt : body)
+            stmt->execute(*this, ctx);
     }
     std::shared_ptr<item> predicate::new_instance() { return scp.get_core().new_fact(*this); }
 } // namespace riddle

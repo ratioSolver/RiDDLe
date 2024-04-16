@@ -244,6 +244,16 @@ namespace riddle
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
+    /**
+     * @brief Call the rule associated with this predicate with the given atom as the left-hand side.
+     *
+     * A rule is a formula of the form `p(x1, ..., xn) <- s1, ..., sm.` where `p` is a predicate, `x1, ..., xn` are the arguments of the predicate, and `s1, ..., sm` are the statements in the body of the rule.
+     * When a rule is fired, the statements in the body are executed and the goal `p(x1, ..., xn)` is achieved.
+     *
+     * @param atm The atom.
+     */
+    void call(std::shared_ptr<atom> &atm);
+
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
@@ -251,6 +261,6 @@ namespace riddle
     std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
     std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
     const std::vector<std::unique_ptr<statement>> &body;    // the body of the predicate..
-    std::vector<std::shared_ptr<item>> atoms;               // the atoms having this predicate as their predicate..
+    std::vector<std::shared_ptr<atom>> atoms;               // the atoms having this predicate as their predicate..
   };
 } // namespace riddle
