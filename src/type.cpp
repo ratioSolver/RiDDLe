@@ -215,7 +215,7 @@ namespace riddle
         }
         return false;
     }
-    void predicate::call(std::shared_ptr<atom> &atm)
+    void predicate::call(std::shared_ptr<atom> atm)
     {
         assert(is_assignable_from(atm->get_type()));
         for (auto &p : parents)

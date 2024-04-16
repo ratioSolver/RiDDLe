@@ -212,10 +212,37 @@ namespace riddle
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
-  private:
+  protected:
+    /**
+     * @brief Adds a constructor to this component type.
+     *
+     * This function adds a constructor to the collection of constructors. The constructor is passed as a unique pointer
+     * and is moved into the collection.
+     *
+     * @param ctor A unique pointer to the constructor to be added.
+     */
     void add_constructor(std::unique_ptr<constructor> &&ctor);
+    /**
+     * @brief Adds a method to this component type.
+     *
+     * @param mthd A unique pointer to the method to be added.
+     */
     void add_method(std::unique_ptr<method> &&mthd);
+    /**
+     * @brief Adds a type to this component type.
+     *
+     * This function adds a type to the collection of types.
+     *
+     * @param tp A unique pointer to the type to be added.
+     */
     void add_type(std::unique_ptr<type> &&tp);
+    /**
+     * @brief Adds a predicate to this component type.
+     *
+     * This function adds a predicate to the collection of predicates.
+     *
+     * @param pred A unique pointer to the predicate to be added.
+     */
     void add_predicate(std::unique_ptr<predicate> &&pred);
 
   private:
@@ -252,7 +279,7 @@ namespace riddle
      *
      * @param atm The atom.
      */
-    void call(std::shared_ptr<atom> &atm);
+    void call(std::shared_ptr<atom> atm);
 
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;

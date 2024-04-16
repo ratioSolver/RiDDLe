@@ -374,9 +374,31 @@ namespace riddle
      */
     [[nodiscard]] virtual std::shared_ptr<item> get(enum_item &enm, const std::string &name) = 0;
 
-  private:
+  protected:
+    /**
+     * @brief Adds a type to this RiDDLe core.
+     *
+     * This function adds a type to the collection of types.
+     *
+     * @param tp A unique pointer to the type to be added.
+     */
     void add_type(std::unique_ptr<type> &&tp);
+    /**
+     * @brief Adds a predicate to this RiDDLe core.
+     *
+     * This function adds a predicate to the collection of predicates.
+     *
+     * @param pred A unique pointer to the predicate to be added.
+     */
     void add_predicate(std::unique_ptr<predicate> &&pred);
+    /**
+     * @brief Adds a method to this RiDDLe core.
+     *
+     * This function adds a method to the collection of methods owned by the object.
+     * The method is passed as a unique pointer, which transfers ownership to the object.
+     *
+     * @param mthd A unique pointer to the method to be added.
+     */
     void add_method(std::unique_ptr<method> &&mthd);
 
 #ifdef ENABLE_VISUALIZATION
