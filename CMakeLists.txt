@@ -5,14 +5,15 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 include(CTest)
 enable_testing()
 
-add_subdirectory(extern/utils)
-
 option(ENABLE_VISUALIZATION "Enable visualization features" OFF)
 
 add_library(RiDDLe src/scope.cpp src/env.cpp src/core.cpp src/type.cpp src/constructor.cpp src/method.cpp src/conjunction.cpp src/item.cpp src/lexer.cpp src/parser.cpp src/expression.cpp src/statement.cpp src/declaration.cpp src/compilation_unit.cpp)
-add_dependencies(RiDDLe utils)
-target_link_libraries(RiDDLe PUBLIC utils)
 target_include_directories(RiDDLe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+if(NOT TARGET utils)
+    add_subdirectory(extern/utils)
+    add_dependencies(RiDDLe utils)
+endif()
+target_link_libraries(RiDDLe PUBLIC utils)
 
 message(STATUS "Enable RiDDLe visualization features: ${ENABLE_VISUALIZATION}")
 if(ENABLE_VISUALIZATION)
