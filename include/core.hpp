@@ -77,7 +77,7 @@ namespace riddle
      * @param value The value of the int expression.
      * @return std::shared_ptr<arith_item> The int expression.
      */
-    [[nodiscard]] std::shared_ptr<arith_item> new_int(INTEGER_TYPE value);
+    [[nodiscard]] std::shared_ptr<arith_item> new_int(INT_TYPE value);
 
     /**
      * @brief Create a new real expression.

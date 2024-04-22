@@ -57,7 +57,7 @@ namespace riddle
 
     std::shared_ptr<bool_item> core::new_bool(bool value) { return std::make_shared<bool_item>(bool_tp, value ? utils::TRUE_lit : utils::FALSE_lit); }
 
-    std::shared_ptr<arith_item> core::new_int(INTEGER_TYPE value) { return std::make_shared<arith_item>(int_tp, utils::lin(utils::rational(value))); }
+    std::shared_ptr<arith_item> core::new_int(INT_TYPE value) { return std::make_shared<arith_item>(int_tp, utils::lin(utils::rational(value))); }
     std::shared_ptr<arith_item> core::new_real(const utils::rational &value) { return std::make_shared<arith_item>(real_tp, utils::lin(value)); }
     std::shared_ptr<arith_item> core::new_time(const utils::rational &value) { return std::make_shared<arith_item>(time_tp, utils::lin(value)); }
 

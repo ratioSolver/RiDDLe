@@ -201,11 +201,11 @@ namespace riddle
   class int_token final : public token
   {
   public:
-    int_token(const INTEGER_TYPE &val, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(IntLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
+    int_token(const INT_TYPE &val, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(IntLiteral_ID, start_line, start_pos, end_line, end_pos), val(val) {}
 
     std::string to_string() const override { return std::to_string(val); }
 
-    const INTEGER_TYPE val;
+    const INT_TYPE val;
   };
 
   class real_token final : public token
@@ -276,7 +276,7 @@ namespace riddle
 
     std::unique_ptr<token> make_int_token(const std::string &str)
     {
-      auto tkn = std::make_unique<int_token>(static_cast<INTEGER_TYPE>(std::stol(str)), start_line, start_pos, end_line, end_pos);
+      auto tkn = std::make_unique<int_token>(static_cast<INT_TYPE>(std::stol(str)), start_line, start_pos, end_line, end_pos);
       start_line = end_line;
       start_pos = end_pos;
       return tkn;
@@ -284,7 +284,7 @@ namespace riddle
 
     std::unique_ptr<token> make_real_token(const std::string &intgr, const std::string &dec)
     {
-      auto tkn = std::make_unique<real_token>(utils::rational(static_cast<INTEGER_TYPE>(std::stol(intgr + dec)), static_cast<INTEGER_TYPE>(std::pow(10, dec.size()))), start_line, start_pos, end_line, end_pos);
+      auto tkn = std::make_unique<real_token>(utils::rational(static_cast<INT_TYPE>(std::stol(intgr + dec)), static_cast<INT_TYPE>(std::pow(10, dec.size()))), start_line, start_pos, end_line, end_pos);
       start_line = end_line;
       start_pos = end_pos;
       return tkn;
