@@ -338,7 +338,22 @@ namespace riddle
     [[nodiscard]] std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
 
     [[nodiscard]] std::optional<std::reference_wrapper<type>> get_type(const std::string &name) const override;
+    [[nodiscard]] std::vector<std::reference_wrapper<type>> get_types() const
+    {
+      std::vector<std::reference_wrapper<type>> tps;
+      for (const auto &tp : types)
+        tps.emplace_back(*tp.second);
+      return tps;
+    }
+
     [[nodiscard]] std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const override;
+    [[nodiscard]] std::vector<std::reference_wrapper<predicate>> get_predicates() const
+    {
+      std::vector<std::reference_wrapper<predicate>> preds;
+      for (const auto &pred : predicates)
+        preds.emplace_back(*pred.second);
+      return preds;
+    }
 
     [[nodiscard]] bool_type &get_bool_type() const { return bool_tp; }
     [[nodiscard]] int_type &get_int_type() const { return int_tp; }

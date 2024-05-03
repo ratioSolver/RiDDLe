@@ -198,7 +198,22 @@ namespace riddle
     [[nodiscard]] std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
 
     [[nodiscard]] std::optional<std::reference_wrapper<type>> get_type(const std::string &name) const override;
+    [[nodiscard]] std::vector<std::reference_wrapper<type>> get_types() const
+    {
+      std::vector<std::reference_wrapper<type>> tps;
+      for (const auto &tp : types)
+        tps.emplace_back(*tp.second);
+      return tps;
+    }
+
     [[nodiscard]] std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const override;
+    [[nodiscard]] std::vector<std::reference_wrapper<predicate>> get_predicates() const
+    {
+      std::vector<std::reference_wrapper<predicate>> preds;
+      for (const auto &pred : predicates)
+        preds.emplace_back(*pred.second);
+      return preds;
+    }
 
     /**
      * @brief Get the instances of the type.
@@ -268,6 +283,13 @@ namespace riddle
      * @return const std::vector<std::reference_wrapper<predicate>>& The parent predicates.
      */
     [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const { return parents; }
+
+    /**
+     * @brief Get the atoms of the predicate.
+     *
+     * @return const std::vector<std::shared_ptr<atom>>& The atoms of the predicate.
+     */
+    [[nodiscard]] const std::vector<std::shared_ptr<atom>> &get_atoms() const { return atoms; }
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
