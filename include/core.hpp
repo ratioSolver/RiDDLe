@@ -21,6 +21,7 @@ namespace riddle
   class method_declaration;
   class class_declaration;
   class predicate_declaration;
+  class formula_statement;
 
   /**
    * @brief The core of the language.
@@ -33,6 +34,7 @@ namespace riddle
     friend class class_declaration;
     friend class predicate_declaration;
     friend class enum_item;
+    friend class formula_statement;
 
   public:
     core();

@@ -14,6 +14,7 @@ namespace riddle
   class assignment_statement;
   class for_all_statement;
   class return_statement;
+  class formula_statement;
 
   /**
    * @brief The environment class.
@@ -28,6 +29,7 @@ namespace riddle
     friend class assignment_statement;
     friend class for_all_statement;
     friend class return_statement;
+    friend class formula_statement;
 
   public:
     env(core &c, std::shared_ptr<env> parent = nullptr, std::map<std::string, std::shared_ptr<item>> &&items = {});

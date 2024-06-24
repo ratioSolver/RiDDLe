@@ -1,3 +1,4 @@
+#include <queue>
 #include "statement.hpp"
 #include "type.hpp"
 #include "core.hpp"
@@ -152,33 +153,43 @@ namespace riddle
     void formula_statement::execute(scope &scp, std::shared_ptr<env> ctx) const
     {
         LOG_TRACE(to_string());
-        auto c_env = ctx;
-        for (const auto &id : formula_scope)
-        {
-            auto itm = c_env->get(id.id);
-            if (!itm)
-                throw std::runtime_error("Cannot find object " + id.id);
-            if (auto cmp = std::dynamic_pointer_cast<component>(itm))
-                c_env = cmp;
-            else
-                throw std::runtime_error("Object " + id.id + " is not a component");
-        }
-
         std::optional<std::reference_wrapper<predicate>> pred_opt;
-        if (c_env) // the formula's scope is explicitely declared..
-            pred_opt = static_cast<component_type &>(static_cast<component &>(*c_env).get_type()).get_predicate(predicate_name.id);
-        else // ..or it is implicitely declared
+        std::map<std::string, std::shared_ptr<item>> args;
+
+        if (!formula_scope.empty())
+        {
+            auto c_env = ctx;
+            for (const auto &id : formula_scope)
+            {
+                auto itm = c_env->get(id.id);
+                if (!itm)
+                    throw std::runtime_error("Cannot find object " + id.id);
+                if (auto e = std::dynamic_pointer_cast<env>(itm))
+                    c_env = e;
+                else
+                    throw std::runtime_error("Object " + id.id + " is not an environment");
+            }
+            if (auto cmp = std::dynamic_pointer_cast<component>(c_env))
+            {
+                pred_opt = static_cast<component_type &>(cmp->get_type()).get_predicate(predicate_name.id);
+                args.emplace("tau", cmp);
+            }
+            else
+                throw std::runtime_error("Object " + formula_scope.back().id + " is not a component");
+        }
+        else
+        {
             pred_opt = scp.get_predicate(predicate_name.id);
+            if (!is_core(scp))
+                args.emplace("tau", ctx->get("tau")); // we inherit tau from the caller
+        }
 
         if (!pred_opt)
             throw std::runtime_error("Cannot find predicate " + predicate_name.id);
 
-        auto &pred = pred_opt->get();
-
-        std::map<std::string, std::shared_ptr<item>> args;
         for (const auto &arg : arguments)
         {
-            auto tp_opt = pred.get_field(arg.get_id().id);
+            auto tp_opt = pred_opt->get().get_field(arg.get_id().id);
             if (!tp_opt)
                 throw std::runtime_error("Cannot find field " + arg.get_id().id);
             auto &tp = tp_opt->get().get_type();
@@ -187,9 +198,62 @@ namespace riddle
                 args.emplace(arg.get_id().id, val);
             else if (val->get_type().is_assignable_from(tp)) // ..or the assignment is a superclass of the target type
             {
+                if (is_enum(*val))
+                { // the assignment is an enum (we prune the unassignable values)..
+                    for (auto &v : scp.get_core().domain(static_cast<enum_item &>(*val)))
+                        if (tp.is_assignable_from(static_cast<item &>(v.get()).get_type()))
+                            scp.get_core().forbid(static_cast<enum_item &>(*val), v);
+                }
+                else
+                    throw std::runtime_error("Cannot assign " + val->get_type().get_name() + " to " + tp.get_name());
+                args.emplace(arg.get_id().id, val);
             }
             else
                 throw std::runtime_error("Cannot assign " + val->get_type().get_name() + " to " + tp.get_name());
         }
+
+        auto atm = scp.get_core().new_atom(is_fact, pred_opt->get(), std::move(args));
+        atm->items.insert(args.begin(), args.end());
+
+        // we initialize the unassigned atom's fields..
+        std::queue<predicate *> q;
+        q.push(&pred_opt->get());
+        while (!q.empty())
+        {
+            auto pred = q.front();
+            q.pop();
+            for (const auto &[name, field] : pred->get_fields())
+                if (atm->items.find(name) == atm->items.end())
+                {
+                    auto &tp = field->get_type();
+                    if (tp.is_primitive())
+                        atm->items.emplace(name, tp.new_instance());
+                    else if (auto ct = dynamic_cast<component_type *>(&tp))
+                    {
+                        switch (ct->get_instances().size())
+                        {
+                        case 0:
+                            throw inconsistency_exception();
+                        case 1:
+                            atm->items.emplace(name, ct->get_instances().front());
+                            break;
+                        default:
+                        {
+                            std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
+                            for (const auto &instance : ct->get_instances())
+                                enum_vals.push_back(*instance);
+                            atm->items.emplace(name, scp.get_core().new_enum(*ct, std::move(enum_vals)));
+                        }
+                        }
+                    }
+                    else
+                        throw std::runtime_error("Cannot create instance of type " + tp.get_name());
+                }
+
+            for (const auto sp : pred->get_parents())
+                q.push(&sp.get());
+        }
+
+        ctx->items.emplace(formula_name.id, atm);
     }
 } // namespace riddle
