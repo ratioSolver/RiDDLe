@@ -24,7 +24,15 @@ namespace riddle
             }
 
         for (const auto &field : fields)
-            if (tp->is_primitive())
+            if (field.get_expression())
+            {
+                auto val = field.get_expression()->evaluate(scp, ctx);
+                if (tp->is_assignable_from(val->get_type()))
+                    ctx->items.emplace(field.get_id().id, val);
+                else
+                    throw std::runtime_error("Cannot assign " + val->get_type().get_name() + " to " + tp->get_name());
+            }
+            else if (tp->is_primitive())
                 ctx->items.emplace(field.get_id().id, field.get_expression() ? field.get_expression()->evaluate(scp, ctx) : tp->new_instance());
             else if (auto ct = dynamic_cast<component_type *>(tp))
                 switch (ct->get_instances().size())
