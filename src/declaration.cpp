@@ -209,9 +209,10 @@ namespace riddle
     {
         auto c_ct = static_cast<component_type *>(&scp.get_type(name.id)->get()); // cast is safe because the type was declared in the same scope
 
+        // we refine the base classes by adding the parent classes to the current class..
         for (const auto &tp : base_classes)
         {
-            auto t = scp.get_type(tp[0].id);
+            auto t = scp.get_type(tp[0].id); // the base class
             if (!t)
                 throw std::invalid_argument("[" + std::to_string(tp[0].start_line) + ", " + std::to_string(tp[0].start_pos) + "] type `" + tp[0].id + "` not found");
             for (size_t i = 1; i < tp.size(); ++i)
@@ -224,8 +225,8 @@ namespace riddle
                 else
                     throw std::invalid_argument("[" + std::to_string(tp[i].start_line) + ", " + std::to_string(tp[i].start_pos) + "] `" + tp[i].id + "` is not a component type");
 
-            if (auto c_ct = dynamic_cast<component_type *>(&t->get()))
-                c_ct->parents.emplace_back(*c_ct);
+            if (auto p_ct = dynamic_cast<component_type *>(&t->get()))
+                c_ct->parents.emplace_back(*p_ct);
             else
                 throw std::invalid_argument("[" + std::to_string(tp[tp.size() - 1].start_line) + ", " + std::to_string(tp[tp.size() - 1].start_pos) + "] `" + tp[tp.size() - 1].id + "` is not a component type");
         }
