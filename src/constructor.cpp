@@ -23,7 +23,7 @@ namespace riddle
         if (arguments.size() != args.size())
             throw std::runtime_error("Invalid number of arguments.");
         for (size_t i = 0; i < args.size(); i++)
-            if (args.at(i).get().get_type().is_assignable_from(arguments.at(i)->get_type()))
+            if (!args.at(i).get().get_type().is_assignable_from(arguments.at(i)->get_type()))
                 throw std::runtime_error("Invalid argument type: " + args.at(i).get().get_type().get_name() + " is not assignable from " + arguments.at(i)->get_type().get_name() + ".");
 
         auto &tp = static_cast<component_type &>(get_parent());
