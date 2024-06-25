@@ -1,5 +1,6 @@
 #include "conjunction.hpp"
 #include "statement.hpp"
+#include "core.hpp"
 
 namespace riddle
 {
@@ -7,5 +8,11 @@ namespace riddle
 
     void conjunction::execute() { conj.execute(*this, ctx); }
 
-    std::shared_ptr<arith_item> conjunction::compute_cost() const noexcept { return std::static_pointer_cast<arith_item>(conj.get_cost()->evaluate(*this, ctx)); }
+    std::shared_ptr<arith_item> conjunction::compute_cost() const noexcept
+    {
+        if (conj.get_cost())
+            return std::static_pointer_cast<arith_item>(conj.get_cost()->evaluate(*this, ctx));
+        else
+            return get_core().new_real(utils::rational::one);
+    }
 } // namespace riddle
