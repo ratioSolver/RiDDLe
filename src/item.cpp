@@ -1,3 +1,4 @@
+#include <queue>
 #include "item.hpp"
 #include "type.hpp"
 #include "core.hpp"
@@ -36,5 +37,44 @@ namespace riddle
 
     component::component(component_type &t, std::shared_ptr<env> parent) : item(t), env(t.get_scope().get_core(), parent) {}
 
-    atom::atom(predicate &t, bool is_fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>> &&args) : item(t), env(t.get_scope().get_core(), nullptr, std::move(args)), fact(is_fact), sigma(sigma) {}
+    atom::atom(predicate &t, bool is_fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>> &&args) : item(t), env(t.get_scope().get_core(), nullptr, std::move(args)), fact(is_fact), sigma(sigma)
+    {
+        // we initialize the unassigned atom's fields..
+        std::queue<predicate *> q;
+        q.push(&t);
+        while (!q.empty())
+        {
+            for (const auto &[name, field] : q.front()->get_fields())
+                if (items.find(name) == items.end())
+                {
+                    auto &tp = field->get_type();
+                    if (tp.is_primitive())
+                        items.emplace(name, tp.new_instance());
+                    else if (auto ct = dynamic_cast<component_type *>(&tp))
+                    {
+                        switch (ct->get_instances().size())
+                        {
+                        case 0:
+                            throw inconsistency_exception();
+                        case 1:
+                            items.emplace(name, ct->get_instances().front());
+                            break;
+                        default:
+                        {
+                            std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
+                            for (const auto &instance : ct->get_instances())
+                                enum_vals.push_back(*instance);
+                            items.emplace(name, get_core().new_enum(*ct, std::move(enum_vals)));
+                        }
+                        }
+                    }
+                    else
+                        throw std::runtime_error("Cannot create instance of type " + tp.get_name());
+                }
+
+            for (const auto sp : q.front()->get_parents())
+                q.push(&sp.get());
+            q.pop();
+        }
+    }
 } // namespace riddle

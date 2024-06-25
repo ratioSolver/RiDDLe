@@ -64,9 +64,17 @@ namespace riddle
     std::shared_ptr<string_item> core::new_string() { return std::make_shared<string_item>(string_tp); }
     std::shared_ptr<string_item> core::new_string(const std::string &value) { return std::make_shared<string_item>(string_tp, value); }
 
-    std::shared_ptr<component> core::new_item(component_type &tp)
+    std::shared_ptr<component> core::new_item(component_type &tp, std::vector<std::shared_ptr<item>> &&arguments)
     {
-        auto itm = std::make_shared<component>(tp);
+        std::shared_ptr<component> itm;
+        std::vector<std::reference_wrapper<const type>> arg_types;
+        for (const auto &arg : arguments)
+            arg_types.push_back(arg->get_type());
+        if (auto c = tp.get_constructor(arg_types))
+            itm = std::static_pointer_cast<component>(c->get().invoke(std::move(arguments)));
+        else
+            throw std::runtime_error("Cannot find constructor for class " + tp.get_name());
+
         tp.instances.emplace_back(itm);
         for (const auto &parent : tp.get_parents())
             parent.get().instances.emplace_back(itm);

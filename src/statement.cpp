@@ -212,48 +212,6 @@ namespace riddle
                 throw std::runtime_error("Cannot assign " + val->get_type().get_name() + " to " + tp.get_name());
         }
 
-        auto atm = scp.get_core().new_atom(is_fact, pred_opt->get(), std::move(args));
-        atm->items.insert(args.begin(), args.end());
-
-        // we initialize the unassigned atom's fields..
-        std::queue<predicate *> q;
-        q.push(&pred_opt->get());
-        while (!q.empty())
-        {
-            auto pred = q.front();
-            q.pop();
-            for (const auto &[name, field] : pred->get_fields())
-                if (atm->items.find(name) == atm->items.end())
-                {
-                    auto &tp = field->get_type();
-                    if (tp.is_primitive())
-                        atm->items.emplace(name, tp.new_instance());
-                    else if (auto ct = dynamic_cast<component_type *>(&tp))
-                    {
-                        switch (ct->get_instances().size())
-                        {
-                        case 0:
-                            throw inconsistency_exception();
-                        case 1:
-                            atm->items.emplace(name, ct->get_instances().front());
-                            break;
-                        default:
-                        {
-                            std::vector<std::reference_wrapper<utils::enum_val>> enum_vals;
-                            for (const auto &instance : ct->get_instances())
-                                enum_vals.push_back(*instance);
-                            atm->items.emplace(name, scp.get_core().new_enum(*ct, std::move(enum_vals)));
-                        }
-                        }
-                    }
-                    else
-                        throw std::runtime_error("Cannot create instance of type " + tp.get_name());
-                }
-
-            for (const auto sp : pred->get_parents())
-                q.push(&sp.get());
-        }
-
-        ctx->items.emplace(formula_name.id, atm);
+        ctx->items.emplace(formula_name.id, is_fact ? scp.get_core().new_fact(pred_opt->get(), std::move(args)) : scp.get_core().new_goal(pred_opt->get(), std::move(args)));
     }
 } // namespace riddle

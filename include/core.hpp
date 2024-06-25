@@ -127,9 +127,10 @@ namespace riddle
      * @brief Create a new item.
      *
      * @param tp The type of the item.
+     * @param arguments The arguments of the constructor.
      * @return std::shared_ptr<component> The item.
      */
-    [[nodiscard]] virtual std::shared_ptr<component> new_item(component_type &tp);
+    [[nodiscard]] virtual std::shared_ptr<component> new_item(component_type &tp, std::vector<std::shared_ptr<item>> &&arguments = {});
 
     /**
      * @brief Create a new enum.
@@ -218,6 +219,17 @@ namespace riddle
      * @return std::shared_ptr<bool_item> The bool expression.
      */
     [[nodiscard]] virtual std::shared_ptr<bool_item> eq(const std::shared_ptr<item> &lhs, const std::shared_ptr<item> &rhs) = 0;
+
+    /**
+     * @brief Checks if two items match.
+     *
+     * This function compares two items and determines if they match or not.
+     *
+     * @param lhs The left-hand side item.
+     * @param rhs The right-hand side item.
+     * @return True if the items match, false otherwise.
+     */
+    [[nodiscard]] virtual bool matches(const std::shared_ptr<item> &lhs, const std::shared_ptr<item> &rhs) const = 0;
 
     /**
      * @brief Return the logical and of the bool expressions.

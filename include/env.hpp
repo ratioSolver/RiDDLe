@@ -23,6 +23,7 @@ namespace riddle
    */
   class env
   {
+    friend class core;
     friend class constructor;
     friend class method;
     friend class local_field_statement;

@@ -163,7 +163,7 @@ namespace riddle
         return std::nullopt;
     }
 
-    std::shared_ptr<item> component_type::new_instance() { return scp.get_core().new_item(*this); }
+    std::shared_ptr<item> component_type::new_instance() { return std::make_shared<component>(*this); }
 
     void component_type::add_constructor(std::unique_ptr<constructor> &&ctor)
     {

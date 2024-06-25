@@ -36,20 +36,11 @@ namespace riddle
                 throw std::runtime_error("Class " + it->id + " is not a component type");
         }
 
-        std::vector<std::reference_wrapper<const type>> arg_types;
         std::vector<std::shared_ptr<item>> arguments;
-
         for (const auto &arg : args)
-        {
-            auto xpr = arg->evaluate(scp, ctx);
-            arg_types.push_back(xpr->get_type());
-            arguments.push_back(xpr);
-        }
+            arguments.push_back(arg->evaluate(scp, ctx));
 
-        if (auto c = tp->get_constructor(arg_types))
-            return c->get().invoke(std::move(arguments));
-        else
-            throw std::runtime_error("Cannot find constructor for class " + instance_type.front().id);
+        return scp.get_core().new_item(*tp, std::move(arguments));
     }
 
     std::shared_ptr<item> eq_expression::evaluate(const scope &scp, std::shared_ptr<env> ctx) const { return scp.get_core().eq(l->evaluate(scp, ctx), r->evaluate(scp, ctx)); }
