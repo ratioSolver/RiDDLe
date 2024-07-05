@@ -180,7 +180,7 @@ namespace riddle
         else
         {
             pred_opt = scp.get_predicate(predicate_name.id);
-            if (!is_core(scp))
+            if (!is_core(pred_opt.value().get().get_scope()))
                 args.emplace("tau", ctx->get("tau")); // we inherit tau from the caller
         }
 
