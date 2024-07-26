@@ -25,6 +25,7 @@ namespace riddle
         cu->refine_predicates(*this);
         cu->execute(*this, ctx);
         cus.emplace_back(std::move(cu));
+        RECOMPUTE_NAMES();
     }
     void core::read(const std::vector<std::string> &files)
     {
@@ -53,6 +54,7 @@ namespace riddle
         cus.reserve(cus.size() + c_cus.size());
         for (auto &cu : c_cus)
             cus.emplace_back(std::move(cu));
+        RECOMPUTE_NAMES();
     }
 
     std::shared_ptr<bool_item> core::new_bool(bool value) { return std::make_shared<bool_item>(bool_tp, value ? utils::TRUE_lit : utils::FALSE_lit); }
