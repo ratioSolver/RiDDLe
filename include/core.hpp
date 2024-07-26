@@ -8,7 +8,7 @@
 #include "enum.hpp"
 #include "compilation_unit.hpp"
 
-#ifdef ENABLE_API
+#ifdef COMPUTE_NAMES
 #include <unordered_map>
 #endif
 
@@ -430,7 +430,7 @@ namespace riddle
      */
     void add_method(std::unique_ptr<method> &&mthd);
 
-#ifdef ENABLE_API
+#ifdef COMPUTE_NAMES
   public:
     std::string guess_name(const item &itm) const noexcept
     {

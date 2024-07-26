@@ -3,7 +3,7 @@
 #include "core.hpp"
 #include "parser.hpp"
 
-#ifdef ENABLE_API
+#ifdef COMPUTE_NAMES
 #include <queue>
 
 #define RECOMPUTE_NAMES() recompute_names()
@@ -180,7 +180,7 @@ namespace riddle
         return xprs[0]->get_type().get_scope().get_core().get_real_type();
     }
 
-#ifdef ENABLE_API
+#ifdef COMPUTE_NAMES
     void core::recompute_names() noexcept
     {
         expr_names.clear();
