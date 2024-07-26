@@ -5,7 +5,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=undefined")
 include(CTest)
 enable_testing()
 
-option(ENABLE_VISUALIZATION "Enable visualization features" OFF)
+option(ENABLE_API "RiDDLe API" OFF)
 
 add_library(RiDDLe src/scope.cpp src/env.cpp src/core.cpp src/type.cpp src/constructor.cpp src/method.cpp src/conjunction.cpp src/item.cpp src/lexer.cpp src/parser.cpp src/expression.cpp src/statement.cpp src/declaration.cpp src/compilation_unit.cpp)
 target_include_directories(RiDDLe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -15,9 +15,9 @@ if(NOT TARGET utils)
 endif()
 target_link_libraries(RiDDLe PUBLIC utils)
 
-message(STATUS "Enable RiDDLe visualization features: ${ENABLE_VISUALIZATION}")
-if(ENABLE_VISUALIZATION)
-    target_compile_definitions(RiDDLe PUBLIC ENABLE_VISUALIZATION)
+message(STATUS "RiDDLe API: ${ENABLE_API}")
+if(ENABLE_API)
+    target_compile_definitions(RiDDLe PUBLIC ENABLE_API)
 endif()
 
 if(BUILD_TESTING)
