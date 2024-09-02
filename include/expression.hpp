@@ -139,10 +139,10 @@ namespace riddle
 
     std::string to_string() const override
     {
-      std::string res = "(" + instance_type[0].to_string();
+      std::string res = "new " + instance_type[0].to_string();
       for (size_t i = 1; i < instance_type.size(); ++i)
         res += "." + instance_type[i].to_string();
-      res += ")(";
+      res += "(";
       for (size_t i = 0; i < args.size(); ++i)
       {
         if (i > 0)

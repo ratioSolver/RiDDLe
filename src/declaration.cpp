@@ -240,12 +240,12 @@ namespace riddle
         // we refine the methods..
         for (const auto &m : methods)
             m->refine(*c_ct);
-        // we refine the types..
+        // we refine the (enclosed) types..
         for (const auto &tp : types)
             tp->refine(*c_ct);
-        // we refine the predicates..
+        // we declare the (enclosed) predicates..
         for (const auto &p : predicates)
-            p->refine(*c_ct);
+            p->declare(*c_ct);
     }
     void class_declaration::refine_predicates(scope &scp) const
     {

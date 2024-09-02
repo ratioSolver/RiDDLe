@@ -136,6 +136,17 @@ namespace riddle
         return std::nullopt;
     }
 
+    std::optional<std::reference_wrapper<field>> component_type::get_field(const std::string &name) const noexcept
+    {
+        if (auto f = scope::get_field(name)) // first check in the current scope
+            return f;
+        // if not in the current scope, check any superclass
+        for (const auto &p : get_parents())
+            if (auto f = p.get().get_field(name))
+                return f;
+        return std::nullopt; // if not found in any scope
+    }
+
     std::optional<std::reference_wrapper<type>> component_type::get_type(const std::string &name) const
     {
         if (auto it = types.find(name); it != types.end())
@@ -165,6 +176,10 @@ namespace riddle
 
     std::shared_ptr<item> component_type::new_instance() { return std::make_shared<component>(*this); }
 
+    void component_type::add_parent(component_type &parent) { parents.emplace_back(parent); }
+
+    void component_type::add_parent(predicate &child, predicate &parent) { child.add_parent(parent); }
+
     void component_type::add_constructor(std::unique_ptr<constructor> &&ctor)
     {
         std::vector<std::reference_wrapper<const type>> args;
@@ -190,6 +205,21 @@ namespace riddle
     }
     void component_type::add_predicate(std::unique_ptr<predicate> &&pred)
     {
+        pred->add_field(std::make_unique<field>(*this, "tau")); // we add the tau field to the predicate..
+
+        // we notify all the supertypes that a new predicate has been created..
+        std::queue<component_type *> q;
+        q.push(this);
+        while (!q.empty())
+        {
+            auto &tp = *q.front();
+            tp.new_predicate(*pred);
+            for (const auto &p : tp.get_parents())
+                q.push(&p.get());
+            q.pop();
+        }
+
+        // we add the predicate to the current scope..
         if (!predicates.emplace(pred->get_name(), std::move(pred)).second)
             throw std::runtime_error("predicate `" + pred->get_name() + "` already exists");
     }
@@ -224,5 +254,19 @@ namespace riddle
         for (const auto &stmt : body)
             stmt->execute(*this, ctx);
     }
+
+    void predicate::add_parent(predicate &parent) { parents.emplace_back(parent); }
+
     std::shared_ptr<item> predicate::new_instance() { return scp.get_core().new_fact(*this); }
+
+    std::optional<std::reference_wrapper<field>> predicate::get_field(const std::string &name) const noexcept
+    {
+        if (auto f = scope::get_field(name)) // first check in the current scope
+            return f;
+        // if not in the current scope, check any superclass
+        for (const auto &p : get_parents())
+            if (auto f = p.get().get_field(name))
+                return f;
+        return std::nullopt; // if not found in any scope
+    }
 } // namespace riddle

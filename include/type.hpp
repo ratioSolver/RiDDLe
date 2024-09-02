@@ -187,6 +187,8 @@ namespace riddle
      */
     [[nodiscard]] const std::vector<std::reference_wrapper<component_type>> &get_parents() const { return parents; }
 
+    [[nodiscard]] std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept override;
+
     /**
      * @brief Get the constructors of the type that match the given argument types.
      *
@@ -229,6 +231,21 @@ namespace riddle
 
   protected:
     /**
+     * Adds a parent component to the current component.
+     *
+     * @param parent The parent component to be added.
+     */
+    void add_parent(component_type &parent);
+
+    /**
+     * Adds a parent predicate to a child predicate.
+     *
+     * @param child The child predicate to add a parent to.
+     * @param parent The parent predicate to be added.
+     */
+    static void add_parent(predicate &child, predicate &parent);
+
+    /**
      * @brief Adds a constructor to this component type.
      *
      * This function adds a constructor to the collection of constructors. The constructor is passed as a unique pointer
@@ -261,6 +278,9 @@ namespace riddle
     void add_predicate(std::unique_ptr<predicate> &&pred);
 
   private:
+    virtual void new_predicate([[maybe_unused]] predicate &pred) {}
+
+  private:
     std::vector<std::reference_wrapper<component_type>> parents;         // the base types (i.e. the types this type inherits from)..
     std::vector<std::unique_ptr<constructor>> constructors;              // the constructors of the type..
     std::map<std::string, std::vector<std::unique_ptr<method>>> methods; // the methods declared in the scope of the type..
@@ -272,6 +292,7 @@ namespace riddle
   class predicate : public type, public scope
   {
     friend class core;
+    friend class component_type;
 
   public:
     predicate(scope &parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body);
@@ -283,6 +304,8 @@ namespace riddle
      * @return const std::vector<std::reference_wrapper<predicate>>& The parent predicates.
      */
     [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const { return parents; }
+
+    [[nodiscard]] std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept override;
 
     /**
      * @brief Get the atoms of the predicate.
@@ -302,6 +325,14 @@ namespace riddle
      * @param atm The atom.
      */
     void call(std::shared_ptr<atom> atm);
+
+  protected:
+    /**
+     * Adds a parent predicate to the current predicate.
+     *
+     * @param parent The parent predicate to be added.
+     */
+    void add_parent(predicate &parent);
 
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
