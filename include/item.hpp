@@ -17,6 +17,8 @@ namespace riddle
   class predicate;
   class bool_item;
 
+  constexpr std::string_view TAU_NAME = "tau";
+
   class item : public utils::enum_val
   {
   public:
@@ -94,7 +96,7 @@ namespace riddle
   public:
     enum_item(type &t, VARIABLE_TYPE v);
 
-    [[nodiscard]] std::shared_ptr<item> get(const std::string &name) override;
+    [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
 
     [[nodiscard]] VARIABLE_TYPE &get_value() { return value; }
     [[nodiscard]] const VARIABLE_TYPE &get_value() const { return value; }
@@ -113,7 +115,7 @@ namespace riddle
   class atom : public item, public env
   {
   public:
-    atom(predicate &t, bool is_fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>> &&args = {});
+    atom(predicate &t, bool is_fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {});
     virtual ~atom() = default;
 
     /**

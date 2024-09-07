@@ -154,7 +154,7 @@ namespace riddle
     {
         LOG_TRACE(to_string());
         std::optional<std::reference_wrapper<predicate>> pred_opt;
-        std::map<std::string, std::shared_ptr<item>> args;
+        std::map<std::string, std::shared_ptr<item>, std::less<>> args;
 
         if (!formula_scope.empty())
         {
@@ -172,7 +172,7 @@ namespace riddle
             if (auto cmp = std::dynamic_pointer_cast<component>(c_env))
             {
                 pred_opt = static_cast<component_type &>(cmp->get_type()).get_predicate(predicate_name.id);
-                args.emplace("tau", cmp);
+                args.emplace(TAU_NAME, cmp);
             }
             else
                 throw std::runtime_error("Object " + formula_scope.back().id + " is not a component");
@@ -181,7 +181,7 @@ namespace riddle
         {
             pred_opt = scp.get_predicate(predicate_name.id);
             if (!is_core(pred_opt.value().get().get_scope()))
-                args.emplace("tau", ctx->get("tau")); // we inherit tau from the caller
+                args.emplace(TAU_NAME, ctx->get(TAU_NAME)); // we inherit tau from the caller
         }
 
         if (!pred_opt)

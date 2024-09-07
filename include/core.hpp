@@ -281,7 +281,7 @@ namespace riddle
      * @param arguments The arguments.
      * @return std::shared_ptr<atom> The atom.
      */
-    [[nodiscard]] virtual std::shared_ptr<atom> new_fact(predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {});
+    [[nodiscard]] virtual std::shared_ptr<atom> new_fact(predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&arguments = {});
     /**
      * @brief Create a new goal atom with the given predicate and arguments.
      *
@@ -289,7 +289,7 @@ namespace riddle
      * @param arguments The arguments.
      * @return std::shared_ptr<atom> The atom.
      */
-    [[nodiscard]] virtual std::shared_ptr<atom> new_goal(predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {});
+    [[nodiscard]] virtual std::shared_ptr<atom> new_goal(predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&arguments = {});
 
     /**
      * @brief Get the bool value of the expression.
@@ -347,11 +347,11 @@ namespace riddle
      * @param name The name of the field.
      * @return std::optional<std::reference_wrapper<field>> The field.
      */
-    [[nodiscard]] virtual std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept override;
+    [[nodiscard]] virtual std::optional<std::reference_wrapper<field>> get_field(std::string_view name) const noexcept override;
 
-    [[nodiscard]] std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
+    [[nodiscard]] std::optional<std::reference_wrapper<method>> get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
 
-    [[nodiscard]] std::optional<std::reference_wrapper<type>> get_type(const std::string &name) const override;
+    [[nodiscard]] std::optional<std::reference_wrapper<type>> get_type(std::string_view name) const override;
     [[nodiscard]] std::vector<std::reference_wrapper<type>> get_types() const
     {
       std::vector<std::reference_wrapper<type>> tps;
@@ -360,7 +360,7 @@ namespace riddle
       return tps;
     }
 
-    [[nodiscard]] std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const override;
+    [[nodiscard]] std::optional<std::reference_wrapper<predicate>> get_predicate(std::string_view name) const override;
     [[nodiscard]] std::vector<std::reference_wrapper<predicate>> get_predicates() const
     {
       std::vector<std::reference_wrapper<predicate>> preds;
@@ -381,7 +381,7 @@ namespace riddle
      * @param name The name of the item.
      * @return std::shared_ptr<item> The item.
      */
-    [[nodiscard]] virtual std::shared_ptr<item> get(const std::string &name) override;
+    [[nodiscard]] virtual std::shared_ptr<item> get(std::string_view name) override;
 
   private:
     /**
@@ -392,7 +392,7 @@ namespace riddle
      * @param arguments The arguments.
      * @return std::shared_ptr<atom> The atom.
      */
-    [[nodiscard]] virtual std::shared_ptr<atom> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments = {}) = 0;
+    [[nodiscard]] virtual std::shared_ptr<atom> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&arguments = {}) = 0;
 
     /**
      * @brief Returns the expression with the given name in the given enum.
@@ -401,7 +401,7 @@ namespace riddle
      * @param name The name of the expression.
      * @return std::shared_ptr<item> The expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<item> get(enum_item &enm, const std::string &name) = 0;
+    [[nodiscard]] virtual std::shared_ptr<item> get(enum_item &enm, std::string_view name) = 0;
 
   protected:
     /**
@@ -446,15 +446,15 @@ namespace riddle
 #endif
 
   private:
-    std::map<std::string, std::unique_ptr<type>> types;                  // the types..
-    std::map<std::string, std::unique_ptr<predicate>> predicates;        // the predicates..
-    std::map<std::string, std::vector<std::unique_ptr<method>>> methods; // the methods..
-    bool_type &bool_tp;                                                  // the bool type..
-    int_type &int_tp;                                                    // the int type..
-    real_type &real_tp;                                                  // the real type..
-    time_type &time_tp;                                                  // the time type..
-    string_type &string_tp;                                              // the string type..
-    std::vector<std::unique_ptr<compilation_unit>> cus;                  // the compilation units..
+    std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types..
+    std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates..
+    std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods..
+    bool_type &bool_tp;                                                               // the bool type..
+    int_type &int_tp;                                                                 // the int type..
+    real_type &real_tp;                                                               // the real type..
+    time_type &time_tp;                                                               // the time type..
+    string_type &string_tp;                                                           // the string type..
+    std::vector<std::unique_ptr<compilation_unit>> cus;                               // the compilation units..
   };
 
   /**

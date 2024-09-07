@@ -11,7 +11,7 @@ namespace riddle
   class field
   {
   public:
-    field(type &t, const std::string &name, const std::vector<std::unique_ptr<expression>> &inits = {}, bool synthetic = false) : t(t), name(name), inits(inits), synthetic(synthetic) {}
+    field(type &t, std::string_view name, const std::vector<std::unique_ptr<expression>> &inits = {}, bool synthetic = false) : t(t), name(name), inits(inits), synthetic(synthetic) {}
 
     /**
      * @brief Get the type.

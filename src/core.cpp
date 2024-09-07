@@ -82,7 +82,7 @@ namespace riddle
             parent.get().instances.emplace_back(itm);
         return itm;
     }
-    std::shared_ptr<atom> core::new_fact(predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments)
+    std::shared_ptr<atom> core::new_fact(predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&arguments)
     {
         auto fact = new_atom(true, pred, std::move(arguments));
         pred.atoms.emplace_back(fact);
@@ -90,7 +90,7 @@ namespace riddle
             parent.get().atoms.emplace_back(fact);
         return fact;
     }
-    std::shared_ptr<atom> core::new_goal(predicate &pred, std::map<std::string, std::shared_ptr<item>> &&arguments)
+    std::shared_ptr<atom> core::new_goal(predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&arguments)
     {
         auto goal = new_atom(false, pred, std::move(arguments));
         pred.atoms.emplace_back(goal);
@@ -99,7 +99,7 @@ namespace riddle
         return goal;
     }
 
-    std::optional<std::reference_wrapper<field>> core::get_field(const std::string &name) const noexcept
+    std::optional<std::reference_wrapper<field>> core::get_field(std::string_view name) const noexcept
     {
         if (auto it = fields.find(name); it != fields.end())
             return *it->second.get();
@@ -107,7 +107,7 @@ namespace riddle
             return std::nullopt;
     }
 
-    std::optional<std::reference_wrapper<method>> core::get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
+    std::optional<std::reference_wrapper<method>> core::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
     {
         if (auto it = methods.find(name); it != methods.end())
             for (const auto &m : it->second)
@@ -126,14 +126,14 @@ namespace riddle
         return std::nullopt;
     }
 
-    std::optional<std::reference_wrapper<type>> core::get_type(const std::string &name) const
+    std::optional<std::reference_wrapper<type>> core::get_type(std::string_view name) const
     {
         if (auto it = types.find(name); it != types.end())
             return *it->second;
         else
             return std::nullopt;
     }
-    std::optional<std::reference_wrapper<predicate>> core::get_predicate(const std::string &name) const
+    std::optional<std::reference_wrapper<predicate>> core::get_predicate(std::string_view name) const
     {
         if (auto it = predicates.find(name); it != predicates.end())
             return *it->second;
@@ -141,7 +141,7 @@ namespace riddle
             return std::nullopt;
     }
 
-    std::shared_ptr<item> core::get(const std::string &name)
+    std::shared_ptr<item> core::get(std::string_view name)
     {
         if (auto it = items.find(name); it != items.end())
             return it->second;

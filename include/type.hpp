@@ -22,7 +22,7 @@ namespace riddle
   class type
   {
   public:
-    type(scope &scp, const std::string &name, bool primitive = false);
+    type(scope &scp, std::string_view name, bool primitive = false);
     virtual ~type() = default;
 
     /**
@@ -134,7 +134,7 @@ namespace riddle
   class typedef_type final : public type
   {
   public:
-    typedef_type(scope &parent, const std::string &name, type &base_type, expression &value);
+    typedef_type(scope &parent, std::string_view name, type &base_type, expression &value);
 
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
@@ -148,7 +148,7 @@ namespace riddle
     friend class enum_declaration;
 
   public:
-    enum_type(scope &parent, const std::string &name, std::vector<std::shared_ptr<item>> &&values);
+    enum_type(scope &parent, std::string_view name, std::vector<std::shared_ptr<item>> &&values);
 
     [[nodiscard]] std::vector<std::shared_ptr<item>> get_values() const;
     [[nodiscard]] std::vector<std::reference_wrapper<enum_type>> get_enums() const { return enums; }
@@ -177,7 +177,7 @@ namespace riddle
     friend class predicate_declaration;
 
   public:
-    component_type(scope &parent, const std::string &name);
+    component_type(scope &parent, std::string_view name);
     virtual ~component_type() = default;
 
     /**
@@ -187,7 +187,7 @@ namespace riddle
      */
     [[nodiscard]] const std::vector<std::reference_wrapper<component_type>> &get_parents() const { return parents; }
 
-    [[nodiscard]] std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept override;
+    [[nodiscard]] std::optional<std::reference_wrapper<field>> get_field(std::string_view name) const noexcept override;
 
     /**
      * @brief Get the constructors of the type that match the given argument types.
@@ -197,9 +197,9 @@ namespace riddle
      */
     [[nodiscard]] std::optional<std::reference_wrapper<constructor>> get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const;
 
-    [[nodiscard]] std::optional<std::reference_wrapper<method>> get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
+    [[nodiscard]] std::optional<std::reference_wrapper<method>> get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
 
-    [[nodiscard]] std::optional<std::reference_wrapper<type>> get_type(const std::string &name) const override;
+    [[nodiscard]] std::optional<std::reference_wrapper<type>> get_type(std::string_view name) const override;
     [[nodiscard]] std::vector<std::reference_wrapper<type>> get_types() const
     {
       std::vector<std::reference_wrapper<type>> tps;
@@ -208,7 +208,7 @@ namespace riddle
       return tps;
     }
 
-    [[nodiscard]] std::optional<std::reference_wrapper<predicate>> get_predicate(const std::string &name) const override;
+    [[nodiscard]] std::optional<std::reference_wrapper<predicate>> get_predicate(std::string_view name) const override;
     [[nodiscard]] std::vector<std::reference_wrapper<predicate>> get_predicates() const
     {
       std::vector<std::reference_wrapper<predicate>> preds;
@@ -281,12 +281,12 @@ namespace riddle
     virtual void new_predicate([[maybe_unused]] predicate &pred) {}
 
   private:
-    std::vector<std::reference_wrapper<component_type>> parents;         // the base types (i.e. the types this type inherits from)..
-    std::vector<std::unique_ptr<constructor>> constructors;              // the constructors of the type..
-    std::map<std::string, std::vector<std::unique_ptr<method>>> methods; // the methods declared in the scope of the type..
-    std::map<std::string, std::unique_ptr<type>> types;                  // the types declared in the scope of the type..
-    std::map<std::string, std::unique_ptr<predicate>> predicates;        // the predicates declared in the scope of the type..
-    std::vector<std::shared_ptr<item>> instances;                        // the instances of the type..
+    std::vector<std::reference_wrapper<component_type>> parents;                      // the base types (i.e. the types this type inherits from)..
+    std::vector<std::unique_ptr<constructor>> constructors;                           // the constructors of the type..
+    std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the scope of the type..
+    std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the scope of the type..
+    std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the scope of the type..
+    std::vector<std::shared_ptr<item>> instances;                                     // the instances of the type..
   };
 
   class predicate : public type, public scope
@@ -295,7 +295,7 @@ namespace riddle
     friend class component_type;
 
   public:
-    predicate(scope &parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body);
+    predicate(scope &parent, std::string_view name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body);
     virtual ~predicate() = default;
 
     /**
@@ -305,7 +305,7 @@ namespace riddle
      */
     [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const { return parents; }
 
-    [[nodiscard]] std::optional<std::reference_wrapper<field>> get_field(const std::string &name) const noexcept override;
+    [[nodiscard]] std::optional<std::reference_wrapper<field>> get_field(std::string_view name) const noexcept override;
 
     /**
      * @brief Get the atoms of the predicate.

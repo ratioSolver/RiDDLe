@@ -33,7 +33,7 @@ namespace riddle
     friend class formula_statement;
 
   public:
-    env(core &c, std::shared_ptr<env> parent = nullptr, std::map<std::string, std::shared_ptr<item>> &&items = {});
+    env(core &c, std::shared_ptr<env> parent = nullptr, std::map<std::string, std::shared_ptr<item>, std::less<>> &&items = {});
     virtual ~env() = default;
 
     /**
@@ -55,20 +55,20 @@ namespace riddle
      * @param name The name of the item.
      * @return std::shared_ptr<item> The item.
      */
-    [[nodiscard]] virtual std::shared_ptr<item> get(const std::string &name);
+    [[nodiscard]] virtual std::shared_ptr<item> get(std::string_view name);
 
     /**
      * @brief Get the items of the environment.
      *
      * @return const std::map<std::string, std::shared_ptr<item>>& The items of the environment.
      */
-    const std::map<std::string, std::shared_ptr<item>> &get_items() const { return items; }
+    const std::map<std::string, std::shared_ptr<item>, std::less<>> &get_items() const { return items; }
 
   private:
     core &cr;
     std::shared_ptr<env> parent;
 
   protected:
-    std::map<std::string, std::shared_ptr<item>> items;
+    std::map<std::string, std::shared_ptr<item>, std::less<>> items;
   };
 } // namespace riddle

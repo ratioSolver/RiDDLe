@@ -8,7 +8,7 @@ namespace riddle
             add_field(std::move(arg));
     }
 
-    std::optional<std::reference_wrapper<field>> scope::get_field(const std::string &name) const noexcept
+    std::optional<std::reference_wrapper<field>> scope::get_field(std::string_view name) const noexcept
     {
         if (auto it = fields.find(name); it != fields.end())
             return *it->second.get();

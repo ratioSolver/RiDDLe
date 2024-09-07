@@ -6,7 +6,7 @@
 
 namespace riddle
 {
-    type::type(scope &scp, const std::string &name, bool primitive) : scp(scp), name(name), primitive(primitive) {}
+    type::type(scope &scp, std::string_view name, bool primitive) : scp(scp), name(name), primitive(primitive) {}
 
     bool_type::bool_type(core &c) : type(c, "bool", true) {}
     std::shared_ptr<item> bool_type::new_instance() { return scp.get_core().new_bool(); }
@@ -23,7 +23,7 @@ namespace riddle
     string_type::string_type(core &c) : type(c, "string", true) {}
     std::shared_ptr<item> string_type::new_instance() { return scp.get_core().new_string(); }
 
-    typedef_type::typedef_type(scope &parent, const std::string &name, type &base_type, expression &value) : type(parent, name), base_type(base_type), value(value) {}
+    typedef_type::typedef_type(scope &parent, std::string_view name, type &base_type, expression &value) : type(parent, name), base_type(base_type), value(value) {}
     std::shared_ptr<item> typedef_type::new_instance()
     {
         // we create a new environment for the expression evaluation..
@@ -31,7 +31,7 @@ namespace riddle
         return value.evaluate(scp, ctx);
     }
 
-    enum_type::enum_type(scope &parent, const std::string &name, std::vector<std::shared_ptr<item>> &&values) : type(parent, name), values(std::move(values)) {}
+    enum_type::enum_type(scope &parent, std::string_view name, std::vector<std::shared_ptr<item>> &&values) : type(parent, name), values(std::move(values)) {}
     std::vector<std::shared_ptr<item>> enum_type::get_values() const
     {
         std::vector<std::shared_ptr<item>> vals;
@@ -70,7 +70,7 @@ namespace riddle
         return scp.get_core().new_enum(*this, std::move(enum_vals));
     }
 
-    component_type::component_type(scope &parent, const std::string &name) : type(parent, name), scope(parent.get_core(), parent) {}
+    component_type::component_type(scope &parent, std::string_view name) : type(parent, name), scope(parent.get_core(), parent) {}
     bool component_type::is_assignable_from(const type &other) const
     {
         if (this == &other)
@@ -110,7 +110,7 @@ namespace riddle
         return std::nullopt;
     }
 
-    std::optional<std::reference_wrapper<method>> component_type::get_method(const std::string &name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
+    std::optional<std::reference_wrapper<method>> component_type::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
     {
         if (auto it = methods.find(name); it != methods.end())
             for (const auto &m : it->second)
@@ -136,7 +136,7 @@ namespace riddle
         return std::nullopt;
     }
 
-    std::optional<std::reference_wrapper<field>> component_type::get_field(const std::string &name) const noexcept
+    std::optional<std::reference_wrapper<field>> component_type::get_field(std::string_view name) const noexcept
     {
         if (auto f = scope::get_field(name)) // first check in the current scope
             return f;
@@ -147,7 +147,7 @@ namespace riddle
         return std::nullopt; // if not found in any scope
     }
 
-    std::optional<std::reference_wrapper<type>> component_type::get_type(const std::string &name) const
+    std::optional<std::reference_wrapper<type>> component_type::get_type(std::string_view name) const
     {
         if (auto it = types.find(name); it != types.end())
             return *it->second;
@@ -160,7 +160,7 @@ namespace riddle
                 return t;
         return std::nullopt;
     }
-    std::optional<std::reference_wrapper<predicate>> component_type::get_predicate(const std::string &name) const
+    std::optional<std::reference_wrapper<predicate>> component_type::get_predicate(std::string_view name) const
     {
         if (auto it = predicates.find(name); it != predicates.end())
             return *it->second;
@@ -205,7 +205,7 @@ namespace riddle
     }
     void component_type::add_predicate(std::unique_ptr<predicate> &&pred)
     {
-        pred->add_field(std::make_unique<field>(*this, "tau")); // we add the tau field to the predicate..
+        pred->add_field(std::make_unique<field>(*this, TAU_NAME)); // we add the tau field to the predicate..
 
         // we notify all the supertypes that a new predicate has been created..
         std::queue<component_type *> q;
@@ -224,7 +224,7 @@ namespace riddle
             throw std::runtime_error("predicate `" + pred->get_name() + "` already exists");
     }
 
-    predicate::predicate(scope &parent, const std::string &name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : type(parent, name), scope(parent.get_core(), parent, std::move(args)), body(body) {}
+    predicate::predicate(scope &parent, std::string_view name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) : type(parent, name), scope(parent.get_core(), parent, std::move(args)), body(body) {}
     bool predicate::is_assignable_from(const type &other) const
     {
         if (this == &other)
@@ -259,7 +259,7 @@ namespace riddle
 
     std::shared_ptr<item> predicate::new_instance() { return scp.get_core().new_fact(*this); }
 
-    std::optional<std::reference_wrapper<field>> predicate::get_field(const std::string &name) const noexcept
+    std::optional<std::reference_wrapper<field>> predicate::get_field(std::string_view name) const noexcept
     {
         if (auto f = scope::get_field(name)) // first check in the current scope
             return f;

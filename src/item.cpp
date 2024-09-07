@@ -33,11 +33,11 @@ namespace riddle
     string_item::string_item(string_type &t, const std::string &s) : item(t), value(s) {}
 
     enum_item::enum_item(type &t, VARIABLE_TYPE v) : item(t), env(t.get_scope().get_core()), value(v) {}
-    std::shared_ptr<item> enum_item::get(const std::string &name) { return get_core().get(*this, name); }
+    std::shared_ptr<item> enum_item::get(std::string_view name) { return get_core().get(*this, name); }
 
     component::component(component_type &t, std::shared_ptr<env> parent) : item(t), env(t.get_scope().get_core(), parent) {}
 
-    atom::atom(predicate &t, bool is_fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>> &&args) : item(t), env(t.get_scope().get_core(), nullptr, std::move(args)), fact(is_fact), sigma(sigma)
+    atom::atom(predicate &t, bool is_fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args) : item(t), env(t.get_scope().get_core(), nullptr, std::move(args)), fact(is_fact), sigma(sigma)
     {
         // we initialize the unassigned atom's fields..
         std::queue<predicate *> q;
