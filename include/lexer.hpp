@@ -181,7 +181,7 @@ namespace riddle
   class id_token final : public token
   {
   public:
-    id_token(const std::string &id, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(ID_ID, start_line, start_pos, end_line, end_pos), id(id) {}
+    id_token(std::string_view id, const size_t &start_line, const size_t &start_pos, const size_t &end_line, const size_t &end_pos) : token(ID_ID, start_line, start_pos, end_line, end_pos), id(id) {}
 
     std::string to_string() const override { return id; }
 
