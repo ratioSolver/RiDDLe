@@ -153,8 +153,8 @@ namespace riddle
 
   private:
     std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
-    std::vector<init_element> inits;                                      // the initializations of the fields..
-    std::vector<std::unique_ptr<statement>> body;                         // the body of the constructor..
+    std::vector<init_element> inits;                                    // the initializations of the fields..
+    std::vector<std::unique_ptr<statement>> body;                       // the body of the constructor..
   };
 
   class method_declaration
@@ -191,10 +191,10 @@ namespace riddle
     void refine(scope &scp) const;
 
   private:
-    std::vector<id_token> return_type;                                    // the return type of the method..
-    id_token name;                                                        // the name of the method..
+    std::vector<id_token> return_type;                                  // the return type of the method..
+    id_token name;                                                      // the name of the method..
     std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the method..
-    std::vector<std::unique_ptr<statement>> body;                         // the body of the method..
+    std::vector<std::unique_ptr<statement>> body;                       // the body of the method..
   };
 
   class predicate_declaration
@@ -238,10 +238,10 @@ namespace riddle
     void refine(scope &scp) const;
 
   private:
-    id_token name;                                                        // the name of the class..
+    id_token name;                                                      // the name of the class..
     std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the type parameters of the class..
-    std::vector<std::vector<id_token>> base_predicates;                   // the base predicates of the class..
-    std::vector<std::unique_ptr<statement>> body;                         // the body of the rule..
+    std::vector<std::vector<id_token>> base_predicates;                 // the base predicates of the class..
+    std::vector<std::unique_ptr<statement>> body;                       // the body of the rule..
   };
 
   class class_declaration final : public type_declaration

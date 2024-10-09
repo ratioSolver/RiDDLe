@@ -56,8 +56,10 @@ namespace riddle
                         arguments.push_back(xpr);
                     }
 
-                    if (auto c = tp->get_constructor(arg_types))
-                        instance->items.emplace(init.get_name().id, c->get().invoke(std::move(arguments)));
+                    if (arg_types.size() == 1 && f->get().get_type().is_assignable_from(arg_types.at(0)))
+                        instance->items.emplace(init.get_name().id, arguments.at(0)); // we assign the argument to the field
+                    else if (auto c = tp->get_constructor(arg_types))
+                        instance->items.emplace(init.get_name().id, c->get().invoke(std::move(arguments))); // we invoke the constructor and assign the result to the field
                     else
                         throw std::runtime_error("Cannot find constructor for class " + init.get_name().id);
                 }

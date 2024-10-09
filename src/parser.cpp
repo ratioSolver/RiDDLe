@@ -296,7 +296,7 @@ namespace riddle
                 error("expected either `typedef` or `enum` or `class` or `predicate` or `void` or identifier..");
             }
 
-        if (constructors.empty())
+        if (constructors.empty()) // if there are no constructors, we add the default constructor..
         {
             std::vector<std::pair<std::vector<id_token>, id_token>> parameters; // the parameters of the constructor..
             std::vector<init_element> inits;                                    // the initializations of the fields..

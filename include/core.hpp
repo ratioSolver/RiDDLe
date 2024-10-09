@@ -73,6 +73,7 @@ namespace riddle
      * @return std::shared_ptr<arith_item> The int expression.
      */
     [[nodiscard]] virtual std::shared_ptr<arith_item> new_int() = 0;
+
     /**
      * @brief Create a new int expression with a value.
      *
