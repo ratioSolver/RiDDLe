@@ -157,7 +157,7 @@ namespace riddle
         std::map<std::string, std::shared_ptr<item>, std::less<>> args;
 
         if (!formula_scope.empty())
-        {
+        { // the formula's scope is explicitely declared..
             auto c_env = ctx;
             for (const auto &id : formula_scope)
             {
@@ -174,11 +174,16 @@ namespace riddle
                 pred_opt = static_cast<component_type &>(cmp->get_type()).get_predicate(predicate_name.id);
                 args.emplace(TAU_NAME, cmp);
             }
+            else if (auto ei = std::dynamic_pointer_cast<enum_item>(c_env))
+            {
+                pred_opt = static_cast<component_type &>(ei->get_type()).get_predicate(predicate_name.id);
+                args.emplace(TAU_NAME, ei);
+            }
             else
                 throw std::runtime_error("Object " + formula_scope.back().id + " is not a component");
         }
         else
-        {
+        { // we inherit the formula's scope..
             pred_opt = scp.get_predicate(predicate_name.id);
             if (!is_core(pred_opt.value().get().get_scope()))
                 args.emplace(TAU_NAME, ctx->get(TAU_NAME)); // we inherit tau from the caller
