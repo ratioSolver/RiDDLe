@@ -103,6 +103,8 @@ namespace riddle
   public:
     real_type(core &c);
 
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
+
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
@@ -114,6 +116,8 @@ namespace riddle
   {
   public:
     time_type(core &c);
+
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
@@ -293,6 +297,7 @@ namespace riddle
   {
     friend class core;
     friend class component_type;
+    friend class predicate_declaration;
 
   public:
     predicate(scope &parent, std::string_view name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body);

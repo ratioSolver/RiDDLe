@@ -541,7 +541,7 @@ namespace riddle
       return true;
   }
 
-  [[nodiscard]] type &determine_type(const std::vector<std::shared_ptr<arith_item>> &xprs);
+  [[nodiscard]] type &determine_type(const core &cr, const std::vector<std::shared_ptr<arith_item>> &xprs);
 
   inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }
 

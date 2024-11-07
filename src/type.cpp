@@ -15,9 +15,11 @@ namespace riddle
     std::shared_ptr<item> int_type::new_instance() { return scp.get_core().new_int(); }
 
     real_type::real_type(core &c) : type(c, "real", true) {}
+    bool real_type::is_assignable_from(const type &other) const { return this == &other || &other.get_scope().get_core().get_int_type() == &other || &other.get_scope().get_core().get_time_type() == &other; }
     std::shared_ptr<item> real_type::new_instance() { return scp.get_core().new_real(); }
 
     time_type::time_type(core &c) : type(c, "time", true) {}
+    bool time_type::is_assignable_from(const type &other) const { return this == &other || &other.get_scope().get_core().get_int_type() == &other || &other.get_scope().get_core().get_real_type() == &other; }
     std::shared_ptr<item> time_type::new_instance() { return scp.get_core().new_time(); }
 
     string_type::string_type(core &c) : type(c, "string", true) {}
