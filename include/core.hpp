@@ -230,7 +230,7 @@ namespace riddle
      * @param rhs The right-hand side item.
      * @return True if the items match, false otherwise.
      */
-    [[nodiscard]] virtual bool matches(const std::shared_ptr<item> &lhs, const std::shared_ptr<item> &rhs) const = 0;
+    [[nodiscard]] virtual bool matches(item &lhs, item &rhs) const = 0;
 
     /**
      * @brief Return the logical and of the bool expressions.
