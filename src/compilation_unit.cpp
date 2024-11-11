@@ -30,9 +30,6 @@ namespace riddle
         // we refine the types..
         for (const auto &t : types)
             t->refine_predicates(scp);
-        // we refine the predicates..
-        for (const auto &p : predicates)
-            p->refine_predicate(scp);
     }
 
     void compilation_unit::execute(scope &scp, std::shared_ptr<env> ctx) const

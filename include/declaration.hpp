@@ -236,7 +236,6 @@ namespace riddle
   private:
     void declare(scope &scp) const;
     void refine(scope &scp) const;
-    void refine_predicate(scope &scp) const;
 
   private:
     id_token name;                                                      // the name of the class..

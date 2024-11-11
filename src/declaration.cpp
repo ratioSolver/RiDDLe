@@ -189,27 +189,23 @@ namespace riddle
                     throw std::invalid_argument("[" + std::to_string(tp_ids[i].start_line) + ", " + std::to_string(tp_ids[i].start_pos) + "] `" + tp_ids[i].id + "` is not a component type");
             p->add_field(std::make_unique<field>(t->get(), id.id));
         }
-    }
-    void predicate_declaration::refine_predicate(scope &scp) const
-    {
-        auto c_p = static_cast<predicate *>(&scp.get_predicate(name.id)->get()); // cast is safe because the predicate was declared in the same scope
 
         // the predicate's parent predicates
         for (const auto &pr : base_predicates)
         {
-            auto p = scp.get_predicate(pr[0].id);
-            if (!p)
+            auto pr_pred = scp.get_predicate(pr[0].id);
+            if (!pr_pred)
                 throw std::invalid_argument("[" + std::to_string(pr[0].start_line) + ", " + std::to_string(pr[0].start_pos) + "] predicate `" + pr[0].id + "` not found");
             for (size_t i = 1; i < pr.size(); ++i)
-                if (auto ct = dynamic_cast<component_type *>(&p->get()))
+                if (auto ct = dynamic_cast<component_type *>(&pr_pred->get()))
                 {
-                    p = ct->get_predicate(pr[i].id);
-                    if (!p)
+                    pr_pred = ct->get_predicate(pr[i].id);
+                    if (!pr_pred)
                         throw std::invalid_argument("[" + std::to_string(pr[i].start_line) + ", " + std::to_string(pr[i].start_pos) + "] predicate `" + pr[i].id + "` not found");
                 }
                 else
                     throw std::invalid_argument("[" + std::to_string(pr[i].start_line) + ", " + std::to_string(pr[i].start_pos) + "] `" + pr[i].id + "` is not a component type");
-            c_p->parents.emplace_back(*&p->get());
+            p->parents.emplace_back(*&pr_pred->get());
         }
     }
 
