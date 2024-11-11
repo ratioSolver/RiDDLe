@@ -1,10 +1,12 @@
 #pragma once
 
+#include "rational.hpp"
 #include <cstddef>
 #include <istream>
 #include <memory>
 #include <cmath>
-#include "rational.hpp"
+#include <string>
+#include <string_view>
 
 namespace riddle
 {
