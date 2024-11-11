@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include "scope.hpp"
+#include <vector>
 
 namespace riddle
 {

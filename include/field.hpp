@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include "expression.hpp"
+#include <string>
 
 namespace riddle
 {

@@ -1,12 +1,12 @@
 #pragma once
 
-#include <vector>
 #include "conjunction.hpp"
 #include "bool.hpp"
 #include "type.hpp"
 #include "inf_rational.hpp"
 #include "enum.hpp"
 #include "compilation_unit.hpp"
+#include <vector>
 
 #ifdef COMPUTE_NAMES
 #include <unordered_map>

@@ -1,10 +1,10 @@
 #pragma once
 
+#include "field.hpp"
 #include <memory>
 #include <vector>
 #include <map>
 #include <optional>
-#include "field.hpp"
 
 namespace riddle
 {

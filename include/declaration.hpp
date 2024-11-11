@@ -1,7 +1,7 @@
 #pragma once
 
-#include <vector>
 #include "statement.hpp"
+#include <vector>
 
 namespace riddle
 {

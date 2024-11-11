@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
 #include "scope.hpp"
 #include "constructor.hpp"
 #include "method.hpp"
+#include <vector>
 
 namespace riddle
 {
