@@ -42,24 +42,24 @@ namespace riddle
                     instance->items.emplace(init.get_name().id, init.get_args().at(0)->evaluate(*this, ctx));
                 else // we initialize a component field by invoking its constructor
                 {
-                    auto tp = dynamic_cast<component_type *>(&f->get().get_type());
-                    if (!tp)
+                    auto c_tp = dynamic_cast<component_type *>(&f->get().get_type());
+                    if (!c_tp)
                         throw std::runtime_error("Cannot invoke constructor on non-component type " + f->get().get_type().get_name());
 
                     std::vector<std::reference_wrapper<const type>> arg_types;
-                    std::vector<std::shared_ptr<item>> arguments;
+                    std::vector<std::shared_ptr<item>> args;
 
                     for (const auto &arg : init.get_args())
                     {
                         auto xpr = arg->evaluate(*this, ctx);
                         arg_types.push_back(xpr->get_type());
-                        arguments.push_back(xpr);
+                        args.push_back(xpr);
                     }
 
                     if (arg_types.size() == 1 && f->get().get_type().is_assignable_from(arg_types.at(0)))
-                        instance->items.emplace(init.get_name().id, arguments.at(0)); // we assign the argument to the field
-                    else if (auto c = tp->get_constructor(arg_types))
-                        instance->items.emplace(init.get_name().id, c->get().invoke(std::move(arguments))); // we invoke the constructor and assign the result to the field
+                        instance->items.emplace(init.get_name().id, args.at(0)); // we assign the argument to the field
+                    else if (auto c = c_tp->get_constructor(arg_types))
+                        instance->items.emplace(init.get_name().id, c->get().invoke(std::move(args))); // we invoke the constructor and assign the result to the field
                     else
                         throw std::runtime_error("Cannot find constructor for class " + init.get_name().id);
                 }
@@ -69,17 +69,17 @@ namespace riddle
                      st != tp.get_parents().end())
             { // we invoke a supertype constructor
                 std::vector<std::reference_wrapper<const type>> arg_types;
-                std::vector<std::shared_ptr<item>> arguments;
+                std::vector<std::shared_ptr<item>> args;
 
                 for (const auto &arg : init.get_args())
                 {
                     auto xpr = arg->evaluate(*this, ctx);
                     arg_types.push_back(xpr->get_type());
-                    arguments.push_back(xpr);
+                    args.push_back(xpr);
                 }
 
                 if (auto c = (*st).get().get_constructor(arg_types))
-                    instance->items.emplace(init.get_name().id, c->get().invoke(std::move(arguments)));
+                    instance->items.emplace(init.get_name().id, c->get().invoke(std::move(args)));
                 else
                     throw std::runtime_error("Cannot find supertype " + init.get_name().id + ".");
             }

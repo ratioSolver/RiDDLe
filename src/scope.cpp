@@ -2,7 +2,7 @@
 
 namespace riddle
 {
-    scope::scope(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args) : c(c), parent(parent)
+    scope::scope(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args) : cr(c), parent(parent)
     {
         for (auto &arg : args)
             add_field(std::move(arg));

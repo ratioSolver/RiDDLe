@@ -112,9 +112,9 @@ namespace riddle
         return std::nullopt;
     }
 
-    std::optional<std::reference_wrapper<method>> component_type::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
+    std::optional<std::reference_wrapper<method>> component_type::get_method(std::string_view mthd_name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
     {
-        if (auto it = methods.find(name); it != methods.end())
+        if (auto it = methods.find(mthd_name); it != methods.end())
             for (const auto &m : it->second)
                 if (m->get_arguments().size() == argument_types.size())
                 {
@@ -129,49 +129,49 @@ namespace riddle
                         return *m;
                 }
         // first check in any enclosing scope
-        if (auto m = scp.get_core().get_method(name, argument_types))
+        if (auto m = scp.get_core().get_method(mthd_name, argument_types))
             return m;
         // if not in any enclosing scope, check any superclass
         for (const auto &p : get_parents())
-            if (auto m = p.get().get_method(name, argument_types))
+            if (auto m = p.get().get_method(mthd_name, argument_types))
                 return m;
         return std::nullopt;
     }
 
-    std::optional<std::reference_wrapper<field>> component_type::get_field(std::string_view name) const noexcept
+    std::optional<std::reference_wrapper<field>> component_type::get_field(std::string_view fld_name) const noexcept
     {
-        if (auto f = scope::get_field(name)) // first check in the current scope
+        if (auto f = scope::get_field(fld_name)) // first check in the current scope
             return f;
         // if not in the current scope, check any superclass
         for (const auto &p : get_parents())
-            if (auto f = p.get().get_field(name))
+            if (auto f = p.get().get_field(fld_name))
                 return f;
         return std::nullopt; // if not found in any scope
     }
 
-    std::optional<std::reference_wrapper<type>> component_type::get_type(std::string_view name) const
+    std::optional<std::reference_wrapper<type>> component_type::get_type(std::string_view ct_name) const
     {
-        if (auto it = types.find(name); it != types.end())
+        if (auto it = types.find(ct_name); it != types.end())
             return *it->second;
         // first check in any enclosing scope
-        if (auto t = scp.get_core().get_type(name))
+        if (auto t = scp.get_core().get_type(ct_name))
             return t;
         // if not in any enclosing scope, check any superclass
         for (const auto &p : get_parents())
-            if (auto t = p.get().get_type(name))
+            if (auto t = p.get().get_type(ct_name))
                 return t;
         return std::nullopt;
     }
-    std::optional<std::reference_wrapper<predicate>> component_type::get_predicate(std::string_view name) const
+    std::optional<std::reference_wrapper<predicate>> component_type::get_predicate(std::string_view pred_name) const
     {
-        if (auto it = predicates.find(name); it != predicates.end())
+        if (auto it = predicates.find(pred_name); it != predicates.end())
             return *it->second;
         // first check in any enclosing scope
-        if (auto p = scp.get_core().get_predicate(name))
+        if (auto p = scp.get_core().get_predicate(pred_name))
             return p;
         // if not in any enclosing scope, check any superclass
         for (const auto &par : get_parents())
-            if (auto p = par.get().get_predicate(name))
+            if (auto p = par.get().get_predicate(pred_name))
                 return p;
         return std::nullopt;
     }

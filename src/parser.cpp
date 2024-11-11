@@ -440,9 +440,9 @@ namespace riddle
                 if (!match(ID_ID))
                     error("Expected identifier..");
 
-                auto name = *static_cast<const id_token *>(tokens[pos - 2].get()); // the name of the parameter..
+                auto par_name = *static_cast<const id_token *>(tokens[pos - 2].get()); // the name of the parameter..
 
-                params.emplace_back(std::move(ids), std::move(name));
+                params.emplace_back(std::move(ids), std::move(par_name));
             } while (match(COMMA_ID));
 
         if (!match(RPAREN_ID))
@@ -590,9 +590,9 @@ namespace riddle
                 if (!match(ID_ID))
                     error("Expected identifier..");
 
-                auto name = *static_cast<const id_token *>(tokens[pos - 2].get()); // the name of the parameter..
+                auto par_name = *static_cast<const id_token *>(tokens[pos - 2].get()); // the name of the parameter..
 
-                params.emplace_back(std::move(ids), name);
+                params.emplace_back(std::move(ids), par_name);
             } while (match(COMMA_ID));
 
             if (!match(RPAREN_ID))

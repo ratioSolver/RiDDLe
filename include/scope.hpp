@@ -28,7 +28,7 @@ namespace riddle
      *
      * @return core& The core object.
      */
-    [[nodiscard]] core &get_core() const { return c; }
+    [[nodiscard]] core &get_core() const { return cr; }
 
     /**
      * @brief Get the enclosing scope.
@@ -81,7 +81,7 @@ namespace riddle
     void add_field(std::unique_ptr<field> &&field);
 
   private:
-    core &c;
+    core &cr;
     scope &parent;
 
   protected:
