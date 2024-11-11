@@ -140,6 +140,8 @@ namespace riddle
   public:
     typedef_type(scope &parent, std::string_view name, type &base_type, expression &value);
 
+    type &get_base_type() const { return base_type; }
+
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
   private:
