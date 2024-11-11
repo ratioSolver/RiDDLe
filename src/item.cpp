@@ -32,7 +32,7 @@ namespace riddle
 
     string_item::string_item(string_type &t, const std::string &s) : item(t), value(s) {}
 
-    enum_item::enum_item(type &t, VARIABLE_TYPE v) : item(t), env(t.get_scope().get_core()), value(v) {}
+    enum_item::enum_item(type &t, std::size_t v) : item(t), env(t.get_scope().get_core()), value(v) {}
     std::shared_ptr<item> enum_item::get(std::string_view name) { return get_core().get(*this, name); }
 
     component::component(component_type &t, std::shared_ptr<env> parent) : item(t), env(t.get_scope().get_core(), parent) {}

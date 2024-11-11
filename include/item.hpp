@@ -94,15 +94,15 @@ namespace riddle
   class enum_item : public item, public env
   {
   public:
-    enum_item(type &t, VARIABLE_TYPE v);
+    enum_item(type &t, std::size_t v);
 
     [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
 
-    [[nodiscard]] VARIABLE_TYPE &get_value() { return value; }
-    [[nodiscard]] const VARIABLE_TYPE &get_value() const { return value; }
+    [[nodiscard]] std::size_t &get_value() { return value; }
+    [[nodiscard]] const std::size_t &get_value() const { return value; }
 
   private:
-    VARIABLE_TYPE value;
+    std::size_t value;
   };
 
   class component : public item, public env
