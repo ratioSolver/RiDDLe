@@ -1027,9 +1027,10 @@ namespace riddle
 
         while (
             ((tk->sym == EQEQ_ID || tk->sym == BANGEQ_ID) && 0 >= pr) ||
-            ((tk->sym == LT_ID || tk->sym == LTEQ_ID || tk->sym == GTEQ_ID || tk->sym == GT_ID || tk->sym == IMPLICATION_ID || tk->sym == BAR_ID || tk->sym == AMP_ID || tk->sym == CARET_ID) && 1 >= pr) ||
-            ((tk->sym == PLUS_ID || tk->sym == MINUS_ID) && 2 >= pr) ||
-            ((tk->sym == STAR_ID || tk->sym == SLASH_ID) && 3 >= pr))
+            ((tk->sym == IMPLICATION_ID || tk->sym == BAR_ID || tk->sym == AMP_ID || tk->sym == CARET_ID) && 1 >= pr) ||
+            ((tk->sym == LT_ID || tk->sym == LTEQ_ID || tk->sym == GTEQ_ID || tk->sym == GT_ID) && 2 >= pr) ||
+            ((tk->sym == PLUS_ID || tk->sym == MINUS_ID) && 3 >= pr) ||
+            ((tk->sym == STAR_ID || tk->sym == SLASH_ID) && 4 >= pr))
         {
             switch (tk->sym)
             {
@@ -1043,39 +1044,11 @@ namespace riddle
                 tk = next_token();
                 expr = std::make_unique<neq_expression>(std::move(expr), parse_expression(1));
                 break;
-            case LT_ID:
-            {
-                assert(1 >= pr);
-                tk = next_token();
-                expr = std::make_unique<lt_expression>(std::move(expr), parse_expression(1));
-                break;
-            }
-            case LTEQ_ID:
-            {
-                assert(1 >= pr);
-                tk = next_token();
-                expr = std::make_unique<leq_expression>(std::move(expr), parse_expression(1));
-                break;
-            }
-            case GTEQ_ID:
-            {
-                assert(1 >= pr);
-                tk = next_token();
-                expr = std::make_unique<geq_expression>(std::move(expr), parse_expression(1));
-                break;
-            }
-            case GT_ID:
-            {
-                assert(1 >= pr);
-                tk = next_token();
-                expr = std::make_unique<gt_expression>(std::move(expr), parse_expression(1));
-                break;
-            }
             case IMPLICATION_ID:
             {
                 assert(1 >= pr);
                 tk = next_token();
-                expr = std::make_unique<implication_expression>(std::move(expr), parse_expression(1));
+                expr = std::make_unique<implication_expression>(std::move(expr), parse_expression(2));
                 break;
             }
             case BAR_ID:
@@ -1114,50 +1087,78 @@ namespace riddle
                 expr = std::make_unique<xor_expression>(std::move(xprs));
                 break;
             }
-            case PLUS_ID:
+            case LT_ID:
             {
                 assert(2 >= pr);
+                tk = next_token();
+                expr = std::make_unique<lt_expression>(std::move(expr), parse_expression(3));
+                break;
+            }
+            case LTEQ_ID:
+            {
+                assert(2 >= pr);
+                tk = next_token();
+                expr = std::make_unique<leq_expression>(std::move(expr), parse_expression(3));
+                break;
+            }
+            case GTEQ_ID:
+            {
+                assert(2 >= pr);
+                tk = next_token();
+                expr = std::make_unique<geq_expression>(std::move(expr), parse_expression(3));
+                break;
+            }
+            case GT_ID:
+            {
+                assert(2 >= pr);
+                tk = next_token();
+                expr = std::make_unique<gt_expression>(std::move(expr), parse_expression(3));
+                break;
+            }
+            case PLUS_ID:
+            {
+                assert(3 >= pr);
                 std::vector<std::unique_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
 
                 while (match(PLUS_ID))
-                    xprs.emplace_back(parse_expression(3));
+                    xprs.emplace_back(parse_expression(4));
 
                 expr = std::make_unique<addition_expression>(std::move(xprs));
                 break;
             }
             case MINUS_ID:
             {
-                assert(2 >= pr);
+                assert(3 >= pr);
                 std::vector<std::unique_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
 
                 while (match(MINUS_ID))
-                    xprs.emplace_back(parse_expression(3));
+                    xprs.emplace_back(parse_expression(4));
 
                 expr = std::make_unique<subtraction_expression>(std::move(xprs));
                 break;
             }
             case STAR_ID:
             {
-                assert(3 >= pr);
+                assert(4 >= pr);
                 std::vector<std::unique_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
 
                 while (match(STAR_ID))
-                    xprs.emplace_back(parse_expression(4));
+                    xprs.emplace_back(parse_expression(5));
 
                 expr = std::make_unique<multiplication_expression>(std::move(xprs));
                 break;
             }
             case SLASH_ID:
             {
-                assert(3 >= pr);
+                assert(4 >= pr);
                 std::vector<std::unique_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
 
                 while (match(SLASH_ID))
-                    xprs.emplace_back(parse_expression(4));
+                    xprs.emplace_back(parse_expression(5));
 
                 expr = std::make_unique<division_expression>(std::move(xprs));
                 break;
