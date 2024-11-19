@@ -27,7 +27,7 @@ namespace riddle
             id.push_back(ch);
             if (is_alnum(ch))
                 return make_id(finish_id(id));
-            return make_token(BOOL_ID);
+            return make_token(BOOL);
         }
         break;
         case 'i':
@@ -42,7 +42,7 @@ namespace riddle
                 return make_id(finish_id(id));
             if (is_alnum(ch))
                 return make_id(finish_id(id));
-            return make_token(INT_ID);
+            return make_token(INT);
         }
         break;
         case 'r':
@@ -60,7 +60,7 @@ namespace riddle
                 return make_id(finish_id(id));
             if (is_alnum(ch))
                 return make_id(finish_id(id));
-            return make_token(REAL_ID);
+            return make_token(REAL);
         }
         break;
         case 's':
@@ -84,7 +84,7 @@ namespace riddle
                 return make_id(finish_id(id));
             if (is_alnum(ch))
                 return make_id(finish_id(id));
-            return make_token(STRING_ID);
+            return make_token(STRING);
         }
         break;
         case 't':
@@ -102,7 +102,7 @@ namespace riddle
                 return make_id(finish_id(id));
             if (is_alnum(ch))
                 return make_id(finish_id(id));
-            return make_token(TIME_ID);
+            return make_token(TIME);
         }
         break;
         case ' ':
@@ -119,7 +119,7 @@ namespace riddle
             return next_token();
         case ';':
             next();
-            return make_token(SEMICOLON_ID);
+            return make_token(SEMICOLON);
         default:
             if (is_alpha(ch))
             {
@@ -127,7 +127,7 @@ namespace riddle
                 id.push_back(ch);
                 return make_id(finish_id(id));
             }
-            return nullptr;
+            return make_token(EoF);
         }
     }
 

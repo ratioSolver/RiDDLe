@@ -7,13 +7,14 @@ namespace riddle
 {
   enum symbol
   {
-    BOOL_ID,      // `bool`
-    INT_ID,       // `int`
-    REAL_ID,      // `real`
-    TIME_ID,      // `time`
-    STRING_ID,    // `string`
-    SEMICOLON_ID, // `;`
-    ID_ID,        // (`a`..`z`|`A`..`Z`|`_`) (`a`..`z`|`A`..`Z`|`0`..`9`|`_`)*
+    BOOL,      // `bool`
+    INT,       // `int`
+    REAL,      // `real`
+    TIME,      // `time`
+    STRING,    // `string`
+    SEMICOLON, // `;`
+    ID,        // (`a`..`z`|`A`..`Z`|`_`) (`a`..`z`|`A`..`Z`|`0`..`9`|`_`)*
+    EoF        // End of file
   };
 
   class token
@@ -29,7 +30,7 @@ namespace riddle
   class id_token final : public token
   {
   public:
-    id_token(std::string &&id, size_t line, size_t start_pos, size_t end_pos) noexcept : token(ID_ID, line, start_pos, end_pos), id(std::move(id)) {}
+    id_token(std::string &&id, size_t line, size_t start_pos, size_t end_pos) noexcept : token(ID, line, start_pos, end_pos), id(std::move(id)) {}
 
     const std::string id;
   };
