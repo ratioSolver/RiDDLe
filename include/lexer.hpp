@@ -125,7 +125,7 @@ namespace riddle
 
     bool match(char expected) noexcept;
     char next() noexcept;
-    std::string finish_id(std::string &str) noexcept;
+    std::string finish_id(std::string &&str) noexcept;
 
     std::unique_ptr<token> make_token(symbol sym) noexcept;
     std::unique_ptr<token> make_id(std::string &&id) noexcept;

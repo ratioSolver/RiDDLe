@@ -14,276 +14,225 @@ namespace riddle
         {
         case 'a':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('u'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('t'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('o'))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
             return make_token(AUTO);
         }
         break;
         case 'b':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('o'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('o'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('l'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
             return make_token(BOOL);
         }
         break;
         case 'c':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('l'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('a'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('s'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (!match('s'))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
             if (is_alnum(ch))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 6, 5)));
             return make_token(CLASS);
         }
         break;
         case 'e':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('n'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('u'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('m'))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
             return make_token(ENUM);
         }
         break;
         case 'f':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             switch (ch)
             {
             case 'a':
-                id.push_back(ch);
                 next();
                 switch (ch)
                 {
                 case 'c':
-                    id.push_back(ch);
+                    next();
                     if (!match('t'))
-                        return make_id(finish_id(id));
+                        return make_id(finish_id(sb.substr(pos - 4, 3)));
                     if (is_alnum(ch))
-                        return make_id(finish_id(id));
+                        return make_id(finish_id(sb.substr(pos - 5, 4)));
                     return make_token(FACT);
                 case 'l':
-                    id.push_back(ch);
+                    next();
                     if (!match('s'))
-                        return make_id(finish_id(id));
-                    id.push_back(ch);
+                        return make_id(finish_id(sb.substr(pos - 4, 3)));
                     if (!match('e'))
-                        return make_id(finish_id(id));
+                        return make_id(finish_id(sb.substr(pos - 5, 4)));
                     if (is_alnum(ch))
-                        return make_id(finish_id(id));
+                        return make_id(finish_id(sb.substr(pos - 6, 5)));
                     return make_bool(false);
                 default:
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 3, 2)));
                 }
                 break;
             case 'o':
-                id.push_back(ch);
                 if (!match('r'))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 3, 2)));
                 if (is_alnum(ch))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
                 return make_token(FOR);
             default:
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             }
         }
         break;
         case 'g':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('o'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('a'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('l'))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
             return make_token(GOAL);
         }
         break;
         case 'i':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('n'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('t'))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (is_alnum(ch))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             return make_token(INT);
         }
         break;
         case 'o':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('r'))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (is_alnum(ch))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             return make_token(OR);
         }
         break;
         case 'r':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('e'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             switch (ch)
             {
             case 'a':
-                id.push_back(ch);
+                next();
                 if (!match('l'))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
                 if (is_alnum(ch))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 5, 4)));
                 return make_token(REAL);
             case 't':
-                id.push_back(ch);
+                next();
                 if (!match('u'))
-                    return make_id(finish_id(id));
-                id.push_back(ch);
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
                 if (!match('r'))
-                    return make_id(finish_id(id));
-                id.push_back(ch);
+                    return make_id(finish_id(sb.substr(pos - 5, 4)));
                 if (!match('n'))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 6, 5)));
                 if (is_alnum(ch))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 7, 6)));
                 return make_token(RETURN);
             default:
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             }
         }
         break;
         case 's':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('t'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('r'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('i'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (!match('n'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
             if (!match('g'))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 6, 5)));
             if (is_alnum(ch))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 7, 6)));
             return make_token(STRING);
         }
         break;
         case 't':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             switch (ch)
             {
             case 'i':
-                id.push_back(ch);
+                next();
                 if (!match('m'))
-                    return make_id(finish_id(id));
-                id.push_back(ch);
+                    return make_id(finish_id(sb.substr(pos - 3, 2)));
                 if (!match('e'))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
                 if (is_alnum(ch))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 5, 4)));
                 return make_token(TIME);
             case 'r':
-                id.push_back(ch);
+                next();
                 if (!match('u'))
-                    return make_id(finish_id(id));
-                id.push_back(ch);
+                    return make_id(finish_id(sb.substr(pos - 3, 2)));
                 if (!match('e'))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
                 if (is_alnum(ch))
-                    return make_id(finish_id(id));
+                    return make_id(finish_id(sb.substr(pos - 5, 4)));
                 return make_bool(true);
             default:
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             }
         }
         break;
         case 'v':
         {
-            std::string id;
-            id.push_back(ch);
             next();
             if (!match('o'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('i'))
-                return make_id(finish_id(id));
-            id.push_back(ch);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('d'))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return make_id(finish_id(id));
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
             return make_token(VOID);
         }
         break;
@@ -298,55 +247,52 @@ namespace riddle
         case '8':
         case '9':
         {
-            std::string intgr;
-            intgr.push_back(ch);
+            unsigned int intgr_len = 1;
             next();
             while (is_digit(ch))
             {
-                intgr.push_back(ch);
+                ++intgr_len;
                 next();
             }
             if (ch == '.')
             {
-                std::string dec;
-                dec.push_back(ch);
+                unsigned int dec_len = 1;
                 next();
                 while (is_digit(ch))
                 {
-                    dec.push_back(ch);
+                    ++dec_len;
                     next();
                 }
-                return make_real(utils::rational(static_cast<INT_TYPE>(std::stol(intgr + dec)), static_cast<INT_TYPE>(std::pow(10, dec.size()))));
+                return make_real(utils::rational(static_cast<INT_TYPE>(std::stol(sb.substr(pos - intgr_len - dec_len - 1, intgr_len + dec_len - 2)), static_cast<INT_TYPE>(std::pow(10, dec_len)))));
             }
-            return make_int(std::stoll(intgr));
+            return make_int(std::stoll(sb.substr(pos - intgr_len, intgr_len - 1)));
         }
         case '"':
         {
-            std::string str;
+            unsigned int str_len = 0;
             next();
             while (ch != '"')
             {
                 if (ch == -1)
                     return make_token(EoF);
-                str.push_back(ch);
+                ++str_len;
                 next();
             }
             next();
-            return make_string(std::move(str));
+            return make_string(sb.substr(pos - str_len - 1, str_len));
         }
         case '.':
         {
-            std::string dec;
-            dec.push_back(ch);
+            unsigned int dec_len = 0;
             next();
             if (is_digit(ch))
             {
                 while (is_digit(ch))
                 {
-                    dec.push_back(ch);
+                    ++dec_len;
                     next();
                 }
-                return make_real(utils::rational(0, static_cast<INT_TYPE>(std::pow(10, dec.size()))));
+                return make_real(utils::rational(static_cast<INT_TYPE>(std::stol(sb.substr(pos - dec_len - 1, dec_len))), static_cast<INT_TYPE>(std::pow(10, dec_len))));
             }
             return make_token(DOT);
         }
@@ -435,11 +381,7 @@ namespace riddle
             return next_token();
         default:
             if (is_alpha(ch))
-            {
-                std::string id;
-                id.push_back(ch);
-                return make_id(finish_id(id));
-            }
+                return make_id(finish_id(sb.substr(pos - 1, 1)));
             return make_token(EoF);
         }
     }
@@ -467,7 +409,7 @@ namespace riddle
         return ch = -1;
     }
 
-    std::string lexer::finish_id(std::string &str) noexcept
+    std::string lexer::finish_id(std::string &&str) noexcept
     {
         while (is_alnum(ch))
         {
@@ -486,7 +428,7 @@ namespace riddle
 
     std::unique_ptr<token> lexer::make_id(std::string &&id) noexcept
     {
-        auto tk = std::make_unique<id_token>(std::move(id), line, start_pos, end_pos - 1);
+        auto tk = std::make_unique<id_token>(std::move(std::move(id)), line, start_pos, end_pos - 1);
         start_pos = end_pos;
         return tk;
     }
