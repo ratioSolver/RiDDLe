@@ -250,8 +250,8 @@ namespace riddle
         case '8':
         case '9':
         {
+            match(ch);
             unsigned int intgr_len = 1;
-            next();
             while (is_digit(ch))
             {
                 ++intgr_len;
@@ -259,21 +259,21 @@ namespace riddle
             }
             if (ch == '.')
             {
+                match('.');
                 unsigned int dec_len = 0;
-                next();
                 while (is_digit(ch))
                 {
                     ++dec_len;
                     next();
                 }
-                return make_real(utils::rational(static_cast<INT_TYPE>(std::stol(sb.substr(pos - intgr_len - dec_len - 2, intgr_len) + sb.substr(pos - intgr_len - 1, dec_len))), static_cast<INT_TYPE>(std::pow(10, dec_len))));
+                return make_real(utils::rational(static_cast<INT_TYPE>(std::stol(sb.substr(pos - intgr_len - dec_len - 2, intgr_len) + sb.substr(pos - dec_len - 1, dec_len))), static_cast<INT_TYPE>(std::pow(10, dec_len))));
             }
             return make_int(std::stoll(sb.substr(pos - intgr_len - 1, intgr_len)));
         }
         case '"':
         {
+            match('"');
             unsigned int str_len = 0;
-            next();
             while (ch != '"')
             {
                 if (ch == -1)
@@ -281,13 +281,13 @@ namespace riddle
                 ++str_len;
                 next();
             }
-            next();
+            match('"');
             return make_string(sb.substr(pos - str_len - 1, str_len));
         }
         case '.':
         {
+            match('.');
             unsigned int dec_len = 0;
-            next();
             if (is_digit(ch))
             {
                 while (is_digit(ch))

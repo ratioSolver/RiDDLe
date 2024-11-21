@@ -43,7 +43,7 @@ void test_lexer0()
 
 void test_lexer1()
 {
-    riddle::lexer lex("5, .5, 2.5");
+    riddle::lexer lex("5, .5, 2.5, 13.275");
     auto tok = lex.next_token();
     assert(tok->sym == riddle::INT);
     assert(static_cast<riddle::int_token *>(tok.get())->value == 5);
@@ -72,6 +72,17 @@ void test_lexer1()
     assert(tok->line == 0);
     assert(tok->start_pos == 7);
     assert(tok->end_pos == 9);
+    comma_tok = lex.next_token();
+    assert(comma_tok->sym == riddle::COMMA);
+    assert(comma_tok->line == 0);
+    assert(comma_tok->start_pos == 10);
+    assert(comma_tok->end_pos == 10);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::REAL);
+    assert(static_cast<riddle::real_token *>(tok.get())->value == utils::rational(531, 40));
+    assert(tok->line == 0);
+    assert(tok->start_pos == 12);
+    assert(tok->end_pos == 17);
     auto eof_tok = lex.next_token();
     assert(eof_tok->sym == riddle::EoF);
 }
@@ -83,11 +94,96 @@ void test_lexer2()
     assert(tok->sym == riddle::LBRACKET);
     assert(tok->line == 0);
     assert(tok->start_pos == 0);
+    assert(tok->end_pos == 0);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::INT);
+    assert(static_cast<riddle::int_token *>(tok.get())->value == 0);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 1);
+    assert(tok->end_pos == 1);
+    auto comma_tok = lex.next_token();
+    assert(comma_tok->sym == riddle::COMMA);
+    assert(comma_tok->line == 0);
+    assert(comma_tok->start_pos == 2);
+    assert(comma_tok->end_pos == 2);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::INT);
+    assert(static_cast<riddle::int_token *>(tok.get())->value == 10);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 4);
+    assert(tok->end_pos == 5);
+    auto rbracket_tok = lex.next_token();
+    assert(rbracket_tok->sym == riddle::RBRACKET);
+    assert(rbracket_tok->line == 0);
+    assert(rbracket_tok->start_pos == 6);
+    assert(rbracket_tok->end_pos == 6);
+    comma_tok = lex.next_token();
+    assert(comma_tok->sym == riddle::COMMA);
+    assert(comma_tok->line == 0);
+    assert(comma_tok->start_pos == 7);
+    assert(comma_tok->end_pos == 7);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::TILDE);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 9);
+    assert(tok->end_pos == 9);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::LPAREN);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 10);
+    assert(tok->end_pos == 10);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::INT);
+    assert(static_cast<riddle::int_token *>(tok.get())->value == 1);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 11);
+    assert(tok->end_pos == 11);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::SLASH);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 12);
+    assert(tok->end_pos == 12);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::INT);
+    assert(static_cast<riddle::int_token *>(tok.get())->value == 3);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 13);
+    assert(tok->end_pos == 13);
+    comma_tok = lex.next_token();
+    assert(comma_tok->sym == riddle::COMMA);
+    assert(comma_tok->line == 0);
+    assert(comma_tok->start_pos == 14);
+    assert(comma_tok->end_pos == 14);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::INT);
+    assert(static_cast<riddle::int_token *>(tok.get())->value == 1);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 16);
+    assert(tok->end_pos == 16);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::SLASH);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 17);
+    assert(tok->end_pos == 17);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::INT);
+    assert(static_cast<riddle::int_token *>(tok.get())->value == 2);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 18);
+    assert(tok->end_pos == 18);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::RPAREN);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 19);
+    assert(tok->end_pos == 19);
+    auto eof_tok = lex.next_token();
+    assert(eof_tok->sym == riddle::EoF);
 }
 
 int main(int argc, char const *argv[])
 {
     test_lexer0();
     test_lexer1();
+    test_lexer2();
     return 0;
 }
