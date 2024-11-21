@@ -60,7 +60,7 @@ namespace riddle
   };
 
   /**
-   * @class token
+   * @class token lexer.hpp "include/lexer.hpp"
    * @brief Represents a lexical token with its associated symbol and position information.
    *
    * The token class encapsulates a symbol and its position within the source code,
@@ -82,7 +82,7 @@ namespace riddle
   };
 
   /**
-   * @class id_token
+   * @class id_token lexer.hpp "include/lexer.hpp"
    * @brief Represents an identifier token in the lexer.
    *
    * This class is a final derived class of the token class and is used to represent
@@ -104,7 +104,7 @@ namespace riddle
   };
 
   /**
-   * @class bool_token
+   * @class bool_token lexer.hpp "include/lexer.hpp"
    * @brief Represents a boolean token in the lexer.
    *
    * This class is a final derived class of the token class, specifically for boolean values.
@@ -123,7 +123,7 @@ namespace riddle
   };
 
   /**
-   * @class int_token
+   * @class int_token lexer.hpp "include/lexer.hpp"
    * @brief Represents an integer token in the lexer.
    *
    * This class is a final derived class from the base class token, specifically
@@ -145,7 +145,7 @@ namespace riddle
   };
 
   /**
-   * @class real_token
+   * @class real_token lexer.hpp "include/lexer.hpp"
    * @brief Represents a token for real numbers in the lexer.
    *
    * This class is a final derived class from the base class token. It is used to
@@ -167,7 +167,7 @@ namespace riddle
   };
 
   /**
-   * @class string_token
+   * @class string_token lexer.hpp "include/lexer.hpp"
    * @brief Represents a token for string literals in the lexer.
    *
    * This class is a final derived class from the base class token. It is used to
@@ -189,7 +189,7 @@ namespace riddle
   };
 
   /**
-   * @class lexer
+   * @class lexer lexer.hpp "include/lexer.hpp"
    * @brief A lexical analyzer for the RiDDLe programming language.
    *
    * The lexer class is responsible for tokenizing the input source code and

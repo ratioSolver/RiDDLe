@@ -4,12 +4,16 @@
 
 namespace riddle
 {
+  /**
+   * @class core core.hpp "include/core.hpp"
+   * @brief The core environment class.
+   */
   class core : public env
   {
   public:
-    core();
+    core() noexcept;
     virtual ~core() = default;
 
-    std::optional<std::reference_wrapper<item>> get(std::string_view name) override;
+    [[nodiscard]] std::optional<std::reference_wrapper<item>> get(std::string_view name) noexcept override;
   };
 } // namespace riddle
