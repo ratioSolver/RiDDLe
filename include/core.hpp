@@ -14,6 +14,6 @@ namespace riddle
     core() noexcept;
     virtual ~core() = default;
 
-    [[nodiscard]] std::optional<std::reference_wrapper<item>> get(std::string_view name) noexcept override;
+    [[nodiscard]] std::shared_ptr<item> get(std::string_view name) noexcept override;
   };
 } // namespace riddle

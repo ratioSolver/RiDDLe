@@ -4,7 +4,6 @@
 #include <map>
 #include <string>
 #include <string_view>
-#include <optional>
 
 namespace riddle
 {
@@ -26,28 +25,28 @@ namespace riddle
   class env
   {
   public:
-    env(core &c, env &parent, std::map<std::string, std::unique_ptr<item>, std::less<>> &&items = {}) noexcept;
+    env(core &c, env &parent, std::map<std::string, std::shared_ptr<item>, std::less<>> &&items = {}) noexcept;
     virtual ~env() = default;
 
     /**
      * @brief Retrieves an item by its name.
      *
-     * This function searches for an item with the specified name and returns it
-     * wrapped in a std::optional. If the item is found, it is returned as a
-     * std::reference_wrapper. If the item is not found, an empty std::optional
-     * is returned.
+     * This function retrieves an item by its name. The function will first
+     * search for the item in the environment's items. If the item is not found,
+     * the function will search for the item in the parent environment. This
+     * process continues until the item is found or there are no more parent
+     * environments to search.
      *
      * @param name The name of the item to retrieve.
-     * @return std::optional<std::reference_wrapper<item>> The item wrapped in
-     * a std::optional if found, otherwise an empty std::optional.
+     * @return The item with the given name, or nullptr if the item is not found.
      */
-    [[nodiscard]] virtual std::optional<std::reference_wrapper<item>> get(std::string_view name) noexcept;
+    [[nodiscard]] virtual std::shared_ptr<item> get(std::string_view name) noexcept;
 
   private:
     core &cr;
     env &parent;
 
   protected:
-    std::map<std::string, std::unique_ptr<item>, std::less<>> items;
+    std::map<std::string, std::shared_ptr<item>, std::less<>> items;
   };
 } // namespace riddle
