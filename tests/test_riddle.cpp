@@ -180,10 +180,50 @@ void test_lexer2()
     assert(eof_tok->sym == riddle::EoF);
 }
 
+void test_lexer4()
+{
+    riddle::lexer lex("int x0;\nreal ret;");
+    auto tok = lex.next_token();
+    assert(tok->sym == riddle::INT);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 0);
+    assert(tok->end_pos == 2);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::ID);
+    assert(static_cast<riddle::id_token *>(tok.get())->id == "x0");
+    assert(tok->line == 0);
+    assert(tok->start_pos == 4);
+    assert(tok->end_pos == 5);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::SEMICOLON);
+    assert(tok->line == 0);
+    assert(tok->start_pos == 6);
+    assert(tok->end_pos == 6);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::REAL);
+    assert(tok->line == 1);
+    assert(tok->start_pos == 0);
+    assert(tok->end_pos == 3);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::ID);
+    assert(static_cast<riddle::id_token *>(tok.get())->id == "ret");
+    assert(tok->line == 1);
+    assert(tok->start_pos == 5);
+    assert(tok->end_pos == 7);
+    tok = lex.next_token();
+    assert(tok->sym == riddle::SEMICOLON);
+    assert(tok->line == 1);
+    assert(tok->start_pos == 8);
+    assert(tok->end_pos == 8);
+    auto eof_tok = lex.next_token();
+    assert(eof_tok->sym == riddle::EoF);
+}
+
 int main(int argc, char const *argv[])
 {
     test_lexer0();
     test_lexer1();
     test_lexer2();
+    test_lexer4();
     return 0;
 }

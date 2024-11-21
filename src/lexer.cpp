@@ -383,8 +383,9 @@ namespace riddle
             next();
             return next_token();
         default:
-            if (is_alpha(ch))
-                return make_id(finish_id(sb.substr(pos - 1, 1)));
+            next();
+            if (is_alnum(ch))
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             return make_token(EoF);
         }
     }
