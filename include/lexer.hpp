@@ -127,6 +127,13 @@ namespace riddle
     char next() noexcept;
     std::string finish_id(std::string &&str) noexcept;
 
+    std::unique_ptr<token> make_token(symbol sym) noexcept;
+    std::unique_ptr<id_token> make_id(std::string &&id) noexcept;
+    std::unique_ptr<bool_token> make_bool(bool value) noexcept;
+    std::unique_ptr<int_token> make_int(INT_TYPE value) noexcept;
+    std::unique_ptr<real_token> make_real(utils::rational &&value) noexcept;
+    std::unique_ptr<string_token> make_string(std::string &&value) noexcept;
+
   private:
     std::string sb;
     size_t pos = 0;

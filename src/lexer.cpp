@@ -18,58 +18,58 @@ namespace riddle
         {
             match('a');
             if (!match('u'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('t'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('o'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(AUTO, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
+            return make_token(AUTO);
         }
         break;
         case 'b':
         {
             match('b');
             if (!match('o'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('o'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('l'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(BOOL, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
+            return make_token(BOOL);
         }
         break;
         case 'c':
         {
             match('c');
             if (!match('l'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('a'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('s'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (!match('s'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
             if (is_alnum(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 6, 5)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(CLASS, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 6, 5)));
+            return make_token(CLASS);
         }
         break;
         case 'e':
         {
             match('e');
             if (!match('n'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('u'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('m'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(ENUM, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
+            return make_token(ENUM);
         }
         break;
         case 'f':
@@ -84,32 +84,32 @@ namespace riddle
                 case 'c':
                     match('c');
                     if (!match('t'))
-                        return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                        return make_id(finish_id(sb.substr(pos - 4, 3)));
                     if (is_alnum(ch))
-                        return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
-                    return std::make_unique<token>(FACT, line, start_pos - 1, end_pos - 2);
+                        return make_id(finish_id(sb.substr(pos - 5, 4)));
+                    return make_token(FACT);
                 case 'l':
                     match('l');
                     if (!match('s'))
-                        return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                        return make_id(finish_id(sb.substr(pos - 4, 3)));
                     if (!match('e'))
-                        return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
+                        return make_id(finish_id(sb.substr(pos - 5, 4)));
                     if (is_alnum(ch))
-                        return std::make_unique<id_token>(finish_id(sb.substr(pos - 6, 5)), line, start_pos - 1, end_pos - 2);
-                    return std::make_unique<bool_token>(false, line, start_pos - 1, end_pos - 2);
+                        return make_id(finish_id(sb.substr(pos - 6, 5)));
+                    return make_bool(false);
                 default:
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 3, 2)));
                 }
                 break;
             case 'o':
                 match('o');
                 if (!match('r'))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 3, 2)));
                 if (is_alnum(ch))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
-                return std::make_unique<token>(FOR, line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
+                return make_token(FOR);
             default:
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             }
         }
         break;
@@ -117,65 +117,65 @@ namespace riddle
         {
             match('g');
             if (!match('o'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('a'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('l'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(GOAL, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
+            return make_token(GOAL);
         }
         break;
         case 'i':
         {
             match('i');
             if (!match('n'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('t'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (is_alnum(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(INT, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
+            return make_token(INT);
         }
         break;
         case 'o':
         {
             match('o');
             if (!match('r'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (is_alnum(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(OR, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
+            return make_token(OR);
         }
         break;
         case 'r':
         {
             match('r');
             if (!match('e'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             switch (ch)
             {
             case 'a':
                 match('a');
                 if (!match('l'))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
                 if (is_alnum(ch))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
-                return std::make_unique<token>(REAL, line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 5, 4)));
+                return make_token(REAL);
             case 't':
                 match('t');
                 if (!match('u'))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
                 if (!match('r'))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 5, 4)));
                 if (!match('n'))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 6, 5)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 6, 5)));
                 if (is_alnum(ch))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 7, 6)), line, start_pos - 1, end_pos - 2);
-                return std::make_unique<token>(RETURN, line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 7, 6)));
+                return make_token(RETURN);
             default:
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             }
         }
         break;
@@ -183,18 +183,18 @@ namespace riddle
         {
             match('s');
             if (!match('t'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('r'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('i'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (!match('n'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
             if (!match('g'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 6, 5)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 6, 5)));
             if (is_alnum(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 7, 6)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(STRING, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 7, 6)));
+            return make_token(STRING);
         }
         break;
         case 't':
@@ -205,23 +205,23 @@ namespace riddle
             case 'i':
                 match('i');
                 if (!match('m'))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 3, 2)));
                 if (!match('e'))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
                 if (is_alnum(ch))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
-                return std::make_unique<token>(TIME, line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 5, 4)));
+                return make_token(TIME);
             case 'r':
                 match('r');
                 if (!match('u'))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 3, 2)));
                 if (!match('e'))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 4, 3)));
                 if (is_alnum(ch))
-                    return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
-                return std::make_unique<bool_token>(true, line, start_pos - 1, end_pos - 2);
+                    return make_id(finish_id(sb.substr(pos - 5, 4)));
+                return make_bool(true);
             default:
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             }
         }
         break;
@@ -229,14 +229,14 @@ namespace riddle
         {
             match('v');
             if (!match('o'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 2, 1)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 2, 1)));
             if (!match('i'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 3, 2)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 3, 2)));
             if (!match('d'))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 4, 3)), line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 4, 3)));
             if (is_alnum(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 5, 4)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(VOID, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 5, 4)));
+            return make_token(VOID);
         }
         break;
         case '0': // in a number literal..
@@ -266,9 +266,9 @@ namespace riddle
                     ++dec_len;
                     next();
                 }
-                return std::make_unique<real_token>(utils::rational(static_cast<INT_TYPE>(std::stol(sb.substr(pos - intgr_len - dec_len - 2, intgr_len) + sb.substr(pos - intgr_len - 1, dec_len))), static_cast<INT_TYPE>(std::pow(10, dec_len))), line, start_pos - 1, end_pos - 2);
+                return make_real(utils::rational(static_cast<INT_TYPE>(std::stol(sb.substr(pos - intgr_len - dec_len - 2, intgr_len) + sb.substr(pos - intgr_len - 1, dec_len))), static_cast<INT_TYPE>(std::pow(10, dec_len))));
             }
-            return std::make_unique<int_token>(std::stoll(sb.substr(pos - intgr_len - 1, intgr_len)), line, start_pos - 1, end_pos - 2);
+            return make_int(std::stoll(sb.substr(pos - intgr_len - 1, intgr_len)));
         }
         case '"':
         {
@@ -277,12 +277,12 @@ namespace riddle
             while (ch != '"')
             {
                 if (ch == -1)
-                    return std::make_unique<token>(EoF, line, start_pos - 1, end_pos - 2);
+                    return make_token(EoF);
                 ++str_len;
                 next();
             }
             next();
-            return std::make_unique<string_token>(sb.substr(pos - str_len - 1, str_len), line, start_pos - 1, end_pos - 2);
+            return make_string(sb.substr(pos - str_len - 1, str_len));
         }
         case '.':
         {
@@ -295,81 +295,81 @@ namespace riddle
                     ++dec_len;
                     next();
                 }
-                return std::make_unique<real_token>(utils::rational(static_cast<INT_TYPE>(std::stol(sb.substr(pos - dec_len - 1, dec_len))), static_cast<INT_TYPE>(std::pow(10, dec_len))), line, start_pos - 1, end_pos - 2);
+                return make_real(utils::rational(static_cast<INT_TYPE>(std::stol(sb.substr(pos - dec_len - 1, dec_len))), static_cast<INT_TYPE>(std::pow(10, dec_len))));
             }
-            return std::make_unique<token>(DOT, line, start_pos - 1, end_pos - 2);
+            return make_token(DOT);
         }
         case ',':
             match(',');
-            return std::make_unique<token>(COMMA, line, start_pos - 1, end_pos - 2);
+            return make_token(COMMA);
         case ':':
             match(':');
-            return std::make_unique<token>(COLON, line, start_pos - 1, end_pos - 2);
+            return make_token(COLON);
         case ';':
             match(';');
-            return std::make_unique<token>(SEMICOLON, line, start_pos - 1, end_pos - 2);
+            return make_token(SEMICOLON);
         case '(':
             match('(');
-            return std::make_unique<token>(LPAREN, line, start_pos - 1, end_pos - 2);
+            return make_token(LPAREN);
         case ')':
             match(')');
-            return std::make_unique<token>(RPAREN, line, start_pos - 1, end_pos - 2);
+            return make_token(RPAREN);
         case '[':
             match('[');
-            return std::make_unique<token>(LBRACKET, line, start_pos - 1, end_pos - 2);
+            return make_token(LBRACKET);
         case ']':
             match(']');
-            return std::make_unique<token>(RBRACKET, line, start_pos - 1, end_pos - 2);
+            return make_token(RBRACKET);
         case '{':
             match('{');
-            return std::make_unique<token>(LBRACE, line, start_pos - 1, end_pos - 2);
+            return make_token(LBRACE);
         case '}':
             match('}');
-            return std::make_unique<token>(RBRACE, line, start_pos - 1, end_pos - 2);
+            return make_token(RBRACE);
         case '+':
             match('+');
-            return std::make_unique<token>(PLUS, line, start_pos - 1, end_pos - 2);
+            return make_token(PLUS);
         case '-':
             match('-');
-            return std::make_unique<token>(MINUS, line, start_pos - 1, end_pos - 2);
+            return make_token(MINUS);
         case '*':
             match('*');
-            return std::make_unique<token>(STAR, line, start_pos - 1, end_pos - 2);
+            return make_token(STAR);
         case '/':
             match('/');
-            return std::make_unique<token>(SLASH, line, start_pos - 1, end_pos - 2);
+            return make_token(SLASH);
         case '&':
             match('&');
-            return std::make_unique<token>(AMP, line, start_pos - 1, end_pos - 2);
+            return make_token(AMP);
         case '|':
             match('|');
-            return std::make_unique<token>(BAR, line, start_pos - 1, end_pos - 2);
+            return make_token(BAR);
         case '~':
             match('~');
-            return std::make_unique<token>(TILDE, line, start_pos - 1, end_pos - 2);
+            return make_token(TILDE);
         case '=':
             match('=');
             if (match('='))
-                return std::make_unique<token>(EQEQ, line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(EQ, line, start_pos - 1, end_pos - 2);
+                return make_token(EQEQ);
+            return make_token(EQ);
         case '>':
             match('>');
             if (match('='))
-                return std::make_unique<token>(GTEQ, line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(GT, line, start_pos - 1, end_pos - 2);
+                return make_token(GTEQ);
+            return make_token(GT);
         case '<':
             match('<');
             if (match('='))
-                return std::make_unique<token>(LTEQ, line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(LT, line, start_pos - 1, end_pos - 2);
+                return make_token(LTEQ);
+            return make_token(LT);
         case '!':
             match('!');
             if (match('='))
-                return std::make_unique<token>(BANGEQ, line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(BANG, line, start_pos - 1, end_pos - 2);
+                return make_token(BANGEQ);
+            return make_token(BANG);
         case '^':
             match('^');
-            return std::make_unique<token>(CARET, line, start_pos - 1, end_pos - 2);
+            return make_token(CARET);
         case ' ':
         case '\t':
             next();
@@ -384,8 +384,8 @@ namespace riddle
             return next_token();
         default:
             if (is_alpha(ch))
-                return std::make_unique<id_token>(finish_id(sb.substr(pos - 1, 1)), line, start_pos - 1, end_pos - 2);
-            return std::make_unique<token>(EoF, line, start_pos - 1, end_pos - 2);
+                return make_id(finish_id(sb.substr(pos - 1, 1)));
+            return make_token(EoF);
         }
     }
 
@@ -421,4 +421,11 @@ namespace riddle
         }
         return str;
     }
+
+    std::unique_ptr<token> lexer::make_token(symbol sym) noexcept { return std::make_unique<token>(sym, line, start_pos - 1, end_pos - 2); }
+    std::unique_ptr<id_token> lexer::make_id(std::string &&id) noexcept { return std::make_unique<id_token>(std::move(id), line, start_pos - 1, end_pos - 2); }
+    std::unique_ptr<bool_token> lexer::make_bool(bool value) noexcept { return std::make_unique<bool_token>(value, line, start_pos - 1, end_pos - 2); }
+    std::unique_ptr<int_token> lexer::make_int(INT_TYPE value) noexcept { return std::make_unique<int_token>(value, line, start_pos - 1, end_pos - 2); }
+    std::unique_ptr<real_token> lexer::make_real(utils::rational &&value) noexcept { return std::make_unique<real_token>(std::move(value), line, start_pos - 1, end_pos - 2); }
+    std::unique_ptr<string_token> lexer::make_string(std::string &&value) noexcept { return std::make_unique<string_token>(std::move(value), line, start_pos - 1, end_pos - 2); }
 } // namespace riddle
