@@ -8,6 +8,7 @@
 namespace riddle
 {
   class type;
+  class bool_type;
 
   /**
    * @class item item.hpp "include/item.hpp"
@@ -33,5 +34,17 @@ namespace riddle
 
   private:
     type &tp;
+  };
+
+  class bool_item final : public item
+  {
+  public:
+    bool_item(bool_type &tp, const utils::lit &l);
+
+    [[nodiscard]] utils::lit &get_value() { return value; }
+    [[nodiscard]] const utils::lit &get_value() const { return value; }
+
+  private:
+    utils::lit value;
   };
 } // namespace riddle

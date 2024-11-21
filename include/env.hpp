@@ -29,6 +29,24 @@ namespace riddle
     virtual ~env() = default;
 
     /**
+     * @brief Retrieves the core object.
+     *
+     * This function returns a reference to the core object.
+     *
+     * @return A reference to the core object.
+     */
+    [[nodiscard]] core &get_core() const noexcept { return cr; }
+
+    /**
+     * @brief Retrieves the parent environment.
+     *
+     * This function returns a reference to the parent environment.
+     *
+     * @return A reference to the parent environment.
+     */
+    [[nodiscard]] env &get_parent() const noexcept { return parent; }
+
+    /**
      * @brief Retrieves an item by its name.
      *
      * This function retrieves an item by its name. The function will first

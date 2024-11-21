@@ -1,6 +1,6 @@
 #pragma once
 
-#include "env.hpp"
+#include "expression.hpp"
 
 namespace riddle
 {
@@ -13,6 +13,20 @@ namespace riddle
   public:
     core() noexcept;
     virtual ~core() = default;
+
+    /**
+     * @brief Create a new bool expression.
+     *
+     * @return std::shared_ptr<bool_item> The bool expression.
+     */
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_bool() = 0;
+    /**
+     * @brief Create a new bool expression with a value.
+     *
+     * @param value The value of the bool expression.
+     * @return std::shared_ptr<bool_item> The bool expression.
+     */
+    [[nodiscard]] std::shared_ptr<bool_item> new_bool(bool value);
 
     [[nodiscard]] std::shared_ptr<item> get(std::string_view name) noexcept override;
   };

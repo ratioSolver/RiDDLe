@@ -31,4 +31,16 @@ namespace riddle
     std::string name;
     bool primitive;
   };
+
+  /**
+   * @class bool_type type.hpp "include/type.hpp"
+   * @brief The bool type class.
+   *
+   * The bool type class is used to represent the boolean type.
+   */
+  class bool_type final : public type
+  {
+  public:
+    bool_type() noexcept : type("bool", true) {}
+  };
 } // namespace riddle
