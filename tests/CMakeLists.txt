@@ -1,2 +1,2 @@
-add_executable(riddle_lib_tests test_riddle.cpp)
-target_link_libraries(riddle_lib_tests PRIVATE RiDDLe)
+add_executable(riddle_lexer_tests test_lexer.cpp)
+target_link_libraries(riddle_lexer_tests PRIVATE RiDDLe)

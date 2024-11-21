@@ -59,56 +59,143 @@ namespace riddle
     EoF          // End of file
   };
 
+  /**
+   * @class token
+   * @brief Represents a lexical token with its associated symbol and position information.
+   *
+   * The token class encapsulates a symbol and its position within the source code,
+   * including the line number and start/end positions.
+   *
+   * @param sym The symbol associated with the token.
+   * @param line The line number where the token is located.
+   * @param start_pos The starting position of the token in the line.
+   * @param end_pos The ending position of the token in the line.
+   */
   class token
   {
   public:
     token(symbol sym, size_t line, size_t start_pos, size_t end_pos) noexcept : sym(sym), line(line), start_pos(start_pos), end_pos(end_pos) {}
     virtual ~token() noexcept = default;
 
-    const symbol sym;
-    const size_t line, start_pos, end_pos;
+    const symbol sym;                      // The symbol associated with the token
+    const size_t line, start_pos, end_pos; // The line number and start/end positions of the token
   };
 
+  /**
+   * @class id_token
+   * @brief Represents an identifier token in the lexer.
+   *
+   * This class is a final derived class of the token class and is used to represent
+   * identifier tokens in the lexical analysis phase.
+   *
+   * @note This class is marked as final and cannot be inherited from.
+   *
+   * @param id The identifier string.
+   * @param line The line number where the token is found.
+   * @param start_pos The starting position of the token in the line.
+   * @param end_pos The ending position of the token in the line.
+   */
   class id_token final : public token
   {
   public:
     id_token(std::string &&id, size_t line, size_t start_pos, size_t end_pos) noexcept : token(ID, line, start_pos, end_pos), id(std::move(id)) {}
 
-    const std::string id;
+    const std::string id; // The identifier string
   };
 
+  /**
+   * @class bool_token
+   * @brief Represents a boolean token in the lexer.
+   *
+   * This class is a final derived class of the token class, specifically for boolean values.
+   *
+   * @param value The boolean value of the token.
+   * @param line The line number where the token is found.
+   * @param start_pos The starting position of the token in the line.
+   * @param end_pos The ending position of the token in the line.
+   */
   class bool_token final : public token
   {
   public:
     bool_token(bool value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(BOOL, line, start_pos, end_pos), value(value) {}
 
-    const bool value;
+    const bool value; // The boolean value
   };
 
+  /**
+   * @class int_token
+   * @brief Represents an integer token in the lexer.
+   *
+   * This class is a final derived class from the base class token, specifically
+   * for handling integer tokens.
+   *
+   * @note This class is marked as final and cannot be inherited from.
+   *
+   * @param value The integer value of the token.
+   * @param line The line number where the token is found.
+   * @param start_pos The starting position of the token in the line.
+   * @param end_pos The ending position of the token in the line.
+   */
   class int_token final : public token
   {
   public:
     int_token(INT_TYPE value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(INT, line, start_pos, end_pos), value(value) {}
 
-    const INT_TYPE value;
+    const INT_TYPE value; // The integer value
   };
 
+  /**
+   * @class real_token
+   * @brief Represents a token for real numbers in the lexer.
+   *
+   * This class is a final derived class from the base class token. It is used to
+   * represent real number tokens in the lexer with additional information such as
+   * the value of the real number, the line number, and the start and end positions
+   * in the source code.
+   *
+   * @param value The rational value of the real number token.
+   * @param line The line number where the token is found.
+   * @param start_pos The starting position of the token in the line.
+   * @param end_pos The ending position of the token in the line.
+   */
   class real_token final : public token
   {
   public:
     real_token(utils::rational &&value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(REAL, line, start_pos, end_pos), value(std::move(value)) {}
 
-    const utils::rational value;
+    const utils::rational value; // The rational value of the real number
   };
 
+  /**
+   * @class string_token
+   * @brief Represents a token for string literals in the lexer.
+   *
+   * This class is a final derived class from the base class token. It is used to
+   * represent string tokens in the lexical analysis phase.
+   *
+   * @note This class is marked as final and cannot be inherited from.
+   *
+   * @param value The string value of the token.
+   * @param line The line number where the token is found.
+   * @param start_pos The starting position of the token in the line.
+   * @param end_pos The ending position of the token in the line.
+   */
   class string_token final : public token
   {
   public:
     string_token(std::string &&value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(STRING, line, start_pos, end_pos), value(std::move(value)) {}
 
-    const std::string value;
+    const std::string value; // The string value
   };
 
+  /**
+   * @class lexer
+   * @brief A lexical analyzer for the RiDDLe programming language.
+   *
+   * The lexer class is responsible for tokenizing the input source code and
+   * generating a sequence of tokens that can be used by the parser to build
+   * an abstract syntax tree (AST).
+   */
   class lexer final
   {
   public:
@@ -116,6 +203,15 @@ namespace riddle
     lexer(std::string &&source);
     lexer(std::istream &is);
 
+    /**
+     * @brief Retrieves the next token from the input stream.
+     *
+     * This function processes the input stream and returns the next token
+     * encapsulated in a std::unique_ptr. If there are no more tokens to be
+     * processed, it returns a nullptr.
+     *
+     * @return std::unique_ptr<token> A unique pointer to the next token, or nullptr if no more tokens are available.
+     */
     std::unique_ptr<token> next_token();
 
   private:
