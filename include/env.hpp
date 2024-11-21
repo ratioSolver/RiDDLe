@@ -1,0 +1,41 @@
+#pragma once
+
+#include <memory>
+#include <map>
+#include <string>
+#include <string_view>
+#include <optional>
+
+namespace riddle
+{
+  class core;
+  class item;
+
+  class env
+  {
+  public:
+    env(core &c, env &parent, std::map<std::string, std::unique_ptr<item>, std::less<>> &&items = {});
+    virtual ~env() = default;
+
+    /**
+     * @brief Retrieves an item by its name.
+     *
+     * This function searches for an item with the specified name and returns it
+     * wrapped in a std::optional. If the item is found, it is returned as a
+     * std::reference_wrapper. If the item is not found, an empty std::optional
+     * is returned.
+     *
+     * @param name The name of the item to retrieve.
+     * @return std::optional<std::reference_wrapper<item>> The item wrapped in
+     * a std::optional if found, otherwise an empty std::optional.
+     */
+    virtual std::optional<std::reference_wrapper<item>> get(std::string_view name);
+
+  private:
+    core &cr;
+    env &parent;
+
+  protected:
+    std::map<std::string, std::unique_ptr<item>, std::less<>> items;
+  };
+} // namespace riddle

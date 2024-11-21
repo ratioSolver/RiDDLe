@@ -5,7 +5,6 @@
 
 namespace riddle
 {
-    lexer::lexer(const std::string &source) : sb(source) { next(); }
     lexer::lexer(std::string &&source) : sb(std::move(source)) { next(); }
     lexer::lexer(std::istream &is) : sb(std::istreambuf_iterator<char>(is), std::istreambuf_iterator<char>()) { next(); }
 

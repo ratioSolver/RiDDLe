@@ -199,7 +199,6 @@ namespace riddle
   class lexer final
   {
   public:
-    lexer(const std::string &source);
     lexer(std::string &&source);
     lexer(std::istream &is);
 
