@@ -47,4 +47,16 @@ namespace riddle
   private:
     utils::lit value;
   };
+
+  class arith_item final : public item
+  {
+  public:
+    arith_item(type &tp, const utils::lin &l);
+
+    [[nodiscard]] utils::lin &get_value() { return value; }
+    [[nodiscard]] const utils::lin &get_value() const { return value; }
+
+  private:
+    utils::lin value;
+  };
 } // namespace riddle

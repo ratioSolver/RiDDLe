@@ -4,4 +4,5 @@
 namespace riddle
 {
     bool_item::bool_item(bool_type &tp, const utils::lit &l) : item(tp), value(l) {}
+    arith_item::arith_item(type &tp, const utils::lin &l) : item(tp), value(l) {}
 } // namespace riddle

@@ -33,4 +33,15 @@ namespace riddle
   private:
     std::unique_ptr<bool_token> l;
   };
+
+  class int_expression : public expression
+  {
+  public:
+    int_expression(std::unique_ptr<int_token> l) noexcept : l(std::move(l)) {}
+
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
+
+  private:
+    std::unique_ptr<int_token> l;
+  };
 } // namespace riddle

@@ -8,6 +8,8 @@ namespace riddle
     core::core() noexcept : scope(*this, *this), env(*this, *this) {}
 
     std::shared_ptr<bool_item> core::new_bool(bool value) { return std::make_shared<bool_item>(static_cast<bool_type &>(get_type(bool_kw)), value ? utils::TRUE_lit : utils::FALSE_lit); }
+    std::shared_ptr<arith_item> core::new_int(INT_TYPE value) { return std::make_shared<arith_item>(static_cast<int_type &>(get_type(int_kw)), utils::lin(utils::rational(value))); }
+    std::shared_ptr<arith_item> core::new_real(utils::rational &&value) { return std::make_shared<arith_item>(static_cast<real_type &>(get_type(real_kw)), utils::lin(std::move(value))); }
 
     field &core::get_field(std::string_view name) const
     {
