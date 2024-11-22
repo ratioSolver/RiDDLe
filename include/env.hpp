@@ -56,9 +56,10 @@ namespace riddle
      * environments to search.
      *
      * @param name The name of the item to retrieve.
-     * @return The item with the given name, or nullptr if the item is not found.
+     * @return The item with the given name.
+     * @throws std::out_of_range if the item is not found in the current or parent environment.
      */
-    [[nodiscard]] virtual std::shared_ptr<item> get(std::string_view name) noexcept;
+    [[nodiscard]] virtual item &get(std::string_view name);
 
   private:
     core &cr;

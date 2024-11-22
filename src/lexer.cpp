@@ -336,7 +336,23 @@ namespace riddle
             return make_token(STAR);
         case '/':
             match('/');
-            return make_token(SLASH);
+            switch (ch)
+            {
+            case '/': // single-line comment
+                while (ch != '\n' && ch != -1)
+                    next();
+                return next_token();
+            case '*': // multi-line comment
+                while (ch != -1)
+                {
+                    if (match('*') && match('/'))
+                        return next_token();
+                    next();
+                }
+                return make_token(EoF);
+            default:
+                return make_token(SLASH);
+            }
         case '&':
             match('&');
             return make_token(AMP);

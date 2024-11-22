@@ -5,6 +5,12 @@
 
 namespace riddle
 {
+  constexpr const char *bool_kw = "bool";
+  constexpr const char *int_kw = "int";
+  constexpr const char *real_kw = "real";
+  constexpr const char *time_kw = "time";
+  constexpr const char *string_kw = "string";
+
   enum symbol
   {
     BOOL,        // `bool`

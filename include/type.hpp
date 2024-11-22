@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string>
+#include "scope.hpp"
 
 namespace riddle
 {
@@ -15,7 +15,7 @@ namespace riddle
   class type
   {
   public:
-    type(std::string &&name, bool primitive = false) noexcept;
+    type(scope &scp, std::string &&name, bool primitive = false) noexcept;
     virtual ~type() = default;
 
     /**
@@ -28,6 +28,7 @@ namespace riddle
     [[nodiscard]] const std::string &get_name() const noexcept { return name; }
 
   private:
+    scope &scp;
     std::string name;
     bool primitive;
   };
@@ -41,6 +42,54 @@ namespace riddle
   class bool_type final : public type
   {
   public:
-    bool_type() noexcept : type("bool", true) {}
+    bool_type(core &cr) noexcept;
+  };
+
+  /**
+   * @class int_type type.hpp "include/type.hpp"
+   * @brief The int type class.
+   *
+   * The int type class is used to represent the integer type.
+   */
+  class int_type final : public type
+  {
+  public:
+    int_type(core &cr) noexcept;
+  };
+
+  /**
+   * @class real_type type.hpp "include/type.hpp"
+   * @brief The real type class.
+   *
+   * The real type class is used to represent the real number type.
+   */
+  class real_type final : public type
+  {
+  public:
+    real_type(core &cr) noexcept;
+  };
+
+  /**
+   * @class time_type type.hpp "include/type.hpp"
+   * @brief The time type class.
+   *
+   * The time type class is used to represent the time type.
+   */
+  class time_type final : public type
+  {
+  public:
+    time_type(core &cr) noexcept;
+  };
+
+  /**
+   * @class string_type type.hpp "include/type.hpp"
+   * @brief The string type class.
+   *
+   * The string type class is used to represent the string type.
+   */
+  class string_type final : public type
+  {
+  public:
+    string_type(core &cr) noexcept;
   };
 } // namespace riddle

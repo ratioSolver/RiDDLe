@@ -47,6 +47,35 @@ namespace riddle
     scope(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args = {});
     virtual ~scope() = default;
 
+    [[nodiscard]] core &get_core() const noexcept { return cr; }
+    [[nodiscard]] scope &get_parent() const noexcept { return parent; }
+
+    /**
+     * @brief Retrieves the field associated with the given name.
+     *
+     * This function searches for the field associated with the provided name
+     * within the current scope. If the field is not found in the current scope,
+     * it delegates the search to the parent scope.
+     *
+     * @param name The name of the field to retrieve.
+     * @return field& A reference to the field associated with the given name.
+     * @throws std::out_of_range if the field is not found in the current or parent scope.
+     */
+    [[nodiscard]] virtual field &get_field(std::string_view name) const;
+
+    /**
+     * @brief Retrieves the type associated with the given name.
+     *
+     * This function searches for the type associated with the provided name
+     * within the current scope. If the type is not found in the current scope,
+     * it delegates the search to the parent scope.
+     *
+     * @param name The name of the type to retrieve.
+     * @return type& A reference to the type associated with the given name.
+     * @throws std::out_of_range if the type is not found in the current or parent scope.
+     */
+    [[nodiscard]] virtual type &get_type(std::string_view name) const { return parent.get_type(name); }
+
   protected:
     /**
      * @brief Adds a field to the scope.
