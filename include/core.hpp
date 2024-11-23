@@ -59,11 +59,15 @@ namespace riddle
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
+    [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
     [[nodiscard]] type &get_type(std::string_view name) const override;
+    [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
     [[nodiscard]] item &get(std::string_view name) override;
 
   private:
-    std::map<std::string, std::unique_ptr<type>, std::less<>> types; // the types..
+    std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the core..
+    std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the core..
+    std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the core..
   };
 } // namespace riddle

@@ -8,7 +8,9 @@
 namespace riddle
 {
   class core;
+  class method;
   class type;
+  class predicate;
 
   /**
    * @brief A field.
@@ -64,6 +66,20 @@ namespace riddle
     [[nodiscard]] virtual field &get_field(std::string_view name) const;
 
     /**
+     * @brief Retrieves the method associated with the given name and argument types.
+     *
+     * This function searches for the method associated with the provided name and argument types
+     * within the current scope. If the method is not found in the current scope,
+     * it delegates the search to the parent scope.
+     *
+     * @param name The name of the method to retrieve.
+     * @param argument_types A vector of references to the types of the arguments of the method.
+     * @return method& A reference to the method associated with the given name and argument types.
+     * @throws std::out_of_range if the method is not found in the current or parent scope.
+     */
+    [[nodiscard]] virtual method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent.get_method(name, argument_types); }
+
+    /**
      * @brief Retrieves the type associated with the given name.
      *
      * This function searches for the type associated with the provided name
@@ -75,6 +91,19 @@ namespace riddle
      * @throws std::out_of_range if the type is not found in the current or parent scope.
      */
     [[nodiscard]] virtual type &get_type(std::string_view name) const { return parent.get_type(name); }
+
+    /**
+     * @brief Retrieves the predicate associated with the given name.
+     *
+     * This function searches for the predicate associated with the provided name
+     * within the current scope. If the predicate is not found in the current scope,
+     * it delegates the search to the parent scope.
+     *
+     * @param name The name of the predicate to retrieve.
+     * @return predicate& A reference to the predicate associated with the given name.
+     * @throws std::out_of_range if the predicate is not found in the current or parent scope.
+     */
+    [[nodiscard]] virtual predicate &get_predicate(std::string_view name) const { return parent.get_predicate(name); }
 
   protected:
     /**

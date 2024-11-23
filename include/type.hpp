@@ -1,9 +1,13 @@
 #pragma once
 
-#include "scope.hpp"
+#include "constructor.hpp"
+#include "method.hpp"
 
 namespace riddle
 {
+  class item;
+  class predicate;
+
   /**
    * @class type type.hpp "include/type.hpp"
    * @brief The type class.
@@ -19,6 +23,15 @@ namespace riddle
     virtual ~type() = default;
 
     /**
+     * @brief Retrieves the scope where the type is defined.
+     *
+     * This function returns a reference to the scope where the type is defined.
+     *
+     * @return scope& A reference to the scope where the type is defined.
+     */
+    [[nodiscard]] scope &get_scope() const noexcept { return scp; }
+
+    /**
      * @brief Retrieves the name of the type.
      *
      * This function returns a constant reference to the name of the type.
@@ -26,6 +39,27 @@ namespace riddle
      * @return const std::string& A constant reference to the name of the type.
      */
     [[nodiscard]] const std::string &get_name() const noexcept { return name; }
+
+    /**
+     * @brief Checks if the type is primitive.
+     *
+     * This function returns a boolean value indicating whether the type
+     * is considered primitive.
+     *
+     * @return true if the type is primitive, false otherwise.
+     */
+    [[nodiscard]] bool is_primitive() const noexcept { return primitive; }
+
+    /**
+     * @brief Checks if the current type is assignable from another type.
+     *
+     * This function returns a boolean value indicating whether the current type
+     * is assignable from another type.
+     *
+     * @param other The type to compare with the current type.
+     * @return true if the current type is assignable from the other type, false otherwise.
+     */
+    [[nodiscard]] virtual bool is_assignable_from(const type &other) const { return this == &other; }
 
   private:
     scope &scp;
@@ -67,6 +101,8 @@ namespace riddle
   {
   public:
     real_type(core &cr) noexcept;
+
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
   };
 
   /**
@@ -79,6 +115,8 @@ namespace riddle
   {
   public:
     time_type(core &cr) noexcept;
+
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
   };
 
   /**
@@ -91,5 +129,79 @@ namespace riddle
   {
   public:
     string_type(core &cr) noexcept;
+  };
+
+  /**
+   * @class enum_type type.hpp "include/type.hpp"
+   * @brief The enum type class.
+   *
+   * The enum type class is used to represent the enumeration type.
+   */
+  class enum_type final : public type
+  {
+  public:
+    enum_type(scope &scp, std::string &&name, std::vector<std::shared_ptr<item>> &&domain) noexcept;
+
+    /**
+     * @brief Retrieves the domain of items.
+     *
+     * This function returns a constant reference to a vector of shared pointers to items,
+     * representing the domain.
+     *
+     * @return const std::vector<std::shared_ptr<item>>& A constant reference to the domain vector.
+     */
+    [[nodiscard]] const std::vector<std::shared_ptr<item>> &get_domain() const noexcept { return domain; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<enum_type>> &get_enums() const noexcept { return enums; }
+
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
+
+  private:
+    std::vector<std::shared_ptr<item>> domain;
+    std::vector<std::reference_wrapper<enum_type>> enums;
+  };
+
+  /**
+   * @class component_type type.hpp "include/type.hpp"
+   * @brief The component type class.
+   *
+   * The component type class is used to represent the component type.
+   */
+  class component_type : public scope, public type
+  {
+  public:
+    component_type(scope &scp, std::string &&name) noexcept;
+    virtual ~component_type() = default;
+
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
+
+    [[nodiscard]] std::vector<std::reference_wrapper<component_type>> &get_parents() noexcept { return parents; }
+
+    [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
+    [[nodiscard]] type &get_type(std::string_view name) const override;
+    [[nodiscard]] predicate &get_predicate(std::string_view name) const;
+
+  private:
+    std::vector<std::reference_wrapper<component_type>> parents;                      // the base types (i.e. the types this type inherits from)..
+    std::vector<std::unique_ptr<constructor>> constructors;                           // the constructors of the type..
+    std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the scope of the type..
+    std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the scope of the type..
+    std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the scope of the type..
+  };
+
+  /**
+   * @class predicate type.hpp "include/type.hpp"
+   * @brief The predicate class.
+   *
+   * The predicate class is used to represent a predicate.
+   */
+  class predicate : public scope, public type
+  {
+  public:
+    predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args) noexcept;
+    virtual ~predicate() = default;
+
+  private:
+    std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
+    std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
   };
 } // namespace riddle
