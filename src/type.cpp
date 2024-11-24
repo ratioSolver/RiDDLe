@@ -99,5 +99,5 @@ namespace riddle
         }
     }
 
-    predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false) {}
+    predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(std::move(body)) {}
 } // namespace riddle

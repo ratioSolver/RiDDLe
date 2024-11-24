@@ -2,7 +2,7 @@
 
 namespace riddle
 {
-    constructor::constructor(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args) noexcept : scope(c, parent)
+    constructor::constructor(scope &scp, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) noexcept : scope(scp.get_core(), scp), body(std::move(body))
     {
         for (auto &arg : args)
         {

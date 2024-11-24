@@ -197,11 +197,12 @@ namespace riddle
   class predicate : public scope, public type
   {
   public:
-    predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args) noexcept;
+    predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args = {}, std::vector<std::unique_ptr<statement>> &&body = {}) noexcept;
     virtual ~predicate() = default;
 
   private:
     std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
     std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
+    std::vector<std::unique_ptr<statement>> body;           // the body of the predicate..
   };
 } // namespace riddle
