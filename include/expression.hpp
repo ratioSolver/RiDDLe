@@ -23,7 +23,7 @@ namespace riddle
     [[nodiscard]] virtual std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const = 0;
   };
 
-  class bool_expression : public expression
+  class bool_expression final : public expression
   {
   public:
     bool_expression(std::unique_ptr<bool_token> l) noexcept : l(std::move(l)) {}
@@ -34,7 +34,7 @@ namespace riddle
     std::unique_ptr<bool_token> l;
   };
 
-  class int_expression : public expression
+  class int_expression final : public expression
   {
   public:
     int_expression(std::unique_ptr<int_token> l) noexcept : l(std::move(l)) {}
@@ -43,5 +43,38 @@ namespace riddle
 
   private:
     std::unique_ptr<int_token> l;
+  };
+
+  class real_expression final : public expression
+  {
+  public:
+    real_expression(std::unique_ptr<real_token> l) noexcept : l(std::move(l)) {}
+
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
+
+  private:
+    std::unique_ptr<real_token> l;
+  };
+
+  class string_expression final : public expression
+  {
+  public:
+    string_expression(std::unique_ptr<string_token> l) noexcept : l(std::move(l)) {}
+
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
+
+  private:
+    std::unique_ptr<string_token> l;
+  };
+
+  class id_expression final : public expression
+  {
+  public:
+    id_expression(std::vector<id_token> &&obj_id) noexcept : object_id(std::move(obj_id)) {}
+
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
+
+  private:
+    std::vector<id_token> object_id;
   };
 } // namespace riddle
