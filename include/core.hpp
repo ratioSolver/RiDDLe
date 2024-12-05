@@ -27,7 +27,7 @@ namespace riddle
      * @param value The value of the bool expression.
      * @return std::shared_ptr<bool_item> The bool expression.
      */
-    [[nodiscard]] std::shared_ptr<bool_item> new_bool(bool value);
+    [[nodiscard]] std::shared_ptr<bool_item> new_bool(const bool value);
 
     /**
      * @brief Create a new int expression.
@@ -41,7 +41,7 @@ namespace riddle
      * @param value The value of the int expression.
      * @return std::shared_ptr<arith_item> The int expression.
      */
-    [[nodiscard]] std::shared_ptr<arith_item> new_int(INT_TYPE value);
+    [[nodiscard]] std::shared_ptr<arith_item> new_int(const INT_TYPE value);
 
     /**
      * @brief Create a real expression.
@@ -55,7 +55,7 @@ namespace riddle
      * @param value The value of the real expression.
      * @return std::shared_ptr<arith_item> The real expression.
      */
-    [[nodiscard]] std::shared_ptr<arith_item> new_real(utils::rational &&value);
+    [[nodiscard]] std::shared_ptr<arith_item> new_real(const utils::rational &value);
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
