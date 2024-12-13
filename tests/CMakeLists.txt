@@ -1,2 +1,8 @@
 add_executable(riddle_lexer_tests test_lexer.cpp)
 target_link_libraries(riddle_lexer_tests PRIVATE RiDDLe)
+
+add_executable(riddle_parser_tests test_parser.cpp)
+target_link_libraries(riddle_parser_tests PRIVATE RiDDLe)
+
+add_test(NAME riddle_lexer_tests COMMAND riddle_lexer_tests)
+add_test(NAME riddle_parser_tests COMMAND riddle_parser_tests)
