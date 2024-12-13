@@ -15,14 +15,13 @@ namespace riddle
   class local_field_statement final : public statement
   {
   public:
-    local_field_statement(std::vector<id_token> &&field_type, std::vector<id_token> &&names, std::vector<std::unique_ptr<expression>> &&values) : field_type(std::move(field_type)), names(std::move(names)), values(std::move(values)) {}
+    local_field_statement(std::vector<id_token> &&field_type, std::vector<std::pair<id_token, std::unique_ptr<expression>>> &&fields) : field_type(std::move(field_type)), fields(std::move(fields)) {}
 
     void execute(const scope &scp, env &ctx) const override;
 
   private:
     std::vector<id_token> field_type;
-    std::vector<id_token> names;
-    std::vector<std::unique_ptr<expression>> values;
+    std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
   };
 
   class assignment_statement final : public statement
@@ -99,7 +98,7 @@ namespace riddle
   class formula_statement final : public statement
   {
   public:
-    formula_statement(bool is_fact, id_token &&id, std::vector<id_token> &&tau, id_token &&predicate_name, std::vector<id_token> &&args, std::vector<std::unique_ptr<expression>> &&values) : is_fact(is_fact), id(std::move(id)), tau(std::move(tau)), predicate_name(std::move(predicate_name)), args(std::move(args)), values(std::move(values)) {}
+    formula_statement(bool is_fact, id_token &&id, std::vector<id_token> &&tau, id_token &&predicate_name, std::vector<std::pair<id_token, std::unique_ptr<expression>>> &&args) : is_fact(is_fact), id(std::move(id)), tau(std::move(tau)), predicate_name(std::move(predicate_name)), args(std::move(args)) {}
 
     void execute(const scope &scp, env &ctx) const override;
 
@@ -108,7 +107,6 @@ namespace riddle
     id_token id;
     std::vector<id_token> tau;
     id_token predicate_name;
-    std::vector<id_token> args;
-    std::vector<std::unique_ptr<expression>> values;
+    std::vector<std::pair<id_token, std::unique_ptr<expression>>> args;
   };
 } // namespace riddle
