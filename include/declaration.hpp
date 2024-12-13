@@ -13,8 +13,27 @@ namespace riddle
     virtual std::string to_string() const = 0;
 
   private:
+    /**
+     * @brief Declares a type within the given scope.
+     *
+     * @param scope A reference to the scope in which the declaration is made.
+     */
     virtual void declare(scope &) const {}
+    /**
+     * @brief Refines a type within the given scope.
+     *
+     * This method is called after all types have been declared, and is used to refine the types with additional information (e.g. fields, methods, predicates, etc.) that require the types to be fully declared.
+     *
+     * @param scope A reference to the scope in which the declaration is made.
+     */
     virtual void refine(scope &) const {}
+    /**
+     * @brief Refines the predicates of a type within the given scope.
+     *
+     * This method is called after all types have been refined, and is used to refine the predicates with additional information (e.g. parent predicates) that require the predicates to be fully declared.
+     *
+     * @param scope A reference to the scope in which the declaration is made.
+     */
     virtual void refine_predicates(scope &) const {}
   };
 
