@@ -10,8 +10,6 @@ namespace riddle
     type_declaration() = default;
     virtual ~type_declaration() = default;
 
-    virtual std::string to_string() const = 0;
-
   private:
     /**
      * @brief Declares a type within the given scope.
