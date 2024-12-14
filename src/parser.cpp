@@ -10,9 +10,10 @@ namespace riddle
         std::vector<std::unique_ptr<method_declaration>> methods;       // the method declarations..
         std::vector<std::unique_ptr<statement>> statements;             // the statements..
 
+        next();
         while (!match(symbol::EoF))
         {
-            switch (tokens.at(pos)->sym)
+            switch (tokens.at(pos - 1)->sym)
             {
             case symbol::ENUM:
                 types.emplace_back(parse_enum_declaration());
@@ -160,7 +161,7 @@ namespace riddle
 
     bool parser::match(const symbol &sym)
     {
-        if (tokens.at(pos)->sym == sym)
+        if (tokens.at(pos - 1)->sym == sym)
         {
             next();
             return true;
