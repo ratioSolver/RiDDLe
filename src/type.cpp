@@ -98,6 +98,48 @@ namespace riddle
             throw std::out_of_range("method " + std::string(name) + " not found");
         }
     }
+    type &component_type::get_type(std::string_view name) const
+    {
+        if (auto it = types.find(name); it != types.end())
+            return *it->second;
+        try
+        { // first check in any enclosing scope
+            return get_scope().get_type(name);
+        }
+        catch (const std::out_of_range &)
+        { // if not in any enclosing scope, check any superclass
+            for (const auto &p : parents)
+                try
+                {
+                    return p.get().get_type(name);
+                }
+                catch (const std::out_of_range &)
+                {
+                }
+            throw std::out_of_range("type " + std::string(name) + " not found");
+        }
+    }
+    predicate &component_type::get_predicate(std::string_view name) const
+    {
+        if (auto it = predicates.find(name); it != predicates.end())
+            return *it->second;
+        try
+        { // first check in any enclosing scope
+            return get_scope().get_predicate(name);
+        }
+        catch (const std::out_of_range &)
+        { // if not in any enclosing scope, check any superclass
+            for (const auto &p : parents)
+                try
+                {
+                    return p.get().get_predicate(name);
+                }
+                catch (const std::out_of_range &)
+                {
+                }
+            throw std::out_of_range("predicate " + std::string(name) + " not found");
+        }
+    }
 
     void component_type::add_type(std::unique_ptr<type> t)
     {

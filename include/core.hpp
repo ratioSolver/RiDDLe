@@ -1,7 +1,6 @@
 #pragma once
 
-#include "scope.hpp"
-#include "expression.hpp"
+#include "type.hpp"
 
 namespace riddle
 {
@@ -9,6 +8,7 @@ namespace riddle
   class method_declaration;
   class class_declaration;
   class predicate_declaration;
+  class compilation_unit;
 
   /**
    * @class core core.hpp "include/core.hpp"
@@ -24,6 +24,23 @@ namespace riddle
   public:
     core() noexcept;
     virtual ~core() = default;
+
+    /**
+     * @brief Reads and processes the given RiDDLe script.
+     *
+     * This function reads and processes the given RiDDLe script.
+     *
+     * @param script The RiDDLe script.
+     */
+    virtual void read(std::string &&script);
+    /**
+     * @brief Reads and processes the given list of RiDDLe files.
+     *
+     * This function reads and processes the given list of RiDDLe files.
+     *
+     * @param files The list of RiDDLe files.
+     */
+    virtual void read(const std::vector<std::string> &files);
 
     /**
      * @brief Create a new bool expression.
@@ -65,7 +82,7 @@ namespace riddle
      * @param value The value of the real expression.
      * @return std::shared_ptr<arith_item> The real expression.
      */
-    [[nodiscard]] std::shared_ptr<arith_item> new_real(const utils::rational &value);
+    [[nodiscard]] std::shared_ptr<arith_item> new_real(utils::rational &&value);
 
     /**
      * @brief Create a new string expression.
@@ -79,7 +96,7 @@ namespace riddle
      * @param value The value of the string expression.
      * @return std::shared_ptr<string_item> The string expression.
      */
-    [[nodiscard]] std::shared_ptr<string_item> new_string(const std::string &value);
+    [[nodiscard]] std::shared_ptr<string_item> new_string(std::string &&value);
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
@@ -103,6 +120,7 @@ namespace riddle
     std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the core..
     std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the core..
     std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the core..
+    std::vector<std::unique_ptr<compilation_unit>> cus;                               // the compilation units read by the core..
   };
 
   inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }

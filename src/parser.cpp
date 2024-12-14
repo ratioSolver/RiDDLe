@@ -130,21 +130,32 @@ namespace riddle
 
     std::unique_ptr<class_declaration> parser::parse_class_declaration()
     {
+        throw std::runtime_error("Not implemented");
     }
+
     std::unique_ptr<field_declaration> parser::parse_field_declaration()
     {
+        throw std::runtime_error("Not implemented");
     }
+
     std::unique_ptr<method_declaration> parser::parse_method_declaration()
     {
+        throw std::runtime_error("Not implemented");
     }
+
     std::unique_ptr<constructor_declaration> parser::parse_constructor_declaration()
     {
+        throw std::runtime_error("Not implemented");
     }
+
     std::unique_ptr<predicate_declaration> parser::parse_predicate_declaration()
     {
+        throw std::runtime_error("Not implemented");
     }
+
     std::unique_ptr<statement> parser::parse_statement()
     {
+        throw std::runtime_error("Not implemented");
     }
 
     bool parser::match(const symbol &sym)

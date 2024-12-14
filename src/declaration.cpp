@@ -9,7 +9,7 @@ namespace riddle
     {
         std::vector<std::shared_ptr<item>> vals;
         for (const auto &val : values)
-            vals.emplace_back(scp.get_core().new_string(val.value));
+            vals.emplace_back(scp.get_core().new_string(std::string(val.value)));
         // we create the enum and add it to the scope..
         auto et = std::make_unique<enum_type>(scp, std::string(name.id), std::move(vals));
 
@@ -40,30 +40,38 @@ namespace riddle
 
     void field_declaration::refine(scope &scp) const
     {
+        throw std::runtime_error("Not implemented");
     }
 
     void constructor_declaration::refine(scope &scp) const
     {
+        throw std::runtime_error("Not implemented");
     }
 
     void method_declaration::refine(scope &scp) const
     {
+        throw std::runtime_error("Not implemented");
     }
 
     void predicate_declaration::declare(scope &scp) const
     {
+        throw std::runtime_error("Not implemented");
     }
     void predicate_declaration::refine(scope &scp) const
     {
+        throw std::runtime_error("Not implemented");
     }
 
     void class_declaration::declare(scope &scp) const
     {
+        throw std::runtime_error("Not implemented");
     }
     void class_declaration::refine(scope &scp) const
     {
+        throw std::runtime_error("Not implemented");
     }
     void class_declaration::refine_predicates(scope &scp) const
     {
+        throw std::runtime_error("Not implemented");
     }
 } // namespace riddle
