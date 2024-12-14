@@ -7,6 +7,10 @@ namespace riddle
 {
   class item;
   class predicate;
+  class enum_declaration;
+  class method_declaration;
+  class class_declaration;
+  class predicate_declaration;
 
   /**
    * @class type type.hpp "include/type.hpp"
@@ -139,6 +143,8 @@ namespace riddle
    */
   class enum_type final : public type
   {
+    friend class enum_declaration;
+
   public:
     enum_type(scope &scp, std::string &&name, std::vector<std::shared_ptr<item>> &&domain) noexcept;
 
@@ -168,6 +174,11 @@ namespace riddle
    */
   class component_type : public scope, public type
   {
+    friend class enum_declaration;
+    friend class method_declaration;
+    friend class class_declaration;
+    friend class predicate_declaration;
+
   public:
     component_type(scope &scp, std::string &&name) noexcept;
     virtual ~component_type() = default;
@@ -179,6 +190,16 @@ namespace riddle
     [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const;
+
+  protected:
+    /**
+     * @brief Adds a type to this component type.
+     *
+     * This function adds a type to the collection of types.
+     *
+     * @param tp A unique pointer to the type to be added.
+     */
+    void add_type(std::unique_ptr<type> tp);
 
   private:
     std::vector<std::reference_wrapper<component_type>> parents;                      // the base types (i.e. the types this type inherits from)..

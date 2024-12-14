@@ -20,7 +20,8 @@ namespace riddle
 
     void scope::add_field(std::unique_ptr<field> field)
     {
-        if (!fields.emplace(field->get_name(), std::move(field)).second)
-            throw std::invalid_argument("field " + field->get_name() + " already exists");
+        std::string name = field->get_name();
+        if (!fields.emplace(name, std::move(field)).second)
+            throw std::invalid_argument("field " + name + " already exists");
     }
 } // namespace riddle

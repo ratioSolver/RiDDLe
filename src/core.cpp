@@ -31,4 +31,11 @@ namespace riddle
             return *it->second;
         throw std::out_of_range("item " + std::string(name) + " not found");
     }
+
+    void core::add_type(std::unique_ptr<type> t)
+    {
+        std::string name = t->get_name();
+        if (!types.emplace(name, std::move(t)).second)
+            throw std::invalid_argument("type " + name + " already exists");
+    }
 } // namespace riddle

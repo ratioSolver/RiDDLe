@@ -99,5 +99,12 @@ namespace riddle
         }
     }
 
+    void component_type::add_type(std::unique_ptr<type> t)
+    {
+        std::string name = t->get_name();
+        if (!types.emplace(name, std::move(t)).second)
+            throw std::invalid_argument("type " + name + " already exists");
+    }
+
     predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(std::move(body)) {}
 } // namespace riddle
