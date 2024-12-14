@@ -6,7 +6,7 @@ namespace riddle
     {
         for (auto &arg : args)
         {
-            this->args.push_back(arg->get_name());
+            this->args.emplace_back(arg->get_name());
             add_field(std::move(arg));
         }
     }

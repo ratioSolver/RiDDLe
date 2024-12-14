@@ -9,7 +9,7 @@ namespace riddle
     {
         std::vector<std::shared_ptr<item>> vals;
         for (const auto &val : values)
-            vals.push_back(scp.get_core().new_string(val.value));
+            vals.emplace_back(scp.get_core().new_string(val.value));
         // we create the enum and add it to the scope..
         auto et = std::make_unique<enum_type>(scp, std::string(name.id), std::move(vals));
 
@@ -32,7 +32,7 @@ namespace riddle
                 else
                     throw std::runtime_error("Invalid type reference");
             if (auto etp = dynamic_cast<enum_type *>(tp))
-                et.enums.push_back(*etp);
+                et.enums.emplace_back(*etp);
             else
                 throw std::runtime_error("Invalid enum reference");
         }

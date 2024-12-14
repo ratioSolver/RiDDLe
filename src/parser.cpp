@@ -15,16 +15,16 @@ namespace riddle
             switch (tokens.at(pos)->sym)
             {
             case symbol::ENUM:
-                types.push_back(parse_enum_declaration());
+                types.emplace_back(parse_enum_declaration());
                 break;
             case symbol::CLASS:
-                types.push_back(parse_class_declaration());
+                types.emplace_back(parse_class_declaration());
                 break;
             case symbol::PREDICATE:
-                predicates.push_back(parse_predicate_declaration());
+                predicates.emplace_back(parse_predicate_declaration());
                 break;
             case symbol::VOID:
-                methods.push_back(parse_method_declaration());
+                methods.emplace_back(parse_method_declaration());
                 break;
             case BOOL:
             case INT:
@@ -44,12 +44,12 @@ namespace riddle
                 if (match(ID) && match(LPAREN))
                 {
                     backtrack(c_pos);
-                    methods.push_back(parse_method_declaration());
+                    methods.emplace_back(parse_method_declaration());
                 }
                 else
                 {
                     backtrack(c_pos);
-                    statements.push_back(parse_statement());
+                    statements.emplace_back(parse_statement());
                 }
                 break;
             }
@@ -63,12 +63,12 @@ namespace riddle
                 if (match(ID) && match(LPAREN))
                 {
                     backtrack(c_pos);
-                    methods.push_back(parse_method_declaration());
+                    methods.emplace_back(parse_method_declaration());
                 }
                 else
                 {
                     backtrack(c_pos);
-                    statements.push_back(parse_statement());
+                    statements.emplace_back(parse_statement());
                 }
                 break;
             }
@@ -99,7 +99,7 @@ namespace riddle
                 {
                     if (!match(String))
                         error("Expected string literal");
-                    values.push_back(static_cast<const string_token &>(*tokens.at(pos - 1)));
+                    values.emplace_back(static_cast<const string_token &>(*tokens.at(pos - 1)));
                     if (!match(COMMA) && !match(RBRACE))
                         error("Expected ',' or '}' after string literal");
                 }
@@ -107,14 +107,14 @@ namespace riddle
             case ID:
             {
                 std::vector<id_token> refs;
-                refs.push_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                refs.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
                 while (match(DOT))
                 {
                     if (!match(ID))
                         error("Expected identifier after '.'");
-                    refs.push_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                    refs.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
                 }
-                enum_refs.push_back(std::move(refs));
+                enum_refs.emplace_back(std::move(refs));
                 break;
             }
             default:
@@ -160,7 +160,7 @@ namespace riddle
     const token &parser::next()
     {
         while (pos >= tokens.size())
-            tokens.push_back(lex.next_token());
+            tokens.emplace_back(lex.next_token());
         return *tokens[pos++];
     }
 
