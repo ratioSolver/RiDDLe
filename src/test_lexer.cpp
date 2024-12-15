@@ -47,150 +47,83 @@ namespace riddle
                 break;
             case 'b':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = BOOL;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'c':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = CLASS;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'e':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = ENUM;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'f':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = FOR;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'g':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = GOAL;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'h':
                 if (current_state == TIME && text == "t") // th
-                {
-                    text.push_back(c);
                     current_state = THIS;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'i':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = INT;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'l':
-                if (current_state == FACT)
-                {
-                    text.push_back(c);
+                if (current_state == FACT && text == "fa") // fal
                     current_state = Bool;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'n':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = NEW;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'o':
-                switch (current_state)
-                {
-                case START:
-                    text.push_back(c);
+                if (current_state == START)
                     current_state = OR;
-                    break;
-                default:
-                    text.push_back(c);
-                }
+                text.push_back(c);
                 break;
             case 'p':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = PREDICATE;
-                }
                 else
                     text.push_back(c);
                 break;
             case 'r':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = REAL;
-                }
                 else if (current_state == TIME && text == "t") // tr
-                {
-                    text.push_back(c);
                     current_state = Bool;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 's':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = STRING;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 't':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = TIME;
-                }
                 else if (current_state == REAL && text == "re") // ret
-                {
-                    text.push_back(c);
                     current_state = RETURN;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case 'v':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = VOID;
-                }
-                else
-                    text.push_back(c);
+                text.push_back(c);
                 break;
             case '0':
             case '1':
@@ -203,213 +136,236 @@ namespace riddle
             case '8':
             case '9':
                 if (current_state == START)
-                {
-                    text.push_back(c);
                     current_state = Int;
-                }
-                else
-                    text.push_back(c);
+                else if (current_state != ID && current_state != Int && current_state != Real)
+                    tokens.push_back(finish_token());
+                text.push_back(c);
                 break;
             case '.':
-                switch (current_state)
+                if ((current_state == START && std::isdigit(is.peek())) || current_state == Int)
                 {
-                case START:
-                    if (std::isdigit(is.peek()))
-                    {
-                        text.push_back(c);
-                        current_state = Real;
-                    }
-                    else
-                    {
-                        if (!text.empty())
-                            tokens.push_back(finish_token());
-                        text.push_back(c);
-                        current_state = DOT;
-                        tokens.push_back(finish_token());
-                    }
-                    break;
-                case Int:
-                    text.push_back(c);
                     current_state = Real;
-                    break;
-                default:
                     text.push_back(c);
+                }
+                else
+                {
+                    if (!text.empty())
+                        tokens.push_back(finish_token());
+                    current_state = DOT;
+                    text.push_back(c);
+                    tokens.push_back(finish_token());
                 }
                 break;
             case '"':
                 switch (current_state)
                 {
                 case START:
-                    text.push_back(c);
                     current_state = String;
+                    text.push_back(c);
                     break;
                 case String:
                     text.push_back(c);
                     tokens.push_back(finish_token());
                     break;
                 default:
-                    text.push_back(c);
+                    throw std::runtime_error("Unexpected character: " + std::string(1, c));
                 }
                 break;
             case '(':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = LPAREN;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case ')':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = RPAREN;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '{':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = LBRACE;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '}':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = RBRACE;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '[':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = LBRACKET;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case ']':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = RBRACKET;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case ',':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = COMMA;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case ':':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = COLON;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case ';':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = SEMICOLON;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '+':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = PLUS;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '-':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = MINUS;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '*':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = STAR;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '&':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = AMP;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '|':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = BAR;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '~':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = TILDE;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '=':
                 if (!text.empty())
                     tokens.push_back(finish_token());
+                current_state = EQ;
                 text.push_back(c);
                 if (is.peek() == '=')
                 {
                     is.ignore();
-                    text.push_back('=');
                     current_state = EQEQ;
+                    text.push_back('=');
                 }
-                else
-                    current_state = EQ;
+                tokens.push_back(finish_token());
                 break;
             case '>':
                 if (!text.empty())
                     tokens.push_back(finish_token());
+                current_state = GT;
                 text.push_back(c);
                 if (is.peek() == '=')
                 {
                     is.ignore();
-                    text.push_back('=');
                     current_state = GTEQ;
+                    text.push_back('=');
                 }
-                else
-                    current_state = GT;
+                tokens.push_back(finish_token());
                 break;
             case '<':
                 if (!text.empty())
                     tokens.push_back(finish_token());
+                current_state = LT;
                 text.push_back(c);
                 if (is.peek() == '=')
                 {
                     is.ignore();
-                    text.push_back('=');
                     current_state = LTEQ;
+                    text.push_back('=');
                 }
-                else
-                    current_state = LT;
+                tokens.push_back(finish_token());
                 break;
             case '!':
                 if (!text.empty())
                     tokens.push_back(finish_token());
+                current_state = BANG;
                 text.push_back(c);
                 if (is.peek() == '=')
                 {
                     is.ignore();
-                    text.push_back('=');
                     current_state = BANGEQ;
+                    text.push_back('=');
                 }
-                else
-                    current_state = BANG;
+                tokens.push_back(finish_token());
                 break;
             case '^':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                text.push_back(c);
                 current_state = CARET;
+                text.push_back(c);
+                tokens.push_back(finish_token());
                 break;
             case '\r':
-                start = 0;
-                [[fallthrough]];
+                if (current_state == String)
+                    text.push_back(c);
+                else
+                {
+                    if (!text.empty())
+                        tokens.push_back(finish_token());
+                    start = 0;
+                }
+                break;
             case '\n':
-                ++line;
-                [[fallthrough]];
+                if (current_state == String)
+                    text.push_back(c);
+                else
+                {
+                    if (!text.empty())
+                        tokens.push_back(finish_token());
+                    start = 0;
+                    ++line;
+                }
+                break;
             case ' ':
             case '\t':
-                if (!text.empty())
-                    tokens.push_back(finish_token());
-                ++start;
+                if (current_state == String)
+                    text.push_back(c);
+                else
+                {
+                    if (!text.empty())
+                        tokens.push_back(finish_token());
+                    ++start;
+                }
                 break;
             case EOF:
                 if (!text.empty())

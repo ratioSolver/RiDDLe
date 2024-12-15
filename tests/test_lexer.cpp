@@ -123,11 +123,74 @@ void test_lexer3()
     assert(tokens[5]->sym == riddle::EoF);
 }
 
+void test_lexer4()
+{
+    riddle::lexer lex;
+    std::stringstream ss;
+    ss << "enum E { \"a\", \"b\", \"c\" } | a.b.c;";
+    auto tokens = lex.parse(ss);
+    assert(tokens.size() == 17);
+    assert(tokens[0]->sym == riddle::ENUM);
+    assert(tokens[0]->line == 1);
+    assert(tokens[0]->start_pos == 0);
+    assert(tokens[0]->end_pos == 3);
+    assert(tokens[1]->sym == riddle::ID);
+    assert(tokens[1]->line == 1);
+    assert(tokens[1]->start_pos == 5);
+    assert(tokens[1]->end_pos == 5);
+    assert(tokens[2]->sym == riddle::LBRACE);
+    assert(tokens[2]->line == 1);
+    assert(tokens[2]->start_pos == 7);
+    assert(tokens[2]->end_pos == 7);
+    assert(tokens[3]->sym == riddle::String);
+    assert(tokens[3]->line == 1);
+    assert(tokens[3]->start_pos == 9);
+    assert(tokens[3]->end_pos == 11);
+    assert(tokens[4]->sym == riddle::COMMA);
+    assert(tokens[4]->line == 1);
+    assert(tokens[4]->start_pos == 12);
+    assert(tokens[4]->end_pos == 12);
+    assert(tokens[5]->sym == riddle::String);
+    assert(tokens[5]->line == 1);
+    assert(tokens[5]->start_pos == 14);
+    assert(tokens[5]->end_pos == 16);
+    assert(tokens[6]->sym == riddle::COMMA);
+    assert(tokens[6]->line == 1);
+    assert(tokens[6]->start_pos == 17);
+    assert(tokens[6]->end_pos == 17);
+    assert(tokens[7]->sym == riddle::String);
+    assert(tokens[7]->line == 1);
+    assert(tokens[7]->start_pos == 19);
+    assert(tokens[7]->end_pos == 21);
+    assert(tokens[8]->sym == riddle::RBRACE);
+    assert(tokens[8]->line == 1);
+    assert(tokens[8]->start_pos == 23);
+    assert(tokens[8]->end_pos == 23);
+    assert(tokens[9]->sym == riddle::BAR);
+    assert(tokens[9]->line == 1);
+    assert(tokens[9]->start_pos == 25);
+    assert(tokens[9]->end_pos == 25);
+    assert(tokens[10]->sym == riddle::ID);
+    assert(tokens[10]->line == 1);
+    assert(tokens[10]->start_pos == 27);
+    assert(tokens[10]->end_pos == 27);
+    assert(tokens[11]->sym == riddle::DOT);
+    assert(tokens[11]->line == 1);
+    assert(tokens[11]->start_pos == 28);
+    assert(tokens[11]->end_pos == 28);
+    assert(tokens[12]->sym == riddle::ID);
+    assert(tokens[12]->line == 1);
+    assert(tokens[12]->start_pos == 29);
+    assert(tokens[12]->end_pos == 29);
+    assert(tokens[13]->sym == riddle::EoF);
+}
+
 int main(int argc, char const *argv[])
 {
     test_lexer0();
     test_lexer1();
     test_lexer2();
     test_lexer3();
+    test_lexer4();
     return 0;
 }
