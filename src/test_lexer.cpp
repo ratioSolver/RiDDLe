@@ -47,83 +47,500 @@ namespace riddle
                 break;
             case 'b':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'o'))
+                        text.push_back('o');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'o'))
+                        text.push_back('o');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'l'))
+                        text.push_back('l');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = BOOL;
-                text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                else
+                    text.push_back(c);
                 break;
             case 'c':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'l'))
+                        text.push_back('l');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'a'))
+                        text.push_back('a');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 's'))
+                        text.push_back('s');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 's'))
+                        text.push_back('s');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = CLASS;
-                text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                else
+                    text.push_back(c);
                 break;
             case 'e':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'n'))
+                        text.push_back('n');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'u'))
+                        text.push_back('u');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'm'))
+                        text.push_back('m');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = ENUM;
-                text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                else
+                    text.push_back(c);
                 break;
             case 'f':
                 if (current_state == START)
-                    current_state = FOR;
-                text.push_back(c);
+                {
+                    text.push_back(c);
+                    if (match(is, 'a'))
+                    {
+                        text.push_back('a');
+                        if (match(is, 'c'))
+                        {
+                            text.push_back('c');
+                            if (match(is, 't'))
+                                text.push_back('t');
+                            else
+                                break;
+                            current_state = FACT;
+                            tokens.push_back(finish_token());
+                        }
+                        else if (match(is, 'l'))
+                        {
+                            text.push_back('l');
+                            if (match(is, 's'))
+                                text.push_back('s');
+                            else
+                                break;
+                            if (match(is, 'e'))
+                                text.push_back('e');
+                            else
+                                break;
+                            current_state = Bool;
+                            tokens.push_back(finish_token());
+                        }
+                        else
+                        {
+                            current_state = ID;
+                            text.push_back(c);
+                        }
+                    }
+                    else if (match(is, 'o'))
+                    {
+                        text.push_back('o');
+                        if (match(is, 'r'))
+                            text.push_back('r');
+                        else
+                            break;
+                        current_state = FOR;
+                        tokens.push_back(finish_token());
+                    }
+                    else
+                    {
+                        current_state = ID;
+                        text.push_back(c);
+                    }
+                }
+                else
+                    text.push_back(c);
                 break;
             case 'g':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'o'))
+                        text.push_back('o');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'a'))
+                        text.push_back('a');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'l'))
+                        text.push_back('l');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = GOAL;
-                text.push_back(c);
-                break;
-            case 'h':
-                if (current_state == TIME && text == "t") // th
-                    current_state = THIS;
-                text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                else
+                    text.push_back(c);
                 break;
             case 'i':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'n'))
+                        text.push_back('n');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 't'))
+                        text.push_back('t');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = INT;
-                text.push_back(c);
-                break;
-            case 'l':
-                if (current_state == FACT && text == "fa") // fal
-                    current_state = Bool;
-                text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                else
+                    text.push_back(c);
                 break;
             case 'n':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'e'))
+                        text.push_back('e');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'w'))
+                        text.push_back('w');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = NEW;
-                text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                else
+                    text.push_back(c);
                 break;
             case 'o':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'r'))
+                        text.push_back('r');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = OR;
-                text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                else
+                    text.push_back(c);
                 break;
             case 'p':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'r'))
+                        text.push_back('r');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'e'))
+                        text.push_back('e');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'd'))
+                        text.push_back('d');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'i'))
+                        text.push_back('i');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'c'))
+                        text.push_back('c');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'a'))
+                        text.push_back('a');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 't'))
+                        text.push_back('t');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'e'))
+                        text.push_back('e');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = PREDICATE;
+                    tokens.push_back(finish_token());
+                }
                 else
                     text.push_back(c);
                 break;
             case 'r':
                 if (current_state == START)
-                    current_state = REAL;
-                else if (current_state == TIME && text == "t") // tr
-                    current_state = Bool;
-                text.push_back(c);
+                {
+                    text.push_back(c);
+                    if (match(is, 'e'))
+                        text.push_back('e');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'a'))
+                    {
+                        text.push_back('a');
+                        if (match(is, 'l'))
+                            text.push_back('l');
+                        else
+                            break;
+                        current_state = REAL;
+                        tokens.push_back(finish_token());
+                    }
+                    else if (match(is, 't'))
+                    {
+                        text.push_back('t');
+                        if (match(is, 'u'))
+                            text.push_back('u');
+                        else
+                            break;
+                        if (match(is, 'r'))
+                            text.push_back('r');
+                        else
+                            break;
+                        if (match(is, 'n'))
+                            text.push_back('n');
+                        else
+                            break;
+                        current_state = RETURN;
+                        tokens.push_back(finish_token());
+                    }
+                    else
+                    {
+                        current_state = ID;
+                        text.push_back(c);
+                    }
+                }
+                else
+                    text.push_back(c);
                 break;
             case 's':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 't'))
+                        text.push_back('t');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'r'))
+                        text.push_back('r');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'i'))
+                        text.push_back('i');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'n'))
+                        text.push_back('n');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'g'))
+                        text.push_back('g');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = STRING;
-                text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                else
+                    text.push_back(c);
                 break;
             case 't':
                 if (current_state == START)
-                    current_state = TIME;
-                else if (current_state == REAL && text == "re") // ret
-                    current_state = RETURN;
-                text.push_back(c);
+                {
+                    text.push_back(c);
+                    if (match(is, 'h'))
+                    {
+                        text.push_back('h');
+                        if (match(is, 'i'))
+                            text.push_back('i');
+                        else
+                            break;
+                        if (match(is, 's'))
+                            text.push_back('s');
+                        else
+                            break;
+                        current_state = THIS;
+                        tokens.push_back(finish_token());
+                    }
+                    else if (match(is, 'i'))
+                    {
+                        text.push_back('i');
+                        if (match(is, 'm'))
+                            text.push_back('m');
+                        else
+                            break;
+                        if (match(is, 'e'))
+                            text.push_back('e');
+                        else
+                            break;
+                        current_state = TIME;
+                        tokens.push_back(finish_token());
+                    }
+                    else if (match(is, 'r'))
+                    {
+                        text.push_back('r');
+                        if (match(is, 'u'))
+                            text.push_back('u');
+                        else
+                            break;
+                        if (match(is, 'e'))
+                            text.push_back('e');
+                        else
+                            break;
+                        current_state = Bool;
+                        tokens.push_back(finish_token());
+                    }
+                    else
+                    {
+                        current_state = ID;
+                        text.push_back(c);
+                    }
+                }
+                else
+                    text.push_back(c);
                 break;
             case 'v':
                 if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'o'))
+                        text.push_back('o');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'i'))
+                        text.push_back('i');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'd'))
+                        text.push_back('d');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
                     current_state = VOID;
-                text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                else
+                    text.push_back(c);
                 break;
             case '0':
             case '1':
@@ -382,7 +799,17 @@ namespace riddle
         return tokens;
     }
 
-    std::unique_ptr<token> lexer::finish_token()
+    bool lexer::match(std::istream &is, char expected) noexcept
+    {
+        if (is.peek() == expected)
+        {
+            is.ignore();
+            return true;
+        }
+        return false;
+    }
+
+    std::unique_ptr<token> lexer::finish_token() noexcept
     {
         std::unique_ptr<token> tok;
         auto end = start + text.size() - 1;

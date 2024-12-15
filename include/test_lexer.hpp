@@ -202,7 +202,8 @@ namespace riddle
     std::vector<std::unique_ptr<token>> parse(std::istream &is);
 
   private:
-    std::unique_ptr<token> finish_token();
+    bool match(std::istream &is, char expected) noexcept;
+    std::unique_ptr<token> finish_token() noexcept;
 
   private:
     symbol current_state = START;

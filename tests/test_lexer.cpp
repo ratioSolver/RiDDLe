@@ -182,7 +182,19 @@ void test_lexer4()
     assert(tokens[12]->line == 1);
     assert(tokens[12]->start_pos == 29);
     assert(tokens[12]->end_pos == 29);
-    assert(tokens[13]->sym == riddle::EoF);
+    assert(tokens[13]->sym == riddle::DOT);
+    assert(tokens[13]->line == 1);
+    assert(tokens[13]->start_pos == 30);
+    assert(tokens[13]->end_pos == 30);
+    assert(tokens[14]->sym == riddle::ID);
+    assert(tokens[14]->line == 1);
+    assert(tokens[14]->start_pos == 31);
+    assert(tokens[14]->end_pos == 31);
+    assert(tokens[15]->sym == riddle::SEMICOLON);
+    assert(tokens[15]->line == 1);
+    assert(tokens[15]->start_pos == 32);
+    assert(tokens[15]->end_pos == 32);
+    assert(tokens[16]->sym == riddle::EoF);
 }
 
 int main(int argc, char const *argv[])
