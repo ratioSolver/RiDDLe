@@ -93,10 +93,41 @@ void test_lexer2()
     assert(tokens[5]->sym == riddle::EoF);
 }
 
+void test_lexer3()
+{
+    riddle::lexer lex;
+    std::stringstream ss;
+    ss << "string a = \"hello\";";
+    auto tokens = lex.parse(ss);
+    assert(tokens.size() == 6);
+    assert(tokens[0]->sym == riddle::STRING);
+    assert(tokens[0]->line == 1);
+    assert(tokens[0]->start_pos == 0);
+    assert(tokens[0]->end_pos == 5);
+    assert(tokens[1]->sym == riddle::ID);
+    assert(tokens[1]->line == 1);
+    assert(tokens[1]->start_pos == 7);
+    assert(tokens[1]->end_pos == 7);
+    assert(tokens[2]->sym == riddle::EQ);
+    assert(tokens[2]->line == 1);
+    assert(tokens[2]->start_pos == 9);
+    assert(tokens[2]->end_pos == 9);
+    assert(tokens[3]->sym == riddle::String);
+    assert(tokens[3]->line == 1);
+    assert(tokens[3]->start_pos == 11);
+    assert(tokens[3]->end_pos == 17);
+    assert(tokens[4]->sym == riddle::SEMICOLON);
+    assert(tokens[4]->line == 1);
+    assert(tokens[4]->start_pos == 18);
+    assert(tokens[4]->end_pos == 18);
+    assert(tokens[5]->sym == riddle::EoF);
+}
+
 int main(int argc, char const *argv[])
 {
     test_lexer0();
     test_lexer1();
     test_lexer2();
+    test_lexer3();
     return 0;
 }

@@ -43,7 +43,6 @@ namespace riddle
                     text.push_back(c);
                     current_state = SLASH;
                     tokens.push_back(finish_token());
-                    text.clear();
                 }
                 break;
             case 'b':
@@ -223,14 +222,10 @@ namespace riddle
                     else
                     {
                         if (!text.empty())
-                        {
                             tokens.push_back(finish_token());
-                            text.clear();
-                        }
                         text.push_back(c);
                         current_state = DOT;
                         tokens.push_back(finish_token());
-                        text.clear();
                     }
                     break;
                 case Int:
@@ -251,7 +246,6 @@ namespace riddle
                 case String:
                     text.push_back(c);
                     tokens.push_back(finish_token());
-                    text.clear();
                     break;
                 default:
                     text.push_back(c);
@@ -453,7 +447,7 @@ namespace riddle
             break;
         }
         case String:
-            tok = std::make_unique<string_token>(std::move(text), line, start, end);
+            tok = std::make_unique<string_token>(std::move(text.substr(1, text.size() - 2)), line, start, end);
             break;
         case ID:
             tok = std::make_unique<id_token>(std::move(text), line, start, end);
