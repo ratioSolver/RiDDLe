@@ -10,7 +10,7 @@ namespace riddle
 
     std::unique_ptr<token> lexer::next_token()
     {
-        start_pos = end_pos;
+        start = end_pos;
         switch (ch)
         {
         case 'a':
@@ -393,7 +393,7 @@ namespace riddle
             ++line;
             [[fallthrough]];
         case '\r':
-            start_pos = 0;
+            start = 0;
             end_pos = 0;
             next();
             return next_token();
@@ -438,10 +438,10 @@ namespace riddle
         return str;
     }
 
-    std::unique_ptr<token> lexer::make_token(symbol sym) noexcept { return std::make_unique<token>(sym, line, start_pos - 1, end_pos - 2); }
-    std::unique_ptr<id_token> lexer::make_id(std::string &&id) noexcept { return std::make_unique<id_token>(std::move(id), line, start_pos - 1, end_pos - 2); }
-    std::unique_ptr<bool_token> lexer::make_bool(bool value) noexcept { return std::make_unique<bool_token>(value, line, start_pos - 1, end_pos - 2); }
-    std::unique_ptr<int_token> lexer::make_int(INT_TYPE value) noexcept { return std::make_unique<int_token>(value, line, start_pos - 1, end_pos - 2); }
-    std::unique_ptr<real_token> lexer::make_real(utils::rational &&value) noexcept { return std::make_unique<real_token>(std::move(value), line, start_pos - 1, end_pos - 2); }
-    std::unique_ptr<string_token> lexer::make_string(std::string &&value) noexcept { return std::make_unique<string_token>(std::move(value), line, start_pos - 1, end_pos - 2); }
+    std::unique_ptr<token> lexer::make_token(symbol sym) noexcept { return std::make_unique<token>(sym, line, start - 1, end_pos - 2); }
+    std::unique_ptr<id_token> lexer::make_id(std::string &&id) noexcept { return std::make_unique<id_token>(std::move(id), line, start - 1, end_pos - 2); }
+    std::unique_ptr<bool_token> lexer::make_bool(bool value) noexcept { return std::make_unique<bool_token>(value, line, start - 1, end_pos - 2); }
+    std::unique_ptr<int_token> lexer::make_int(INT_TYPE value) noexcept { return std::make_unique<int_token>(value, line, start - 1, end_pos - 2); }
+    std::unique_ptr<real_token> lexer::make_real(utils::rational &&value) noexcept { return std::make_unique<real_token>(std::move(value), line, start - 1, end_pos - 2); }
+    std::unique_ptr<string_token> lexer::make_string(std::string &&value) noexcept { return std::make_unique<string_token>(std::move(value), line, start - 1, end_pos - 2); }
 } // namespace riddle
