@@ -1,7 +1,9 @@
 #pragma once
 
 #include "rational.hpp"
+#include <vector>
 #include <memory>
+#include <istream>
 
 namespace riddle
 {
@@ -13,6 +15,7 @@ namespace riddle
 
   enum symbol
   {
+    START,       // Start state
     BOOL,        // `bool`
     INT,         // `int`
     REAL,        // `real`
@@ -29,7 +32,6 @@ namespace riddle
     NEW,         // `new`
     FOR,         // `for`
     THIS,        // `this`
-    AUTO,        // `auto`
     VOID,        // `void`
     RETURN,      // `return`
     FACT,        // `fact`
@@ -123,7 +125,7 @@ namespace riddle
   class bool_token final : public token
   {
   public:
-    bool_token(bool value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(BOOL, line, start_pos, end_pos), value(value) {}
+    bool_token(bool value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(Bool, line, start_pos, end_pos), value(value) {}
 
     const bool value; // The boolean value
   };
@@ -145,7 +147,7 @@ namespace riddle
   class int_token final : public token
   {
   public:
-    int_token(INT_TYPE value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(INT, line, start_pos, end_pos), value(value) {}
+    int_token(INT_TYPE value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(Int, line, start_pos, end_pos), value(value) {}
 
     const INT_TYPE value; // The integer value
   };
@@ -167,7 +169,7 @@ namespace riddle
   class real_token final : public token
   {
   public:
-    real_token(utils::rational &&value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(REAL, line, start_pos, end_pos), value(std::move(value)) {}
+    real_token(utils::rational &&value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(Real, line, start_pos, end_pos), value(std::move(value)) {}
 
     const utils::rational value; // The rational value of the real number
   };
@@ -189,56 +191,26 @@ namespace riddle
   class string_token final : public token
   {
   public:
-    string_token(std::string &&value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(STRING, line, start_pos, end_pos), value(std::move(value)) {}
+    string_token(std::string &&value, size_t line, size_t start_pos, size_t end_pos) noexcept : token(String, line, start_pos, end_pos), value(std::move(value)) {}
 
     const std::string value; // The string value
   };
 
-  /**
-   * @class lexer lexer.hpp "include/lexer.hpp"
-   * @brief A lexical analyzer for the RiDDLe programming language.
-   *
-   * The lexer class is responsible for tokenizing the input source code and
-   * generating a sequence of tokens that can be used by the parser to build
-   * an abstract syntax tree (AST).
-   */
   class lexer final
   {
   public:
-    lexer(std::string &&source);
-    lexer(std::istream &is);
-
-    /**
-     * @brief Retrieves the next token from the input stream.
-     *
-     * This function processes the input stream and returns the next token
-     * encapsulated in a std::unique_ptr. If there are no more tokens to be
-     * processed, it returns a nullptr.
-     *
-     * @return std::unique_ptr<token> A unique pointer to the next token, or nullptr if no more tokens are available.
-     */
-    std::unique_ptr<token> next_token();
+    std::vector<std::unique_ptr<const token>> parse(std::istream &is);
 
   private:
-    static bool is_alpha(char ch) noexcept { return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z'); }
-    static bool is_digit(char ch) noexcept { return ch >= '0' && ch <= '9'; }
-    static bool is_alnum(char ch) noexcept { return is_alpha(ch) || is_digit(ch); }
-
-    bool match(char expected) noexcept;
-    char next() noexcept;
-    std::string finish_id(std::string &&str) noexcept;
-
-    std::unique_ptr<token> make_token(symbol sym) noexcept;
-    std::unique_ptr<id_token> make_id(std::string &&id) noexcept;
-    std::unique_ptr<bool_token> make_bool(bool value) noexcept;
-    std::unique_ptr<int_token> make_int(INT_TYPE value) noexcept;
-    std::unique_ptr<real_token> make_real(utils::rational &&value) noexcept;
-    std::unique_ptr<string_token> make_string(std::string &&value) noexcept;
+    bool match(std::istream &is, char expected) noexcept;
+    std::unique_ptr<const token> finish_token() noexcept;
 
   private:
-    std::string sb;
-    size_t pos = 0;
-    char ch;
-    size_t line = 0, start = 0, end_pos = 0;
+    symbol current_state = START;
+
+    size_t line = 1;
+    size_t start = 0;
+
+    std::string text;
   };
 } // namespace riddle

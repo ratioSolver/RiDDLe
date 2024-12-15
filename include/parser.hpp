@@ -7,8 +7,7 @@ namespace riddle
   class parser final
   {
   public:
-    parser(std::string &&source) : lex(std::move(source)) {}
-    parser(std::istream &is) : lex(is) {}
+    parser(std::istream &is);
 
     [[nodiscard]] std::unique_ptr<compilation_unit> parse_compilation_unit();
     [[nodiscard]] std::unique_ptr<enum_declaration> parse_enum_declaration();
@@ -21,8 +20,6 @@ namespace riddle
 
   private:
     [[nodiscard]] bool match(const symbol &sym);
-    const token &next();
-    void backtrack(const size_t &p) noexcept;
 
     void error(std::string &&err);
 

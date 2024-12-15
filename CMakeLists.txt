@@ -7,7 +7,7 @@ enable_testing()
 
 option(COMPUTE_NAMES "Compute RiDDLe names" OFF)
 
-add_library(RiDDLe src/core.cpp src/scope.cpp src/env.cpp src/type.cpp src/constructor.cpp src/method.cpp src/item.cpp src/conjunction.cpp src/declaration.cpp src/statement.cpp src/expression.cpp src/compilation_unit.cpp src/lexer.cpp src/test_lexer.cpp src/parser.cpp)
+add_library(RiDDLe src/core.cpp src/scope.cpp src/env.cpp src/type.cpp src/constructor.cpp src/method.cpp src/item.cpp src/conjunction.cpp src/declaration.cpp src/statement.cpp src/expression.cpp src/compilation_unit.cpp src/lexer.cpp src/parser.cpp)
 target_compile_features(RiDDLe PUBLIC cxx_std_17)
 target_include_directories(RiDDLe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 if(NOT TARGET utils)

@@ -3,6 +3,8 @@
 
 namespace riddle
 {
+    parser::parser(std::istream &is) : lex(), tokens(lex.parse(is)), pos(0) {}
+
     std::unique_ptr<compilation_unit> parser::parse_compilation_unit()
     {
         std::vector<std::unique_ptr<type_declaration>> types;           // the type declarations..
@@ -10,10 +12,9 @@ namespace riddle
         std::vector<std::unique_ptr<method_declaration>> methods;       // the method declarations..
         std::vector<std::unique_ptr<statement>> statements;             // the statements..
 
-        next();
         while (!match(symbol::EoF))
         {
-            switch (tokens.at(pos - 1)->sym)
+            switch (tokens.at(pos)->sym)
             {
             case symbol::ENUM:
                 types.emplace_back(parse_enum_declaration());
@@ -40,35 +41,33 @@ namespace riddle
             case Int:
             case Real:
             {
-                size_t c_pos = pos;
-                next();
+                size_t c_pos = pos++;
                 if (match(ID) && match(LPAREN))
                 {
-                    backtrack(c_pos);
+                    pos = c_pos;
                     methods.emplace_back(parse_method_declaration());
                 }
                 else
                 {
-                    backtrack(c_pos);
+                    pos = c_pos;
                     statements.emplace_back(parse_statement());
                 }
                 break;
             }
             case ID:
             {
-                size_t c_pos = pos;
-                next();
+                size_t c_pos = pos++;
                 while (match(DOT))
                     if (!match(ID))
                         error("Expected identifier after '.'");
                 if (match(ID) && match(LPAREN))
                 {
-                    backtrack(c_pos);
+                    pos = c_pos;
                     methods.emplace_back(parse_method_declaration());
                 }
                 else
                 {
-                    backtrack(c_pos);
+                    pos = c_pos;
                     statements.emplace_back(parse_statement());
                 }
                 break;
@@ -93,16 +92,19 @@ namespace riddle
 
         do
         {
-            switch (next().sym)
+            switch (tokens.at(pos++)->sym)
             {
             case LBRACE:
-                while (!match(RBRACE))
+                if (!match(RBRACE))
                 {
-                    if (!match(String))
-                        error("Expected string literal");
-                    values.emplace_back(static_cast<const string_token &>(*tokens.at(pos - 1)));
-                    if (!match(COMMA) && !match(RBRACE))
-                        error("Expected ',' or '}' after string literal");
+                    do
+                    {
+                        if (!match(String))
+                            error("Expected string literal");
+                        values.emplace_back(static_cast<const string_token &>(*tokens.at(pos - 1)));
+                    } while (match(COMMA));
+                    if (!match(RBRACE))
+                        error("Expected '}' after string literals");
                 }
                 break;
             case ID:
@@ -161,22 +163,13 @@ namespace riddle
 
     bool parser::match(const symbol &sym)
     {
-        if (tokens.at(pos - 1)->sym == sym)
+        if (tokens.at(pos)->sym == sym)
         {
-            next();
+            pos++;
             return true;
         }
         return false;
     }
-
-    const token &parser::next()
-    {
-        while (pos >= tokens.size())
-            tokens.emplace_back(lex.next_token());
-        return *tokens[pos++];
-    }
-
-    void parser::backtrack(const size_t &p) noexcept { pos = p; }
 
     void parser::error(std::string &&err) { throw std::invalid_argument("[" + std::to_string(tokens.at(pos)->line) + ":" + std::to_string(tokens.at(pos)->start_pos) + "] " + std::move(err)); }
 } // namespace riddle

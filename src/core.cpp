@@ -2,6 +2,7 @@
 #include "item.hpp"
 #include "type.hpp"
 #include "parser.hpp"
+#include <sstream>
 #include <fstream>
 #include <stdexcept>
 
@@ -11,7 +12,8 @@ namespace riddle
 
     void core::read(std::string &&script)
     {
-        parser p(std::move(script));
+        std::stringstream ss(script);
+        parser p(ss);
         auto cu = p.parse_compilation_unit();
         cu->declare(*this);
         cu->refine(*this);
