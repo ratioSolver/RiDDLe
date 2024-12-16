@@ -14,6 +14,12 @@ public:
     std::shared_ptr<riddle::string_item> new_string() override { return core::new_string(""); }
 };
 
+void test_class_declaration()
+{
+    test_core core;
+    core.read("class A { int a; } | a;");
+}
+
 void test_enum_declaration()
 {
     test_core core;
@@ -22,6 +28,7 @@ void test_enum_declaration()
 
 int main()
 {
+    test_class_declaration();
     test_enum_declaration();
     return 0;
 }

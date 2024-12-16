@@ -12,20 +12,20 @@ namespace riddle
         std::vector<std::unique_ptr<method_declaration>> methods;       // the method declarations..
         std::vector<std::unique_ptr<statement>> statements;             // the statements..
 
-        while (!match(symbol::EoF))
+        while (!match(EoF))
         {
             switch (tokens.at(pos)->sym)
             {
-            case symbol::ENUM:
+            case ENUM:
                 types.emplace_back(parse_enum_declaration());
                 break;
-            case symbol::CLASS:
+            case CLASS:
                 types.emplace_back(parse_class_declaration());
                 break;
-            case symbol::PREDICATE:
+            case PREDICATE:
                 predicates.emplace_back(parse_predicate_declaration());
                 break;
-            case symbol::VOID:
+            case VOID:
                 methods.emplace_back(parse_method_declaration());
                 break;
             case BOOL:
@@ -33,25 +33,21 @@ namespace riddle
             case REAL:
             case TIME:
             case STRING:
-            case LBRACE:
-            case BANG:
-            case FACT:
-            case GOAL:
-            case Bool:
-            case Int:
-            case Real:
             {
-                size_t c_pos = pos++;
-                if (match(ID) && match(LPAREN))
-                {
-                    pos = c_pos;
+                if (!match(ID))
+                    error("Expected identifier");
+
+                if (match(LPAREN))
+                { // method declaration..
+                    pos -= 3;
                     methods.emplace_back(parse_method_declaration());
                 }
                 else
-                {
-                    pos = c_pos;
+                { // statement..
+                    pos -= 3;
                     statements.emplace_back(parse_statement());
                 }
+
                 break;
             }
             case ID:
@@ -59,17 +55,30 @@ namespace riddle
                 size_t c_pos = pos++;
                 while (match(DOT))
                     if (!match(ID))
-                        error("Expected identifier after '.'");
-                if (match(ID) && match(LPAREN))
-                {
-                    pos = c_pos;
+                        error("Expected identifier after `.`");
+                if (match(LPAREN))
+                { // method declaration..
+                    pos = c_pos - 1;
                     methods.emplace_back(parse_method_declaration());
                 }
                 else
-                {
-                    pos = c_pos;
+                { // statement..
+                    pos = c_pos - 1;
                     statements.emplace_back(parse_statement());
                 }
+                break;
+            }
+            case LBRACE:
+            case BANG:
+            case FACT:
+            case GOAL:
+            case Bool:
+            case Int:
+            case Real:
+            case String:
+            { // statement..
+                pos--;
+                statements.emplace_back(parse_statement());
                 break;
             }
             default:
@@ -81,10 +90,10 @@ namespace riddle
 
     std::unique_ptr<enum_declaration> parser::parse_enum_declaration()
     {
-        if (!match(symbol::ENUM))
-            error("Expected 'enum' keyword");
+        if (!match(ENUM))
+            error("Expected `enum` keyword");
         if (!match(ID))
-            error("Expected identifier after 'enum' keyword");
+            error("Expected identifier after `enum` keyword");
 
         auto id = static_cast<const id_token &>(*tokens.at(pos - 1));
         std::vector<string_token> values;             // the values of the enum..
@@ -104,7 +113,7 @@ namespace riddle
                         values.emplace_back(static_cast<const string_token &>(*tokens.at(pos - 1)));
                     } while (match(COMMA));
                     if (!match(RBRACE))
-                        error("Expected '}' after string literals");
+                        error("Expected `}` after string literals");
                 }
                 break;
             case ID:
@@ -114,26 +123,133 @@ namespace riddle
                 while (match(DOT))
                 {
                     if (!match(ID))
-                        error("Expected identifier after '.'");
+                        error("Expected identifier after `.`");
                     refs.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
                 }
                 enum_refs.emplace_back(std::move(refs));
                 break;
             }
             default:
-                error("Expected '{' or '|'");
+                error("Expected `{` or `|`");
             }
         } while (match(BAR));
 
         if (!match(SEMICOLON))
-            error("Expected ';' after enum declaration");
+            error("Expected `;` after enum declaration");
 
         return std::make_unique<enum_declaration>(std::move(id), std::move(values), std::move(enum_refs));
     }
 
     std::unique_ptr<class_declaration> parser::parse_class_declaration()
     {
-        throw std::runtime_error("Not implemented");
+        std::vector<std::vector<id_token>> base_classes;                    // the base classes of the class..
+        std::vector<std::unique_ptr<field_declaration>> fields;             // the fields of the class..
+        std::vector<std::unique_ptr<constructor_declaration>> constructors; // the constructors of the class..
+        std::vector<std::unique_ptr<method_declaration>> methods;           // the methods of the class..
+        std::vector<std::unique_ptr<predicate_declaration>> predicates;     // the predicates of the class..
+        std::vector<std::unique_ptr<type_declaration>> types;               // the types of the class..
+
+        if (!match(CLASS))
+            error("Expected `class` keyword");
+
+        if (!match(ID))
+            error("Expected identifier after `class` keyword");
+
+        auto id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+        if (match(COLON))
+            do
+            {
+                std::vector<id_token> base_class;
+                do
+                {
+                    if (!match(ID))
+                        error("Expected identifier after `:`");
+                    base_class.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                } while (match(DOT));
+                base_classes.emplace_back(std::move(base_class));
+            } while (match(COMMA));
+
+        if (!match(LBRACE))
+            error("Expected `{` after class declaration");
+
+        while (!match(RBRACE))
+            switch (tokens.at(pos)->sym)
+            {
+            case BOOL:
+            case INT:
+            case REAL:
+            case TIME:
+            case STRING:
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+
+                if (match(LPAREN))
+                { // method declaration..
+                    pos -= 3;
+                    methods.emplace_back(parse_method_declaration());
+                }
+                else
+                { // field declaration..
+                    pos -= 3;
+                    fields.emplace_back(parse_field_declaration());
+                }
+
+                break;
+            }
+            case ID:
+            {
+                if (match(LPAREN))
+                { // constructor declaration..
+                    pos -= 2;
+                    constructors.emplace_back(parse_constructor_declaration());
+                }
+                else
+                {
+                    size_t c_pos = pos++;
+                    while (match(DOT))
+                        if (!match(ID))
+                            error("Expected identifier after `.`");
+                    if (match(LPAREN))
+                    { // method declaration..
+                        pos = c_pos - 1;
+                        methods.emplace_back(parse_method_declaration());
+                    }
+                    else
+                    { // field declaration..
+                        pos = c_pos - 1;
+                        fields.emplace_back(parse_field_declaration());
+                    }
+                }
+                break;
+            }
+            case ENUM:
+                types.emplace_back(parse_enum_declaration());
+                break;
+            case CLASS:
+                types.emplace_back(parse_class_declaration());
+                break;
+            case PREDICATE:
+                predicates.emplace_back(parse_predicate_declaration());
+                break;
+            case VOID:
+                methods.emplace_back(parse_method_declaration());
+                break;
+            default:
+                error("Unexpected token");
+            }
+
+        if (constructors.empty())
+        {
+            std::vector<std::pair<std::vector<id_token>, id_token>> params;
+            std::vector<id_token> names;
+            std::vector<std::vector<std::unique_ptr<expression>>> args;
+            std::vector<std::unique_ptr<statement>> stmts;
+            constructors.emplace_back(std::make_unique<constructor_declaration>(std::move(params), std::move(names), std::move(args), std::move(stmts)));
+        }
+
+        return std::make_unique<class_declaration>(std::move(id), std::move(base_classes), std::move(fields), std::move(constructors), std::move(methods), std::move(predicates), std::move(types));
     }
 
     std::unique_ptr<field_declaration> parser::parse_field_declaration()
