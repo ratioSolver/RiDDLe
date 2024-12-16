@@ -65,6 +65,16 @@ namespace riddle
      */
     [[nodiscard]] virtual bool is_assignable_from(const type &other) const { return this == &other; }
 
+    /**
+     * @brief Creates a new instance of the item.
+     *
+     * This function is a pure virtual function that must be overridden by
+     * derived classes to create and return a new instance of the item.
+     *
+     * @return std::shared_ptr<item> A shared pointer to the newly created item instance.
+     */
+    [[nodiscard]] virtual std::shared_ptr<item> new_instance() = 0;
+
   private:
     scope &scp;
     std::string name;
@@ -81,6 +91,9 @@ namespace riddle
   {
   public:
     bool_type(core &cr) noexcept;
+
+  private:
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -93,6 +106,9 @@ namespace riddle
   {
   public:
     int_type(core &cr) noexcept;
+
+  private:
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -107,6 +123,9 @@ namespace riddle
     real_type(core &cr) noexcept;
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
+
+  private:
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -121,6 +140,9 @@ namespace riddle
     time_type(core &cr) noexcept;
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
+
+  private:
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -133,6 +155,9 @@ namespace riddle
   {
   public:
     string_type(core &cr) noexcept;
+
+  private:
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
 
   /**
@@ -162,6 +187,9 @@ namespace riddle
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
   private:
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
+
+  private:
     std::vector<std::shared_ptr<item>> domain;
     std::vector<std::reference_wrapper<enum_type>> enums;
   };
@@ -178,6 +206,7 @@ namespace riddle
     friend class method_declaration;
     friend class class_declaration;
     friend class predicate_declaration;
+    friend class constructor;
 
   public:
     component_type(scope &scp, std::string &&name) noexcept;
@@ -186,6 +215,19 @@ namespace riddle
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
     [[nodiscard]] std::vector<std::reference_wrapper<component_type>> &get_parents() noexcept { return parents; }
+
+    /**
+     * @brief Retrieves a constructor that matches the given argument types.
+     *
+     * This function searches for a constructor that can be invoked with the specified
+     * argument types and returns a reference to it.
+     *
+     * @param argument_types A vector of references to the types of the arguments that the
+     *                       constructor should accept.
+     * @return A reference to the constructor that matches the given argument types.
+     * @throws std::out_of_range if the constructor is not found.
+     */
+    [[nodiscard]] constructor &get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const;
 
     [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
     [[nodiscard]] type &get_type(std::string_view name) const override;
@@ -200,6 +242,9 @@ namespace riddle
      * @param tp A unique pointer to the type to be added.
      */
     void add_type(std::unique_ptr<type> tp);
+
+  private:
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
   private:
     std::vector<std::reference_wrapper<component_type>> parents;                      // the base types (i.e. the types this type inherits from)..
@@ -220,6 +265,9 @@ namespace riddle
   public:
     predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args = {}, std::vector<std::unique_ptr<statement>> &&body = {}) noexcept;
     virtual ~predicate() = default;
+
+  private:
+    [[nodiscard]] std::shared_ptr<item> new_instance() override;
 
   private:
     std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..

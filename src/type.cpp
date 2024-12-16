@@ -9,16 +9,21 @@ namespace riddle
     type::type(scope &scp, std::string &&name, bool primitive) noexcept : scp(scp), name(std::move(name)), primitive(primitive) {}
 
     bool_type::bool_type(core &cr) noexcept : type(cr, bool_kw, true) {}
+    std::shared_ptr<item> bool_type::new_instance() { return get_scope().get_core().new_bool(); }
 
     int_type::int_type(core &cr) noexcept : type(cr, int_kw, true) {}
+    std::shared_ptr<item> int_type::new_instance() { return get_scope().get_core().new_int(); }
 
     real_type::real_type(core &cr) noexcept : type(cr, real_kw, true) {}
     bool real_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other; }
+    std::shared_ptr<item> real_type::new_instance() { return get_scope().get_core().new_real(); }
 
     time_type::time_type(core &cr) noexcept : type(cr, time_kw, true) {}
     bool time_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other; }
+    std::shared_ptr<item> time_type::new_instance() { return get_scope().get_core().new_time(); }
 
     string_type::string_type(core &cr) noexcept : type(cr, string_kw, true) {}
+    std::shared_ptr<item> string_type::new_instance() { return get_scope().get_core().new_string(); }
 
     enum_type::enum_type(scope &scp, std::string &&name, std::vector<std::shared_ptr<item>> &&domain) noexcept : type(scp, std::move(name), false), domain(std::move(domain)) {}
     bool enum_type::is_assignable_from(const type &other) const
@@ -40,6 +45,13 @@ namespace riddle
             }
         }
         return false;
+    }
+    std::shared_ptr<item> enum_type::new_instance()
+    {
+        std::vector<std::reference_wrapper<utils::enum_val>> items;
+        for (const auto &i : domain)
+            items.push_back(*i);
+        return get_scope().get_core().new_enum(*this, std::move(items));
     }
 
     component_type::component_type(scope &scp, std::string &&name) noexcept : scope(scp.get_core(), scp), type(scp, std::move(name), false) {}
@@ -63,6 +75,24 @@ namespace riddle
             }
         }
         return false;
+    }
+
+    constructor &component_type::get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const
+    {
+        for (const auto &c : constructors)
+            if (c->get_args().size() == argument_types.size())
+            {
+                bool match = true;
+                for (size_t i = 0; i < argument_types.size(); ++i)
+                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(argument_types[i].get()))
+                    {
+                        match = false;
+                        break;
+                    }
+                if (match)
+                    return *c;
+            }
+        throw std::out_of_range("constructor not found");
     }
 
     method &component_type::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
@@ -148,5 +178,9 @@ namespace riddle
             throw std::invalid_argument("type " + name + " already exists");
     }
 
+    std::shared_ptr<item> component_type::new_instance() { return std::make_shared<item>(static_cast<component_type &>(*this)); }
+
     predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(std::move(body)) {}
+
+    std::shared_ptr<item> predicate::new_instance() { return std::make_shared<item>(static_cast<predicate &>(*this)); }
 } // namespace riddle

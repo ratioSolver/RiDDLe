@@ -11,6 +11,7 @@ namespace riddle
   class method;
   class type;
   class predicate;
+  class expression;
 
   /**
    * @brief A field.
@@ -18,7 +19,7 @@ namespace riddle
   class field
   {
   public:
-    field(type &tp, std::string &&name) noexcept;
+    field(type &tp, std::string &&name, const std::unique_ptr<expression> &expr) noexcept;
 
     /**
      * @brief Retrieves the type of the field.
@@ -38,9 +39,19 @@ namespace riddle
      */
     [[nodiscard]] const std::string &get_name() const noexcept { return name; }
 
+    /**
+     * @brief Retrieves the expression of the field.
+     *
+     * This function returns a reference to the expression of the field.
+     *
+     * @return A reference to the expression of the field.
+     */
+    [[nodiscard]] const std::unique_ptr<expression> &get_expression() const noexcept { return expr; }
+
   private:
     type &tp;
     std::string name;
+    const std::unique_ptr<expression> &expr;
   };
 
   class scope
@@ -50,6 +61,13 @@ namespace riddle
     virtual ~scope() = default;
 
     [[nodiscard]] core &get_core() const noexcept { return cr; }
+    /**
+     * @brief Retrieves the parent scope.
+     *
+     * This function returns a reference to the parent scope of the current scope.
+     *
+     * @return A reference to the parent scope.
+     */
     [[nodiscard]] scope &get_parent() const noexcept { return parent; }
 
     /**

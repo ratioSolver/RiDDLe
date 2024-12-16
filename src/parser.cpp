@@ -39,12 +39,12 @@ namespace riddle
 
                 if (match(LPAREN))
                 { // method declaration..
-                    pos -= 3;
+                    pos -= 2;
                     methods.emplace_back(parse_method_declaration());
                 }
                 else
                 { // statement..
-                    pos -= 3;
+                    pos -= 2;
                     statements.emplace_back(parse_statement());
                 }
 
@@ -174,7 +174,7 @@ namespace riddle
             error("Expected `{` after class declaration");
 
         while (!match(RBRACE))
-            switch (tokens.at(pos)->sym)
+            switch (tokens.at(pos++)->sym)
             {
             case BOOL:
             case INT:
@@ -187,12 +187,12 @@ namespace riddle
 
                 if (match(LPAREN))
                 { // method declaration..
-                    pos -= 3;
+                    pos -= 2;
                     methods.emplace_back(parse_method_declaration());
                 }
                 else
                 { // field declaration..
-                    pos -= 3;
+                    pos -= 2;
                     fields.emplace_back(parse_field_declaration());
                 }
 
@@ -254,7 +254,72 @@ namespace riddle
 
     std::unique_ptr<field_declaration> parser::parse_field_declaration()
     {
-        throw std::runtime_error("Not implemented");
+        std::vector<id_token> tp;
+        std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+        switch (tokens.at(pos++)->sym)
+        {
+        case BOOL:
+            tp.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case INT:
+            tp.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case REAL:
+            tp.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case TIME:
+            tp.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case STRING:
+            tp.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case ID:
+        {
+            size_t c_pos = pos++;
+            while (match(DOT))
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+            if (!match(ID))
+                error("Expected identifier after `.`");
+            tp.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+            pos = c_pos;
+            break;
+        }
+        default:
+            error("Expected type");
+        }
+
+        do
+        {
+            if (!match(ID))
+                error("Expected identifier");
+            id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+            if (match(EQ))
+                fields.emplace_back(std::move(id), parse_expression());
+            else if (match(LPAREN))
+            {
+                std::vector<std::unique_ptr<expression>> args;
+                if (!match(RPAREN))
+                {
+                    do
+                    {
+                        args.emplace_back(parse_expression());
+                    } while (match(COMMA));
+                    if (!match(RPAREN))
+                        error("Expected `)` after arguments");
+                }
+                std::vector<id_token> f_tp = tp;
+                fields.emplace_back(std::move(id), std::make_unique<constructor_expression>(std::move(f_tp), std::move(args)));
+            }
+            else
+                fields.emplace_back(std::move(id), nullptr);
+        } while (match(COMMA));
+
+        if (!match(SEMICOLON))
+            error("Expected `;` after field declaration");
+
+        return std::make_unique<field_declaration>(std::move(tp), std::move(fields));
     }
 
     std::unique_ptr<method_declaration> parser::parse_method_declaration()
@@ -273,6 +338,11 @@ namespace riddle
     }
 
     std::unique_ptr<statement> parser::parse_statement()
+    {
+        throw std::runtime_error("Not implemented");
+    }
+
+    std::unique_ptr<expression> parser::parse_expression()
     {
         throw std::runtime_error("Not implemented");
     }

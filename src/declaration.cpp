@@ -40,7 +40,17 @@ namespace riddle
 
     void field_declaration::refine(scope &scp) const
     {
-        throw std::runtime_error("Not implemented");
+        auto *c_tp = &scp.get_type(tp[0].id);
+        for (size_t i = 1; i < tp.size(); ++i)
+            if (auto ct = dynamic_cast<component_type *>(c_tp))
+                c_tp = &ct->get_type(tp[i].id);
+            else
+                throw std::runtime_error("Invalid type reference");
+
+        for (const auto &f : fields)
+        {
+            auto new_f = std::make_unique<field>(*c_tp, std::string(f.first.id), f.second);
+        }
     }
 
     void constructor_declaration::refine(scope &scp) const
@@ -63,12 +73,55 @@ namespace riddle
     }
 
     void class_declaration::declare(scope &scp) const
-    {
-        throw std::runtime_error("Not implemented");
+    { // we create the class and add it to the scope..
+        auto new_ct = std::make_unique<component_type>(scp, std::string(name.id));
+        if (auto cr = dynamic_cast<core *>(&scp))
+            cr->add_type(std::move(new_ct));
+        else if (auto ct = dynamic_cast<component_type *>(&scp))
+            ct->add_type(std::move(new_ct));
+        else
+            throw std::runtime_error("Invalid scope type");
+
+        // we declare the enclosed types..
+        for (const auto &tp : types)
+            tp->declare(*new_ct);
     }
     void class_declaration::refine(scope &scp) const
     {
-        throw std::runtime_error("Not implemented");
+        auto &ct = static_cast<component_type &>(scp.get_type(name.id)); // we retrieve the class type.. we know it exists, because we declared it, so we can safely cast it..
+        for (const auto &base : base_classes)
+        {
+            auto tp = &scp.get_type(base[0].id);
+            for (size_t i = 1; i < base.size(); ++i)
+                if (auto ct = dynamic_cast<component_type *>(tp))
+                    tp = &ct->get_type(base[i].id);
+                else
+                    throw std::runtime_error("Invalid type reference");
+            if (auto ctp = dynamic_cast<component_type *>(tp))
+                ct.parents.emplace_back(*ctp);
+            else
+                throw std::runtime_error("Invalid class reference");
+        }
+
+        // we refine the fields..
+        for (const auto &field : fields)
+            field->refine(ct);
+
+        // we refine the constructors..
+        for (const auto &constructor : constructors)
+            constructor->refine(ct);
+
+        // we refine the methods..
+        for (const auto &method : methods)
+            method->refine(ct);
+
+        // we refine the (enclosed) types..
+        for (const auto &tp : types)
+            tp->refine(ct);
+
+        // we refine the predicates..
+        for (const auto &predicate : predicates)
+            predicate->refine(ct);
     }
     void class_declaration::refine_predicates(scope &scp) const
     {

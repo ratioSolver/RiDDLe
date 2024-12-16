@@ -24,7 +24,7 @@ namespace riddle
    * is a named entity that has a type. Items are stored in environments and can be
    * retrieved by their name.
    */
-  class item
+  class item : public utils::enum_val
   {
   public:
     item(type &tp) noexcept : tp(tp) {}
@@ -83,7 +83,7 @@ namespace riddle
   class enum_item final : public item
   {
   public:
-    enum_item(enum_type &tp, utils::var v);
+    enum_item(type &tp, utils::var v);
 
     [[nodiscard]] utils::var &get_value() { return value; }
     [[nodiscard]] const utils::var &get_value() const { return value; }

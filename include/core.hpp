@@ -85,6 +85,20 @@ namespace riddle
     [[nodiscard]] std::shared_ptr<arith_item> new_real(utils::rational &&value);
 
     /**
+     * @brief Create a new time expression.
+     *
+     * @return std::shared_ptr<arith_item> The time expression.
+     */
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_time() = 0;
+    /**
+     * @brief Create a new time expression with a value.
+     *
+     * @param value The value of the time expression.
+     * @return std::shared_ptr<arith_item> The time expression.
+     */
+    [[nodiscard]] std::shared_ptr<arith_item> new_time(utils::rational &&value);
+
+    /**
      * @brief Create a new string expression.
      *
      * @return std::shared_ptr<string_item> The string expression.
@@ -97,6 +111,19 @@ namespace riddle
      * @return std::shared_ptr<string_item> The string expression.
      */
     [[nodiscard]] std::shared_ptr<string_item> new_string(std::string &&value);
+
+    /**
+     * @brief Creates a new enum item.
+     *
+     * This function is responsible for creating a new enum item based on the provided type and values.
+     *
+     * @param tp A reference to the type for which the enum item is being created.
+     * @param values A vector of references to enum values that will be used to create the enum item.
+     *               The vector is passed as an rvalue reference to allow for efficient move semantics.
+     *
+     * @return A shared pointer to the newly created enum item.
+     */
+    [[nodiscard]] virtual std::shared_ptr<enum_item> new_enum(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 

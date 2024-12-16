@@ -5,10 +5,12 @@
 namespace riddle
 {
   class compilation_unit;
+  class class_declaration;
 
   class type_declaration
   {
     friend class compilation_unit;
+    friend class class_declaration;
 
   public:
     type_declaration() = default;
@@ -89,6 +91,7 @@ namespace riddle
   class method_declaration final
   {
     friend class compilation_unit;
+    friend class class_declaration;
 
   public:
     method_declaration(std::vector<id_token> &&rt, const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : rt(std::move(rt)), name(std::move(name)), params(std::move(params)), stmts(std::move(stmts)) {}
@@ -106,6 +109,7 @@ namespace riddle
   class predicate_declaration final
   {
     friend class compilation_unit;
+    friend class class_declaration;
 
   public:
     predicate_declaration(const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_predicates, std::vector<std::unique_ptr<statement>> &&body) : name(std::move(name)), params(std::move(params)), base_predicates(std::move(base_predicates)), body(std::move(body)) {}
