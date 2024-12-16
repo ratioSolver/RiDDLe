@@ -8,7 +8,14 @@
 
 namespace riddle
 {
-    core::core() noexcept : scope(*this, *this), env(*this, *this) {}
+    core::core() noexcept : scope(*this, *this), env(*this, *this)
+    {
+        add_type(std::make_unique<bool_type>(*this));
+        add_type(std::make_unique<int_type>(*this));
+        add_type(std::make_unique<real_type>(*this));
+        add_type(std::make_unique<time_type>(*this));
+        add_type(std::make_unique<string_type>(*this));
+    }
 
     void core::read(std::string &&script)
     {
@@ -33,7 +40,7 @@ namespace riddle
                 c_cus.push_back(p.parse_compilation_unit());
             }
             else
-                throw std::runtime_error("file " + file + " not found");
+                throw std::runtime_error("file `" + file + "` not found");
 
         for (auto &cu : c_cus)
             cu->declare(*this);
@@ -56,7 +63,7 @@ namespace riddle
     {
         if (auto it = fields.find(name); it != fields.end())
             return *it->second;
-        throw std::out_of_range("field " + std::string(name) + " not found");
+        throw std::out_of_range("field `" + std::string(name) + "` not found");
     }
 
     method &core::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
@@ -75,32 +82,32 @@ namespace riddle
                     if (match)
                         return *m;
                 }
-        throw std::out_of_range("method " + std::string(name) + " not found");
+        throw std::out_of_range("method `" + std::string(name) + "` not found");
     }
     type &core::get_type(std::string_view name) const
     {
         if (auto it = types.find(name); it != types.end())
             return *it->second;
-        throw std::out_of_range("type " + std::string(name) + " not found");
+        throw std::out_of_range("type `" + std::string(name) + "` not found");
     }
     predicate &core::get_predicate(std::string_view name) const
     {
         if (auto it = predicates.find(name); it != predicates.end())
             return *it->second;
-        throw std::out_of_range("predicate " + std::string(name) + " not found");
+        throw std::out_of_range("predicate `" + std::string(name) + "` not found");
     }
 
     item &core::get(std::string_view name)
     {
         if (auto it = items.find(name); it != items.end())
             return *it->second;
-        throw std::out_of_range("item " + std::string(name) + " not found");
+        throw std::out_of_range("item `" + std::string(name) + "` not found");
     }
 
     void core::add_type(std::unique_ptr<type> t)
     {
         std::string name = t->get_name();
         if (!types.emplace(name, std::move(t)).second)
-            throw std::invalid_argument("type " + name + " already exists");
+            throw std::invalid_argument("type `" + name + "` already exists");
     }
 } // namespace riddle
