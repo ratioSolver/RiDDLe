@@ -171,6 +171,30 @@ namespace riddle
         }
     }
 
+    void component_type::add_parent(component_type &parent) { parents.emplace_back(parent); }
+
+    void component_type::add_constructor(std::unique_ptr<constructor> ctr)
+    {
+        std::vector<std::reference_wrapper<const type>> args;
+        args.reserve(ctr->get_args().size());
+        for (const auto &arg : ctr->get_args())
+            args.push_back(get_field(arg).get_type());
+        for (const auto &c : constructors)
+            if (c->get_args().size() == args.size())
+            {
+                bool match = true;
+                for (size_t i = 0; i < args.size(); ++i)
+                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(args[i]))
+                    {
+                        match = false;
+                        break;
+                    }
+                if (match)
+                    throw std::invalid_argument("constructor already exists");
+            }
+        constructors.emplace_back(std::move(ctr));
+    }
+
     void component_type::add_type(std::unique_ptr<type> t)
     {
         std::string name = t->get_name();

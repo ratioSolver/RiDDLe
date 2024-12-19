@@ -55,7 +55,21 @@ namespace riddle
 
     void constructor_declaration::refine(scope &scp) const
     {
-        throw std::runtime_error("Not implemented");
+        std::vector<std::unique_ptr<field>> args; // the parameters of the constructor..
+        args.reserve(this->params.size());
+        for (const auto &param : this->params)
+        {
+            auto *c_tp = &scp.get_type(param.second.id);
+            for (size_t i = 0; i < param.first.size(); ++i)
+                if (auto ct = dynamic_cast<component_type *>(c_tp))
+                    c_tp = &ct->get_type(param.first[i].id);
+                else
+                    throw std::runtime_error("Invalid type reference");
+            args.emplace_back(std::make_unique<field>(*c_tp, std::string(param.second.id), nullptr));
+        }
+
+        auto tp = dynamic_cast<component_type *>(&scp);
+        tp->add_constructor(std::make_unique<constructor>(*tp, std::move(args), stmts));
     }
 
     void method_declaration::refine(scope &scp) const
@@ -125,6 +139,12 @@ namespace riddle
     }
     void class_declaration::refine_predicates(scope &scp) const
     {
-        throw std::runtime_error("Not implemented");
+        auto &ct = static_cast<component_type &>(scp.get_type(name.id)); // we retrieve the class type.. we know it exists, because we declared it, so we can safely cast it..
+        // we refine the predicates..
+        for (const auto &predicate : predicates)
+            predicate->refine(ct);
+        // we refine the (enclosed) types..
+        for (const auto &tp : types)
+            tp->refine_predicates(ct);
     }
 } // namespace riddle

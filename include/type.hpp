@@ -206,6 +206,7 @@ namespace riddle
     friend class method_declaration;
     friend class class_declaration;
     friend class predicate_declaration;
+    friend class constructor_declaration;
     friend class constructor;
 
   public:
@@ -234,6 +235,24 @@ namespace riddle
     [[nodiscard]] predicate &get_predicate(std::string_view name) const;
 
   protected:
+    /**
+     * @brief Adds a parent to this component type.
+     *
+     * This function adds a parent to the collection of parents.
+     *
+     * @param parent A reference to the parent to be added.
+     */
+    void add_parent(component_type &parent);
+
+    /**
+     * @brief Adds a constructor to this component type.
+     *
+     * This function adds a constructor to the collection of constructors.
+     *
+     * @param ctr A unique pointer to the constructor to be added.
+     */
+    void add_constructor(std::unique_ptr<constructor> ctr);
+
     /**
      * @brief Adds a type to this component type.
      *

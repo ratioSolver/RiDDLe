@@ -8,7 +8,7 @@ namespace riddle
   class constructor : public scope
   {
   public:
-    constructor(scope &scp, std::vector<std::unique_ptr<field>> &&args = {}, std::vector<std::unique_ptr<statement>> &&body = {}) noexcept;
+    constructor(scope &scp, std::vector<std::unique_ptr<field>> &&args = {}, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
 
     /**
      * @brief Retrieves the arguments.
@@ -31,7 +31,7 @@ namespace riddle
     [[nodiscard]] std::shared_ptr<item> invoke(std::vector<std::shared_ptr<item>> &&args) const;
 
   private:
-    std::vector<std::string> args;                      // The names of the arguments.
-    const std::vector<std::unique_ptr<statement>> body; // The body of the constructor.
+    std::vector<std::string> args;                       // The names of the arguments.
+    const std::vector<std::unique_ptr<statement>> &body; // The body of the constructor.
   };
 } // namespace riddle

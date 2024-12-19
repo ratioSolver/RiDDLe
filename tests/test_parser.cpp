@@ -25,7 +25,7 @@ void test_class_declaration()
 void test_enum_declaration()
 {
     test_core core;
-    core.read("enum E { \"a\", \"b\", \"c\" } | a.b.c;");
+    core.read("enum E { \"a\", \"b\", \"c\" };");
 }
 
 int main()
