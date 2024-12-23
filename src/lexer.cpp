@@ -686,10 +686,10 @@ namespace riddle
                 text.push_back(c);
                 tokens.push_back(finish_token());
                 break;
-            case '~':
+            case '?':
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                current_state = TILDE;
+                current_state = QUESTION;
                 text.push_back(c);
                 tokens.push_back(finish_token());
                 break;

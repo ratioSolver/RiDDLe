@@ -17,7 +17,7 @@ namespace riddle
     [[nodiscard]] std::unique_ptr<constructor_declaration> parse_constructor_declaration();
     [[nodiscard]] std::unique_ptr<predicate_declaration> parse_predicate_declaration();
     [[nodiscard]] std::unique_ptr<statement> parse_statement();
-    [[nodiscard]] std::unique_ptr<expression> parse_expression();
+    [[nodiscard]] std::unique_ptr<expression> parse_expression(std::size_t precedence = 0);
 
   private:
     [[nodiscard]] bool match(const symbol &sym);

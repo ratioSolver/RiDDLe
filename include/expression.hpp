@@ -46,6 +46,18 @@ namespace riddle
     int_token l;
   };
 
+  class uncertain_int_expression final : public expression
+  {
+  public:
+    uncertain_int_expression(int_token &&lb, int_token &&ub) noexcept : lb(std::move(lb)), ub(std::move(ub)) {}
+
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
+
+  private:
+    int_token lb;
+    int_token ub;
+  };
+
   class real_expression final : public expression
   {
   public:
@@ -55,6 +67,18 @@ namespace riddle
 
   private:
     real_token l;
+  };
+
+  class uncertain_real_expression final : public expression
+  {
+  public:
+    uncertain_real_expression(real_token &&lb, real_token &&ub) noexcept : lb(std::move(lb)), ub(std::move(ub)) {}
+
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
+
+  private:
+    real_token lb;
+    real_token ub;
   };
 
   class string_expression final : public expression

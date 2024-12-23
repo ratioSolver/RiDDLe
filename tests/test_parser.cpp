@@ -19,7 +19,13 @@ public:
 void test_class_declaration()
 {
     test_core core;
-    core.read("class A { int a; }");
+    core.read("class A { int a; };");
+}
+
+void test_field_declaration()
+{
+    test_core core;
+    core.read("class A { int a = 0; };");
 }
 
 void test_enum_declaration()
@@ -31,6 +37,7 @@ void test_enum_declaration()
 int main()
 {
     test_class_declaration();
+    test_field_declaration();
     test_enum_declaration();
     return 0;
 }

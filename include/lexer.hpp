@@ -53,7 +53,7 @@ namespace riddle
     SLASH,       // `/`
     AMP,         // `&`
     BAR,         // `|`
-    TILDE,       // `~`
+    QUESTION,    // `?`
     EQ,          // `=`
     GT,          // `>`
     LT,          // `<`
