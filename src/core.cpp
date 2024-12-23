@@ -98,10 +98,10 @@ namespace riddle
         throw std::out_of_range("predicate `" + std::string(name) + "` not found");
     }
 
-    item &core::get(std::string_view name)
+    std::shared_ptr<item> core::get(std::string_view name)
     {
         if (auto it = items.find(name); it != items.end())
-            return *it->second;
+            return it->second;
         throw std::out_of_range("item `" + std::string(name) + "` not found");
     }
 

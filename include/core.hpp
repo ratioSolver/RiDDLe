@@ -69,6 +69,22 @@ namespace riddle
      * @return std::shared_ptr<arith_item> The int expression.
      */
     [[nodiscard]] std::shared_ptr<arith_item> new_int(const INT_TYPE value);
+    /**
+     * @brief Create a new int expression with the given bounds.
+     *
+     * @param lb The lower bound of the int expression.
+     * @param ub The upper bound of the int expression.
+     * @return std::shared_ptr<arith_item> The int expression.
+     */
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_int(const INT_TYPE lb, const INT_TYPE ub) = 0;
+    /**
+     * @brief Create a new uncertain int expression with the given bounds.
+     *
+     * @param lb The lower bound of the uncertain int expression.
+     * @param ub The upper bound of the uncertain int expression.
+     * @return std::shared_ptr<arith_item> The uncertain int expression.
+     */
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_uncertain_int(const INT_TYPE lb, const INT_TYPE ub) = 0;
 
     /**
      * @brief Create a real expression.
@@ -83,6 +99,22 @@ namespace riddle
      * @return std::shared_ptr<arith_item> The real expression.
      */
     [[nodiscard]] std::shared_ptr<arith_item> new_real(utils::rational &&value);
+    /**
+     * @brief Create a new real expression with the given bounds.
+     *
+     * @param lb The lower bound of the real expression.
+     * @param ub The upper bound of the real expression.
+     * @return std::shared_ptr<arith_item> The real expression.
+     */
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_real(utils::rational &&lb, utils::rational &&ub) = 0;
+    /**
+     * @brief Create a new uncertain real expression with the given bounds.
+     *
+     * @param lb The lower bound of the uncertain real expression.
+     * @param ub The upper bound of the uncertain real expression.
+     * @return std::shared_ptr<arith_item> The uncertain real expression.
+     */
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_uncertain_real(utils::rational &&lb, utils::rational &&ub) = 0;
 
     /**
      * @brief Create a new time expression.
@@ -125,13 +157,47 @@ namespace riddle
      */
     [[nodiscard]] virtual std::shared_ptr<enum_item> new_enum(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
 
+    /**
+     * @brief Creates a new boolean item representing a logical AND operation.
+     *
+     * This function takes a vector of boolean items and combines them into a single
+     * boolean item that represents the logical AND of all the input expressions.
+     *
+     * @param exprs A vector of shared pointers to boolean items to be combined.
+     * @return A shared pointer to the newly created boolean item representing the AND operation.
+     */
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_and(std::vector<std::shared_ptr<bool_item>> &&exprs) = 0;
+    /**
+     * @brief Creates a new boolean OR item from a list of boolean expressions.
+     *
+     * This function is responsible for creating a new boolean OR item, which
+     * represents the logical OR operation on the provided boolean expressions.
+     *
+     * @param exprs A vector of shared pointers to boolean items, representing
+     * the boolean expressions to be OR-ed together.
+     * @return A shared pointer to the newly created boolean OR item.
+     */
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_or(std::vector<std::shared_ptr<bool_item>> &&exprs) = 0;
+    /**
+     * @brief Creates a new XOR (exclusive OR) boolean item.
+     *
+     * This function is responsible for creating a new XOR boolean item from a vector of boolean items.
+     * The XOR operation will return true if an odd number of the boolean items in the vector are true.
+     *
+     * @param exprs A vector of shared pointers to boolean items, which will be used as the operands for the XOR operation.
+     * @return A shared pointer to the newly created XOR boolean item.
+     */
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_xor(std::vector<std::shared_ptr<bool_item>> &&exprs) = 0;
+
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_not(std::shared_ptr<bool_item> expr) = 0;
+
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
     [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
-    [[nodiscard]] item &get(std::string_view name) override;
+    [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
 
   protected:
     /**

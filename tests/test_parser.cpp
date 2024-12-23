@@ -10,10 +10,20 @@ public:
 
     std::shared_ptr<riddle::bool_item> new_bool() override { return core::new_bool(false); }
     std::shared_ptr<riddle::arith_item> new_int() override { return core::new_int(0); }
+    std::shared_ptr<riddle::arith_item> new_int(const INT_TYPE lb, const INT_TYPE ub) override { return core::new_int(lb); }
+    std::shared_ptr<riddle::arith_item> new_uncertain_int(const INT_TYPE lb, const INT_TYPE ub) override { return core::new_int(lb); }
     std::shared_ptr<riddle::arith_item> new_real() override { return core::new_real(utils::rational(0)); }
+    std::shared_ptr<riddle::arith_item> new_real(utils::rational &&lb, utils::rational &&ub) override { return core::new_real(utils::rational(lb)); }
+    std::shared_ptr<riddle::arith_item> new_uncertain_real(utils::rational &&lb, utils::rational &&ub) override { return core::new_real(utils::rational(lb)); }
     std::shared_ptr<riddle::arith_item> new_time() override { return core::new_time(utils::rational(0)); }
     std::shared_ptr<riddle::string_item> new_string() override { return core::new_string(""); }
     std::shared_ptr<riddle::enum_item> new_enum(riddle::type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) override { return std::make_shared<riddle::enum_item>(tp, utils::var()); }
+
+    std::shared_ptr<riddle::bool_item> new_and(std::vector<std::shared_ptr<riddle::bool_item>> &&exprs) override { return core::new_bool(false); }
+    std::shared_ptr<riddle::bool_item> new_or(std::vector<std::shared_ptr<riddle::bool_item>> &&exprs) override { return core::new_bool(false); }
+    std::shared_ptr<riddle::bool_item> new_xor(std::vector<std::shared_ptr<riddle::bool_item>> &&exprs) override { return core::new_bool(false); }
+
+    std::shared_ptr<riddle::bool_item> new_not(std::shared_ptr<riddle::bool_item> expr) override { return core::new_bool(false); }
 };
 
 void test_class_declaration()

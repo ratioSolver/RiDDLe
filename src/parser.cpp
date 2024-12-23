@@ -363,6 +363,31 @@ namespace riddle
         case String:
             expr = std::make_unique<string_expression>(string_token(std::string(static_cast<const string_token &>(*tokens.at(pos - 1)).value), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
             break;
+        case LBRACKET:
+            switch (tokens.at(pos++)->sym)
+            {
+            case INT:
+                if (!match(COMMA))
+                    error("Expected `,` after `int`");
+                if (!match(INT))
+                    error("Expected `int` after `,`");
+                if (!match(RBRACKET))
+                    error("Expected `]` after `int`");
+                expr = std::make_unique<bounded_int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 4)).value, tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), int_token(static_cast<const int_token &>(*tokens.at(pos - 2)).value, tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                break;
+            case REAL:
+                if (!match(COMMA))
+                    error("Expected `,` after `real`");
+                if (!match(REAL))
+                    error("Expected `real` after `,`");
+                if (!match(RBRACKET))
+                    error("Expected `]` after `real`");
+                expr = std::make_unique<bounded_real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 4)).value), tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 2)).value), tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                break;
+            default:
+                error("Expected `int` or `real` after `[`");
+            }
+            break;
         case QUESTION:
             if (!match(LBRACKET))
                 error("Expected `[` after `?`");

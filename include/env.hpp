@@ -62,7 +62,7 @@ namespace riddle
      * @return The item with the given name.
      * @throws std::out_of_range if the item is not found in the current or parent environment.
      */
-    [[nodiscard]] virtual item &get(std::string_view name);
+    [[nodiscard]] virtual std::shared_ptr<item> get(std::string_view name);
 
   private:
     core &cr;
