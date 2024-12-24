@@ -189,7 +189,121 @@ namespace riddle
      */
     [[nodiscard]] virtual std::shared_ptr<bool_item> new_xor(std::vector<std::shared_ptr<bool_item>> &&exprs) = 0;
 
+    /**
+     * @brief Creates a new boolean item representing the logical NOT of the given expression.
+     *
+     * This function takes a shared pointer to a boolean item and returns a new shared pointer
+     * to a boolean item that represents the logical NOT operation applied to the input expression.
+     *
+     * @param expr A shared pointer to the boolean item to be negated.
+     * @return A shared pointer to a new boolean item representing the logical NOT of the input expression.
+     */
     [[nodiscard]] virtual std::shared_ptr<bool_item> new_not(std::shared_ptr<bool_item> expr) = 0;
+
+    /**
+     * @brief Creates a new arithmetic item representing the negation of the given expression.
+     *
+     * This function takes a shared pointer to an arithmetic item and returns a shared pointer
+     * to a new arithmetic item that represents the negation of the input expression.
+     *
+     * @param xpr A shared pointer to the arithmetic item to be negated.
+     * @return A shared pointer to the new arithmetic item representing the negation of the input expression.
+     */
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_negation(std::shared_ptr<arith_item> xpr) = 0;
+
+    /**
+     * @brief Creates a new arithmetic sum item.
+     *
+     * This function is responsible for creating a new arithmetic sum item
+     * from a vector of arithmetic items. The function returns a shared pointer
+     * to the newly created arithmetic sum item.
+     *
+     * @param xprs A vector of shared pointers to arithmetic items that will be summed.
+     * @return std::shared_ptr<arith_item> A shared pointer to the newly created arithmetic sum item.
+     */
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_sum(std::vector<std::shared_ptr<arith_item>> &&xprs) = 0;
+    /**
+     * @brief Creates a new product from a vector of arithmetic items.
+     *
+     * This function is responsible for creating a new product object
+     * from the given vector of arithmetic items. The function returns
+     * a shared pointer to the newly created product.
+     *
+     * @param xprs A vector of shared pointers to arithmetic items.
+     *
+     * @return std::shared_ptr<arith_item> A shared pointer to the newly created product.
+     */
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_product(std::vector<std::shared_ptr<arith_item>> &&xprs) = 0;
+    /**
+     * @brief Creates a new division arithmetic item.
+     *
+     * This function creates a new arithmetic item representing the division of
+     * the left-hand side (lhs) by the right-hand side (rhs).
+     *
+     * @param lhs A shared pointer to the left-hand side arithmetic item.
+     * @param rhs A shared pointer to the right-hand side arithmetic item.
+     * @return std::shared_ptr<arith_item> A shared pointer to the resulting division arithmetic item.
+     */
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_divide(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+
+    /**
+     * @brief Creates a new less-than comparison item.
+     *
+     * This function creates a new less-than comparison item using the provided
+     * arithmetic items as the left-hand side (lhs) and right-hand side (rhs) of
+     * the comparison.
+     *
+     * @param lhs A shared pointer to the left-hand side arithmetic item.
+     * @param rhs A shared pointer to the right-hand side arithmetic item.
+     * @return A shared pointer to the newly created less-than comparison item.
+     */
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_lt(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+    /**
+     * @brief Creates a new less-than-or-equal-to (<=) boolean item.
+     *
+     * This function generates a new boolean item that represents the
+     * less-than-or-equal-to (<=) comparison between two arithmetic items.
+     *
+     * @param lhs A shared pointer to the left-hand side arithmetic item.
+     * @param rhs A shared pointer to the right-hand side arithmetic item.
+     * @return A shared pointer to the newly created boolean item representing
+     *         the result of the <= comparison.
+     */
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_le(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+    /**
+     * @brief Creates a new greater-than comparison item.
+     *
+     * This function creates a new boolean item that represents the result of
+     * comparing two arithmetic items to determine if the left-hand side (lhs)
+     * is greater than the right-hand side (rhs).
+     *
+     * @param lhs A shared pointer to the left-hand side arithmetic item.
+     * @param rhs A shared pointer to the right-hand side arithmetic item.
+     * @return A shared pointer to a boolean item representing the result of the comparison.
+     */
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_gt(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+    /**
+     * @brief Creates a new greater-than-or-equal-to boolean item.
+     *
+     * This function creates a new boolean item that represents the
+     * greater-than-or-equal-to (>=) comparison between two arithmetic items.
+     *
+     * @param lhs A shared pointer to the left-hand side arithmetic item.
+     * @param rhs A shared pointer to the right-hand side arithmetic item.
+     * @return A shared pointer to the newly created boolean item representing the comparison.
+     */
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_ge(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+    /**
+     * @brief Creates a new equality comparison item.
+     *
+     * This function creates a new equality comparison item using the provided left-hand side (lhs)
+     * and right-hand side (rhs) items.
+     *
+     * @param lhs A shared pointer to the left-hand side item.
+     * @param rhs A shared pointer to the right-hand side item.
+     * @return A shared pointer to the newly created equality comparison item.
+     */
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_eq(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) = 0;
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 

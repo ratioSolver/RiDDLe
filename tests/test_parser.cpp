@@ -24,6 +24,19 @@ public:
     std::shared_ptr<riddle::bool_item> new_xor(std::vector<std::shared_ptr<riddle::bool_item>> &&exprs) override { return core::new_bool(false); }
 
     std::shared_ptr<riddle::bool_item> new_not(std::shared_ptr<riddle::bool_item> expr) override { return core::new_bool(false); }
+
+    std::shared_ptr<riddle::arith_item> new_negation(std::shared_ptr<riddle::arith_item> xpr) override { return core::new_int(0); }
+
+    std::shared_ptr<riddle::arith_item> new_sum(std::vector<std::shared_ptr<riddle::arith_item>> &&xprs) override { return core::new_int(0); }
+    std::shared_ptr<riddle::arith_item> new_product(std::vector<std::shared_ptr<riddle::arith_item>> &&xprs) override { return core::new_int(0); }
+    std::shared_ptr<riddle::arith_item> new_divide(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return core::new_int(0); }
+
+    std::shared_ptr<riddle::bool_item> new_lt(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return core::new_bool(false); }
+    std::shared_ptr<riddle::bool_item> new_le(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return core::new_bool(false); }
+    std::shared_ptr<riddle::bool_item> new_gt(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return core::new_bool(false); }
+    std::shared_ptr<riddle::bool_item> new_ge(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return core::new_bool(false); }
+
+    std::shared_ptr<riddle::bool_item> new_eq(std::shared_ptr<riddle::item> lhs, std::shared_ptr<riddle::item> rhs) override { return core::new_bool(false); }
 };
 
 void test_class_declaration()

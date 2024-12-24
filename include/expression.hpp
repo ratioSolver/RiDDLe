@@ -171,29 +171,6 @@ namespace riddle
     std::unique_ptr<expression> xpr;
   };
 
-  class implies_expression final : public expression
-  {
-  public:
-    implies_expression(std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
-
-    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
-
-  private:
-    std::unique_ptr<expression> lhs;
-    std::unique_ptr<expression> rhs;
-  };
-
-  class plus_expression final : public expression
-  {
-  public:
-    plus_expression(std::unique_ptr<expression> xpr) noexcept : xpr(std::move(xpr)) {}
-
-    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
-
-  private:
-    std::unique_ptr<expression> xpr;
-  };
-
   class minus_expression final : public expression
   {
   public:

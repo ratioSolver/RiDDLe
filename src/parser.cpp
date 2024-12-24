@@ -415,9 +415,6 @@ namespace riddle
                 error("Expected `int` or `real` after `[`");
             }
             break;
-        case PLUS:
-            expr = std::make_unique<plus_expression>(parse_expression());
-            break;
         case MINUS:
             expr = std::make_unique<minus_expression>(parse_expression());
             break;

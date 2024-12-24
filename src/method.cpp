@@ -10,4 +10,19 @@ namespace riddle
             add_field(std::move(arg));
         }
     }
+
+    std::shared_ptr<item> method::invoke(env &ctx, std::vector<std::shared_ptr<item>> &&args) const
+    {
+        env local(ctx.get_core(), ctx);
+
+        for (size_t i = 0; i < this->args.size(); ++i)
+            local.items.emplace(this->args[i], args[i]);
+
+        for (const auto &stmt : body)
+            stmt->execute(*this, local);
+
+        if (auto it = local.items.find("return"); it != local.items.end())
+            return it->second;
+        return nullptr;
+    }
 } // namespace riddle

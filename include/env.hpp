@@ -10,6 +10,7 @@ namespace riddle
   class core;
   class item;
   class constructor;
+  class method;
 
   /**
    * @class env env.hpp "include/env.hpp"
@@ -26,6 +27,7 @@ namespace riddle
   class env
   {
     friend class constructor;
+    friend class method;
 
   public:
     env(core &c, env &parent, std::map<std::string, std::shared_ptr<item>, std::less<>> &&items = {}) noexcept;
