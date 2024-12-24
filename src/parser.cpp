@@ -559,6 +559,182 @@ namespace riddle
 
             return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
         }
+        case ID:
+        { // either a local field, an assignment or an expression..
+            size_t c_pos = pos++;
+            while (match(DOT))
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+
+            switch (tokens.at(pos)->sym)
+            {
+            case ID: // a local field..
+            {
+                std::vector<id_token> field_type;
+                std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+                pos = c_pos;
+                if (!match(ID))
+                    error("Expected identifier");
+
+                field_type.emplace_back(static_cast<const id_token &>(*tokens.at(pos++)));
+
+                do
+                {
+                    if (!match(ID))
+                        error("Expected identifier");
+                    id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+                    if (match(EQ))
+                        fields.emplace_back(std::move(id), parse_expression());
+                    else
+                        fields.emplace_back(std::move(id), nullptr);
+                } while (match(COMMA));
+
+                if (!match(SEMICOLON))
+                    error("Expected `;` after local field declaration");
+
+                return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+            }
+            case EQ: // an assignment..
+            {
+                std::vector<id_token> object_id;
+                object_id.emplace_back(static_cast<const id_token &>(*tokens.at(c_pos)));
+                while (match(DOT))
+                {
+                    if (!match(ID))
+                        error("Expected identifier after `.`");
+                    object_id.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                }
+                if (!match(EQ))
+                    error("Expected `=` after object identifier");
+                return std::make_unique<assignment_statement>(std::move(object_id), id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos), parse_expression());
+            }
+            default: // an expression..
+                pos = c_pos;
+                return std::make_unique<expression_statement>(parse_expression());
+            }
+        }
+        case LBRACE:
+        { // a conjunction or a disjunction..
+            std::vector<std::unique_ptr<conjunction_statement>> conjuncts;
+            pos--;
+            do // conjunction..
+            {
+                std::vector<std::unique_ptr<statement>> stmts;
+                if (!match(LBRACE))
+                    error("Expected `{` after `conjunction`");
+                while (!match(RBRACE))
+                    stmts.emplace_back(parse_statement());
+
+                if (match(LBRACKET))
+                { // a priced conjunction..
+                    conjuncts.emplace_back(std::make_unique<conjunction_statement>(std::move(stmts), parse_expression()));
+                    if (!match(RBRACKET))
+                        error("Expected `]` after priced conjunction");
+                }
+                else // a simple conjunction..
+                    conjuncts.emplace_back(std::make_unique<conjunction_statement>(std::move(stmts)));
+            } while (match(OR));
+
+            if (conjuncts.size() == 1) // a simple conjunction..
+                return std::move(conjuncts.front());
+            else // a disjunction..
+                return std::make_unique<disjunction_statement>(std::move(conjuncts));
+        }
+        case FOR:
+        { // a for loop..
+            if (!match(LPAREN))
+                error("Expected `(` after `for`");
+            std::vector<id_token> enum_type;
+            std::vector<std::unique_ptr<statement>> stmts;
+            do // the enum type..
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+                enum_type.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+            } while (match(DOT));
+
+            if (!match(ID))
+                error("Expected identifier");
+
+            id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+            if (!match(RPAREN))
+                error("Expected `)` after for loop");
+
+            if (!match(LBRACE))
+                error("Expected `{` after for loop");
+
+            while (!match(RBRACE))
+                stmts.emplace_back(parse_statement());
+
+            return std::make_unique<for_all_statement>(std::move(enum_type), std::move(id), std::move(stmts));
+        }
+        case RETURN:
+        { // a return statement..
+            auto xpr = parse_expression();
+            if (!match(SEMICOLON))
+                error("Expected `;` after return statement");
+            return std::make_unique<return_statement>(std::move(xpr));
+        }
+        case FACT:
+        case GOAL:
+        { // a fact or a goal..
+            bool is_fact = tokens.at(pos - 1)->sym == FACT;
+            std::vector<id_token> tau;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> args;
+
+            if (!match(ID))
+                error("Expected identifier");
+
+            id_token name = static_cast<const id_token &>(*tokens.at(pos - 1)); // the name of the atom..
+
+            if (!match(EQ))
+                error("Expected `=` after atom name");
+
+            if (!match(NEW))
+                error("Expected `new` after `=`");
+
+            do // the formula scope..
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+                tau.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+            } while (match(DOT));
+
+            tau.pop_back();
+            auto predicate_name = id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            if (!match(LPAREN))
+                error("Expected `(` after predicate name");
+
+            if (!match(RPAREN))
+            { // the arguments of the atom..
+                do
+                {
+                    if (!match(ID))
+                        error("Expected identifier");
+
+                    id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+                    if (match(COLON))
+                        args.emplace_back(std::move(id), parse_expression());
+                    else
+                        args.emplace_back(std::move(id), nullptr);
+                } while (match(COMMA));
+
+                if (!match(RPAREN))
+                    error("Expected `)` after arguments");
+            }
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after fact or goal");
+
+            return std::make_unique<formula_statement>(is_fact, std::move(name), std::move(tau), std::move(predicate_name), std::move(args));
+        }
+        default:
+            pos--;
+            return std::make_unique<expression_statement>(parse_expression());
         }
     }
 
