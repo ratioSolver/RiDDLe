@@ -1,9 +1,18 @@
 #pragma once
 
 #include "expression.hpp"
+#include <stdexcept>
 
 namespace riddle
 {
+  class inconsistency_exception : public std::exception
+  {
+  public:
+    inconsistency_exception() = default;
+
+    virtual const char *what() const noexcept override { return "inconsistency detected"; }
+  };
+
   class statement
   {
   public:

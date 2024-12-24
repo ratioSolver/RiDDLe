@@ -4,7 +4,6 @@
 #include "parser.hpp"
 #include <sstream>
 #include <fstream>
-#include <stdexcept>
 
 namespace riddle
 {

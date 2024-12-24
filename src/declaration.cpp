@@ -1,7 +1,6 @@
 #include "declaration.hpp"
 #include "core.hpp"
 #include "type.hpp"
-#include <stdexcept>
 
 namespace riddle
 {

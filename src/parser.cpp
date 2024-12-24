@@ -1,5 +1,4 @@
 #include "parser.hpp"
-#include <stdexcept>
 #include <cassert>
 
 namespace riddle

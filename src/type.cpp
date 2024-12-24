@@ -2,7 +2,6 @@
 #include "core.hpp"
 #include "lexer.hpp"
 #include <queue>
-#include <stdexcept>
 
 namespace riddle
 {
