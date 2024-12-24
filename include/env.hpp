@@ -11,6 +11,7 @@ namespace riddle
   class item;
   class constructor;
   class method;
+  class local_field_statement;
 
   /**
    * @class env env.hpp "include/env.hpp"
@@ -28,6 +29,7 @@ namespace riddle
   {
     friend class constructor;
     friend class method;
+    friend class local_field_statement;
 
   public:
     env(core &c, env &parent, std::map<std::string, std::shared_ptr<item>, std::less<>> &&items = {}) noexcept;

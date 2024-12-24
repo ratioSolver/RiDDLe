@@ -234,6 +234,8 @@ namespace riddle
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const;
 
+    [[nodiscard]] std::vector<std::shared_ptr<item>> &get_instances() noexcept { return instances; }
+
   protected:
     /**
      * @brief Adds a parent to this component type.
@@ -271,6 +273,7 @@ namespace riddle
     std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the scope of the type..
     std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the scope of the type..
     std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the scope of the type..
+    std::vector<std::shared_ptr<item>> instances;                                     // the instances of the type..
   };
 
   /**

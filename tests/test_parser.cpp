@@ -51,6 +51,12 @@ void test_field_declaration()
     core.read("class A { int a = 0; };");
 }
 
+void test_method_declaration()
+{
+    test_core core;
+    core.read("class A { int a() { return 0; } };");
+}
+
 void test_enum_declaration()
 {
     test_core core;
@@ -61,6 +67,7 @@ int main()
 {
     test_class_declaration();
     test_field_declaration();
+    test_method_declaration();
     test_enum_declaration();
     return 0;
 }

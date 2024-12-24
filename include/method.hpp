@@ -2,13 +2,14 @@
 
 #include "scope.hpp"
 #include "statement.hpp"
+#include <optional>
 
 namespace riddle
 {
   class method : public scope
   {
   public:
-    method(scope &scp, std::vector<std::unique_ptr<field>> &&args = {}, std::vector<std::unique_ptr<statement>> &&body = {}) noexcept;
+    method(scope &scp, std::optional<std::reference_wrapper<type>> return_type, std::vector<std::unique_ptr<field>> &&args = {}, std::vector<std::unique_ptr<statement>> &&body = {}) noexcept;
 
     /**
      * @brief Retrieves the arguments.
@@ -33,7 +34,8 @@ namespace riddle
     [[nodiscard]] std::shared_ptr<item> invoke(env &ctx, std::vector<std::shared_ptr<item>> &&args) const;
 
   private:
-    std::vector<std::string> args;                      // The names of the arguments.
-    const std::vector<std::unique_ptr<statement>> body; // The body of the method.
+    const std::optional<std::reference_wrapper<type>> return_type; // The return type of the method.
+    std::vector<std::string> args;                                 // The names of the arguments.
+    const std::vector<std::unique_ptr<statement>> body;            // The body of the method.
   };
 } // namespace riddle

@@ -188,7 +188,7 @@ namespace riddle
 
                 if (match(LPAREN))
                 { // method declaration..
-                    pos -= 2;
+                    pos -= 3;
                     methods.emplace_back(parse_method_declaration());
                 }
                 else
@@ -328,7 +328,107 @@ namespace riddle
 
     std::unique_ptr<method_declaration> parser::parse_method_declaration()
     {
-        throw std::runtime_error("Not implemented");
+        std::vector<id_token> rt;
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::unique_ptr<statement>> stmts;
+
+        switch (tokens.at(pos++)->sym)
+        {
+        case VOID:
+            break;
+        case BOOL:
+            rt.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case INT:
+            rt.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case REAL:
+            rt.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case TIME:
+            rt.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case STRING:
+            rt.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case ID:
+        {
+            size_t c_pos = pos++;
+            while (match(DOT))
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+            if (!match(ID))
+                error("Expected identifier after `.`");
+            rt.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+            pos = c_pos;
+            break;
+        }
+        default:
+            error("Expected type");
+        }
+
+        if (!match(ID))
+            error("Expected identifier");
+
+        id_token name = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+        if (!match(LPAREN))
+            error("Expected `(` after method name");
+
+        if (!match(RPAREN))
+        {
+            do
+            {
+                std::vector<id_token> tp;
+                switch (tokens.at(pos++)->sym)
+                {
+                case BOOL:
+                    tp.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case INT:
+                    tp.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case REAL:
+                    tp.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case TIME:
+                    tp.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case STRING:
+                    tp.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case ID:
+                {
+                    size_t c_pos = pos++;
+                    while (match(DOT))
+                        if (!match(ID))
+                            error("Expected identifier after `.`");
+                    if (!match(ID))
+                        error("Expected identifier after `.`");
+                    tp.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                    pos = c_pos;
+                    break;
+                }
+                default:
+                    error("Expected type");
+                }
+
+                if (!match(ID))
+                    error("Expected identifier");
+                params.emplace_back(std::move(tp), static_cast<const id_token &>(*tokens.at(pos - 1)));
+            } while (match(COMMA));
+
+            if (!match(RPAREN))
+                error("Expected `)` after parameters");
+        }
+
+        if (!match(LBRACE))
+            error("Expected `{` after method declaration");
+
+        while (!match(RBRACE))
+            stmts.emplace_back(parse_statement());
+
+        return std::make_unique<method_declaration>(std::move(rt), std::move(name), std::move(params), std::move(stmts));
     }
 
     std::unique_ptr<constructor_declaration> parser::parse_constructor_declaration()
@@ -343,7 +443,124 @@ namespace riddle
 
     std::unique_ptr<statement> parser::parse_statement()
     {
-        throw std::runtime_error("Not implemented");
+        switch (tokens.at(pos++)->sym)
+        {
+        case BOOL:
+        { // a local field having a bool type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        case INT:
+        { // a local field having a int type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        case REAL:
+        { // a local field having a real type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        case TIME:
+        { // a local field having a time type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        case STRING:
+        { // a local field having a string type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        }
     }
 
     std::unique_ptr<expression> parser::parse_expression(std::size_t precedence)
