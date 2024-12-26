@@ -1,6 +1,7 @@
 #include "core.hpp"
 #include "parser.hpp"
 #include "conjunction.hpp"
+#include "exceptions.hpp"
 #include <queue>
 
 namespace riddle
@@ -39,22 +40,6 @@ namespace riddle
                     for (auto &inst : ct->get_instances())
                         values.emplace_back(*inst);
                     ctx.items.emplace(id.id, ctx.get_core().new_enum(*ct, std::move(values)));
-                }
-                }
-            else if (auto et = dynamic_cast<enum_type *>(tp))
-                switch (et->get_domain().size())
-                {
-                case 0: // no values
-                    throw inconsistency_exception();
-                case 1: // only one value
-                    ctx.items.emplace(id.id, *et->get_domain().begin());
-                    break;
-                default:
-                { // multiple values
-                    std::vector<std::reference_wrapper<utils::enum_val>> values;
-                    for (auto &val : et->get_domain())
-                        values.emplace_back(*val);
-                    ctx.items.emplace(id.id, ctx.get_core().new_enum(*et, std::move(values)));
                 }
                 }
             else
@@ -181,22 +166,6 @@ namespace riddle
                             for (auto &inst : ct->get_instances())
                                 values.emplace_back(*inst);
                             c_args.emplace(name, ctx.get_core().new_enum(*ct, std::move(values)));
-                        }
-                        }
-                    else if (auto et = dynamic_cast<enum_type *>(&tp))
-                        switch (et->get_domain().size())
-                        {
-                        case 0: // no values
-                            throw inconsistency_exception();
-                        case 1: // only one value
-                            c_args.emplace(name, *et->get_domain().begin());
-                            break;
-                        default:
-                        { // multiple values
-                            std::vector<std::reference_wrapper<utils::enum_val>> values;
-                            for (auto &val : et->get_domain())
-                                values.emplace_back(*val);
-                            c_args.emplace(name, ctx.get_core().new_enum(*et, std::move(values)));
                         }
                         }
                     else

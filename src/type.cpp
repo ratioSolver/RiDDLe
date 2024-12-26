@@ -1,6 +1,7 @@
 #include "type.hpp"
 #include "core.hpp"
 #include "lexer.hpp"
+#include "exceptions.hpp"
 #include <queue>
 
 namespace riddle
@@ -24,7 +25,7 @@ namespace riddle
     string_type::string_type(core &cr) noexcept : type(cr, string_kw, true) {}
     std::shared_ptr<item> string_type::new_instance() { return get_scope().get_core().new_string(); }
 
-    enum_type::enum_type(scope &scp, std::string &&name, std::vector<std::shared_ptr<item>> &&domain) noexcept : type(scp, std::move(name), false), domain(std::move(domain)) {}
+    enum_type::enum_type(scope &scp, std::string &&name, std::vector<std::shared_ptr<item>> &&domain) noexcept : type(scp, std::move(name), true), domain(std::move(domain)) {}
     bool enum_type::is_assignable_from(const type &other) const
     {
         if (this == &other)
@@ -47,10 +48,20 @@ namespace riddle
     }
     std::shared_ptr<item> enum_type::new_instance()
     {
-        std::vector<std::reference_wrapper<utils::enum_val>> items;
-        for (const auto &i : domain)
-            items.push_back(*i);
-        return get_scope().get_core().new_enum(*this, std::move(items));
+        switch (domain.size())
+        {
+        case 0:
+            throw inconsistency_exception();
+        case 1:
+            return domain[0];
+        default:
+        {
+            std::vector<std::reference_wrapper<utils::enum_val>> items;
+            for (const auto &i : domain)
+                items.push_back(*i);
+            return get_scope().get_core().new_enum(*this, std::move(items));
+        }
+        }
     }
 
     component_type::component_type(scope &scp, std::string &&name) noexcept : scope(scp.get_core(), scp), type(scp, std::move(name), false) {}
