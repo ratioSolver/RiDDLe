@@ -201,7 +201,7 @@ namespace riddle
             throw std::invalid_argument("type " + name + " already exists");
     }
 
-    std::shared_ptr<item> component_type::new_instance() { return std::make_shared<item>(static_cast<component_type &>(*this)); }
+    std::shared_ptr<item> component_type::new_instance() { return std::make_shared<component>(static_cast<component_type &>(*this)); }
 
     predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(std::move(body)) {}
 

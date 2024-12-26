@@ -95,7 +95,7 @@ namespace riddle
   class component : public item, public env
   {
   public:
-    component(component_type &t, env &parent);
+    component(component_type &t);
     virtual ~component() = default;
   };
 } // namespace riddle

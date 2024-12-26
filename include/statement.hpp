@@ -57,8 +57,12 @@ namespace riddle
     std::unique_ptr<expression> xpr;
   };
 
+  class disjunction_statement;
+
   class conjunction_statement final : public statement
   {
+    friend class disjunction_statement;
+
   public:
     conjunction_statement(std::vector<std::unique_ptr<statement>> &&stmts, std::unique_ptr<expression> cst = nullptr) : stmts(std::move(stmts)), cst(std::move(cst)) {}
 

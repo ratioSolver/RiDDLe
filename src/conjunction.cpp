@@ -2,5 +2,11 @@
 
 namespace riddle
 {
-    conjunction::conjunction(core &c, scope &parent, env &&ctx) noexcept : scope(c, parent), ctx(std::move(ctx)) {}
+    conjunction::conjunction(const scope &scp, env &&ctx, const utils::rational cst, const std::vector<std::unique_ptr<statement>> &body) noexcept : scp(scp), ctx(std::move(ctx)), cst(cst), body(body) {}
+
+    void conjunction::execute()
+    {
+        for (auto &stmt : body)
+            stmt->execute(scp, ctx);
+    }
 } // namespace riddle

@@ -1,9 +1,12 @@
 #pragma once
 
+#include "bool.hpp"
+#include "inf_rational.hpp"
 #include "type.hpp"
 
 namespace riddle
 {
+  class conjunction;
   class enum_declaration;
   class method_declaration;
   class class_declaration;
@@ -55,6 +58,16 @@ namespace riddle
      * @return std::shared_ptr<bool_item> The bool expression.
      */
     [[nodiscard]] std::shared_ptr<bool_item> new_bool(const bool value);
+
+    /**
+     * @brief Evaluates the boolean value of the given expression.
+     *
+     * This function takes a boolean expression and returns its logical value.
+     *
+     * @param expr The boolean expression to evaluate.
+     * @return utils::lbool The logical value of the expression.
+     */
+    [[nodiscard]] virtual utils::lbool bool_value(const bool_item &expr) const noexcept = 0;
 
     /**
      * @brief Create a new int expression.
@@ -129,6 +142,17 @@ namespace riddle
      * @return std::shared_ptr<arith_item> The time expression.
      */
     [[nodiscard]] std::shared_ptr<arith_item> new_time(utils::rational &&value);
+
+    /**
+     * @brief Computes the arithmetic value of the given arithmetic item.
+     *
+     * This function takes an arithmetic item expression and computes its
+     * corresponding arithmetic value.
+     *
+     * @param expr The arithmetic item expression to be evaluated.
+     * @return utils::inf_rational The computed arithmetic value of the expression.
+     */
+    [[nodiscard]] virtual utils::inf_rational arith_value(const arith_item &expr) const noexcept = 0;
 
     /**
      * @brief Create a new string expression.
@@ -304,6 +328,25 @@ namespace riddle
      * @return A shared pointer to the newly created equality comparison item.
      */
     [[nodiscard]] virtual std::shared_ptr<bool_item> new_eq(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) = 0;
+
+    /**
+     * @brief Pure virtual function to add a new disjunction.
+     *
+     * This function is responsible for adding a new disjunction composed of multiple conjunctions.
+     *
+     * @param disjuncts A vector of unique pointers to conjunction objects, representing the disjunction.
+     */
+    virtual void new_disjunction(std::vector<std::unique_ptr<conjunction>> &&disjuncts) = 0;
+
+    /**
+     * @brief Asserts a fact in the system.
+     *
+     * This pure virtual function is intended to be overridden by derived classes
+     * to assert a fact represented by a shared pointer to a bool_item object.
+     *
+     * @param fact A shared pointer to a bool_item object representing the fact to be asserted.
+     */
+    virtual void assert_fact(std::shared_ptr<bool_item> fact) = 0;
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 

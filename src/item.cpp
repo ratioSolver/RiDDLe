@@ -1,5 +1,4 @@
-#include "item.hpp"
-#include "type.hpp"
+#include "core.hpp"
 #include <type_traits>
 
 namespace riddle
@@ -12,5 +11,5 @@ namespace riddle
 
     enum_item::enum_item(type &tp, utils::var v) : item(tp), value(v) {}
 
-    component::component(component_type &t, env &parent) : item(t), env(t.get_core(), parent) {}
+    component::component(component_type &t) : item(t), env(t.get_core(), t.get_core()) {}
 } // namespace riddle
