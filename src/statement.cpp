@@ -1,6 +1,7 @@
 #include "core.hpp"
 #include "parser.hpp"
 #include "conjunction.hpp"
+#include <queue>
 
 namespace riddle
 {
@@ -134,7 +135,7 @@ namespace riddle
     }
 
     void formula_statement::execute(const scope &scp, env &ctx) const
-    {
+    { // create a new atom
         std::map<std::string, std::shared_ptr<item>, std::less<>> c_args;
         for (auto &[id, expr] : args)
             c_args.emplace(id.id, expr->evaluate(scp, ctx));
@@ -153,6 +154,58 @@ namespace riddle
             c_args.emplace(tau_kw, atm->get(tau_kw));
 
         auto &pred = tau.empty() ? scp.get_predicate(predicate_name.id) : static_cast<component_type &>(c_args.at(tau_kw).get()->get_type()).get_predicate(predicate_name.id);
+
+        // we initialize the unassigned atom's fields..
+        std::queue<predicate *> q;
+        q.push(&pred);
+        while (!q.empty())
+        {
+            auto p = q.front();
+            for (const auto &[name, f] : p->get_fields())
+                if (c_args.find(name) == c_args.end())
+                { // the field is unassigned
+                    auto &tp = f->get_type();
+                    if (tp.is_primitive())
+                        c_args.emplace(name, tp.new_instance());
+                    else if (auto ct = dynamic_cast<component_type *>(&tp))
+                        switch (ct->get_instances().size())
+                        {
+                        case 0: // no instances
+                            throw inconsistency_exception();
+                        case 1: // only one instance
+                            c_args.emplace(name, *ct->get_instances().begin());
+                            break;
+                        default:
+                        { // multiple instances
+                            std::vector<std::reference_wrapper<utils::enum_val>> values;
+                            for (auto &inst : ct->get_instances())
+                                values.emplace_back(*inst);
+                            c_args.emplace(name, ctx.get_core().new_enum(*ct, std::move(values)));
+                        }
+                        }
+                    else if (auto et = dynamic_cast<enum_type *>(&tp))
+                        switch (et->get_domain().size())
+                        {
+                        case 0: // no values
+                            throw inconsistency_exception();
+                        case 1: // only one value
+                            c_args.emplace(name, *et->get_domain().begin());
+                            break;
+                        default:
+                        { // multiple values
+                            std::vector<std::reference_wrapper<utils::enum_val>> values;
+                            for (auto &val : et->get_domain())
+                                values.emplace_back(*val);
+                            c_args.emplace(name, ctx.get_core().new_enum(*et, std::move(values)));
+                        }
+                        }
+                    else
+                        throw std::runtime_error("Invalid type reference");
+                }
+            q.pop();
+            for (auto &parent : p->get_parents())
+                q.push(&parent.get());
+        }
 
         auto atm = scp.get_core().new_atom(is_fact, pred, std::move(c_args));
 

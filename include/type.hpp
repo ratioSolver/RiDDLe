@@ -216,7 +216,7 @@ namespace riddle
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
-    [[nodiscard]] std::vector<std::reference_wrapper<component_type>> &get_parents() noexcept { return parents; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<component_type>> &get_parents() const noexcept { return parents; }
 
     /**
      * @brief Retrieves a constructor that matches the given argument types.
@@ -290,6 +290,8 @@ namespace riddle
   public:
     predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args = {}, std::vector<std::unique_ptr<statement>> &&body = {}) noexcept;
     virtual ~predicate() = default;
+
+    [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const noexcept { return parents; }
 
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;

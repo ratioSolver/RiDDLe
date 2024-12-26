@@ -71,6 +71,17 @@ namespace riddle
     [[nodiscard]] scope &get_parent() const noexcept { return parent; }
 
     /**
+     * @brief Retrieves the fields of the current scope.
+     *
+     * This function returns a constant reference to a map containing the fields
+     * of the current scope. The map keys are strings representing the field names,
+     * and the values are unique pointers to the field objects.
+     *
+     * @return A constant reference to a map with field names as keys and unique pointers to fields as values.
+     */
+    [[nodiscard]] const std::map<std::string, std::unique_ptr<field>, std::less<>> &get_fields() const noexcept { return fields; }
+
+    /**
      * @brief Retrieves the field associated with the given name.
      *
      * This function searches for the field associated with the provided name
