@@ -348,6 +348,16 @@ namespace riddle
      */
     virtual void assert_fact(std::shared_ptr<bool_item> fact) = 0;
 
+    /**
+     * @brief Creates a new atom.
+     *
+     * @param is_fact A boolean indicating whether the atom is a fact or a goal.
+     * @param pred A reference to the predicate associated with the atom.
+     * @param args An optional map of arguments where the key is a string and the value is a shared pointer to an item. Defaults to an empty map.
+     * @return A shared pointer to the newly created atom.
+     */
+    [[nodiscard]] std::shared_ptr<atom> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {});
+
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
     [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
@@ -365,6 +375,9 @@ namespace riddle
      * @param tp A unique pointer to the type to be added.
      */
     void add_type(std::unique_ptr<type> tp);
+
+  private:
+    [[nodiscard]] virtual std::shared_ptr<atom> create_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {}) { return std::make_shared<atom>(pred, is_fact, utils::TRUE_lit, std::move(args)); }
 
   private:
     std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the core..

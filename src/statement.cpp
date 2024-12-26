@@ -101,7 +101,7 @@ namespace riddle
         std::vector<std::unique_ptr<conjunction>> conjs;
         for (auto &conj : blocks)
         {
-            env cctx(ctx);
+            env cctx(scp.get_core(), ctx);
             auto cst = conj->cst ? scp.get_core().arith_value(static_cast<arith_item &>(*conj->cst->evaluate(scp, ctx))).get_rational() : utils::rational::one;
             conjs.emplace_back(std::make_unique<conjunction>(scp, std::move(cctx), cst, conj->stmts));
         }
@@ -119,12 +119,43 @@ namespace riddle
         if (auto ct = dynamic_cast<component_type *>(tp))
             for (auto &inst : ct->get_instances())
             {
-                env cctx(ctx);
-                cctx.items.emplace(enum_id.id, *inst);
+                env cctx(scp.get_core(), ctx);
+                cctx.items.emplace(enum_id.id, inst);
                 for (auto &stmt : stmts)
                     stmt->execute(scp, cctx);
             }
         else
             throw std::runtime_error("Invalid type reference");
+    }
+
+    void return_statement::execute(const scope &scp, env &ctx) const
+    { // return from a method
+        ctx.items.emplace(return_kw, xpr->evaluate(scp, ctx));
+    }
+
+    void formula_statement::execute(const scope &scp, env &ctx) const
+    {
+        std::map<std::string, std::shared_ptr<item>, std::less<>> c_args;
+        for (auto &[id, expr] : args)
+            c_args.emplace(id.id, expr->evaluate(scp, ctx));
+
+        if (!tau.empty())
+        {
+            auto c_tau = ctx.get(tau[0].id);
+            for (size_t i = 1; i < tau.size(); ++i)
+                if (auto ct = dynamic_cast<component *>(c_tau.get()))
+                    c_tau = ct->get(tau[i].id);
+                else
+                    throw std::runtime_error("Invalid type reference");
+            c_args.emplace(tau.back().id, c_tau);
+        }
+        else if (auto atm = dynamic_cast<atom *>(&ctx))
+            c_args.emplace(tau_kw, atm->get(tau_kw));
+
+        auto &pred = tau.empty() ? scp.get_predicate(predicate_name.id) : static_cast<component_type &>(c_args.at(tau_kw).get()->get_type()).get_predicate(predicate_name.id);
+
+        auto atm = scp.get_core().new_atom(is_fact, pred, std::move(c_args));
+
+        ctx.items.emplace(id.id, atm);
     }
 } // namespace riddle

@@ -24,6 +24,7 @@ namespace riddle
   {
   public:
     type(scope &scp, std::string &&name, bool primitive = false) noexcept;
+    type(const type &) = delete;
     virtual ~type() = default;
 
     /**
@@ -284,6 +285,8 @@ namespace riddle
    */
   class predicate : public scope, public type
   {
+    friend class core;
+
   public:
     predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args = {}, std::vector<std::unique_ptr<statement>> &&body = {}) noexcept;
     virtual ~predicate() = default;
@@ -295,5 +298,6 @@ namespace riddle
     std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
     std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
     std::vector<std::unique_ptr<statement>> body;           // the body of the predicate..
+    std::vector<std::shared_ptr<atom>> atoms;               // the atoms of the predicate..
   };
 } // namespace riddle

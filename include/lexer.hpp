@@ -12,6 +12,12 @@ namespace riddle
   constexpr const char *real_kw = "real";
   constexpr const char *time_kw = "time";
   constexpr const char *string_kw = "string";
+  constexpr const char *return_kw = "return";
+  constexpr const char *at_kw = "at";
+  constexpr const char *start_kw = "start";
+  constexpr const char *end_kw = "end";
+  constexpr const char *duration_kw = "duration";
+  constexpr const char *tau_kw = "tau";
 
   enum symbol
   {

@@ -14,6 +14,8 @@ namespace riddle
   class local_field_statement;
   class assignment_statement;
   class for_all_statement;
+  class return_statement;
+  class formula_statement;
 
   /**
    * @class env env.hpp "include/env.hpp"
@@ -34,9 +36,13 @@ namespace riddle
     friend class local_field_statement;
     friend class assignment_statement;
     friend class for_all_statement;
+    friend class return_statement;
+    friend class formula_statement;
 
   public:
     env(core &c, env &parent, std::map<std::string, std::shared_ptr<item>, std::less<>> &&items = {}) noexcept;
+    env(const env &) = delete;
+    env(env &&) = default;
     virtual ~env() = default;
 
     /**

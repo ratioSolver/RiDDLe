@@ -4,6 +4,7 @@
 #include "parser.hpp"
 #include <sstream>
 #include <fstream>
+#include <queue>
 
 namespace riddle
 {
@@ -58,6 +59,22 @@ namespace riddle
     std::shared_ptr<arith_item> core::new_real(utils::rational &&value) { return std::make_shared<arith_item>(static_cast<real_type &>(get_type(real_kw)), utils::lin(value)); }
     std::shared_ptr<arith_item> core::new_time(utils::rational &&value) { return std::make_shared<arith_item>(static_cast<time_type &>(get_type(time_kw)), utils::lin(value)); }
     std::shared_ptr<string_item> core::new_string(std::string &&value) { return std::make_shared<string_item>(static_cast<string_type &>(get_type(string_kw)), std::move(value)); }
+
+    std::shared_ptr<atom> core::new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args)
+    {
+        auto atm = create_atom(is_fact, pred, std::move(args));
+        std::queue<predicate *> q;
+        q.push(&pred);
+        while (!q.empty())
+        {
+            auto p = q.front();
+            p->atoms.push_back(atm);
+            q.pop();
+            for (auto &parent : p->parents)
+                q.push(&parent.get());
+        }
+        return atm;
+    }
 
     field &core::get_field(std::string_view name) const
     {

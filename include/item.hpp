@@ -15,6 +15,7 @@ namespace riddle
   class string_type;
   class enum_type;
   class component_type;
+  class predicate;
 
   /**
    * @class item item.hpp "include/item.hpp"
@@ -28,6 +29,7 @@ namespace riddle
   {
   public:
     item(type &tp) noexcept : tp(tp) {}
+    item(const item &) = delete;
 
     /**
      * @brief Get the type of the item.
@@ -97,5 +99,20 @@ namespace riddle
   public:
     component(component_type &t);
     virtual ~component() = default;
+  };
+
+  class atom : public item, public env
+  {
+  public:
+    atom(predicate &t, bool fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {});
+    virtual ~atom() = default;
+
+    [[nodiscard]] bool is_fact() const { return fact; }
+    [[nodiscard]] utils::lit &get_sigma() { return sigma; }
+    [[nodiscard]] const utils::lit &get_sigma() const { return sigma; }
+
+  private:
+    bool fact;        // whether the atom is a fact
+    utils::lit sigma; // the literal indicating the status of the atom (i.e., true if active, false if unified, undefined if inactive)
   };
 } // namespace riddle
