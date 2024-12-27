@@ -4,6 +4,14 @@
 #include "inf_rational.hpp"
 #include "type.hpp"
 
+#ifdef COMPUTE_NAMES
+#include <unordered_map>
+
+#define RECOMPUTE_NAMES() recompute_names()
+#else
+#define RECOMPUTE_NAMES()
+#endif
+
 namespace riddle
 {
   class conjunction;
@@ -397,6 +405,36 @@ namespace riddle
      */
     void add_type(std::unique_ptr<type> tp);
 
+#ifdef COMPUTE_NAMES
+  protected:
+    /**
+     * @brief Guesses the name of the given item.
+     *
+     * This function attempts to find the name associated with the provided item
+     * by looking it up in the `expr_names` map. If the item is found, its
+     * corresponding name is returned. Otherwise, an empty string is returned.
+     *
+     * @param itm The item for which the name is to be guessed.
+     * @return A string representing the name of the item, or an empty string if
+     *         the item is not found in the `expr_names` map.
+     */
+    std::string guess_name(const item &itm) const noexcept
+    {
+      if (const auto at_f = expr_names.find(&itm); at_f != expr_names.cend())
+        return at_f->second;
+      return "";
+    }
+
+  private:
+    /**
+     * @brief Recomputes the names.
+     *
+     * This function recalculates or updates the names based on the current state.
+     * It is guaranteed not to throw any exceptions.
+     */
+    void recompute_names() noexcept;
+#endif
+
   private:
     [[nodiscard]] virtual std::shared_ptr<atom> create_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {}) { return std::make_shared<atom>(pred, is_fact, utils::TRUE_lit, std::move(args)); }
 
@@ -405,6 +443,10 @@ namespace riddle
     std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the core..
     std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the core..
     std::vector<std::unique_ptr<compilation_unit>> cus;                               // the compilation units read by the core..
+
+#ifdef COMPUTE_NAMES
+    std::unordered_map<const item *, const std::string> expr_names; // the names of the expressions..
+#endif
   };
 
   inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }

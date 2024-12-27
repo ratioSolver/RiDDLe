@@ -26,7 +26,8 @@ namespace riddle
         cu->refine(*this);
         cu->refine_predicates(*this);
         cu->execute(*this, *this);
-        cus.push_back(std::move(cu));
+        cus.push_back(std::move(cu)); // add the compilation unit to the list of compilation units
+        RECOMPUTE_NAMES();
     }
 
     void core::read(const std::vector<std::string> &files)
@@ -51,7 +52,8 @@ namespace riddle
         for (auto &cu : c_cus)
             cu->execute(*this, *this);
 
-        cus.insert(cus.end(), std::make_move_iterator(c_cus.begin()), std::make_move_iterator(c_cus.end()));
+        cus.insert(cus.end(), std::make_move_iterator(c_cus.begin()), std::make_move_iterator(c_cus.end())); // add the compilation units to the list of compilation units
+        RECOMPUTE_NAMES();
     }
 
     std::shared_ptr<bool_item> core::new_bool(const bool value) { return std::make_shared<bool_item>(static_cast<bool_type &>(get_type(bool_kw)), value ? utils::TRUE_lit : utils::FALSE_lit); }

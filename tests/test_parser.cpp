@@ -50,6 +50,12 @@ void test_class_declaration()
     core.read("class A { int a; };");
 }
 
+void test_class_inheritance()
+{
+    test_core core;
+    core.read("class A { int a; }; class B : A { int b; };");
+}
+
 void test_field_declaration()
 {
     test_core core;
@@ -71,6 +77,7 @@ void test_enum_declaration()
 int main()
 {
     test_class_declaration();
+    test_class_inheritance();
     test_field_declaration();
     test_method_declaration();
     test_enum_declaration();
