@@ -44,7 +44,7 @@ namespace riddle
   class enum_declaration final : public type_declaration
   {
   public:
-    enum_declaration(const id_token &&name, std::vector<string_token> &&values, std::vector<std::vector<id_token>> &&enum_refs) : name(std::move(name)), values(std::move(values)), enum_refs(std::move(enum_refs)) {}
+    enum_declaration(id_token &&name, std::vector<string_token> &&values, std::vector<std::vector<id_token>> &&enum_refs) : name(std::move(name)), values(std::move(values)), enum_refs(std::move(enum_refs)) {}
 
   private:
     void declare(scope &scp) const override;
@@ -76,15 +76,14 @@ namespace riddle
     friend class class_declaration;
 
   public:
-    constructor_declaration(std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<id_token> &&names, std::vector<std::vector<std::unique_ptr<expression>>> &&args, std::vector<std::unique_ptr<statement>> &&stmts) : params(std::move(params)), names(std::move(names)), args(std::move(args)), stmts(std::move(stmts)) {}
+    constructor_declaration(std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> &&inits, std::vector<std::unique_ptr<statement>> &&stmts) : params(std::move(params)), inits(std::move(inits)), stmts(std::move(stmts)) {}
 
   private:
     void refine(scope &scp) const;
 
   private:
     std::vector<std::pair<std::vector<id_token>, id_token>> params;
-    std::vector<id_token> names;
-    std::vector<std::vector<std::unique_ptr<expression>>> args;
+    std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> inits;
     std::vector<std::unique_ptr<statement>> stmts;
   };
 
@@ -94,7 +93,7 @@ namespace riddle
     friend class class_declaration;
 
   public:
-    method_declaration(std::vector<id_token> &&rt, const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : rt(std::move(rt)), name(std::move(name)), params(std::move(params)), stmts(std::move(stmts)) {}
+    method_declaration(std::vector<id_token> &&rt, id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::unique_ptr<statement>> &&stmts) : rt(std::move(rt)), name(std::move(name)), params(std::move(params)), stmts(std::move(stmts)) {}
 
   private:
     void refine(scope &scp) const;
@@ -112,7 +111,7 @@ namespace riddle
     friend class class_declaration;
 
   public:
-    predicate_declaration(const id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_predicates, std::vector<std::unique_ptr<statement>> &&body) : name(std::move(name)), params(std::move(params)), base_predicates(std::move(base_predicates)), body(std::move(body)) {}
+    predicate_declaration(id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_predicates, std::vector<std::unique_ptr<statement>> &&body) : name(std::move(name)), params(std::move(params)), base_predicates(std::move(base_predicates)), body(std::move(body)) {}
 
   private:
     void declare(scope &scp) const;
@@ -128,7 +127,7 @@ namespace riddle
   class class_declaration final : public type_declaration
   {
   public:
-    class_declaration(const id_token &&name, std::vector<std::vector<id_token>> &&base_classes, std::vector<std::unique_ptr<field_declaration>> &&fields, std::vector<std::unique_ptr<constructor_declaration>> &&constructors, std::vector<std::unique_ptr<method_declaration>> &&methods, std::vector<std::unique_ptr<predicate_declaration>> &&predicates, std::vector<std::unique_ptr<type_declaration>> &&types) : name(std::move(name)), base_classes(std::move(base_classes)), fields(std::move(fields)), constructors(std::move(constructors)), methods(std::move(methods)), predicates(std::move(predicates)), types(std::move(types)) {}
+    class_declaration(id_token &&name, std::vector<std::vector<id_token>> &&base_classes, std::vector<std::unique_ptr<field_declaration>> &&fields, std::vector<std::unique_ptr<constructor_declaration>> &&constructors, std::vector<std::unique_ptr<method_declaration>> &&methods, std::vector<std::unique_ptr<predicate_declaration>> &&predicates, std::vector<std::unique_ptr<type_declaration>> &&types) : name(std::move(name)), base_classes(std::move(base_classes)), fields(std::move(fields)), constructors(std::move(constructors)), methods(std::move(methods)), predicates(std::move(predicates)), types(std::move(types)) {}
 
   private:
     void declare(scope &scp) const override;

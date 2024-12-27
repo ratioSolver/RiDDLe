@@ -74,6 +74,12 @@ void test_enum_declaration()
     core.read("enum E { \"a\", \"b\", \"c\" };");
 }
 
+void test_predicate_declaration()
+{
+    test_core core;
+    core.read("predicate p(int a, int b);");
+}
+
 int main()
 {
     test_class_declaration();
@@ -81,5 +87,6 @@ int main()
     test_field_declaration();
     test_method_declaration();
     test_enum_declaration();
+    test_predicate_declaration();
     return 0;
 }

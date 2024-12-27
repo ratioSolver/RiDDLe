@@ -95,7 +95,7 @@ namespace riddle
         if (!match(ID))
             error("Expected identifier after `enum` keyword");
 
-        auto id = static_cast<const id_token &>(*tokens.at(pos - 1));
+        id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
         std::vector<string_token> values;             // the values of the enum..
         std::vector<std::vector<id_token>> enum_refs; // the enum references..
 
@@ -110,7 +110,7 @@ namespace riddle
                     {
                         if (!match(String))
                             error("Expected string literal");
-                        values.emplace_back(static_cast<const string_token &>(*tokens.at(pos - 1)));
+                        values.emplace_back(std::string(static_cast<const string_token &>(*tokens.at(pos - 1)).value), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                     } while (match(COMMA));
                     if (!match(RBRACE))
                         error("Expected `}` after string literals");
@@ -119,12 +119,12 @@ namespace riddle
             case ID:
             {
                 std::vector<id_token> refs;
-                refs.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                refs.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                 while (match(DOT))
                 {
                     if (!match(ID))
                         error("Expected identifier after `.`");
-                    refs.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                    refs.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                 }
                 enum_refs.emplace_back(std::move(refs));
                 break;
@@ -155,7 +155,7 @@ namespace riddle
         if (!match(ID))
             error("Expected identifier after `class` keyword");
 
-        auto id = static_cast<const id_token &>(*tokens.at(pos - 1));
+        id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
         if (match(COLON))
             do
@@ -165,7 +165,7 @@ namespace riddle
                 {
                     if (!match(ID))
                         error("Expected identifier after `:`");
-                    base_class.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                    base_class.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                 } while (match(DOT));
                 base_classes.emplace_back(std::move(base_class));
             } while (match(COMMA));
@@ -244,12 +244,11 @@ namespace riddle
             error("Expected `;` after class declaration");
 
         if (constructors.empty())
-        {
+        { // default constructor..
             std::vector<std::pair<std::vector<id_token>, id_token>> params;
-            std::vector<id_token> names;
-            std::vector<std::vector<std::unique_ptr<expression>>> args;
+            std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> inits;
             std::vector<std::unique_ptr<statement>> stmts;
-            constructors.emplace_back(std::make_unique<constructor_declaration>(std::move(params), std::move(names), std::move(args), std::move(stmts)));
+            constructors.emplace_back(std::make_unique<constructor_declaration>(std::move(params), std::move(inits), std::move(stmts)));
         }
 
         return std::make_unique<class_declaration>(std::move(id), std::move(base_classes), std::move(fields), std::move(constructors), std::move(methods), std::move(predicates), std::move(types));
@@ -285,7 +284,7 @@ namespace riddle
                     error("Expected identifier after `.`");
             if (!match(ID))
                 error("Expected identifier after `.`");
-            tp.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+            tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             pos = c_pos;
             break;
         }
@@ -297,7 +296,9 @@ namespace riddle
         {
             if (!match(ID))
                 error("Expected identifier");
-            id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+            id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
             if (match(EQ))
                 fields.emplace_back(std::move(id), parse_expression());
             else if (match(LPAREN))
@@ -312,7 +313,10 @@ namespace riddle
                     if (!match(RPAREN))
                         error("Expected `)` after arguments");
                 }
-                std::vector<id_token> f_tp = tp;
+                std::vector<id_token> f_tp;
+                f_tp.reserve(tp.size());
+                for (const auto &t : tp)
+                    f_tp.emplace_back(std::string(t.id), t.line, t.start_pos, t.end_pos);
                 fields.emplace_back(std::move(id), std::make_unique<constructor_expression>(std::move(f_tp), std::move(args)));
             }
             else
@@ -358,7 +362,7 @@ namespace riddle
                     error("Expected identifier after `.`");
             if (!match(ID))
                 error("Expected identifier after `.`");
-            rt.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+            rt.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             pos = c_pos;
             break;
         }
@@ -366,16 +370,16 @@ namespace riddle
             error("Expected type");
         }
 
-        if (!match(ID))
+        if (!match(ID)) // method name..
             error("Expected identifier");
 
-        id_token name = static_cast<const id_token &>(*tokens.at(pos - 1));
+        id_token name(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
         if (!match(LPAREN))
             error("Expected `(` after method name");
 
         if (!match(RPAREN))
-        {
+        { // we parse the parameters..
             do
             {
                 std::vector<id_token> tp;
@@ -404,7 +408,7 @@ namespace riddle
                             error("Expected identifier after `.`");
                     if (!match(ID))
                         error("Expected identifier after `.`");
-                    tp.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                     pos = c_pos;
                     break;
                 }
@@ -414,7 +418,7 @@ namespace riddle
 
                 if (!match(ID))
                     error("Expected identifier");
-                params.emplace_back(std::move(tp), static_cast<const id_token &>(*tokens.at(pos - 1)));
+                params.emplace_back(std::move(tp), id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
             } while (match(COMMA));
 
             if (!match(RPAREN))
@@ -432,12 +436,180 @@ namespace riddle
 
     std::unique_ptr<constructor_declaration> parser::parse_constructor_declaration()
     {
-        throw std::runtime_error("Not implemented");
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> inits;
+        std::vector<std::unique_ptr<statement>> stmts;
+
+        if (!match(ID)) // constructor name..
+            error("Expected identifier");
+
+        if (!match(LPAREN))
+            error("Expected `(` after constructor name");
+
+        if (!match(RPAREN))
+        { // we parse the parameters..
+            do
+            {
+                std::vector<id_token> tp;
+                switch (tokens.at(pos++)->sym)
+                {
+                case BOOL:
+                    tp.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case INT:
+                    tp.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case REAL:
+                    tp.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case TIME:
+                    tp.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case STRING:
+                    tp.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case ID:
+                {
+                    size_t c_pos = pos++;
+                    while (match(DOT))
+                        if (!match(ID))
+                            error("Expected identifier after `.`");
+                    if (!match(ID))
+                        error("Expected identifier after `.`");
+                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    pos = c_pos;
+                    break;
+                }
+                default:
+                    error("Expected type");
+                }
+
+                if (!match(ID))
+                    error("Expected identifier");
+                params.emplace_back(std::move(tp), id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            } while (match(COMMA));
+
+            if (!match(RPAREN))
+                error("Expected `)` after parameters");
+        }
+
+        if (match(COLON))
+            do // we parse the initializations..
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                if (!match(LPAREN))
+                    error("Expected `(` after identifier");
+
+                std::vector<std::unique_ptr<expression>> args;
+                if (!match(RPAREN))
+                {
+                    do
+                    {
+                        args.emplace_back(parse_expression());
+                    } while (match(COMMA));
+                    if (!match(RPAREN))
+                        error("Expected `)` after arguments");
+                }
+
+                inits.emplace_back(std::move(id), std::move(args));
+            } while (match(COMMA));
+
+        if (!match(LBRACE))
+            error("Expected `{` after constructor declaration");
+
+        while (!match(RBRACE))
+            stmts.emplace_back(parse_statement());
+
+        return std::make_unique<constructor_declaration>(std::move(params), std::move(inits), std::move(stmts));
     }
 
     std::unique_ptr<predicate_declaration> parser::parse_predicate_declaration()
     {
-        throw std::runtime_error("Not implemented");
+        if (!match(PREDICATE))
+            error("Expected `predicate` keyword");
+
+        if (!match(ID)) // predicate name..
+            error("Expected identifier after `predicate` keyword");
+
+        id_token name(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::vector<id_token>> base_predicates;
+        std::vector<std::unique_ptr<statement>> body;
+
+        if (!match(LPAREN))
+            error("Expected `(` after predicate name");
+
+        if (!match(RPAREN))
+        { // we parse the parameters..
+            do
+            {
+                std::vector<id_token> tp;
+                switch (tokens.at(pos++)->sym)
+                {
+                case BOOL:
+                    tp.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case INT:
+                    tp.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case REAL:
+                    tp.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case TIME:
+                    tp.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case STRING:
+                    tp.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case ID:
+                {
+                    size_t c_pos = pos++;
+                    while (match(DOT))
+                        if (!match(ID))
+                            error("Expected identifier after `.`");
+                    if (!match(ID))
+                        error("Expected identifier after `.`");
+                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    pos = c_pos;
+                    break;
+                }
+                default:
+                    error("Expected type");
+                }
+
+                if (!match(ID))
+                    error("Expected identifier");
+                params.emplace_back(std::move(tp), id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            } while (match(COMMA));
+
+            if (!match(RPAREN))
+                error("Expected `)` after parameters");
+        }
+
+        if (match(COLON))
+            do // we parse the base predicates..
+            {
+                std::vector<id_token> base_predicate;
+                do
+                {
+                    if (!match(ID))
+                        error("Expected identifier");
+                    base_predicate.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                } while (match(DOT));
+                base_predicates.emplace_back(std::move(base_predicate));
+            } while (match(COMMA));
+
+        if (!match(LBRACE))
+            error("Expected `{` after predicate declaration");
+
+        while (!match(RBRACE))
+            body.emplace_back(parse_statement());
+
+        return std::make_unique<predicate_declaration>(std::move(name), std::move(params), std::move(base_predicates), std::move(body));
     }
 
     std::unique_ptr<statement> parser::parse_statement()
@@ -455,7 +627,9 @@ namespace riddle
             {
                 if (!match(ID))
                     error("Expected identifier");
-                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
                 if (match(EQ))
                     fields.emplace_back(std::move(id), parse_expression());
                 else
@@ -478,7 +652,9 @@ namespace riddle
             {
                 if (!match(ID))
                     error("Expected identifier");
-                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
                 if (match(EQ))
                     fields.emplace_back(std::move(id), parse_expression());
                 else
@@ -501,7 +677,9 @@ namespace riddle
             {
                 if (!match(ID))
                     error("Expected identifier");
-                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
                 if (match(EQ))
                     fields.emplace_back(std::move(id), parse_expression());
                 else
@@ -524,7 +702,9 @@ namespace riddle
             {
                 if (!match(ID))
                     error("Expected identifier");
-                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
                 if (match(EQ))
                     fields.emplace_back(std::move(id), parse_expression());
                 else
@@ -547,7 +727,9 @@ namespace riddle
             {
                 if (!match(ID))
                     error("Expected identifier");
-                id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
                 if (match(EQ))
                     fields.emplace_back(std::move(id), parse_expression());
                 else
@@ -576,14 +758,15 @@ namespace riddle
                 pos = c_pos;
                 if (!match(ID))
                     error("Expected identifier");
-
-                field_type.emplace_back(static_cast<const id_token &>(*tokens.at(pos++)));
+                field_type.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
                 do
                 {
                     if (!match(ID))
                         error("Expected identifier");
-                    id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+
+                    id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
                     if (match(EQ))
                         fields.emplace_back(std::move(id), parse_expression());
                     else
@@ -598,12 +781,12 @@ namespace riddle
             case EQ: // an assignment..
             {
                 std::vector<id_token> object_id;
-                object_id.emplace_back(static_cast<const id_token &>(*tokens.at(c_pos)));
+                object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(c_pos)).id), tokens.at(c_pos)->line, tokens.at(c_pos)->start_pos, tokens.at(c_pos)->end_pos);
                 while (match(DOT))
                 {
                     if (!match(ID))
                         error("Expected identifier after `.`");
-                    object_id.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                    object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                 }
                 if (!match(EQ))
                     error("Expected `=` after object identifier");
@@ -651,13 +834,13 @@ namespace riddle
             {
                 if (!match(ID))
                     error("Expected identifier");
-                enum_type.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                enum_type.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             } while (match(DOT));
 
             if (!match(ID))
                 error("Expected identifier");
 
-            id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+            id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
             if (!match(RPAREN))
                 error("Expected `)` after for loop");
@@ -687,7 +870,7 @@ namespace riddle
             if (!match(ID))
                 error("Expected identifier");
 
-            id_token name = static_cast<const id_token &>(*tokens.at(pos - 1)); // the name of the atom..
+            id_token name(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
             if (!match(EQ))
                 error("Expected `=` after atom name");
@@ -699,7 +882,7 @@ namespace riddle
             {
                 if (!match(ID))
                     error("Expected identifier");
-                tau.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                tau.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             } while (match(DOT));
 
             tau.pop_back();
@@ -715,7 +898,7 @@ namespace riddle
                     if (!match(ID))
                         error("Expected identifier");
 
-                    id_token id = static_cast<const id_token &>(*tokens.at(pos - 1));
+                    id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
                     if (match(COLON))
                         args.emplace_back(std::move(id), parse_expression());
@@ -816,12 +999,12 @@ namespace riddle
         case ID:
         {
             std::vector<id_token> object_id;
-            object_id.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+            object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             while (match(DOT))
             {
                 if (!match(ID))
                     error("Expected identifier after `.`");
-                object_id.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             }
             if (match(LPAREN))
             { // call expression..
@@ -846,12 +1029,12 @@ namespace riddle
             std::vector<id_token> type_id;
             if (!match(ID))
                 error("Expected identifier after `new`");
-            type_id.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+            type_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             while (match(DOT))
             {
                 if (!match(ID))
                     error("Expected identifier after `.`");
-                type_id.emplace_back(static_cast<const id_token &>(*tokens.at(pos - 1)));
+                type_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             }
             if (!match(LPAREN))
                 error("Expected `(` after type");

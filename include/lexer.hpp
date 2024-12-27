@@ -113,6 +113,7 @@ namespace riddle
   {
   public:
     id_token(std::string &&id, size_t line, size_t start_pos, size_t end_pos) noexcept : token(ID, line, start_pos, end_pos), id(std::move(id)) {}
+    id_token(id_token &&) noexcept = default; // Move constructor
 
     const std::string id; // The identifier string
   };
