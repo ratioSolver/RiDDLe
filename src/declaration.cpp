@@ -122,8 +122,8 @@ namespace riddle
         auto &pred = static_cast<predicate &>(scp.get_predicate(name.id)); // we retrieve the predicate.. we know it exists, because we declared it, so we can safely cast it..
         for (const auto &par : params)
         {
-            auto *c_tp = &scp.get_type(par.second.id);
-            for (size_t i = 0; i < par.first.size(); ++i)
+            auto *c_tp = &scp.get_type(par.first[0].id);
+            for (size_t i = 1; i < par.first.size(); ++i)
                 if (auto ct = dynamic_cast<component_type *>(c_tp))
                     c_tp = &ct->get_type(par.first[i].id);
                 else

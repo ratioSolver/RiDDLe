@@ -77,7 +77,6 @@ namespace riddle
             case Real:
             case String:
             { // statement..
-                pos--;
                 statements.emplace_back(parse_statement());
                 break;
             }
@@ -207,18 +206,18 @@ namespace riddle
                 }
                 else
                 {
-                    size_t c_pos = pos++;
+                    size_t c_pos = pos;
                     while (match(DOT))
                         if (!match(ID))
                             error("Expected identifier after `.`");
                     if (match(LPAREN))
                     { // method declaration..
-                        pos = c_pos - 1;
+                        pos = c_pos;
                         methods.emplace_back(parse_method_declaration());
                     }
                     else
                     { // field declaration..
-                        pos = c_pos - 1;
+                        pos = c_pos;
                         fields.emplace_back(parse_field_declaration());
                     }
                 }
@@ -278,14 +277,12 @@ namespace riddle
             break;
         case ID:
         {
-            size_t c_pos = pos++;
             while (match(DOT))
                 if (!match(ID))
                     error("Expected identifier after `.`");
             if (!match(ID))
                 error("Expected identifier after `.`");
             tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
-            pos = c_pos;
             break;
         }
         default:
@@ -356,14 +353,12 @@ namespace riddle
             break;
         case ID:
         {
-            size_t c_pos = pos++;
             while (match(DOT))
                 if (!match(ID))
                     error("Expected identifier after `.`");
             if (!match(ID))
                 error("Expected identifier after `.`");
             rt.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
-            pos = c_pos;
             break;
         }
         default:
@@ -402,14 +397,12 @@ namespace riddle
                     break;
                 case ID:
                 {
-                    size_t c_pos = pos++;
                     while (match(DOT))
                         if (!match(ID))
                             error("Expected identifier after `.`");
                     if (!match(ID))
                         error("Expected identifier after `.`");
                     tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
-                    pos = c_pos;
                     break;
                 }
                 default:
@@ -470,14 +463,12 @@ namespace riddle
                     break;
                 case ID:
                 {
-                    size_t c_pos = pos++;
                     while (match(DOT))
                         if (!match(ID))
                             error("Expected identifier after `.`");
                     if (!match(ID))
                         error("Expected identifier after `.`");
                     tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
-                    pos = c_pos;
                     break;
                 }
                 default:
@@ -567,14 +558,12 @@ namespace riddle
                     break;
                 case ID:
                 {
-                    size_t c_pos = pos++;
                     while (match(DOT))
                         if (!match(ID))
                             error("Expected identifier after `.`");
                     if (!match(ID))
                         error("Expected identifier after `.`");
                     tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
-                    pos = c_pos;
                     break;
                 }
                 default:
@@ -743,7 +732,7 @@ namespace riddle
         }
         case ID:
         { // either a local field, an assignment or an expression..
-            size_t c_pos = pos++;
+            size_t c_pos = pos;
             while (match(DOT))
                 if (!match(ID))
                     error("Expected identifier after `.`");
@@ -752,13 +741,19 @@ namespace riddle
             {
             case ID: // a local field..
             {
+                pos = c_pos - 1;
                 std::vector<id_token> field_type;
                 std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
 
-                pos = c_pos;
                 if (!match(ID))
                     error("Expected identifier");
                 field_type.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                while (match(DOT))
+                    if (match(ID))
+                        field_type.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    else
+                        error("Expected identifier after `.`");
 
                 do
                 {
@@ -780,6 +775,7 @@ namespace riddle
             }
             case EQ: // an assignment..
             {
+                pos = c_pos - 1;
                 std::vector<id_token> object_id;
                 object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(c_pos)).id), tokens.at(c_pos)->line, tokens.at(c_pos)->start_pos, tokens.at(c_pos)->end_pos);
                 while (match(DOT))
@@ -788,13 +784,28 @@ namespace riddle
                         error("Expected identifier after `.`");
                     object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                 }
+
+                id_token field_id = std::move(object_id.back());
+                object_id.pop_back();
+
                 if (!match(EQ))
                     error("Expected `=` after object identifier");
-                return std::make_unique<assignment_statement>(std::move(object_id), id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos), parse_expression());
+
+                auto xpr = parse_expression();
+
+                if (!match(SEMICOLON))
+                    error("Expected `;` after assignment");
+
+                return std::make_unique<assignment_statement>(std::move(object_id), std::move(field_id), std::move(xpr));
             }
             default: // an expression..
-                pos = c_pos;
-                return std::make_unique<expression_statement>(parse_expression());
+                pos = c_pos - 1;
+                auto xpr = parse_expression();
+
+                if (!match(SEMICOLON))
+                    error("Expected `;` after expression");
+
+                return std::make_unique<expression_statement>(std::move(xpr));
             }
         }
         case LBRACE:
@@ -885,8 +896,8 @@ namespace riddle
                 tau.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             } while (match(DOT));
 
+            auto predicate_name = std::move(tau.back());
             tau.pop_back();
-            auto predicate_name = id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
             if (!match(LPAREN))
                 error("Expected `(` after predicate name");

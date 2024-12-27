@@ -77,7 +77,7 @@ void test_enum_declaration()
 void test_predicate_declaration()
 {
     test_core core;
-    core.read("predicate p(int a, int b);");
+    core.read("predicate p(int a, int b) { a < b; }");
 }
 
 int main()
