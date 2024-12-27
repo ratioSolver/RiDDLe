@@ -62,6 +62,12 @@ void test_field_declaration()
     core.read("class A { int a = 0; };");
 }
 
+void test_constructor_declaration()
+{
+    test_core core;
+    core.read("class A { A() { } };");
+}
+
 void test_method_declaration()
 {
     test_core core;
@@ -85,6 +91,7 @@ int main()
     test_class_declaration();
     test_class_inheritance();
     test_field_declaration();
+    test_constructor_declaration();
     test_method_declaration();
     test_enum_declaration();
     test_predicate_declaration();
