@@ -2,7 +2,7 @@
 
 namespace riddle
 {
-    method::method(scope &scp, std::optional<std::reference_wrapper<type>> return_type, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) noexcept : scope(scp.get_core(), scp), return_type(return_type), body(std::move(body))
+    method::method(scope &scp, std::optional<std::reference_wrapper<type>> return_type, std::string_view name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp), return_type(return_type), name(name), body(body)
     {
         for (auto &arg : args)
         {

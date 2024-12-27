@@ -257,9 +257,30 @@ namespace riddle
     void add_constructor(std::unique_ptr<constructor> ctr);
 
     /**
+     * @brief Adds a method to this component type.
+     *
+     * This function takes ownership of the provided unique pointer to a method
+     * and adds it to the internal collection of methods.
+     *
+     * @param mthd A unique pointer to the method to be added.
+     */
+    void add_method(std::unique_ptr<method> mthd);
+
+    /**
+     * @brief Adds a predicate to this component type.
+     *
+     * This function takes ownership of the provided predicate and adds it to the
+     * internal collection of predicates.
+     *
+     * @param pred A unique pointer to the predicate to be added.
+     */
+    void add_predicate(std::unique_ptr<predicate> pred);
+
+    /**
      * @brief Adds a type to this component type.
      *
-     * This function adds a type to the collection of types.
+     * This function takes ownership of the provided type and adds it to the
+     * internal collection of types.
      *
      * @param tp A unique pointer to the type to be added.
      */
@@ -286,9 +307,10 @@ namespace riddle
   class predicate : public scope, public type
   {
     friend class core;
+    friend class predicate_declaration;
 
   public:
-    predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args = {}, std::vector<std::unique_ptr<statement>> &&body = {}) noexcept;
+    predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args = {}, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
     virtual ~predicate() = default;
 
     [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const noexcept { return parents; }
@@ -299,7 +321,7 @@ namespace riddle
   private:
     std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
     std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
-    std::vector<std::unique_ptr<statement>> body;           // the body of the predicate..
+    const std::vector<std::unique_ptr<statement>> &body;    // the body of the predicate..
     std::vector<std::shared_ptr<atom>> atoms;               // the atoms of the predicate..
   };
 } // namespace riddle

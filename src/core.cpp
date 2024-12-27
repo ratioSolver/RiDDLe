@@ -121,6 +121,29 @@ namespace riddle
         throw std::out_of_range("item `" + std::string(name) + "` not found");
     }
 
+    void core::add_method(std::unique_ptr<method> mthd)
+    {
+        std::vector<std::reference_wrapper<const type>> args;
+        for (const auto &arg : mthd->get_args())
+            args.push_back(mthd->get_field(arg).get_type());
+        try
+        { // check if the method already exists
+            get_method(mthd->get_name(), args);
+            throw std::invalid_argument("method `" + mthd->get_name() + "` already exists");
+        }
+        catch (const std::out_of_range &)
+        {
+            methods[mthd->get_name()].push_back(std::move(mthd));
+        }
+    }
+
+    void core::add_predicate(std::unique_ptr<predicate> pred)
+    {
+        std::string name = pred->get_name();
+        if (!predicates.emplace(name, std::move(pred)).second)
+            throw std::invalid_argument("predicate `" + name + "` already exists");
+    }
+
     void core::add_type(std::unique_ptr<type> t)
     {
         std::string name = t->get_name();

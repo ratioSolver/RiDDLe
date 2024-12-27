@@ -9,7 +9,16 @@ namespace riddle
   class method : public scope
   {
   public:
-    method(scope &scp, std::optional<std::reference_wrapper<type>> return_type, std::vector<std::unique_ptr<field>> &&args = {}, std::vector<std::unique_ptr<statement>> &&body = {}) noexcept;
+    method(scope &scp, std::optional<std::reference_wrapper<type>> return_type, std::string_view name, std::vector<std::unique_ptr<field>> &&args = {}, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
+
+    /**
+     * @brief Retrieves the name of the method.
+     *
+     * This function returns a constant reference to the name of the method.
+     *
+     * @return const std::string& A constant reference to the name of the method.
+     */
+    [[nodiscard]] const std::string &get_name() const noexcept { return name; }
 
     /**
      * @brief Retrieves the arguments.
@@ -35,7 +44,8 @@ namespace riddle
 
   private:
     const std::optional<std::reference_wrapper<type>> return_type; // The return type of the method.
+    const std::string name;                                        // The name of the method.
     std::vector<std::string> args;                                 // The names of the arguments.
-    const std::vector<std::unique_ptr<statement>> body;            // The body of the method.
+    const std::vector<std::unique_ptr<statement>> &body;           // The body of the method.
   };
 } // namespace riddle

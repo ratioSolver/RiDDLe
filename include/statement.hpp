@@ -7,6 +7,8 @@ namespace riddle
   class statement
   {
   public:
+    statement() = default;
+    statement(const statement &) = delete;
     virtual ~statement() = default;
 
     virtual void execute(const scope &scp, env &ctx) const = 0;

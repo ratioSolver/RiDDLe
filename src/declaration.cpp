@@ -73,16 +73,65 @@ namespace riddle
 
     void method_declaration::refine(scope &scp) const
     {
-        throw std::runtime_error("Not implemented");
+        std::vector<std::unique_ptr<field>> args; // the parameters of the method..
+        args.reserve(this->params.size());
+        for (const auto &param : this->params)
+        {
+            auto *c_tp = &scp.get_type(param.second.id);
+            for (size_t i = 0; i < param.first.size(); ++i)
+                if (auto ct = dynamic_cast<component_type *>(c_tp))
+                    c_tp = &ct->get_type(param.first[i].id);
+                else
+                    throw std::runtime_error("Invalid type reference");
+            args.emplace_back(std::make_unique<field>(*c_tp, std::string(param.second.id), nullptr));
+        }
+
+        std::optional<std::reference_wrapper<type>> rt;
+        if (!this->rt.empty())
+        {
+            auto *c_tp = &scp.get_type(this->rt[0].id);
+            for (size_t i = 1; i < this->rt.size(); ++i)
+                if (auto ct = dynamic_cast<component_type *>(c_tp))
+                    c_tp = &ct->get_type(this->rt[i].id);
+                else
+                    throw std::runtime_error("Invalid type reference");
+            rt = *c_tp;
+        }
+
+        auto mthd = std::make_unique<method>(scp, rt, name.id, std::move(args), stmts);
+        if (auto ct = dynamic_cast<component_type *>(&scp))
+            ct->add_method(std::move(mthd));
+        else if (auto cr = dynamic_cast<core *>(&scp))
+            cr->add_method(std::move(mthd));
+        else
+            throw std::runtime_error("Invalid scope type");
     }
 
     void predicate_declaration::declare(scope &scp) const
     {
-        throw std::runtime_error("Not implemented");
+        auto pred = std::make_unique<predicate>(scp, std::string(name.id), std::vector<std::unique_ptr<field>>(), body);
+        if (auto ct = dynamic_cast<component_type *>(&scp))
+            ct->add_predicate(std::move(pred));
+        else if (auto cr = dynamic_cast<core *>(&scp))
+            cr->add_predicate(std::move(pred));
+        else
+            throw std::runtime_error("Invalid scope type");
     }
     void predicate_declaration::refine(scope &scp) const
     {
-        throw std::runtime_error("Not implemented");
+        auto &pred = static_cast<predicate &>(scp.get_predicate(name.id)); // we retrieve the predicate.. we know it exists, because we declared it, so we can safely cast it..
+        for (const auto &par : params)
+        {
+            auto *c_tp = &scp.get_type(par.second.id);
+            for (size_t i = 0; i < par.first.size(); ++i)
+                if (auto ct = dynamic_cast<component_type *>(c_tp))
+                    c_tp = &ct->get_type(par.first[i].id);
+                else
+                    throw std::runtime_error("Invalid type reference");
+            auto arg = std::make_unique<field>(*c_tp, std::string(par.second.id), nullptr);
+            pred.args.push_back(*arg);
+            pred.add_field(std::move(arg));
+        }
     }
 
     void class_declaration::declare(scope &scp) const

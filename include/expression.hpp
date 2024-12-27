@@ -12,6 +12,7 @@ namespace riddle
   {
   public:
     expression() = default;
+    expression(const expression &) = delete;
     virtual ~expression() = default;
 
     /**

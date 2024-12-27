@@ -205,6 +205,29 @@ namespace riddle
         constructors.emplace_back(std::move(ctr));
     }
 
+    void component_type::add_method(std::unique_ptr<method> mthd)
+    {
+        std::vector<std::reference_wrapper<const type>> args;
+        for (const auto &arg : mthd->get_args())
+            args.push_back(mthd->get_field(arg).get_type());
+        try
+        { // check if the method already exists
+            get_method(mthd->get_name(), args);
+            throw std::invalid_argument("method `" + mthd->get_name() + "` already exists");
+        }
+        catch (const std::out_of_range &)
+        {
+            methods[mthd->get_name()].push_back(std::move(mthd));
+        }
+    }
+
+    void component_type::add_predicate(std::unique_ptr<predicate> pred)
+    {
+        std::string name = pred->get_name();
+        if (!predicates.emplace(name, std::move(pred)).second)
+            throw std::invalid_argument("predicate " + name + " already exists");
+    }
+
     void component_type::add_type(std::unique_ptr<type> t)
     {
         std::string name = t->get_name();
@@ -214,7 +237,7 @@ namespace riddle
 
     std::shared_ptr<item> component_type::new_instance() { return std::make_shared<component>(static_cast<component_type &>(*this)); }
 
-    predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, std::vector<std::unique_ptr<statement>> &&body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(std::move(body)) {}
+    predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
 
     std::shared_ptr<item> predicate::new_instance() { return std::make_shared<item>(static_cast<predicate &>(*this)); }
 } // namespace riddle

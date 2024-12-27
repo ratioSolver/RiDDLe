@@ -368,9 +368,30 @@ namespace riddle
 
   protected:
     /**
+     * @brief Adds a method to this RiDDLe core.
+     *
+     * This function takes ownership of the provided unique pointer to a method
+     * and adds it to the internal collection of methods.
+     *
+     * @param mthd A unique pointer to the method to be added.
+     */
+    void add_method(std::unique_ptr<method> mthd);
+
+    /**
+     * @brief Adds a predicate to this RiDDLe core.
+     *
+     * This function takes ownership of the provided predicate and adds it to the
+     * internal collection of predicates.
+     *
+     * @param pred A unique pointer to the predicate to be added.
+     */
+    void add_predicate(std::unique_ptr<predicate> pred);
+
+    /**
      * @brief Adds a type to this RiDDLe core.
      *
-     * This function adds a type to the collection of types.
+     * This function takes ownership of the provided type and adds it to the
+     * internal collection of types.
      *
      * @param tp A unique pointer to the type to be added.
      */
