@@ -1,9 +1,10 @@
-#include "constructor.hpp"
-#include "type.hpp"
+#include "core.hpp"
+#include "exceptions.hpp"
+#include <algorithm>
 
 namespace riddle
 {
-    constructor::constructor(scope &scp, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp), body(body)
+    constructor::constructor(scope &scp, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> &inits, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp), inits(inits), body(body)
     {
         for (auto &arg : args)
         {
@@ -12,7 +13,7 @@ namespace riddle
         }
     }
 
-    std::shared_ptr<item> constructor::invoke(std::vector<std::shared_ptr<item>> &&args) const
+    void constructor::invoke(std::shared_ptr<component> self, std::vector<std::shared_ptr<item>> &&args) const
     {
         if (args.size() != this->args.size())
             throw std::invalid_argument("invalid number of arguments");
@@ -20,15 +21,88 @@ namespace riddle
             if (!args[i]->get_type().is_assignable_from(get_field(this->args[i]).get_type()))
                 throw std::invalid_argument("invalid argument type");
 
-        auto &tp = static_cast<component_type &>(get_parent());                 // the type of the component..
-        auto instance = std::static_pointer_cast<component>(tp.new_instance()); // the new instance of the component..
-
-        env ctx(get_core(), *instance); // the context in which the constructor is invoked..
+        env ctx(get_core(), *self); // the context in which the constructor is invoked..
         for (size_t i = 0; i < args.size(); ++i)
             ctx.items.emplace(this->args[i], args[i]);
 
-        throw std::runtime_error("not implemented");
+        // we initialize the instance
+        for (const auto &init : inits)
+            if (auto f = fields.find(init.first.id); f != fields.end())
+            {
+                if (init.second.empty()) // we initialize the field with a new instance
+                    self->items.emplace(f->first, f->second->get_type().new_instance());
+                else
+                {
+                    std::vector<std::shared_ptr<item>> init_args;
+                    std::vector<std::reference_wrapper<const type>> argument_types;
 
-        return instance; // return the new instance of the component..
+                    for (const auto &arg : init.second)
+                        init_args.emplace_back(arg->evaluate(*this, ctx));
+                    for (const auto &arg : init_args)
+                        argument_types.emplace_back(arg->get_type());
+
+                    if (init_args.size() == 1 && argument_types[0].get().is_assignable_from(f->second->get_type()))
+                        self->items.emplace(f->first, init_args[0]); // we assign the argument to the field
+                    else
+                    { // we invoke the constructor of the field
+                        auto &ctp = static_cast<component_type &>(f->second->get_type());
+                        auto instance = std::dynamic_pointer_cast<component>(ctp.new_instance());
+                        ctp.get_constructor(argument_types).invoke(instance, std::move(init_args));
+                        self->items.emplace(f->first, instance);
+                    }
+                }
+            }
+            else
+            {
+                auto &tp = static_cast<component_type &>(get_parent());
+                if (auto st = std::find_if(tp.get_parents().begin(), tp.get_parents().end(), [&init](const auto &parent)
+                                           { return parent.get().get_name() == init.first.id; });
+                    st != tp.get_parents().end())
+                { // we invoke a supertype constructor
+                    std::vector<std::shared_ptr<item>> init_args;
+                    std::vector<std::reference_wrapper<const type>> argument_types;
+
+                    for (const auto &arg : init.second)
+                        init_args.emplace_back(arg->evaluate(*this, ctx));
+                    for (const auto &arg : init_args)
+                        argument_types.emplace_back(arg->get_type());
+
+                    st->get().get_constructor(argument_types).invoke(self, std::move(init_args));
+                }
+            }
+
+        // we initialize the uninitialized fields
+        for (const auto &[name, f] : fields)
+            if (!f->is_synthetic() && self->items.find(name) == self->items.end()) // the field is not initialized
+            {
+                if (f->get_expression())
+                { // initialize with an expression
+                    auto val = f->get_expression()->evaluate(*this, ctx);
+                    if (f->get_type().is_assignable_from(val->get_type()))
+                        self->items.emplace(name, val);
+                    else
+                        throw std::runtime_error("Invalid assignment");
+                }
+                else if (f->get_type().is_primitive()) // initialize with a default value
+                    self->items.emplace(name, f->get_type().new_instance());
+                else if (auto ct = dynamic_cast<component_type *>(&f->get_type()))
+                    switch (ct->get_instances().size())
+                    {
+                    case 0: // no instances
+                        throw inconsistency_exception();
+                    case 1: // only one instance
+                        self->items.emplace(name, *ct->get_instances().begin());
+                        break;
+                    default:
+                    { // multiple instances
+                        std::vector<std::reference_wrapper<utils::enum_val>> values;
+                        for (auto &inst : ct->get_instances())
+                            values.emplace_back(*inst);
+                        self->items.emplace(name, get_core().new_enum(*ct, std::move(values)));
+                    }
+                    }
+                else
+                    throw std::runtime_error("Invalid type reference");
+            }
     }
 } // namespace riddle

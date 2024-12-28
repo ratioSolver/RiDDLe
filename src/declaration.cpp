@@ -68,7 +68,7 @@ namespace riddle
         }
 
         auto tp = dynamic_cast<component_type *>(&scp);
-        tp->add_constructor(std::make_unique<constructor>(*tp, std::move(args), stmts));
+        tp->add_constructor(std::make_unique<constructor>(*tp, std::move(args), inits, stmts));
     }
 
     void method_declaration::refine(scope &scp) const
@@ -181,9 +181,9 @@ namespace riddle
         for (const auto &tp : types)
             tp->refine(ct);
 
-        // we refine the predicates..
+        // we declare the predicates..
         for (const auto &predicate : predicates)
-            predicate->refine(ct);
+            predicate->declare(ct);
     }
     void class_declaration::refine_predicates(scope &scp) const
     {

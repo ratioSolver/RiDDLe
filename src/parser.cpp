@@ -34,6 +34,7 @@ namespace riddle
             case TIME:
             case STRING:
             {
+                pos++;
                 if (!match(ID))
                     error("Expected identifier");
 
@@ -58,12 +59,12 @@ namespace riddle
                         error("Expected identifier after `.`");
                 if (match(LPAREN))
                 { // method declaration..
-                    pos = c_pos - 1;
+                    pos = c_pos;
                     methods.emplace_back(parse_method_declaration());
                 }
                 else
                 { // statement..
-                    pos = c_pos - 1;
+                    pos = c_pos;
                     statements.emplace_back(parse_statement());
                 }
                 break;
@@ -224,15 +225,19 @@ namespace riddle
                 break;
             }
             case ENUM:
+                pos--;
                 types.emplace_back(parse_enum_declaration());
                 break;
             case CLASS:
+                pos--;
                 types.emplace_back(parse_class_declaration());
                 break;
             case PREDICATE:
+                pos--;
                 predicates.emplace_back(parse_predicate_declaration());
                 break;
             case VOID:
+                pos--;
                 methods.emplace_back(parse_method_declaration());
                 break;
             default:
@@ -242,13 +247,8 @@ namespace riddle
         if (!match(SEMICOLON))
             error("Expected `;` after class declaration");
 
-        if (constructors.empty())
-        { // default constructor..
-            std::vector<std::pair<std::vector<id_token>, id_token>> params;
-            std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> inits;
-            std::vector<std::unique_ptr<statement>> stmts;
-            constructors.emplace_back(std::make_unique<constructor_declaration>(std::move(params), std::move(inits), std::move(stmts)));
-        }
+        if (constructors.empty()) // default constructor..
+            constructors.emplace_back(std::make_unique<constructor_declaration>(std::vector<std::pair<std::vector<id_token>, id_token>>(), std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>>(), std::vector<std::unique_ptr<statement>>()));
 
         return std::make_unique<class_declaration>(std::move(id), std::move(base_classes), std::move(fields), std::move(constructors), std::move(methods), std::move(predicates), std::move(types));
     }
@@ -928,7 +928,12 @@ namespace riddle
         }
         default:
             pos--;
-            return std::make_unique<expression_statement>(parse_expression());
+            auto xpr = parse_expression();
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after expression");
+
+            return std::make_unique<expression_statement>(std::move(xpr));
         }
     }
 
@@ -1077,14 +1082,16 @@ namespace riddle
             ((tokens.at(pos)->sym == LT || tokens.at(pos)->sym == LTEQ || tokens.at(pos)->sym == GTEQ || tokens.at(pos)->sym == GT) && 2 >= precedence) ||
             ((tokens.at(pos)->sym == PLUS || tokens.at(pos)->sym == MINUS) && 3 >= precedence) ||
             ((tokens.at(pos)->sym == STAR || tokens.at(pos)->sym == SLASH) && 4 >= precedence))
-            switch (tokens.at(pos++)->sym)
+            switch (tokens.at(pos)->sym)
             {
             case EQEQ:
                 assert(0 >= precedence);
+                pos++; // we parse the `==` operator..
                 expr = std::make_unique<eq_expression>(std::move(expr), parse_expression(1));
                 break;
             case BANGEQ:
                 assert(0 >= precedence);
+                pos++; // we parse the `!=` operator..
                 expr = std::make_unique<not_expression>(std::make_unique<eq_expression>(std::move(expr), parse_expression(1)));
                 break;
             case IMPLICATION:
@@ -1092,6 +1099,7 @@ namespace riddle
                 assert(1 >= precedence);
                 std::vector<std::unique_ptr<expression>> xprs;
                 xprs.emplace_back(std::make_unique<not_expression>(std::move(expr)));
+                pos++; // we parse the `=>` operator..
                 xprs.emplace_back(parse_expression(2));
                 expr = std::make_unique<or_expression>(std::move(xprs));
                 break;
@@ -1128,18 +1136,22 @@ namespace riddle
             }
             case LT:
                 assert(2 >= precedence);
+                pos++; // we parse the `<` operator..
                 expr = std::make_unique<lt_expression>(std::move(expr), parse_expression(3));
                 break;
             case LTEQ:
                 assert(2 >= precedence);
+                pos++; // we parse the `<=` operator..
                 expr = std::make_unique<le_expression>(std::move(expr), parse_expression(3));
                 break;
             case GTEQ:
                 assert(2 >= precedence);
+                pos++; // we parse the `>=` operator..
                 expr = std::make_unique<ge_expression>(std::move(expr), parse_expression(3));
                 break;
             case GT:
                 assert(2 >= precedence);
+                pos++; // we parse the `>` operator..
                 expr = std::make_unique<gt_expression>(std::move(expr), parse_expression(3));
                 break;
             case PLUS:
@@ -1164,6 +1176,7 @@ namespace riddle
             }
             case SLASH:
                 assert(4 >= precedence);
+                pos++; // we parse the `/` operator..
                 expr = std::make_unique<divide_expression>(std::move(expr), parse_expression(5));
                 break;
             default:

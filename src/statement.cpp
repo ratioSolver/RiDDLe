@@ -133,7 +133,7 @@ namespace riddle
                     c_tau = ct->get(tau[i].id);
                 else
                     throw std::runtime_error("Invalid type reference");
-            c_args.emplace(tau.back().id, c_tau);
+            c_args.emplace(tau_kw, c_tau);
         }
         else if (auto atm = dynamic_cast<atom *>(&ctx))
             c_args.emplace(tau_kw, atm->get(tau_kw));

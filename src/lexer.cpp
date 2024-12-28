@@ -193,10 +193,7 @@ namespace riddle
                         tokens.push_back(finish_token());
                     }
                     else
-                    {
                         current_state = ID;
-                        text.push_back(c);
-                    }
                 }
                 else
                     text.push_back(c);
@@ -403,10 +400,7 @@ namespace riddle
                         tokens.push_back(finish_token());
                     }
                     else
-                    {
                         current_state = ID;
-                        text.push_back(c);
-                    }
                 }
                 else
                     text.push_back(c);
@@ -503,10 +497,7 @@ namespace riddle
                         tokens.push_back(finish_token());
                     }
                     else
-                    {
                         current_state = ID;
-                        text.push_back(c);
-                    }
                 }
                 else
                     text.push_back(c);

@@ -97,7 +97,11 @@ namespace riddle
             argument_types.emplace_back(arg->get_type());
 
         if (auto ct = dynamic_cast<component_type *>(tp))
-            return ct->get_constructor(argument_types).invoke(std::move(args));
+        {
+            auto instance = ct->new_instance();
+            ct->get_constructor(argument_types).invoke(std::dynamic_pointer_cast<component>(instance), std::move(args));
+            return instance;
+        }
         else
             throw std::runtime_error("Invalid type reference");
     }

@@ -209,6 +209,7 @@ namespace riddle
     friend class predicate_declaration;
     friend class constructor_declaration;
     friend class constructor;
+    friend class constructor_expression;
 
   public:
     component_type(scope &scp, std::string &&name) noexcept;

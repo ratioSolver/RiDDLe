@@ -86,6 +86,36 @@ void test_predicate_declaration()
     core.read("predicate p(int a, int b) { a < b; }");
 }
 
+void test_items()
+{
+    test_core core;
+    core.read("bool b;");
+    core.read("int i;");
+    core.read("real r;");
+    core.read("time t;");
+    core.read("string s;");
+    core.read("enum E { \"a\", \"b\", \"c\" };");
+    core.read("E e;");
+}
+
+void test_statements()
+{
+    test_core core;
+    core.read("int a, b, c;");
+    core.read("2*a + 3*b < 4*c;");
+}
+
+void test_fact()
+{
+    test_core core;
+    core.read("predicate p(int a, int b) { a < b; }");
+    core.read("fact f = new p();");
+    core.read("goal g = new p();");
+
+    core.read("class A { predicate p(int a, int b) { a < b; } };");
+    core.read("A a = new A(); fact f = new a.p();");
+}
+
 int main()
 {
     test_class_declaration();
@@ -95,5 +125,8 @@ int main()
     test_method_declaration();
     test_enum_declaration();
     test_predicate_declaration();
+    test_items();
+    test_statements();
+    test_fact();
     return 0;
 }
