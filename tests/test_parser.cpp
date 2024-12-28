@@ -72,6 +72,7 @@ void test_method_declaration()
 {
     test_core core;
     core.read("class A { int a() { return 0; } };");
+    core.read("A a = new A(); int i = a.a();");
 }
 
 void test_enum_declaration()

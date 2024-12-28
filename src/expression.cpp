@@ -110,10 +110,7 @@ namespace riddle
     {
         auto obj = &ctx;
         for (size_t i = 0; i < object_id.size(); ++i)
-            if (auto c = dynamic_cast<component *>(obj))
-                obj = static_cast<component *>(c->get(object_id[i].id).get());
-            else
-                throw std::runtime_error("Invalid object reference");
+            obj = static_cast<component *>(obj->get(object_id[i].id).get());
 
         std::vector<std::shared_ptr<item>> args;
         for (const auto &arg : arguments)

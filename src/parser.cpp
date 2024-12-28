@@ -1024,6 +1024,9 @@ namespace riddle
             }
             if (match(LPAREN))
             { // call expression..
+                id_token fn_id = std::move(object_id.back());
+                object_id.pop_back();
+
                 std::vector<std::unique_ptr<expression>> args;
                 if (!match(RPAREN))
                 {
@@ -1034,7 +1037,7 @@ namespace riddle
                     if (!match(RPAREN))
                         error("Expected `)` after arguments");
                 }
-                expr = std::make_unique<call_expression>(std::move(object_id), id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos), std::move(args));
+                expr = std::make_unique<call_expression>(std::move(object_id), std::move(fn_id), std::move(args));
             }
             else // id expression..
                 expr = std::make_unique<id_expression>(std::move(object_id));
