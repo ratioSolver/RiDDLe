@@ -957,26 +957,26 @@ namespace riddle
         case LBRACKET:
             switch (tokens.at(pos++)->sym)
             {
-            case INT:
+            case Int:
                 if (!match(COMMA))
-                    error("Expected `,` after `int`");
-                if (!match(INT))
-                    error("Expected `int` after `,`");
+                    error("Expected `,` after int literal");
+                if (!match(Int))
+                    error("Expected int literal after `,`");
                 if (!match(RBRACKET))
-                    error("Expected `]` after `int`");
+                    error("Expected `]` after int literal");
                 expr = std::make_unique<bounded_int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 4)).value, tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), int_token(static_cast<const int_token &>(*tokens.at(pos - 2)).value, tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
                 break;
-            case REAL:
+            case Real:
                 if (!match(COMMA))
-                    error("Expected `,` after `real`");
-                if (!match(REAL))
-                    error("Expected `real` after `,`");
+                    error("Expected `,` after real literal");
+                if (!match(Real))
+                    error("Expected real literal after `,`");
                 if (!match(RBRACKET))
-                    error("Expected `]` after `real`");
+                    error("Expected `]` after real literal");
                 expr = std::make_unique<bounded_real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 4)).value), tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 2)).value), tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
                 break;
             default:
-                error("Expected `int` or `real` after `[`");
+                error("Expected int literal or real literal after `[`");
             }
             break;
         case QUESTION:
@@ -984,26 +984,26 @@ namespace riddle
                 error("Expected `[` after `?`");
             switch (tokens.at(pos++)->sym)
             {
-            case INT:
+            case Int:
                 if (!match(COMMA))
-                    error("Expected `,` after `int`");
-                if (!match(INT))
-                    error("Expected `int` after `,`");
+                    error("Expected `,` after int literal");
+                if (!match(Int))
+                    error("Expected int literal after `,`");
                 if (!match(RBRACKET))
-                    error("Expected `]` after `int`");
+                    error("Expected `]` after int literal");
                 expr = std::make_unique<uncertain_int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 4)).value, tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), int_token(static_cast<const int_token &>(*tokens.at(pos - 2)).value, tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
                 break;
-            case REAL:
+            case Real:
                 if (!match(COMMA))
-                    error("Expected `,` after `real`");
-                if (!match(REAL))
-                    error("Expected `real` after `,`");
+                    error("Expected `,` after real literal");
+                if (!match(Real))
+                    error("Expected real literal after `,`");
                 if (!match(RBRACKET))
-                    error("Expected `]` after `real`");
+                    error("Expected `]` after real literal");
                 expr = std::make_unique<uncertain_real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 4)).value), tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 2)).value), tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
                 break;
             default:
-                error("Expected `int` or `real` after `[`");
+                error("Expected int literal or real literal after `[`");
             }
             break;
         case MINUS:

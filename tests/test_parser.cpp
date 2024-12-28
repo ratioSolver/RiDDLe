@@ -98,6 +98,22 @@ void test_items()
     core.read("E e;");
 }
 
+void test_bounded_ariths()
+{
+    test_core core;
+    core.read("int i = [0, 10];");
+    core.read("real r = [0.0, 10.0];");
+    core.read("time t = [0, 10];");
+}
+
+void test_uncertain_ariths()
+{
+    test_core core;
+    core.read("int i = ?[0, 10];");
+    core.read("real r = ?[0.0, 10.0];");
+    core.read("time t = ?[0, 10];");
+}
+
 void test_statements()
 {
     test_core core;
@@ -126,6 +142,8 @@ int main()
     test_enum_declaration();
     test_predicate_declaration();
     test_items();
+    test_bounded_ariths();
+    test_uncertain_ariths();
     test_statements();
     test_fact();
     return 0;
