@@ -3,6 +3,7 @@
 #include "bool.hpp"
 #include "inf_rational.hpp"
 #include "type.hpp"
+#include "parser.hpp"
 
 #ifdef COMPUTE_NAMES
 #include <unordered_map>
@@ -15,11 +16,6 @@
 namespace riddle
 {
   class conjunction;
-  class enum_declaration;
-  class method_declaration;
-  class class_declaration;
-  class predicate_declaration;
-  class compilation_unit;
 
   /**
    * @class core core.hpp "include/core.hpp"
@@ -56,16 +52,16 @@ namespace riddle
     /**
      * @brief Create a new bool expression.
      *
-     * @return std::shared_ptr<bool_item> The bool expression.
+     * @return bool_expr The bool expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_bool() = 0;
+    [[nodiscard]] virtual bool_expr new_bool() = 0;
     /**
      * @brief Create a new bool expression with a value.
      *
      * @param value The value of the bool expression.
-     * @return std::shared_ptr<bool_item> The bool expression.
+     * @return bool_expr The bool expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_bool(const bool value) = 0;
+    [[nodiscard]] virtual bool_expr new_bool(const bool value) = 0;
 
     /**
      * @brief Evaluates the boolean value of the given expression.
@@ -80,76 +76,76 @@ namespace riddle
     /**
      * @brief Create a new int expression.
      *
-     * @return std::shared_ptr<arith_item> The int expression.
+     * @return arith_expr The int expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_int() = 0;
+    [[nodiscard]] virtual arith_expr new_int() = 0;
     /**
      * @brief Create a new int expression with a value.
      *
      * @param value The value of the int expression.
-     * @return std::shared_ptr<arith_item> The int expression.
+     * @return arith_expr The int expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_int(const INT_TYPE value) = 0;
+    [[nodiscard]] virtual arith_expr new_int(const INT_TYPE value) = 0;
     /**
      * @brief Create a new int expression with the given bounds.
      *
      * @param lb The lower bound of the int expression.
      * @param ub The upper bound of the int expression.
-     * @return std::shared_ptr<arith_item> The int expression.
+     * @return arith_expr The int expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_int(const INT_TYPE lb, const INT_TYPE ub) = 0;
+    [[nodiscard]] virtual arith_expr new_int(const INT_TYPE lb, const INT_TYPE ub) = 0;
     /**
      * @brief Create a new uncertain int expression with the given bounds.
      *
      * @param lb The lower bound of the uncertain int expression.
      * @param ub The upper bound of the uncertain int expression.
-     * @return std::shared_ptr<arith_item> The uncertain int expression.
+     * @return arith_expr The uncertain int expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_uncertain_int(const INT_TYPE lb, const INT_TYPE ub) = 0;
+    [[nodiscard]] virtual arith_expr new_uncertain_int(const INT_TYPE lb, const INT_TYPE ub) = 0;
 
     /**
      * @brief Create a real expression.
      *
-     * @return std::shared_ptr<arith_item> The real expression.
+     * @return arith_expr The real expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_real() = 0;
+    [[nodiscard]] virtual arith_expr new_real() = 0;
     /**
      * @brief Create a new real expression with a value.
      *
      * @param value The value of the real expression.
-     * @return std::shared_ptr<arith_item> The real expression.
+     * @return arith_expr The real expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_real(utils::rational &&value) = 0;
+    [[nodiscard]] virtual arith_expr new_real(utils::rational &&value) = 0;
     /**
      * @brief Create a new real expression with the given bounds.
      *
      * @param lb The lower bound of the real expression.
      * @param ub The upper bound of the real expression.
-     * @return std::shared_ptr<arith_item> The real expression.
+     * @return arith_expr The real expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_real(utils::rational &&lb, utils::rational &&ub) = 0;
+    [[nodiscard]] virtual arith_expr new_real(utils::rational &&lb, utils::rational &&ub) = 0;
     /**
      * @brief Create a new uncertain real expression with the given bounds.
      *
      * @param lb The lower bound of the uncertain real expression.
      * @param ub The upper bound of the uncertain real expression.
-     * @return std::shared_ptr<arith_item> The uncertain real expression.
+     * @return arith_expr The uncertain real expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_uncertain_real(utils::rational &&lb, utils::rational &&ub) = 0;
+    [[nodiscard]] virtual arith_expr new_uncertain_real(utils::rational &&lb, utils::rational &&ub) = 0;
 
     /**
      * @brief Create a new time expression.
      *
-     * @return std::shared_ptr<arith_item> The time expression.
+     * @return arith_expr The time expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_time() = 0;
+    [[nodiscard]] virtual arith_expr new_time() = 0;
     /**
      * @brief Create a new time expression with a value.
      *
      * @param value The value of the time expression.
-     * @return std::shared_ptr<arith_item> The time expression.
+     * @return arith_expr The time expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_time(utils::rational &&value) = 0;
+    [[nodiscard]] virtual arith_expr new_time(utils::rational &&value) = 0;
 
     /**
      * @brief Computes the arithmetic value of the given arithmetic item.
@@ -187,7 +183,7 @@ namespace riddle
      *
      * @return A shared pointer to the newly created enum item.
      */
-    [[nodiscard]] virtual std::shared_ptr<enum_item> new_enum(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
+    [[nodiscard]] virtual enum_expr new_enum(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.
@@ -198,7 +194,7 @@ namespace riddle
      * @param exprs A vector of shared pointers to boolean items to be combined.
      * @return A shared pointer to the newly created boolean item representing the AND operation.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_and(std::vector<std::shared_ptr<bool_item>> &&exprs) = 0;
+    [[nodiscard]] virtual bool_expr new_and(std::vector<bool_expr> &&exprs) = 0;
     /**
      * @brief Creates a new boolean OR item from a list of boolean expressions.
      *
@@ -209,7 +205,7 @@ namespace riddle
      * the boolean expressions to be OR-ed together.
      * @return A shared pointer to the newly created boolean OR item.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_or(std::vector<std::shared_ptr<bool_item>> &&exprs) = 0;
+    [[nodiscard]] virtual bool_expr new_or(std::vector<bool_expr> &&exprs) = 0;
     /**
      * @brief Creates a new XOR (exclusive OR) boolean item.
      *
@@ -219,7 +215,7 @@ namespace riddle
      * @param exprs A vector of shared pointers to boolean items, which will be used as the operands for the XOR operation.
      * @return A shared pointer to the newly created XOR boolean item.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_xor(std::vector<std::shared_ptr<bool_item>> &&exprs) = 0;
+    [[nodiscard]] virtual bool_expr new_xor(std::vector<bool_expr> &&exprs) = 0;
 
     /**
      * @brief Creates a new boolean item representing the logical NOT of the given expression.
@@ -230,7 +226,7 @@ namespace riddle
      * @param expr A shared pointer to the boolean item to be negated.
      * @return A shared pointer to a new boolean item representing the logical NOT of the input expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_not(std::shared_ptr<bool_item> expr) = 0;
+    [[nodiscard]] virtual bool_expr new_not(bool_expr expr) = 0;
 
     /**
      * @brief Creates a new arithmetic item representing the negation of the given expression.
@@ -241,7 +237,7 @@ namespace riddle
      * @param xpr A shared pointer to the arithmetic item to be negated.
      * @return A shared pointer to the new arithmetic item representing the negation of the input expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_negation(std::shared_ptr<arith_item> xpr) = 0;
+    [[nodiscard]] virtual arith_expr new_negation(arith_expr xpr) = 0;
 
     /**
      * @brief Creates a new arithmetic sum item.
@@ -251,9 +247,9 @@ namespace riddle
      * to the newly created arithmetic sum item.
      *
      * @param xprs A vector of shared pointers to arithmetic items that will be summed.
-     * @return std::shared_ptr<arith_item> A shared pointer to the newly created arithmetic sum item.
+     * @return arith_expr A shared pointer to the newly created arithmetic sum item.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_sum(std::vector<std::shared_ptr<arith_item>> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_sum(std::vector<arith_expr> &&xprs) = 0;
     /**
      * @brief Creates a new product from a vector of arithmetic items.
      *
@@ -263,9 +259,9 @@ namespace riddle
      *
      * @param xprs A vector of shared pointers to arithmetic items.
      *
-     * @return std::shared_ptr<arith_item> A shared pointer to the newly created product.
+     * @return arith_expr A shared pointer to the newly created product.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_product(std::vector<std::shared_ptr<arith_item>> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_product(std::vector<arith_expr> &&xprs) = 0;
     /**
      * @brief Creates a new division arithmetic item.
      *
@@ -274,9 +270,9 @@ namespace riddle
      *
      * @param lhs A shared pointer to the left-hand side arithmetic item.
      * @param rhs A shared pointer to the right-hand side arithmetic item.
-     * @return std::shared_ptr<arith_item> A shared pointer to the resulting division arithmetic item.
+     * @return arith_expr A shared pointer to the resulting division arithmetic item.
      */
-    [[nodiscard]] virtual std::shared_ptr<arith_item> new_divide(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+    [[nodiscard]] virtual arith_expr new_divide(arith_expr lhs, arith_expr rhs) = 0;
 
     /**
      * @brief Creates a new less-than comparison item.
@@ -289,7 +285,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to the newly created less-than comparison item.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_lt(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+    [[nodiscard]] virtual bool_expr new_lt(arith_expr lhs, arith_expr rhs) = 0;
     /**
      * @brief Creates a new less-than-or-equal-to (<=) boolean item.
      *
@@ -301,7 +297,7 @@ namespace riddle
      * @return A shared pointer to the newly created boolean item representing
      *         the result of the <= comparison.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_le(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+    [[nodiscard]] virtual bool_expr new_le(arith_expr lhs, arith_expr rhs) = 0;
     /**
      * @brief Creates a new greater-than comparison item.
      *
@@ -313,7 +309,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to a boolean item representing the result of the comparison.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_gt(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+    [[nodiscard]] virtual bool_expr new_gt(arith_expr lhs, arith_expr rhs) = 0;
     /**
      * @brief Creates a new greater-than-or-equal-to boolean item.
      *
@@ -324,7 +320,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to the newly created boolean item representing the comparison.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_ge(std::shared_ptr<arith_item> lhs, std::shared_ptr<arith_item> rhs) = 0;
+    [[nodiscard]] virtual bool_expr new_ge(arith_expr lhs, arith_expr rhs) = 0;
     /**
      * @brief Creates a new equality comparison item.
      *
@@ -335,7 +331,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side item.
      * @return A shared pointer to the newly created equality comparison item.
      */
-    [[nodiscard]] virtual std::shared_ptr<bool_item> new_eq(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) = 0;
+    [[nodiscard]] virtual bool_expr new_eq(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) = 0;
 
     /**
      * @brief Pure virtual function to add a new disjunction.
@@ -354,7 +350,7 @@ namespace riddle
      *
      * @param fact A shared pointer to a bool_item object representing the fact to be asserted.
      */
-    virtual void assert_fact(std::shared_ptr<bool_item> fact) = 0;
+    virtual void assert_fact(bool_expr fact) = 0;
 
     /**
      * @brief Creates a new atom.
@@ -364,7 +360,7 @@ namespace riddle
      * @param args An optional map of arguments where the key is a string and the value is a shared pointer to an item. Defaults to an empty map.
      * @return A shared pointer to the newly created atom.
      */
-    [[nodiscard]] std::shared_ptr<atom> new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {});
+    [[nodiscard]] atom_expr new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {});
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
@@ -436,7 +432,7 @@ namespace riddle
 #endif
 
   private:
-    [[nodiscard]] virtual std::shared_ptr<atom> create_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {}) { return std::make_shared<atom>(pred, is_fact, std::move(args)); }
+    [[nodiscard]] virtual atom_expr create_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {}) = 0;
 
   private:
     std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the core..

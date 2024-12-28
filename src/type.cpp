@@ -240,7 +240,7 @@ namespace riddle
 
     predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
 
-    void predicate::call(std::shared_ptr<atom> atm)
+    void predicate::call(atom_expr atm)
     {
         assert(is_assignable_from(atm->get_type()));
         for (auto &p : parents)

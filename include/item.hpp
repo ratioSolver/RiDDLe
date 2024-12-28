@@ -2,8 +2,6 @@
 
 #include "env.hpp"
 #include "enum.hpp"
-#include "lit.hpp"
-#include "lin.hpp"
 
 namespace riddle
 {
@@ -51,6 +49,8 @@ namespace riddle
     virtual ~bool_item() = default;
   };
 
+  using bool_expr = std::shared_ptr<bool_item>;
+
   class arith_item : public item
   {
   public:
@@ -60,6 +60,8 @@ namespace riddle
     virtual ~arith_item() = default;
   };
 
+  using arith_expr = std::shared_ptr<arith_item>;
+
   class string_item : public item
   {
   public:
@@ -67,12 +69,16 @@ namespace riddle
     virtual ~string_item() = default;
   };
 
+  using string_expr = std::shared_ptr<string_item>;
+
   class enum_item final : public item
   {
   public:
     enum_item(type &tp);
     virtual ~enum_item() = default;
   };
+
+  using enum_expr = std::shared_ptr<enum_item>;
 
   class component : public item, public env
   {
@@ -95,4 +101,6 @@ namespace riddle
   private:
     bool fact; // whether the atom is a fact
   };
+
+  using atom_expr = std::shared_ptr<atom>;
 } // namespace riddle

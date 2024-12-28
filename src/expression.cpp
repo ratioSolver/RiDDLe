@@ -25,7 +25,7 @@ namespace riddle
 
     std::shared_ptr<item> and_expression::evaluate(const scope &scp, env &ctx) const
     {
-        std::vector<std::shared_ptr<bool_item>> exprs;
+        std::vector<bool_expr> exprs;
         for (const auto &expr : xprs)
             exprs.emplace_back(std::dynamic_pointer_cast<bool_item>(expr->evaluate(scp, ctx)));
         return ctx.get_core().new_and(std::move(exprs));
@@ -33,7 +33,7 @@ namespace riddle
 
     std::shared_ptr<item> or_expression::evaluate(const scope &scp, env &ctx) const
     {
-        std::vector<std::shared_ptr<bool_item>> exprs;
+        std::vector<bool_expr> exprs;
         for (const auto &expr : xprs)
             exprs.emplace_back(std::dynamic_pointer_cast<bool_item>(expr->evaluate(scp, ctx)));
         return ctx.get_core().new_or(std::move(exprs));
@@ -41,7 +41,7 @@ namespace riddle
 
     std::shared_ptr<item> xor_expression::evaluate(const scope &scp, env &ctx) const
     {
-        std::vector<std::shared_ptr<bool_item>> exprs;
+        std::vector<bool_expr> exprs;
         for (const auto &expr : xprs)
             exprs.emplace_back(std::dynamic_pointer_cast<bool_item>(expr->evaluate(scp, ctx)));
         return ctx.get_core().new_xor(std::move(exprs));
@@ -53,7 +53,7 @@ namespace riddle
 
     std::shared_ptr<item> sum_expression::evaluate(const scope &scp, env &ctx) const
     {
-        std::vector<std::shared_ptr<arith_item>> c_xprs;
+        std::vector<arith_expr> c_xprs;
         for (const auto &xpr : xprs)
             c_xprs.emplace_back(std::dynamic_pointer_cast<arith_item>(xpr->evaluate(scp, ctx)));
         return ctx.get_core().new_sum(std::move(c_xprs));
@@ -61,7 +61,7 @@ namespace riddle
 
     std::shared_ptr<item> product_expression::evaluate(const scope &scp, env &ctx) const
     {
-        std::vector<std::shared_ptr<arith_item>> c_xprs;
+        std::vector<arith_expr> c_xprs;
         for (const auto &xpr : xprs)
             c_xprs.emplace_back(std::dynamic_pointer_cast<arith_item>(xpr->evaluate(scp, ctx)));
         return ctx.get_core().new_product(std::move(c_xprs));

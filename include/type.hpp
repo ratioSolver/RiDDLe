@@ -323,7 +323,7 @@ namespace riddle
      *
      * @param atm A shared pointer to the atom to be called.
      */
-    void call(std::shared_ptr<atom> atm);
+    void call(atom_expr atm);
 
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
@@ -332,6 +332,6 @@ namespace riddle
     std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
     std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
     const std::vector<std::unique_ptr<statement>> &body;    // the body of the predicate..
-    std::vector<std::shared_ptr<atom>> atoms;               // the atoms of the predicate..
+    std::vector<atom_expr> atoms;               // the atoms of the predicate..
   };
 } // namespace riddle

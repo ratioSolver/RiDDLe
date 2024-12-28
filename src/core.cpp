@@ -1,7 +1,4 @@
 #include "core.hpp"
-#include "item.hpp"
-#include "type.hpp"
-#include "parser.hpp"
 #include <sstream>
 #include <fstream>
 #include <queue>
@@ -56,7 +53,7 @@ namespace riddle
         RECOMPUTE_NAMES();
     }
 
-    std::shared_ptr<atom> core::new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args)
+    atom_expr core::new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args)
     {
         auto atm = create_atom(is_fact, pred, std::move(args));
         std::queue<predicate *> q;

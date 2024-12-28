@@ -1,4 +1,3 @@
-#include "parser.hpp"
 #include "core.hpp"
 #include <cassert>
 
@@ -8,45 +7,47 @@ public:
     test_core() noexcept : riddle::core() {}
     ~test_core() override = default;
 
-    std::shared_ptr<riddle::bool_item> new_bool(const bool value) override { return std::make_shared<riddle::bool_item>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw))); }
-    std::shared_ptr<riddle::bool_item> new_bool() override { return new_bool(false); }
+    riddle::bool_expr new_bool(const bool value) override { return std::make_shared<riddle::bool_item>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw))); }
+    riddle::bool_expr new_bool() override { return new_bool(false); }
     utils::lbool bool_value(const riddle::bool_item &expr) const noexcept override { return utils::Undefined; }
-    std::shared_ptr<riddle::arith_item> new_int(const INT_TYPE lb) override { return std::make_shared<riddle::arith_item>(static_cast<riddle::int_type &>(get_type(riddle::int_kw))); }
-    std::shared_ptr<riddle::arith_item> new_int() override { return new_int(0); }
-    std::shared_ptr<riddle::arith_item> new_int(const INT_TYPE lb, const INT_TYPE ub) override { return new_int(lb); }
-    std::shared_ptr<riddle::arith_item> new_uncertain_int(const INT_TYPE lb, const INT_TYPE ub) override { return new_int(lb); }
-    std::shared_ptr<riddle::arith_item> new_real(utils::rational &&value) override { return std::make_shared<riddle::arith_item>(static_cast<riddle::real_type &>(get_type(riddle::real_kw))); }
-    std::shared_ptr<riddle::arith_item> new_real() override { return new_real(utils::rational(0)); }
-    std::shared_ptr<riddle::arith_item> new_real(utils::rational &&lb, utils::rational &&ub) override { return new_real(utils::rational(lb)); }
-    std::shared_ptr<riddle::arith_item> new_uncertain_real(utils::rational &&lb, utils::rational &&ub) override { return new_real(utils::rational(lb)); }
-    std::shared_ptr<riddle::arith_item> new_time(utils::rational &&value) override { return std::make_shared<riddle::arith_item>(static_cast<riddle::time_type &>(get_type(riddle::time_kw))); }
-    std::shared_ptr<riddle::arith_item> new_time() override { return new_time(utils::rational(0)); }
+    riddle::arith_expr new_int(const INT_TYPE lb) override { return std::make_shared<riddle::arith_item>(static_cast<riddle::int_type &>(get_type(riddle::int_kw))); }
+    riddle::arith_expr new_int() override { return new_int(0); }
+    riddle::arith_expr new_int(const INT_TYPE lb, const INT_TYPE ub) override { return new_int(lb); }
+    riddle::arith_expr new_uncertain_int(const INT_TYPE lb, const INT_TYPE ub) override { return new_int(lb); }
+    riddle::arith_expr new_real(utils::rational &&value) override { return std::make_shared<riddle::arith_item>(static_cast<riddle::real_type &>(get_type(riddle::real_kw))); }
+    riddle::arith_expr new_real() override { return new_real(utils::rational(0)); }
+    riddle::arith_expr new_real(utils::rational &&lb, utils::rational &&ub) override { return new_real(utils::rational(lb)); }
+    riddle::arith_expr new_uncertain_real(utils::rational &&lb, utils::rational &&ub) override { return new_real(utils::rational(lb)); }
+    riddle::arith_expr new_time(utils::rational &&value) override { return std::make_shared<riddle::arith_item>(static_cast<riddle::time_type &>(get_type(riddle::time_kw))); }
+    riddle::arith_expr new_time() override { return new_time(utils::rational(0)); }
     utils::inf_rational arith_value(const riddle::arith_item &expr) const noexcept override { return utils::inf_rational(); }
-    std::shared_ptr<riddle::string_item> new_string(std::string &&value) override { return std::make_shared<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw))); }
-    std::shared_ptr<riddle::string_item> new_string() override { return new_string(""); }
-    std::shared_ptr<riddle::enum_item> new_enum(riddle::type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) override { return std::make_shared<riddle::enum_item>(tp); }
+    riddle::string_expr new_string(std::string &&value) override { return std::make_shared<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw))); }
+    riddle::string_expr new_string() override { return new_string(""); }
+    riddle::enum_expr new_enum(riddle::type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) override { return std::make_shared<riddle::enum_item>(tp); }
 
-    std::shared_ptr<riddle::bool_item> new_and(std::vector<std::shared_ptr<riddle::bool_item>> &&exprs) override { return new_bool(false); }
-    std::shared_ptr<riddle::bool_item> new_or(std::vector<std::shared_ptr<riddle::bool_item>> &&exprs) override { return new_bool(false); }
-    std::shared_ptr<riddle::bool_item> new_xor(std::vector<std::shared_ptr<riddle::bool_item>> &&exprs) override { return new_bool(false); }
+    riddle::bool_expr new_and(std::vector<riddle::bool_expr> &&exprs) override { return new_bool(false); }
+    riddle::bool_expr new_or(std::vector<riddle::bool_expr> &&exprs) override { return new_bool(false); }
+    riddle::bool_expr new_xor(std::vector<riddle::bool_expr> &&exprs) override { return new_bool(false); }
 
-    std::shared_ptr<riddle::bool_item> new_not(std::shared_ptr<riddle::bool_item> expr) override { return new_bool(false); }
+    riddle::bool_expr new_not(riddle::bool_expr expr) override { return new_bool(false); }
 
-    std::shared_ptr<riddle::arith_item> new_negation(std::shared_ptr<riddle::arith_item> xpr) override { return new_int(0); }
+    riddle::arith_expr new_negation(riddle::arith_expr xpr) override { return new_int(0); }
 
-    std::shared_ptr<riddle::arith_item> new_sum(std::vector<std::shared_ptr<riddle::arith_item>> &&xprs) override { return new_int(0); }
-    std::shared_ptr<riddle::arith_item> new_product(std::vector<std::shared_ptr<riddle::arith_item>> &&xprs) override { return new_int(0); }
-    std::shared_ptr<riddle::arith_item> new_divide(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return new_int(0); }
+    riddle::arith_expr new_sum(std::vector<riddle::arith_expr> &&xprs) override { return new_int(0); }
+    riddle::arith_expr new_product(std::vector<riddle::arith_expr> &&xprs) override { return new_int(0); }
+    riddle::arith_expr new_divide(riddle::arith_expr lhs, riddle::arith_expr rhs) override { return new_int(0); }
 
-    std::shared_ptr<riddle::bool_item> new_lt(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return new_bool(false); }
-    std::shared_ptr<riddle::bool_item> new_le(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return new_bool(false); }
-    std::shared_ptr<riddle::bool_item> new_gt(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return new_bool(false); }
-    std::shared_ptr<riddle::bool_item> new_ge(std::shared_ptr<riddle::arith_item> lhs, std::shared_ptr<riddle::arith_item> rhs) override { return new_bool(false); }
+    riddle::bool_expr new_lt(riddle::arith_expr lhs, riddle::arith_expr rhs) override { return new_bool(false); }
+    riddle::bool_expr new_le(riddle::arith_expr lhs, riddle::arith_expr rhs) override { return new_bool(false); }
+    riddle::bool_expr new_gt(riddle::arith_expr lhs, riddle::arith_expr rhs) override { return new_bool(false); }
+    riddle::bool_expr new_ge(riddle::arith_expr lhs, riddle::arith_expr rhs) override { return new_bool(false); }
 
-    std::shared_ptr<riddle::bool_item> new_eq(std::shared_ptr<riddle::item> lhs, std::shared_ptr<riddle::item> rhs) override { return new_bool(false); }
+    riddle::bool_expr new_eq(std::shared_ptr<riddle::item> lhs, std::shared_ptr<riddle::item> rhs) override { return new_bool(false); }
 
     void new_disjunction(std::vector<std::unique_ptr<riddle::conjunction>> &&disjuncts) override {}
-    void assert_fact(std::shared_ptr<riddle::bool_item> fact) override {}
+    void assert_fact(riddle::bool_expr fact) override {}
+
+    riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::item>, std::less<>> &&args) override { return std::make_shared<riddle::atom>(pred, is_fact, std::move(args)); }
 };
 
 void test_class_declaration()
