@@ -65,7 +65,7 @@ namespace riddle
      * @param value The value of the bool expression.
      * @return std::shared_ptr<bool_item> The bool expression.
      */
-    [[nodiscard]] std::shared_ptr<bool_item> new_bool(const bool value);
+    [[nodiscard]] virtual std::shared_ptr<bool_item> new_bool(const bool value) = 0;
 
     /**
      * @brief Evaluates the boolean value of the given expression.
@@ -89,7 +89,7 @@ namespace riddle
      * @param value The value of the int expression.
      * @return std::shared_ptr<arith_item> The int expression.
      */
-    [[nodiscard]] std::shared_ptr<arith_item> new_int(const INT_TYPE value);
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_int(const INT_TYPE value) = 0;
     /**
      * @brief Create a new int expression with the given bounds.
      *
@@ -119,7 +119,7 @@ namespace riddle
      * @param value The value of the real expression.
      * @return std::shared_ptr<arith_item> The real expression.
      */
-    [[nodiscard]] std::shared_ptr<arith_item> new_real(utils::rational &&value);
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_real(utils::rational &&value) = 0;
     /**
      * @brief Create a new real expression with the given bounds.
      *
@@ -149,7 +149,7 @@ namespace riddle
      * @param value The value of the time expression.
      * @return std::shared_ptr<arith_item> The time expression.
      */
-    [[nodiscard]] std::shared_ptr<arith_item> new_time(utils::rational &&value);
+    [[nodiscard]] virtual std::shared_ptr<arith_item> new_time(utils::rational &&value) = 0;
 
     /**
      * @brief Computes the arithmetic value of the given arithmetic item.
@@ -174,7 +174,7 @@ namespace riddle
      * @param value The value of the string expression.
      * @return std::shared_ptr<string_item> The string expression.
      */
-    [[nodiscard]] std::shared_ptr<string_item> new_string(std::string &&value);
+    [[nodiscard]] virtual std::shared_ptr<string_item> new_string(std::string &&value) = 0;
 
     /**
      * @brief Creates a new enum item.
@@ -436,7 +436,7 @@ namespace riddle
 #endif
 
   private:
-    [[nodiscard]] virtual std::shared_ptr<atom> create_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {}) { return std::make_shared<atom>(pred, is_fact, utils::TRUE_lit, std::move(args)); }
+    [[nodiscard]] virtual std::shared_ptr<atom> create_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {}) { return std::make_shared<atom>(pred, is_fact, std::move(args)); }
 
   private:
     std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the core..

@@ -44,75 +44,55 @@ namespace riddle
     type &tp;
   };
 
-  class bool_item final : public item
+  class bool_item : public item
   {
   public:
-    bool_item(bool_type &tp, const utils::lit &l);
-
-    [[nodiscard]] utils::lit &get_value() { return value; }
-    [[nodiscard]] const utils::lit &get_value() const { return value; }
-
-  private:
-    utils::lit value;
+    bool_item(bool_type &tp);
+    virtual ~bool_item() = default;
   };
 
-  class arith_item final : public item
+  class arith_item : public item
   {
   public:
-    arith_item(int_type &t, const utils::lin &l);
-    arith_item(real_type &t, const utils::lin &l);
-    arith_item(time_type &t, const utils::lin &l);
-
-    [[nodiscard]] utils::lin &get_value() { return value; }
-    [[nodiscard]] const utils::lin &get_value() const { return value; }
-
-  private:
-    utils::lin value;
+    arith_item(int_type &tp);
+    arith_item(real_type &tp);
+    arith_item(time_type &tp);
+    virtual ~arith_item() = default;
   };
 
-  class string_item final : public item
+  class string_item : public item
   {
   public:
-    string_item(string_type &tp, std::string &&s);
-
-    [[nodiscard]] std::string &get_value() { return value; }
-    [[nodiscard]] const std::string &get_value() const { return value; }
-
-  private:
-    std::string value;
+    string_item(string_type &tp);
+    virtual ~string_item() = default;
   };
 
   class enum_item final : public item
   {
   public:
-    enum_item(type &tp, utils::var v);
-
-    [[nodiscard]] utils::var &get_value() { return value; }
-    [[nodiscard]] const utils::var &get_value() const { return value; }
-
-  private:
-    utils::var value;
+    enum_item(type &tp);
+    virtual ~enum_item() = default;
   };
 
   class component : public item, public env
   {
   public:
-    component(component_type &t);
+    component(component_type &tp);
     virtual ~component() = default;
   };
 
   class atom : public item, public env
   {
   public:
-    atom(predicate &t, bool fact, const utils::lit &sigma, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {});
+    atom(predicate &t, bool fact, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {});
     virtual ~atom() = default;
 
     [[nodiscard]] bool is_fact() const { return fact; }
-    [[nodiscard]] utils::lit &get_sigma() { return sigma; }
-    [[nodiscard]] const utils::lit &get_sigma() const { return sigma; }
 
   private:
-    bool fact;        // whether the atom is a fact
-    utils::lit sigma; // the literal indicating the status of the atom (i.e., true if active, false if unified, undefined if inactive)
+    static env &atom_parent(const predicate &t, const std::map<std::string, std::shared_ptr<item>, std::less<>> &args);
+
+  private:
+    bool fact; // whether the atom is a fact
   };
 } // namespace riddle

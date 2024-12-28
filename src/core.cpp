@@ -56,12 +56,6 @@ namespace riddle
         RECOMPUTE_NAMES();
     }
 
-    std::shared_ptr<bool_item> core::new_bool(const bool value) { return std::make_shared<bool_item>(static_cast<bool_type &>(get_type(bool_kw)), value ? utils::TRUE_lit : utils::FALSE_lit); }
-    std::shared_ptr<arith_item> core::new_int(const INT_TYPE value) { return std::make_shared<arith_item>(static_cast<int_type &>(get_type(int_kw)), utils::lin(utils::rational(value))); }
-    std::shared_ptr<arith_item> core::new_real(utils::rational &&value) { return std::make_shared<arith_item>(static_cast<real_type &>(get_type(real_kw)), utils::lin(value)); }
-    std::shared_ptr<arith_item> core::new_time(utils::rational &&value) { return std::make_shared<arith_item>(static_cast<time_type &>(get_type(time_kw)), utils::lin(value)); }
-    std::shared_ptr<string_item> core::new_string(std::string &&value) { return std::make_shared<string_item>(static_cast<string_type &>(get_type(string_kw)), std::move(value)); }
-
     std::shared_ptr<atom> core::new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args)
     {
         auto atm = create_atom(is_fact, pred, std::move(args));
