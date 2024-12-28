@@ -316,6 +316,15 @@ namespace riddle
 
     [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const noexcept { return parents; }
 
+    /**
+     * @brief Calls the rule associated with the predicate to achieve the desired goal.
+     *
+     * This function calls the rule associated with the predicate to achieve the desired goal.
+     *
+     * @param atm A shared pointer to the atom to be called.
+     */
+    void call(std::shared_ptr<atom> atm);
+
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
 

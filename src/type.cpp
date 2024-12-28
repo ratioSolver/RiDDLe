@@ -3,6 +3,7 @@
 #include "lexer.hpp"
 #include "exceptions.hpp"
 #include <queue>
+#include <cassert>
 
 namespace riddle
 {
@@ -238,6 +239,16 @@ namespace riddle
     std::shared_ptr<item> component_type::new_instance() { return std::make_shared<component>(static_cast<component_type &>(*this)); }
 
     predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
+
+    void predicate::call(std::shared_ptr<atom> atm)
+    {
+        assert(is_assignable_from(atm->get_type()));
+        for (auto &p : parents)
+            p.get().call(atm);
+        env ctx(get_core(), *atm);
+        for (const auto &stmt : body)
+            stmt->execute(*this, ctx);
+    }
 
     std::shared_ptr<item> predicate::new_instance() { return std::make_shared<item>(static_cast<predicate &>(*this)); }
 } // namespace riddle
