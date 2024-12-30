@@ -71,7 +71,7 @@ namespace riddle
 
   using string_expr = std::shared_ptr<string_item>;
 
-  class enum_item final : public item
+  class enum_item : public item
   {
   public:
     enum_item(type &tp);

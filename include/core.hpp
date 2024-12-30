@@ -161,16 +161,16 @@ namespace riddle
     /**
      * @brief Create a new string expression.
      *
-     * @return std::shared_ptr<string_item> The string expression.
+     * @return string_expr The string expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<string_item> new_string() = 0;
+    [[nodiscard]] virtual string_expr new_string() = 0;
     /**
      * @brief Create a new string expression with a value.
      *
      * @param value The value of the string expression.
-     * @return std::shared_ptr<string_item> The string expression.
+     * @return string_expr The string expression.
      */
-    [[nodiscard]] virtual std::shared_ptr<string_item> new_string(std::string &&value) = 0;
+    [[nodiscard]] virtual string_expr new_string(std::string &&value) = 0;
 
     /**
      * @brief Creates a new enum item.
