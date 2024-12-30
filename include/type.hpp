@@ -234,7 +234,7 @@ namespace riddle
 
     [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
     [[nodiscard]] type &get_type(std::string_view name) const override;
-    [[nodiscard]] predicate &get_predicate(std::string_view name) const;
+    [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
     [[nodiscard]] std::vector<std::shared_ptr<item>> &get_instances() noexcept { return instances; }
 
@@ -332,6 +332,6 @@ namespace riddle
     std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
     std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
     const std::vector<std::unique_ptr<statement>> &body;    // the body of the predicate..
-    std::vector<atom_expr> atoms;               // the atoms of the predicate..
+    std::vector<atom_expr> atoms;                           // the atoms of the predicate..
   };
 } // namespace riddle
