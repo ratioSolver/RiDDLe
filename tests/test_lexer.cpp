@@ -197,6 +197,36 @@ void test_lexer4()
     assert(tokens[16]->sym == riddle::EoF);
 }
 
+void test_comment()
+{
+    riddle::lexer lex;
+    std::stringstream ss;
+    ss << "int a = 42; // this is a comment";
+    auto tokens = lex.parse(ss);
+    assert(tokens.size() == 6);
+    assert(tokens[0]->sym == riddle::INT);
+    assert(tokens[0]->line == 1);
+    assert(tokens[0]->start_pos == 0);
+    assert(tokens[0]->end_pos == 2);
+    assert(tokens[1]->sym == riddle::ID);
+    assert(tokens[1]->line == 1);
+    assert(tokens[1]->start_pos == 4);
+    assert(tokens[1]->end_pos == 4);
+    assert(tokens[2]->sym == riddle::EQ);
+    assert(tokens[2]->line == 1);
+    assert(tokens[2]->start_pos == 6);
+    assert(tokens[2]->end_pos == 6);
+    assert(tokens[3]->sym == riddle::Int);
+    assert(tokens[3]->line == 1);
+    assert(tokens[3]->start_pos == 8);
+    assert(tokens[3]->end_pos == 9);
+    assert(tokens[4]->sym == riddle::SEMICOLON);
+    assert(tokens[4]->line == 1);
+    assert(tokens[4]->start_pos == 10);
+    assert(tokens[4]->end_pos == 10);
+    assert(tokens[5]->sym == riddle::EoF);
+}
+
 int main()
 {
     test_lexer0();
@@ -204,5 +234,6 @@ int main()
     test_lexer2();
     test_lexer3();
     test_lexer4();
+    test_comment();
     return 0;
 }

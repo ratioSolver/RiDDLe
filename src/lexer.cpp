@@ -24,6 +24,8 @@ namespace riddle
                     is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
                     ++line;
                     start = 0;
+                    if (!is.good()) // end of file before `\n`
+                        tokens.push_back(std::make_unique<token>(EoF, line, start, start));
                     break;
                 case '*': // multi-line comment
                     is.ignore();
