@@ -821,7 +821,7 @@ namespace riddle
             break;
         }
         case String:
-            tok = std::make_unique<string_token>(std::move(text.substr(1, text.size() - 2)), line, start, end);
+            tok = std::make_unique<string_token>(text.substr(1, text.size() - 2), line, start, end);
             break;
         case ID:
             tok = std::make_unique<id_token>(std::move(text), line, start, end);
