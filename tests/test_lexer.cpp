@@ -197,7 +197,7 @@ void test_lexer4()
     assert(tokens[16]->sym == riddle::EoF);
 }
 
-int main(int argc, char const *argv[])
+int main()
 {
     test_lexer0();
     test_lexer1();
