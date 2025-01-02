@@ -85,9 +85,17 @@ namespace riddle
     void disjunction_statement::execute(const scope &scp, env &ctx) const
     { // execute a disjunction of conjunctions
         std::vector<std::unique_ptr<conjunction>> conjs;
+        std::map<std::string, std::shared_ptr<item>, std::less<>> items;
+        env *tmp_ctx = &ctx; // find the nearest core, component or atom
+        while (!(dynamic_cast<core *>(tmp_ctx) || dynamic_cast<component *>(tmp_ctx) || dynamic_cast<atom *>(tmp_ctx)))
+        {
+            items.insert(tmp_ctx->items.begin(), tmp_ctx->items.end());
+            tmp_ctx = &tmp_ctx->get_parent();
+        }
         for (auto &conj : blocks)
         {
-            env cctx(scp.get_core(), ctx);
+            env cctx(scp.get_core(), *tmp_ctx);            // we create a new context
+            cctx.items.insert(items.begin(), items.end()); // copy the items
             auto cst = conj->cst ? scp.get_core().arith_value(static_cast<arith_item &>(*conj->cst->evaluate(scp, ctx))).get_rational() : utils::rational::one;
             conjs.emplace_back(std::make_unique<conjunction>(scp, std::move(cctx), cst, conj->stmts));
         }

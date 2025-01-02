@@ -16,6 +16,7 @@ namespace riddle
   class for_all_statement;
   class return_statement;
   class formula_statement;
+  class disjunction_statement;
 
   /**
    * @class env env.hpp "include/env.hpp"
@@ -38,6 +39,7 @@ namespace riddle
     friend class for_all_statement;
     friend class return_statement;
     friend class formula_statement;
+    friend class disjunction_statement;
 
   public:
     env(core &c, env &parent, std::map<std::string, std::shared_ptr<item>, std::less<>> &&items = {}) noexcept;
