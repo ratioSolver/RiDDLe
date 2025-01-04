@@ -13,14 +13,15 @@ namespace riddle
     std::shared_ptr<item> bool_type::new_instance() { return get_scope().get_core().new_bool(); }
 
     int_type::int_type(core &cr) noexcept : type(cr, int_kw, true) {}
+    bool int_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(real_kw) == &other || &get_scope().get_core().get_type(time_kw) == &other; }
     std::shared_ptr<item> int_type::new_instance() { return get_scope().get_core().new_int(); }
 
     real_type::real_type(core &cr) noexcept : type(cr, real_kw, true) {}
-    bool real_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other; }
+    bool real_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other || &get_scope().get_core().get_type(time_kw) == &other; }
     std::shared_ptr<item> real_type::new_instance() { return get_scope().get_core().new_real(); }
 
     time_type::time_type(core &cr) noexcept : type(cr, time_kw, true) {}
-    bool time_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other; }
+    bool time_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other || &get_scope().get_core().get_type(real_kw) == &other; }
     std::shared_ptr<item> time_type::new_instance() { return get_scope().get_core().new_time(); }
 
     string_type::string_type(core &cr) noexcept : type(cr, string_kw, true) {}
@@ -250,5 +251,5 @@ namespace riddle
             stmt->execute(*this, ctx);
     }
 
-    std::shared_ptr<item> predicate::new_instance() { return std::make_shared<item>(static_cast<predicate &>(*this)); }
+    std::shared_ptr<item> predicate::new_instance() { return get_scope().get_core().new_atom(true, *this); }
 } // namespace riddle

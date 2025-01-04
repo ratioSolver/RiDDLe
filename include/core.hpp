@@ -331,7 +331,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side item.
      * @return A shared pointer to the newly created equality comparison item.
      */
-    [[nodiscard]] virtual bool_expr new_eq(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) = 0;
+    [[nodiscard]] bool_expr new_eq(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) { return lhs->operator==(rhs); }
 
     /**
      * @brief Pure virtual function to add a new disjunction.

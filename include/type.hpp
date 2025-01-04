@@ -108,6 +108,8 @@ namespace riddle
   public:
     int_type(core &cr) noexcept;
 
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
+
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
   };
@@ -315,6 +317,16 @@ namespace riddle
     virtual ~predicate() = default;
 
     [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const noexcept { return parents; }
+
+    /**
+     * @brief Retrieves the arguments of the predicate.
+     *
+     * This function returns a constant reference to a vector of references to fields,
+     * representing the arguments of the predicate.
+     *
+     * @return const std::vector<std::reference_wrapper<field>>& A constant reference to the arguments vector.
+     */
+    [[nodiscard]] const std::vector<std::reference_wrapper<field>> &get_args() const noexcept { return args; }
 
     /**
      * @brief Calls the rule associated with the predicate to achieve the desired goal.

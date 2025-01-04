@@ -2,6 +2,7 @@
 
 #include "env.hpp"
 #include "enum.hpp"
+#include <vector>
 
 namespace riddle
 {
@@ -14,6 +15,7 @@ namespace riddle
   class enum_type;
   class component_type;
   class predicate;
+  class bool_item;
 
   /**
    * @class item item.hpp "include/item.hpp"
@@ -28,6 +30,7 @@ namespace riddle
   public:
     item(type &tp) noexcept : tp(tp) {}
     item(const item &) = delete;
+    virtual ~item() = default;
 
     /**
      * @brief Get the type of the item.
@@ -38,9 +41,13 @@ namespace riddle
      */
     [[nodiscard]] type &get_type() const { return tp; }
 
+    [[nodiscard]] virtual std::shared_ptr<bool_item> operator==(std::shared_ptr<item> rhs) const = 0;
+
   private:
     type &tp;
   };
+
+  using expr = std::shared_ptr<item>;
 
   class bool_item : public item
   {
@@ -74,8 +81,13 @@ namespace riddle
   class enum_item : public item
   {
   public:
-    enum_item(type &tp);
+    enum_item(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values);
     virtual ~enum_item() = default;
+
+    [[nodiscard]] const std::vector<std::reference_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
+
+  private:
+    std::vector<std::reference_wrapper<utils::enum_val>> values;
   };
 
   using enum_expr = std::shared_ptr<enum_item>;
@@ -85,6 +97,8 @@ namespace riddle
   public:
     component(component_type &tp);
     virtual ~component() = default;
+
+    [[nodiscard]] std::shared_ptr<bool_item> operator==(std::shared_ptr<item> rhs) const override;
   };
 
   class atom : public item, public env

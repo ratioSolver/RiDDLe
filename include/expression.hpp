@@ -2,7 +2,6 @@
 
 #include "item.hpp"
 #include "lexer.hpp"
-#include <vector>
 
 namespace riddle
 {
