@@ -5,10 +5,11 @@
 
 namespace riddle
 {
-  class constructor : public scope
+  class constructor final : public scope
   {
   public:
     constructor(scope &scp, std::vector<std::unique_ptr<field>> &&args = {}, const std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> &inits = {}, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
+    constructor(const constructor &) = delete;
 
     /**
      * @brief Retrieves the arguments.
