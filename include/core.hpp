@@ -184,6 +184,15 @@ namespace riddle
      * @return A shared pointer to the newly created enum item.
      */
     [[nodiscard]] virtual enum_expr new_enum(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
+    /**
+     * @brief Retrieves the enum value associated with the given enum item.
+     *
+     * This function is responsible for retrieving the enum value associated with the given enum item.
+     *
+     * @param expr The enum item for which the associated enum value is to be retrieved.
+     * @return A reference to the enum value associated with the given enum item.
+     */
+    [[nodiscard]] virtual utils::enum_val &enum_value(const enum_item &expr) const noexcept = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.
