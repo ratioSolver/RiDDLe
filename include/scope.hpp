@@ -12,6 +12,7 @@ namespace riddle
   class type;
   class predicate;
   class expression;
+  class field_declaration;
 
   /**
    * @brief A field.
@@ -66,6 +67,8 @@ namespace riddle
 
   class scope
   {
+    friend class field_declaration;
+
   public:
     scope(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args = {});
     virtual ~scope() = default;

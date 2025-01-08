@@ -237,7 +237,22 @@ namespace riddle
             throw std::invalid_argument("type " + name + " already exists");
     }
 
-    std::shared_ptr<item> component_type::new_instance() { return std::make_shared<component>(static_cast<component_type &>(*this)); }
+    std::shared_ptr<item> component_type::new_instance()
+    {
+        auto itm = std::make_shared<component>(static_cast<component_type &>(*this));
+        // we store the instance in type the hierarchy..
+        std::queue<component_type *> q;
+        q.push(this);
+        while (!q.empty())
+        {
+            auto tp = q.front();
+            q.pop();
+            tp->instances.push_back(itm);
+            for (const auto &p : tp->parents)
+                q.push(&p.get());
+        }
+        return itm;
+    }
 
     predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
 
@@ -251,5 +266,20 @@ namespace riddle
             stmt->execute(*this, ctx);
     }
 
-    std::shared_ptr<item> predicate::new_instance() { return get_scope().get_core().new_atom(true, *this); }
+    std::shared_ptr<item> predicate::new_instance()
+    {
+        auto atm = get_scope().get_core().new_atom(true, *this);
+        // we store the atom in the predicate hierarchy..
+        std::queue<predicate *> q;
+        q.push(this);
+        while (!q.empty())
+        {
+            auto p = q.front();
+            q.pop();
+            p->atoms.push_back(atm);
+            for (const auto &par : p->parents)
+                q.push(&par.get());
+        }
+        return atm;
+    }
 } // namespace riddle

@@ -47,9 +47,12 @@ namespace riddle
                 throw std::runtime_error("Invalid type reference");
 
         for (const auto &f : fields)
-        {
-            auto new_f = std::make_unique<field>(*c_tp, std::string(f.first.id), f.second);
-        }
+            if (auto cr = dynamic_cast<core *>(&scp))
+                cr->add_field(std::make_unique<field>(*c_tp, std::string(f.first.id), f.second));
+            else if (auto ct = dynamic_cast<component_type *>(&scp))
+                ct->add_field(std::make_unique<field>(*c_tp, std::string(f.first.id), f.second));
+            else
+                throw std::runtime_error("Invalid scope type");
     }
 
     void constructor_declaration::refine(scope &scp) const
@@ -58,8 +61,8 @@ namespace riddle
         args.reserve(this->params.size());
         for (const auto &param : this->params)
         {
-            auto *c_tp = &scp.get_type(param.second.id);
-            for (size_t i = 0; i < param.first.size(); ++i)
+            auto *c_tp = &scp.get_type(param.first[0].id);
+            for (size_t i = 1; i < param.first.size(); ++i)
                 if (auto ct = dynamic_cast<component_type *>(c_tp))
                     c_tp = &ct->get_type(param.first[i].id);
                 else
@@ -67,8 +70,10 @@ namespace riddle
             args.emplace_back(std::make_unique<field>(*c_tp, std::string(param.second.id), nullptr));
         }
 
-        auto tp = dynamic_cast<component_type *>(&scp);
-        tp->add_constructor(std::make_unique<constructor>(*tp, std::move(args), inits, stmts));
+        if (auto tp = dynamic_cast<component_type *>(&scp))
+            tp->add_constructor(std::make_unique<constructor>(*tp, std::move(args), inits, stmts));
+        else
+            throw std::runtime_error("Invalid scope type");
     }
 
     void method_declaration::refine(scope &scp) const
