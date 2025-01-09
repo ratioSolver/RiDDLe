@@ -238,6 +238,13 @@ namespace riddle
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
+    /**
+     * @brief retrieves the list of the instances of the type.
+     *
+     * This function returns a reference to the vector containing instances.
+     *
+     * @return std::vector<std::shared_ptr<item>>& A reference to the vector of instances.
+     */
     [[nodiscard]] std::vector<std::shared_ptr<item>> &get_instances() noexcept { return instances; }
 
   protected:
@@ -327,6 +334,15 @@ namespace riddle
      * @return const std::vector<std::reference_wrapper<field>>& A constant reference to the arguments vector.
      */
     [[nodiscard]] const std::vector<std::reference_wrapper<field>> &get_args() const noexcept { return args; }
+
+    /**
+     * @brief Retrieves the list of atoms.
+     *
+     * This function returns a constant reference to the vector containing atoms.
+     *
+     * @return const std::vector<atom_expr>& A constant reference to the vector of atoms.
+     */
+    [[nodiscard]] const std::vector<atom_expr> &get_atoms() const noexcept { return atoms; }
 
     /**
      * @brief Calls the rule associated with the predicate to achieve the desired goal.
