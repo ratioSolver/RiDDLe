@@ -238,6 +238,9 @@ namespace riddle
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
+    [[nodiscard]] const std::map<std::string, std::unique_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
+    [[nodiscard]] const std::map<std::string, std::unique_ptr<predicate>, std::less<>> &get_predicates() const noexcept { return predicates; }
+
     /**
      * @brief retrieves the list of the instances of the type.
      *
