@@ -377,6 +377,8 @@ namespace riddle
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
+    [[nodiscard]] const std::map<std::string, std::unique_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
+
     [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
 
   protected:
