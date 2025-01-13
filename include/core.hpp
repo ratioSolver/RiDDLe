@@ -29,8 +29,17 @@ namespace riddle
     friend class predicate_declaration;
 
   public:
-    core() noexcept;
+    core(std::string_view name = "RiDDLe") noexcept;
     virtual ~core() = default;
+
+    /**
+     * @brief Retrieves the name of the core environment.
+     *
+     * This function returns the name as a string.
+     *
+     * @return std::string The name.
+     */
+    [[nodiscard]] std::string get_name() const noexcept { return name; }
 
     /**
      * @brief Reads and processes the given RiDDLe script.
@@ -446,6 +455,7 @@ namespace riddle
     [[nodiscard]] virtual atom_expr create_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {}) = 0;
 
   private:
+    const std::string name;                                                           // the name of the core..
     std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the core..
     std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the core..
     std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the core..

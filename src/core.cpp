@@ -5,7 +5,7 @@
 
 namespace riddle
 {
-    core::core() noexcept : scope(*this, *this), env(*this, *this)
+    core::core(std::string_view name) noexcept : scope(*this, *this), env(*this, *this), name(name)
     {
         add_type(std::make_unique<bool_type>(*this));
         add_type(std::make_unique<int_type>(*this));
