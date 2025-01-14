@@ -46,6 +46,15 @@ namespace riddle
     [[nodiscard]] const std::string &get_name() const noexcept { return name; }
 
     /**
+     * @brief Retrieves the full name.
+     *
+     * This function returns the full name as a string.
+     *
+     * @return std::string The full name.
+     */
+    [[nodiscard]] std::string get_full_name() const noexcept;
+
+    /**
      * @brief Checks if the type is primitive.
      *
      * This function returns a boolean value indicating whether the type

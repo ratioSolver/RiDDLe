@@ -180,6 +180,15 @@ namespace riddle
      * @return string_expr The string expression.
      */
     [[nodiscard]] virtual string_expr new_string(std::string &&value) = 0;
+    /**
+     * @brief Retrieves the string value of the given expression.
+     *
+     * This function takes a string expression and returns its string value.
+     *
+     * @param expr The string expression.
+     * @return std::string The string value of the expression.
+     */
+    [[nodiscard]] virtual std::string string_value(const string_item &expr) const noexcept = 0;
 
     /**
      * @brief Creates a new enum item.
@@ -389,6 +398,9 @@ namespace riddle
     [[nodiscard]] const std::map<std::string, std::unique_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
 
     [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
+
+    [[nodiscard]] json::json get_state() const;
+    [[nodiscard]] json::json get_timelines() const;
 
   protected:
     /**

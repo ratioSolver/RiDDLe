@@ -2,6 +2,7 @@
 #include <sstream>
 #include <fstream>
 #include <queue>
+#include <set>
 
 namespace riddle
 {
@@ -112,6 +113,63 @@ namespace riddle
         if (auto it = items.find(name); it != items.end())
             return it->second;
         throw std::out_of_range("item `" + std::string(name) + "` not found");
+    }
+
+    json::json core::get_state() const
+    {
+        std::set<item *> all_items; // we keep track of all the items..
+        std::set<atom *> all_atoms; // we keep track of all the atoms..
+        std::queue<component_type *> q;
+        for (const auto &tp : types)
+            if (auto ct = dynamic_cast<component_type *>(tp.second.get()))
+                q.push(ct);
+            else if (auto et = dynamic_cast<enum_type *>(tp.second.get()))
+                for (const auto &val : et->get_domain())
+                    all_items.insert(static_cast<item *>(val.get()));
+        while (!q.empty())
+        {
+            auto tp = q.front();
+            q.pop();
+            for (const auto &itm : tp->get_instances())
+                all_items.insert(itm.get());
+            for (const auto &pred : q.front()->get_predicates())
+                for (const auto &atm : pred.second->get_atoms())
+                    all_atoms.insert(static_cast<atom *>(atm.get()));
+            for (const auto &etp : tp->get_types())
+                if (auto ct = dynamic_cast<component_type *>(etp.second.get()))
+                    q.push(ct);
+                else if (auto et = dynamic_cast<enum_type *>(etp.second.get()))
+                    for (const auto &val : et->get_domain())
+                        all_items.insert(static_cast<item *>(val.get()));
+        }
+        for (const auto &pred : predicates)
+            for (const auto &atm : pred.second->get_atoms())
+                all_atoms.insert(static_cast<atom *>(atm.get()));
+
+        json::json j_core{{"name", name}};
+        if (!all_items.empty())
+        { // we add the items of the core..
+            json::json j_items;
+            for (const auto &itm : all_items)
+                j_items[itm->get_id()] = itm->to_json();
+            j_core["items"] = std::move(j_items);
+        }
+        if (!all_atoms.empty())
+        { // we add the atoms of the core..
+            json::json j_atoms;
+            for (const auto &atm : all_atoms)
+                j_atoms[atm->get_id()] = atm->to_json();
+            j_core["atoms"] = std::move(j_atoms);
+        }
+        if (!items.empty())
+        { // we add the items of the core..
+            json::json j_items;
+            for (const auto &[name, itm] : items)
+                j_items[name] = itm->to_json();
+            j_core["exprs"] = std::move(j_items);
+        }
+
+        return j_core;
     }
 
     void core::add_method(std::unique_ptr<method> mthd)

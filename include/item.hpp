@@ -2,6 +2,7 @@
 
 #include "env.hpp"
 #include "enum.hpp"
+#include "json.hpp"
 #include <vector>
 
 namespace riddle
@@ -43,6 +44,17 @@ namespace riddle
 
     [[nodiscard]] virtual std::shared_ptr<bool_item> operator==(std::shared_ptr<item> rhs) const = 0;
 
+    [[nodiscard]] virtual json::json to_json() const = 0;
+
+    /**
+     * @brief Get the unique identifier of the item.
+     *
+     * This function returns the unique identifier of the item.
+     *
+     * @return The unique identifier of the item.
+     */
+    [[nodiscard]] uintptr_t get_id() const noexcept { return reinterpret_cast<uintptr_t>(this); }
+
   private:
     type &tp;
   };
@@ -54,6 +66,8 @@ namespace riddle
   public:
     bool_item(bool_type &tp);
     virtual ~bool_item() = default;
+
+    [[nodiscard]] virtual json::json to_json() const override;
   };
 
   using bool_expr = std::shared_ptr<bool_item>;
@@ -65,6 +79,8 @@ namespace riddle
     arith_item(real_type &tp);
     arith_item(time_type &tp);
     virtual ~arith_item() = default;
+
+    [[nodiscard]] virtual json::json to_json() const override;
   };
 
   using arith_expr = std::shared_ptr<arith_item>;
@@ -74,6 +90,8 @@ namespace riddle
   public:
     string_item(string_type &tp);
     virtual ~string_item() = default;
+
+    [[nodiscard]] virtual json::json to_json() const override;
   };
 
   using string_expr = std::shared_ptr<string_item>;
@@ -85,6 +103,8 @@ namespace riddle
     virtual ~enum_item() = default;
 
     [[nodiscard]] const std::vector<std::reference_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
+
+    [[nodiscard]] virtual json::json to_json() const override;
 
   private:
     std::vector<std::reference_wrapper<utils::enum_val>> values;
@@ -99,6 +119,15 @@ namespace riddle
     virtual ~component() = default;
 
     [[nodiscard]] std::shared_ptr<bool_item> operator==(std::shared_ptr<item> rhs) const override;
+
+    [[nodiscard]] virtual json::json to_json() const override;
+  };
+
+  enum atom_state
+  {
+    active,   // the atom is active
+    inactive, // the atom is inactive
+    unified   // the atom is unified
   };
 
   class atom : public item, public env
@@ -108,6 +137,10 @@ namespace riddle
     virtual ~atom() = default;
 
     [[nodiscard]] bool is_fact() const { return fact; }
+
+    [[nodiscard]] virtual atom_state get_state() const { return atom_state::active; }
+
+    [[nodiscard]] virtual json::json to_json() const override;
 
   private:
     static env &atom_parent(const predicate &t, const std::map<std::string, std::shared_ptr<item>, std::less<>> &args);

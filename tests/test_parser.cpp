@@ -117,6 +117,7 @@ public:
     utils::inf_rational arith_value(const riddle::arith_item &) const noexcept override { return utils::inf_rational(); }
     riddle::string_expr new_string(std::string &&) override { return std::make_shared<string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
     riddle::string_expr new_string() override { return new_string(""); }
+    std::string string_value(const riddle::string_item &) const noexcept override { return ""; }
     riddle::enum_expr new_enum(riddle::type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) override { return std::make_shared<enum_item>(tp, 0, std::move(values)); }
     utils::enum_val &enum_value(const riddle::enum_item &itm) const noexcept override { return itm.get_values()[0].get(); }
 

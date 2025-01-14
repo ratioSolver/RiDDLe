@@ -8,6 +8,17 @@
 namespace riddle
 {
     type::type(scope &scp, std::string &&name, bool primitive) noexcept : scp(scp), name(std::move(name)), primitive(primitive) {}
+    std::string type::get_full_name() const noexcept
+    {
+        std::string full_name = get_name();
+        const auto *t = this;
+        while (const auto *et = dynamic_cast<const type *>(&t->get_scope()))
+        {
+            full_name.insert(0, et->get_name() + ".");
+            t = et;
+        }
+        return full_name;
+    }
 
     bool_type::bool_type(core &cr) noexcept : type(cr, bool_kw, true) {}
     std::shared_ptr<item> bool_type::new_instance() { return get_scope().get_core().new_bool(); }
