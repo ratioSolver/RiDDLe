@@ -2,3 +2,6 @@
 	path = extern/utils
 	url = https://github.com/ratioSolver/Utils
 	branch = memory
+[submodule "extern/json"]
+	path = extern/json
+	url = https://github.com/ratioSolver/json
