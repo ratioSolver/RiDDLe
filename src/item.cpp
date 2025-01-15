@@ -5,7 +5,7 @@ namespace riddle
     bool_item::bool_item(bool_type &tp) : item(tp) {}
     json::json bool_item::to_json() const
     {
-        json::json j_val{{"type", get_type().get_name()}}; // we add the type of the item..
+        json::json j_val{{"type", std::string_view(get_type().get_name())}}; // we add the type of the item..
         switch (get_type().get_scope().get_core().bool_value(*this))
         {
         case utils::True:
@@ -26,7 +26,7 @@ namespace riddle
     arith_item::arith_item(time_type &tp) : item(tp) {}
     json::json arith_item::to_json() const
     {
-        json::json j_val{{"type", get_type().get_name()}}; // we add the type of the item..
+        json::json j_val{{"type", std::string_view(get_type().get_name())}}; // we add the type of the item..
         const auto val = get_type().get_scope().get_core().arith_value(*this);
         j_val["num"] = static_cast<int64_t>(val.get_rational().numerator());
         j_val["den"] = static_cast<int64_t>(val.get_rational().denominator());
@@ -37,7 +37,7 @@ namespace riddle
     }
 
     string_item::string_item(string_type &tp) : item(tp) {}
-    json::json string_item::to_json() const { return {{"type", get_type().get_name(), {"val", get_type().get_scope().get_core().string_value(*this)}}}; }
+    json::json string_item::to_json() const { return {{"type", std::string_view(get_type().get_name()), {"val", get_type().get_scope().get_core().string_value(*this)}}}; }
 
     enum_item::enum_item(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) : item(tp), values(std::move(values)) {}
     json::json enum_item::to_json() const
@@ -67,7 +67,7 @@ namespace riddle
     {
         json::json j_itm{{"type", get_type().get_full_name()}}; // we add the type of the item..
 #ifdef COMPUTE_NAMES
-        j_itm["name"] = get_type().get_scope().get_core().guess_name(*this);
+        j_itm["name"] = std::string_view(get_type().get_scope().get_core().guess_name(*this));
 #endif
 
         if (!items.empty())

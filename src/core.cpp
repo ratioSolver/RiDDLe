@@ -146,7 +146,7 @@ namespace riddle
             for (const auto &atm : pred.second->get_atoms())
                 all_atoms.insert(static_cast<atom *>(atm.get()));
 
-        json::json j_core{{"name", name}};
+        json::json j_core{{"name", std::string_view(name)}};
         if (!all_items.empty())
         { // we add the items of the core..
             json::json j_items;
