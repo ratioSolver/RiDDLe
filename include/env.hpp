@@ -40,6 +40,9 @@ namespace riddle
     friend class return_statement;
     friend class formula_statement;
     friend class disjunction_statement;
+#ifdef COMPUTE_NAMES
+    friend class core;
+#endif
 
   public:
     env(core &c, env &parent, std::map<std::string, std::shared_ptr<item>, std::less<>> &&items = {}) noexcept;

@@ -27,6 +27,9 @@ namespace riddle
     friend class method_declaration;
     friend class class_declaration;
     friend class predicate_declaration;
+#ifdef COMPUTE_NAMES
+    friend class component;
+#endif
 
   public:
     core(std::string_view name = "RiDDLe") noexcept;

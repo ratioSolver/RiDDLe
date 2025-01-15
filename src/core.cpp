@@ -201,4 +201,30 @@ namespace riddle
         if (!types.emplace(name, std::move(t)).second)
             throw std::invalid_argument("type `" + name + "` already exists");
     }
+
+#ifdef COMPUTE_NAMES
+    void core::recompute_names() noexcept
+    {
+        expr_names.clear();
+
+        std::queue<std::pair<std::string, std::shared_ptr<item>>> q;
+        for (const auto &xpr : items)
+        {
+            expr_names.emplace(xpr.second.get(), xpr.first);
+            if (!xpr.second->get_type().is_primitive())
+                q.push(xpr);
+        }
+
+        while (!q.empty())
+        {
+            const auto &c_xpr = q.front();
+            if (const auto *c_env = dynamic_cast<env *>(c_xpr.second.get()))
+                for (const auto &xpr : c_env->items)
+                    if (expr_names.emplace(xpr.second.get(), expr_names.at(c_xpr.second.get()) + '.' + xpr.first).second)
+                        if (!xpr.second->get_type().is_primitive())
+                            q.push(xpr);
+            q.pop();
+        }
+    }
+#endif
 } // namespace riddle
