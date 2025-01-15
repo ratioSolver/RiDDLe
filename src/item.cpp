@@ -42,9 +42,9 @@ namespace riddle
     enum_item::enum_item(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) : item(tp), values(std::move(values)) {}
     json::json enum_item::to_json() const
     {
-        json::json j_val{{"type", "enum"}}; // we add the type of the item..
+        json::json j_val{{"type", "enum"}}; // we add the type of the enum item..
 
-        // we add the full name of the type of the item..
+        // we add the full name of the type of the enum item..
         std::string tp_name = get_type().get_name();
         const auto *t = &get_type();
         while (const auto *et = dynamic_cast<const type *>(&t->get_scope()))
@@ -54,9 +54,12 @@ namespace riddle
         }
         j_val["enums_type"] = tp_name;
 
-        // we add the value of the item..
-        auto &val = get_type().get_scope().get_core().enum_value(*this);
-        j_val["val"] = static_cast<item &>(val).get_id();
+        // we add the domain of the enum item..
+        auto vals = get_type().get_scope().get_core().enum_value(*this);
+        json::json j_vals(json::json_type::array);
+        for (const auto &val : vals)
+            j_vals.push_back(static_cast<item &>(val.get()).get_id());
+        j_val["vals"] = std::move(j_vals);
 
         return j_val;
     }
@@ -69,16 +72,9 @@ namespace riddle
         j_itm["name"] = std::string_view(get_type().get_scope().get_core().guess_name(*this));
 #endif
 
-        if (!items.empty())
-        { // we add the fields of the item..
-            json::json j_itms;
-            for (const auto &[name, itm] : items)
-                if (auto c = dynamic_cast<component *>(itm.get()))
-                    j_itms[name] = c->get_id();
-                else
-                    j_itms[name] = itm->to_json();
-            j_itm["exprs"] = std::move(j_itms);
-        }
+        if (!items.empty()) // we add the fields of the item..
+            j_itm["exprs"] = env::to_json();
+
         return j_itm;
     }
 
@@ -103,16 +99,9 @@ namespace riddle
             break;
         }
 
-        if (!items.empty())
-        { // we add the fields of the atom..
-            json::json j_itms;
-            for (const auto &[name, itm] : items)
-                if (auto c = dynamic_cast<component *>(itm.get()))
-                    j_itms[name] = c->get_id();
-                else
-                    j_itms[name] = itm->to_json();
-            j_atm["exprs"] = std::move(j_itms);
-        }
+        if (!items.empty()) // we add the fields of the atom..
+            j_atm["exprs"] = env::to_json();
+
         return j_atm;
     }
 

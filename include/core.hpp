@@ -206,14 +206,15 @@ namespace riddle
      */
     [[nodiscard]] virtual enum_expr new_enum(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
     /**
-     * @brief Retrieves the enum value associated with the given enum item.
+     * @brief Retrieves the domain for the given enum item.
      *
-     * This function is responsible for retrieving the enum value associated with the given enum item.
+     * This function takes an enum item and returns a vector of references to the enum values that
+     * make up the domain of the enum item.
      *
-     * @param expr The enum item for which the associated enum value is to be retrieved.
-     * @return A reference to the enum value associated with the given enum item.
+     * @param expr The enum item for which the domain is being retrieved.
+     * @return A vector of references to the enum values that make up the domain of the enum item.
      */
-    [[nodiscard]] virtual utils::enum_val &enum_value(const enum_item &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::vector<std::reference_wrapper<utils::enum_val>> enum_value(const enum_item &expr) const noexcept = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.
@@ -402,7 +403,7 @@ namespace riddle
 
     [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
 
-    [[nodiscard]] json::json to_json() const;
+    [[nodiscard]] virtual json::json to_json() const;
 
   protected:
     /**

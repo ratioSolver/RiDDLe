@@ -161,13 +161,8 @@ namespace riddle
                 j_atoms[std::to_string(atm->get_id())] = atm->to_json();
             j_core["atoms"] = std::move(j_atoms);
         }
-        if (!items.empty())
-        { // we add the items of the core..
-            json::json j_items;
-            for (const auto &[name, itm] : items)
-                j_items[name] = itm->to_json();
-            j_core["exprs"] = std::move(j_items);
-        }
+        if (!items.empty()) // we add the fields of the core..
+            j_core["exprs"] = env::to_json();
 
         return j_core;
     }

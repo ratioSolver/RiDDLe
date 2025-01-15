@@ -1,5 +1,6 @@
 #pragma once
 
+#include "json.hpp"
 #include <memory>
 #include <map>
 #include <string>
@@ -82,6 +83,8 @@ namespace riddle
      * @throws std::out_of_range if the item is not found in the current or parent environment.
      */
     [[nodiscard]] virtual std::shared_ptr<item> get(std::string_view name);
+
+    [[nodiscard]] virtual json::json to_json() const;
 
   private:
     core &cr;
