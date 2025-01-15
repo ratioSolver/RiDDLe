@@ -402,8 +402,7 @@ namespace riddle
 
     [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
 
-    [[nodiscard]] json::json get_state() const;
-    [[nodiscard]] json::json get_timelines() const;
+    [[nodiscard]] json::json to_json() const;
 
   protected:
     /**

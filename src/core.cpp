@@ -115,7 +115,7 @@ namespace riddle
         throw std::out_of_range("item `" + std::string(name) + "` not found");
     }
 
-    json::json core::get_state() const
+    json::json core::to_json() const
     {
         std::set<item *> all_items; // we keep track of all the items..
         std::set<atom *> all_atoms; // we keep track of all the atoms..
@@ -132,7 +132,7 @@ namespace riddle
             q.pop();
             for (const auto &itm : tp->get_instances())
                 all_items.insert(itm.get());
-            for (const auto &pred : q.front()->get_predicates())
+            for (const auto &pred : tp->get_predicates())
                 for (const auto &atm : pred.second->get_atoms())
                     all_atoms.insert(static_cast<atom *>(atm.get()));
             for (const auto &etp : tp->get_types())
@@ -151,14 +151,14 @@ namespace riddle
         { // we add the items of the core..
             json::json j_items;
             for (const auto &itm : all_items)
-                j_items[itm->get_id()] = itm->to_json();
+                j_items[std::to_string(itm->get_id())] = itm->to_json();
             j_core["items"] = std::move(j_items);
         }
         if (!all_atoms.empty())
         { // we add the atoms of the core..
             json::json j_atoms;
             for (const auto &atm : all_atoms)
-                j_atoms[atm->get_id()] = atm->to_json();
+                j_atoms[std::to_string(atm->get_id())] = atm->to_json();
             j_core["atoms"] = std::move(j_atoms);
         }
         if (!items.empty())

@@ -54,11 +54,10 @@ namespace riddle
         }
         j_val["enums_type"] = tp_name;
 
-        // we add the values of the item..
-        json::json j_vals;
-        for (const auto &val : values)
-            j_vals.push_back(dynamic_cast<item &>(val.get()).get_id());
-        j_val["val"] = std::move(j_vals);
+        // we add the value of the item..
+        auto &val = get_type().get_scope().get_core().enum_value(*this);
+        j_val["val"] = static_cast<item &>(val).get_id();
+
         return j_val;
     }
 
