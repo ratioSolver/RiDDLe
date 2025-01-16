@@ -1,4 +1,5 @@
 #include "core.hpp"
+#include <cassert>
 
 namespace riddle
 {
@@ -28,11 +29,19 @@ namespace riddle
     {
         json::json j_val{{"type", std::string_view(get_type().get_name())}}; // we add the type of the item..
         const auto val = get_type().get_scope().get_core().arith_value(*this);
-        j_val["num"] = static_cast<int64_t>(val.get_rational().numerator());
-        j_val["den"] = static_cast<int64_t>(val.get_rational().denominator());
-        if (val.get_infinitesimal() != utils::rational::zero)
-            j_val["inf"] = {{"num", static_cast<int64_t>(val.get_infinitesimal().numerator())},
-                            {"den", static_cast<int64_t>(val.get_infinitesimal().denominator())}};
+        if (get_type().get_name() == "int")
+        {
+            assert(is_integer(val));
+            j_val["val"] = static_cast<int64_t>(val.get_rational().numerator());
+        }
+        else
+        {
+            j_val["num"] = static_cast<int64_t>(val.get_rational().numerator());
+            j_val["den"] = static_cast<int64_t>(val.get_rational().denominator());
+            if (val.get_infinitesimal() != utils::rational::zero)
+                j_val["inf"] = {{"num", static_cast<int64_t>(val.get_infinitesimal().numerator())},
+                                {"den", static_cast<int64_t>(val.get_infinitesimal().denominator())}};
+        }
         return j_val;
     }
 

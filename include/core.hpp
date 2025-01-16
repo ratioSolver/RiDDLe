@@ -36,6 +36,15 @@ namespace riddle
     virtual ~core() = default;
 
     /**
+     * @brief Retrieves the unique identifier for the current core.
+     *
+     * This function returns the unique identifier for the current core.
+     *
+     * @return uintptr_t The unique identifier.
+     */
+    [[nodiscard]] uintptr_t get_id() const noexcept { return reinterpret_cast<uintptr_t>(this); }
+
+    /**
      * @brief Retrieves the name of the core environment.
      *
      * This function returns the name as a string.

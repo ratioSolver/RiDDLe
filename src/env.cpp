@@ -21,6 +21,8 @@ namespace riddle
         for (const auto &[name, itm] : items)
             if (itm->get_type().is_primitive()) // we add the json representation of the item..
                 j_itms[name] = itm->to_json();
+            else if (auto e = dynamic_cast<enum_item *>(itm.get()))
+                j_itms[name] = e->to_json();
             else if (auto c = dynamic_cast<component *>(itm.get()))
                 j_itms[name] = {{"type", "item"}, {"val", c->get_id()}};
             else if (auto a = dynamic_cast<atom *>(itm.get()))
