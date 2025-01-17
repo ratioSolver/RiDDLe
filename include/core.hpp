@@ -412,7 +412,7 @@ namespace riddle
 
     [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
 
-    [[nodiscard]] virtual json::json to_json() const;
+    [[nodiscard]] virtual json::json to_json() const override;
 
   protected:
     /**
