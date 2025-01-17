@@ -71,6 +71,7 @@ namespace riddle
 
   public:
     scope(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args = {});
+    scope(const scope &) = delete;
     virtual ~scope() = default;
 
     [[nodiscard]] core &get_core() const noexcept { return cr; }
