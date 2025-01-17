@@ -1,8 +1,10 @@
 add_executable(riddle_lexer_tests test_lexer.cpp)
+add_dependencies(riddle_lexer_tests RiDDLe)
 target_link_libraries(riddle_lexer_tests PRIVATE RiDDLe)
 setup_sanitizers(riddle_lexer_tests)
 
 add_executable(riddle_parser_tests test_parser.cpp)
+add_dependencies(riddle_parser_tests RiDDLe)
 target_link_libraries(riddle_parser_tests PRIVATE RiDDLe)
 setup_sanitizers(riddle_parser_tests)
 
