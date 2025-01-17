@@ -67,7 +67,7 @@ namespace riddle
         auto vals = get_type().get_scope().get_core().enum_value(*this);
         json::json j_vals(json::json_type::array);
         for (const auto &val : vals)
-            j_vals.push_back(static_cast<item &>(val.get()).get_id());
+            j_vals.push_back(static_cast<uint64_t>(static_cast<item &>(val.get()).get_id()));
         j_val["vals"] = std::move(j_vals);
 
         return j_val;
