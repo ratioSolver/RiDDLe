@@ -17,7 +17,7 @@ jobs:
           sudo apt-get install -y cmake lcov
 
       - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON -DENABLE_UBASAN=ON -DENABLE_COV=ON
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON -DENABLE_UBSAN=ON -DENABLE_COV=ON
 
       - name: Build
         run: cmake --build build --config Debug
