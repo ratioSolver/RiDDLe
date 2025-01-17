@@ -24,9 +24,9 @@ namespace riddle
             else if (auto e = dynamic_cast<enum_item *>(itm.get()))
                 j_itms[name] = e->to_json();
             else if (auto c = dynamic_cast<component *>(itm.get()))
-                j_itms[name] = {{"type", "item"}, {"val", c->get_id()}};
+                j_itms[name] = {{"type", "item"}, {"val", static_cast<uint64_t>(c->get_id())}};
             else if (auto a = dynamic_cast<atom *>(itm.get()))
-                j_itms[name] = {{"type", "atom"}, {"val", a->get_id()}};
+                j_itms[name] = {{"type", "atom"}, {"val", static_cast<uint64_t>(a->get_id())}};
             else
                 assert(false);
         return j_itms;
