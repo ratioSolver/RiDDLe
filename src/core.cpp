@@ -174,7 +174,7 @@ namespace riddle
             args.push_back(mthd->get_field(arg).get_type());
         try
         { // check if the method already exists
-            get_method(mthd->get_name(), args);
+            [[maybe_unused]] auto &m = get_method(mthd->get_name(), args);
             throw std::invalid_argument("method `" + mthd->get_name() + "` already exists");
         }
         catch (const std::out_of_range &)

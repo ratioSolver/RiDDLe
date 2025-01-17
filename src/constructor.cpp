@@ -104,5 +104,9 @@ namespace riddle
                 else
                     throw std::runtime_error("Invalid type reference");
             }
+
+        // we execute the constructor statements
+        for (const auto &stmt : body)
+            stmt->execute(*this, ctx);
     }
 } // namespace riddle
