@@ -1167,6 +1167,16 @@ namespace riddle
                 expr = std::make_unique<sum_expression>(std::move(xprs));
                 break;
             }
+            case MINUS:
+            {
+                assert(3 >= precedence);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+                while (match(MINUS))
+                    xprs.emplace_back(parse_expression(4));
+                expr = std::make_unique<subtraction_expression>(std::move(xprs));
+                break;
+            }
             case STAR:
             {
                 assert(4 >= precedence);
@@ -1178,10 +1188,16 @@ namespace riddle
                 break;
             }
             case SLASH:
+            {
                 assert(4 >= precedence);
-                pos++; // we parse the `/` operator..
-                expr = std::make_unique<divide_expression>(std::move(expr), parse_expression(5));
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+                while (match(SLASH))
+                    xprs.emplace_back(parse_expression(5));
+                expr = std::make_unique<division_expression>(std::move(xprs));
                 break;
+            }
+            break;
             default:
                 error("Unexpected token");
             }

@@ -3,6 +3,8 @@
 #include <fstream>
 #include <queue>
 #include <set>
+#include <algorithm>
+#include <cassert>
 
 namespace riddle
 {
@@ -106,6 +108,33 @@ namespace riddle
         if (auto it = predicates.find(name); it != predicates.end())
             return *it->second;
         throw std::out_of_range("predicate `" + std::string(name) + "` not found");
+    }
+
+    type &core::type_promotion(const std::vector<arith_expr> &exprs) const
+    {
+        assert(!exprs.empty());
+        unsigned int max = 0;
+        for (const auto &expr : exprs)
+            if (expr->get_type().get_name() == int_kw)
+                max = std::max(max, 1u);
+            else if (expr->get_type().get_name() == real_kw)
+                max = std::max(max, 2u);
+            else if (expr->get_type().get_name() == time_kw)
+            {
+                max = 3u;
+                break;
+            }
+        switch (max)
+        {
+        case 1:
+            return get_type(int_kw);
+        case 2:
+            return get_type(real_kw);
+        case 3:
+            return get_type(time_kw);
+        default:
+            throw std::invalid_argument("invalid type promotion");
+        }
     }
 
     std::shared_ptr<item> core::get(std::string_view name)

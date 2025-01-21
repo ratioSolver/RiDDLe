@@ -212,6 +212,8 @@ namespace riddle
     bool match(std::istream &is, char expected) noexcept;
     std::unique_ptr<const token> finish_token() noexcept;
 
+    static bool is_id_part(const char &ch) noexcept { return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'); }
+
   private:
     symbol current_state = START;
 

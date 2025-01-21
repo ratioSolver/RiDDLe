@@ -193,6 +193,17 @@ namespace riddle
     std::vector<std::unique_ptr<expression>> xprs;
   };
 
+  class subtraction_expression final : public expression
+  {
+  public:
+    subtraction_expression(std::vector<std::unique_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
+
+    [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
+
+  private:
+    std::vector<std::unique_ptr<expression>> xprs;
+  };
+
   class product_expression final : public expression
   {
   public:
@@ -204,16 +215,15 @@ namespace riddle
     std::vector<std::unique_ptr<expression>> xprs;
   };
 
-  class divide_expression final : public expression
+  class division_expression final : public expression
   {
   public:
-    divide_expression(std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    division_expression(std::vector<std::unique_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
 
     [[nodiscard]] std::shared_ptr<item> evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    std::unique_ptr<expression> lhs;
-    std::unique_ptr<expression> rhs;
+    std::vector<std::unique_ptr<expression>> xprs;
   };
 
   class lt_expression final : public expression

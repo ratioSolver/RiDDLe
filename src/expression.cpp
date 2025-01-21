@@ -18,6 +18,8 @@ namespace riddle
         for (size_t i = 1; i < object_id.size(); ++i)
             if (auto c = dynamic_cast<component *>(obj.get()))
                 obj = c->get(object_id[i].id);
+            else if (auto c = dynamic_cast<atom *>(obj.get()))
+                obj = c->get(object_id[i].id);
             else
                 throw std::runtime_error("Invalid object reference");
         return obj;
@@ -59,6 +61,14 @@ namespace riddle
         return ctx.get_core().new_sum(std::move(c_xprs));
     }
 
+    std::shared_ptr<item> subtraction_expression::evaluate(const scope &scp, env &ctx) const
+    {
+        std::vector<arith_expr> c_xprs;
+        for (const auto &xpr : xprs)
+            c_xprs.emplace_back(std::dynamic_pointer_cast<arith_item>(xpr->evaluate(scp, ctx)));
+        return ctx.get_core().new_subtraction(std::move(c_xprs));
+    }
+
     std::shared_ptr<item> product_expression::evaluate(const scope &scp, env &ctx) const
     {
         std::vector<arith_expr> c_xprs;
@@ -67,7 +77,13 @@ namespace riddle
         return ctx.get_core().new_product(std::move(c_xprs));
     }
 
-    std::shared_ptr<item> divide_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_divide(std::dynamic_pointer_cast<arith_item>(lhs->evaluate(scp, ctx)), std::dynamic_pointer_cast<arith_item>(rhs->evaluate(scp, ctx))); }
+    std::shared_ptr<item> division_expression::evaluate(const scope &scp, env &ctx) const
+    {
+        std::vector<arith_expr> c_xprs;
+        for (const auto &xpr : xprs)
+            c_xprs.emplace_back(std::dynamic_pointer_cast<arith_item>(xpr->evaluate(scp, ctx)));
+        return ctx.get_core().new_division(std::move(c_xprs));
+    }
 
     std::shared_ptr<item> lt_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_lt(std::dynamic_pointer_cast<arith_item>(lhs->evaluate(scp, ctx)), std::dynamic_pointer_cast<arith_item>(rhs->evaluate(scp, ctx))); }
 

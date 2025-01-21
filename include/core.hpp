@@ -291,6 +291,17 @@ namespace riddle
      */
     [[nodiscard]] virtual arith_expr new_sum(std::vector<arith_expr> &&xprs) = 0;
     /**
+     * @brief Creates a new arithmetic subtraction item.
+     *
+     * This function is responsible for creating a new arithmetic subtraction item
+     * from a vector of arithmetic items. The function returns a shared pointer
+     * to the newly created arithmetic subtraction item.
+     *
+     * @param xprs A vector of shared pointers to arithmetic items that will be subtracted.
+     * @return arith_expr A shared pointer to the newly created arithmetic subtraction item.
+     */
+    [[nodiscard]] virtual arith_expr new_subtraction(std::vector<arith_expr> &&xprs) = 0;
+    /**
      * @brief Creates a new product from a vector of arithmetic items.
      *
      * This function is responsible for creating a new product object
@@ -305,14 +316,15 @@ namespace riddle
     /**
      * @brief Creates a new division arithmetic item.
      *
-     * This function creates a new arithmetic item representing the division of
-     * the left-hand side (lhs) by the right-hand side (rhs).
+     * This function is responsible for creating a new division arithmetic item
+     * from a vector of arithmetic items. The function returns a shared pointer
+     * to the newly created division arithmetic item.
      *
-     * @param lhs A shared pointer to the left-hand side arithmetic item.
-     * @param rhs A shared pointer to the right-hand side arithmetic item.
-     * @return arith_expr A shared pointer to the resulting division arithmetic item.
+     * @param xprs A vector of shared pointers to arithmetic items that will be divided.
+     *
+     * @return arith_expr A shared pointer to the newly created division arithmetic item.
      */
-    [[nodiscard]] virtual arith_expr new_divide(arith_expr lhs, arith_expr rhs) = 0;
+    [[nodiscard]] virtual arith_expr new_division(std::vector<arith_expr> &&xprs) = 0;
 
     /**
      * @brief Creates a new less-than comparison item.
@@ -409,6 +421,18 @@ namespace riddle
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
     [[nodiscard]] const std::map<std::string, std::unique_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
+
+    /**
+     * @brief Promotes the type of the given arithmetic expressions.
+     *
+     * This function takes a vector of arithmetic expressions and determines the
+     * appropriate type promotion for them. The result is a reference to the
+     * promoted type.
+     *
+     * @param exprs A vector of arithmetic expressions to be promoted.
+     * @return A reference to the promoted type.
+     */
+    [[nodiscard]] type &type_promotion(const std::vector<arith_expr> &exprs) const;
 
     [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
 

@@ -130,8 +130,9 @@ public:
     riddle::arith_expr new_negation(riddle::arith_expr) override { return new_int(0); }
 
     riddle::arith_expr new_sum(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
+    riddle::arith_expr new_subtraction(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
     riddle::arith_expr new_product(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
-    riddle::arith_expr new_divide(riddle::arith_expr, riddle::arith_expr) override { return new_int(0); }
+    riddle::arith_expr new_division(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
 
     riddle::bool_expr new_lt(riddle::arith_expr, riddle::arith_expr) override { return new_bool(false); }
     riddle::bool_expr new_le(riddle::arith_expr, riddle::arith_expr) override { return new_bool(false); }

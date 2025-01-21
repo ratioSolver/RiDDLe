@@ -72,8 +72,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = BOOL;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = BOOL;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
@@ -110,8 +118,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = CLASS;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = CLASS;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
@@ -141,8 +157,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = ENUM;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = ENUM;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
@@ -160,9 +184,20 @@ namespace riddle
                             if (match(is, 't'))
                                 text.push_back('t');
                             else
+                            {
+                                current_state = ID;
                                 break;
-                            current_state = FACT;
-                            tokens.push_back(finish_token());
+                            }
+                            if (is_id_part(is.peek()))
+                            {
+                                current_state = ID;
+                                break;
+                            }
+                            else
+                            {
+                                current_state = FACT;
+                                tokens.push_back(finish_token());
+                            }
                         }
                         else if (match(is, 'l'))
                         {
@@ -174,9 +209,20 @@ namespace riddle
                             if (match(is, 'e'))
                                 text.push_back('e');
                             else
+                            {
+                                current_state = ID;
                                 break;
-                            current_state = Bool;
-                            tokens.push_back(finish_token());
+                            }
+                            if (is_id_part(is.peek()))
+                            {
+                                current_state = ID;
+                                break;
+                            }
+                            else
+                            {
+                                current_state = Bool;
+                                tokens.push_back(finish_token());
+                            }
                         }
                         else
                         {
@@ -190,9 +236,20 @@ namespace riddle
                         if (match(is, 'r'))
                             text.push_back('r');
                         else
+                        {
+                            current_state = ID;
                             break;
-                        current_state = FOR;
-                        tokens.push_back(finish_token());
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = FOR;
+                            tokens.push_back(finish_token());
+                        }
                     }
                     else
                         current_state = ID;
@@ -225,8 +282,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = GOAL;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = GOAL;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
@@ -249,8 +314,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = INT;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = INT;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
@@ -273,8 +346,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = NEW;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = NEW;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
@@ -290,8 +371,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = OR;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = OR;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
@@ -356,8 +445,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = PREDICATE;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = PREDICATE;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
@@ -379,9 +476,20 @@ namespace riddle
                         if (match(is, 'l'))
                             text.push_back('l');
                         else
+                        {
+                            current_state = ID;
                             break;
-                        current_state = REAL;
-                        tokens.push_back(finish_token());
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = REAL;
+                            tokens.push_back(finish_token());
+                        }
                     }
                     else if (match(is, 't'))
                     {
@@ -397,9 +505,20 @@ namespace riddle
                         if (match(is, 'n'))
                             text.push_back('n');
                         else
+                        {
+                            current_state = ID;
                             break;
-                        current_state = RETURN;
-                        tokens.push_back(finish_token());
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = RETURN;
+                            tokens.push_back(finish_token());
+                        }
                     }
                     else
                         current_state = ID;
@@ -446,8 +565,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = STRING;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = STRING;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
@@ -466,9 +593,20 @@ namespace riddle
                         if (match(is, 's'))
                             text.push_back('s');
                         else
+                        {
+                            current_state = ID;
                             break;
-                        current_state = THIS;
-                        tokens.push_back(finish_token());
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = THIS;
+                            tokens.push_back(finish_token());
+                        }
                     }
                     else if (match(is, 'i'))
                     {
@@ -480,9 +618,20 @@ namespace riddle
                         if (match(is, 'e'))
                             text.push_back('e');
                         else
+                        {
+                            current_state = ID;
                             break;
-                        current_state = TIME;
-                        tokens.push_back(finish_token());
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = TIME;
+                            tokens.push_back(finish_token());
+                        }
                     }
                     else if (match(is, 'r'))
                     {
@@ -494,9 +643,20 @@ namespace riddle
                         if (match(is, 'e'))
                             text.push_back('e');
                         else
+                        {
+                            current_state = ID;
                             break;
-                        current_state = Bool;
-                        tokens.push_back(finish_token());
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = Bool;
+                            tokens.push_back(finish_token());
+                        }
                     }
                     else
                         current_state = ID;
@@ -529,8 +689,16 @@ namespace riddle
                         current_state = ID;
                         break;
                     }
-                    current_state = VOID;
-                    tokens.push_back(finish_token());
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = VOID;
+                        tokens.push_back(finish_token());
+                    }
                 }
                 else
                     text.push_back(c);
