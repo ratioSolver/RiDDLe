@@ -239,6 +239,16 @@ namespace riddle
         std::string name = pred->get_name();
         if (!predicates.emplace(name, std::move(pred)).second)
             throw std::invalid_argument("predicate " + name + " already exists");
+        std::queue<component_type *> q;
+        q.push(this);
+        while (!q.empty())
+        {
+            auto tp = q.front();
+            q.pop();
+            tp->created_predicate(*predicates[name]);
+            for (const auto &p : tp->parents)
+                q.push(&p.get());
+        }
     }
 
     void component_type::add_type(std::unique_ptr<type> t)
@@ -247,6 +257,8 @@ namespace riddle
         if (!types.emplace(name, std::move(t)).second)
             throw std::invalid_argument("type " + name + " already exists");
     }
+
+    void component_type::add_parent(predicate &child, predicate &parent) { child.parents.emplace_back(parent); }
 
     std::shared_ptr<item> component_type::new_instance()
     {
@@ -266,6 +278,27 @@ namespace riddle
     }
 
     predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
+
+    bool predicate::is_assignable_from(const type &other) const
+    {
+        if (this == &other)
+            return true;
+        else if (auto ct = dynamic_cast<const predicate *>(&other))
+        {
+            std::queue<const predicate *> q;
+            q.push(ct);
+            while (!q.empty())
+            {
+                auto tp = q.front();
+                q.pop();
+                if (tp == this)
+                    return true;
+                for (const auto &p : tp->parents)
+                    q.push(&p.get());
+            }
+        }
+        return false;
+    }
 
     void predicate::call(atom_expr atm)
     {

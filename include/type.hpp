@@ -308,8 +308,20 @@ namespace riddle
      */
     void add_type(std::unique_ptr<type> tp);
 
+    /**
+     * @brief Adds a parent predicate to a child predicate.
+     *
+     * This function establishes a parent-child relationship between two predicates.
+     *
+     * @param child The predicate that will be assigned a parent.
+     * @param parent The predicate that will be assigned as the parent of the child.
+     */
+    void add_parent(predicate &child, predicate &parent);
+
   private:
     [[nodiscard]] std::shared_ptr<item> new_instance() override;
+
+    virtual void created_predicate([[maybe_unused]] predicate &pred) {}
 
   private:
     std::vector<std::reference_wrapper<component_type>> parents;                      // the base types (i.e. the types this type inherits from)..
@@ -329,11 +341,14 @@ namespace riddle
   class predicate : public scope, public type
   {
     friend class core;
+    friend class component_type;
     friend class predicate_declaration;
 
   public:
     predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args = {}, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
     virtual ~predicate() = default;
+
+    [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
     [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const noexcept { return parents; }
 
