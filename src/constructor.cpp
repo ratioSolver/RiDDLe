@@ -46,9 +46,9 @@ namespace riddle
                     else
                     { // we invoke the constructor of the field
                         auto &ctp = static_cast<component_type &>(f->second->get_type());
-                        auto instance = utils::dynamic_pointer_cast<component>(ctp.new_instance());
+                        auto instance = utils::s_ptr_cast<component>(ctp.new_instance());
                         ctp.get_constructor(argument_types).invoke(instance, std::move(init_args));
-                        self->items.emplace(f->first, instance);
+                        self->items.emplace(f->first, std::move(instance));
                     }
                 }
             }

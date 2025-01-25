@@ -73,7 +73,7 @@ namespace riddle
 
     void expression_statement::execute(const scope &scp, env &ctx) const
     { // evaluate an expression and assert it as a fact
-        scp.get_core().assert_fact(utils::dynamic_pointer_cast<bool_item>(xpr->evaluate(scp, ctx)));
+        scp.get_core().assert_fact(utils::s_ptr_cast<bool_item>(xpr->evaluate(scp, ctx)));
     }
 
     void conjunction_statement::execute(const scope &scp, env &ctx) const
@@ -186,6 +186,6 @@ namespace riddle
 
         auto atm = scp.get_core().new_atom(is_fact, pred, std::move(c_args));
 
-        ctx.items.emplace(id.id, atm);
+        ctx.items.emplace(id.id, std::move(atm));
     }
 } // namespace riddle

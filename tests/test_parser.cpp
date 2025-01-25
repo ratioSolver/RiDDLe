@@ -80,7 +80,7 @@ private:
 class atom : public riddle::atom
 {
 public:
-    atom(riddle::predicate &pred, bool is_fact, utils::lit &&expr, std::map<std::string, std::shared_ptr<riddle::item>, std::less<>> &&args) : riddle::atom(pred, is_fact, std::move(args)), expr(expr) {}
+    atom(riddle::predicate &pred, bool is_fact, utils::lit &&expr, std::map<std::string, utils::s_ptr<riddle::item>, std::less<>> &&args) : riddle::atom(pred, is_fact, std::move(args)), expr(expr) {}
 
     [[nodiscard]] utils::lit &get_sigma() noexcept { return expr; }
     [[nodiscard]] const utils::lit &get_sigma() const noexcept { return expr; }
@@ -119,7 +119,7 @@ public:
     riddle::string_expr new_string() override { return new_string(""); }
     std::string string_value(const riddle::string_item &) const noexcept override { return ""; }
     riddle::enum_expr new_enum(riddle::type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) override { return utils::make_s_ptr<enum_item>(tp, 0, std::move(values)); }
-    std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const riddle::enum_item &itm) const noexcept override { return {itm.get_values()[0].get()}; }
+    std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const riddle::enum_item &itm) const noexcept override { return {*itm.get_values()[0]}; }
 
     riddle::bool_expr new_and(std::vector<riddle::bool_expr> &&) override { return new_bool(false); }
     riddle::bool_expr new_or(std::vector<riddle::bool_expr> &&) override { return new_bool(false); }
@@ -142,7 +142,7 @@ public:
     void new_disjunction(std::vector<utils::u_ptr<riddle::conjunction>> &&) override {}
     void assert_fact(riddle::bool_expr) override {}
 
-    riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::item>, std::less<>> &&args) override
+    riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, utils::s_ptr<riddle::item>, std::less<>> &&args) override
     {
         auto f = utils::FALSE_lit;
         return utils::make_s_ptr<atom>(pred, is_fact, std::move(f), std::move(args));
