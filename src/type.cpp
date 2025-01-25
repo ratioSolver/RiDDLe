@@ -270,7 +270,7 @@ namespace riddle
         {
             auto tp = q.front();
             q.pop();
-            tp->instances.push_back(itm.get());
+            tp->instances.push_back(utils::s_ptr(itm));
             for (const auto &p : tp->parents)
                 q.push(p.operator->());
         }
