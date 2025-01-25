@@ -1,8 +1,8 @@
 #pragma once
 
+#include "memory.hpp"
 #include <string>
 #include <vector>
-#include <memory>
 #include <map>
 
 namespace riddle
@@ -20,7 +20,7 @@ namespace riddle
   class field
   {
   public:
-    field(type &tp, std::string &&name, const std::unique_ptr<expression> &expr, bool synthetic = false) noexcept;
+    field(type &tp, std::string &&name, const utils::u_ptr<expression> &expr, bool synthetic = false) noexcept;
 
     /**
      * @brief Retrieves the type of the field.
@@ -47,7 +47,7 @@ namespace riddle
      *
      * @return A reference to the expression of the field.
      */
-    [[nodiscard]] const std::unique_ptr<expression> &get_expression() const noexcept { return expr; }
+    [[nodiscard]] const utils::u_ptr<expression> &get_expression() const noexcept { return expr; }
 
     /**
      * @brief Checks if the field is synthetic.
@@ -61,7 +61,7 @@ namespace riddle
   private:
     type &tp;
     std::string name;
-    const std::unique_ptr<expression> &expr;
+    const utils::u_ptr<expression> &expr;
     bool synthetic;
   };
 
@@ -70,7 +70,7 @@ namespace riddle
     friend class field_declaration;
 
   public:
-    scope(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args = {});
+    scope(core &c, scope &parent, std::vector<utils::u_ptr<field>> &&args = {});
     scope(const scope &) = delete;
     virtual ~scope() = default;
 
@@ -93,7 +93,7 @@ namespace riddle
      *
      * @return A constant reference to a map with field names as keys and unique pointers to fields as values.
      */
-    [[nodiscard]] const std::map<std::string, std::unique_ptr<field>, std::less<>> &get_fields() const noexcept { return fields; }
+    [[nodiscard]] const std::map<std::string, utils::u_ptr<field>, std::less<>> &get_fields() const noexcept { return fields; }
 
     /**
      * @brief Retrieves the field associated with the given name.
@@ -120,7 +120,7 @@ namespace riddle
      * @return method& A reference to the method associated with the given name and argument types.
      * @throws std::out_of_range if the method is not found in the current or parent scope.
      */
-    [[nodiscard]] virtual method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent.get_method(name, argument_types); }
+    [[nodiscard]] virtual method &get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const { return parent.get_method(name, argument_types); }
 
     /**
      * @brief Retrieves the type associated with the given name.
@@ -156,13 +156,13 @@ namespace riddle
      *
      * @param field A unique pointer to the field to be added.
      */
-    void add_field(std::unique_ptr<field> field);
+    void add_field(utils::u_ptr<field> field);
 
   private:
     core &cr;
     scope &parent;
 
   protected:
-    std::map<std::string, std::unique_ptr<field>, std::less<>> fields;
+    std::map<std::string, utils::u_ptr<field>, std::less<>> fields;
   };
 } // namespace riddle

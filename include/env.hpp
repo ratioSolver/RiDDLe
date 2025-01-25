@@ -1,7 +1,7 @@
 #pragma once
 
 #include "json.hpp"
-#include <memory>
+#include "memory.hpp"
 #include <map>
 #include <string>
 #include <string_view>
@@ -10,6 +10,7 @@ namespace riddle
 {
   class core;
   class item;
+  using expr = utils::s_ptr<item>;
   class constructor;
   class method;
   class local_field_statement;
@@ -46,7 +47,7 @@ namespace riddle
 #endif
 
   public:
-    env(core &c, env &parent, std::map<std::string, std::shared_ptr<item>, std::less<>> &&items = {}) noexcept;
+    env(core &c, env &parent, std::map<std::string, expr, std::less<>> &&items = {}) noexcept;
     env(const env &) = delete;
     env(env &&) = default;
     virtual ~env() = default;
@@ -82,7 +83,7 @@ namespace riddle
      * @return The item with the given name.
      * @throws std::out_of_range if the item is not found in the current or parent environment.
      */
-    [[nodiscard]] virtual std::shared_ptr<item> get(std::string_view name);
+    [[nodiscard]] virtual expr get(std::string_view name);
 
     [[nodiscard]] virtual json::json to_json() const;
 
@@ -91,6 +92,6 @@ namespace riddle
     env &parent;
 
   protected:
-    std::map<std::string, std::shared_ptr<item>, std::less<>> items;
+    std::map<std::string, expr, std::less<>> items;
   };
 } // namespace riddle

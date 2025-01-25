@@ -2,7 +2,7 @@
 
 namespace riddle
 {
-    method::method(scope &scp, std::optional<std::reference_wrapper<type>> return_type, std::string_view name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp), return_type(return_type), name(name), body(body)
+    method::method(scope &scp, std::optional<utils::ref_wrapper<type>> return_type, std::string_view name, std::vector<utils::u_ptr<field>> &&args, const std::vector<utils::u_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp), return_type(return_type), name(name), body(body)
     {
         for (auto &arg : args)
         {
@@ -11,7 +11,7 @@ namespace riddle
         }
     }
 
-    std::shared_ptr<item> method::invoke(env &ctx, std::vector<std::shared_ptr<item>> &&args) const
+    expr method::invoke(env &ctx, std::vector<expr> &&args) const
     {
         env local(ctx.get_core(), ctx);
 

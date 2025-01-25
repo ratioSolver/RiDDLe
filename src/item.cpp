@@ -48,7 +48,7 @@ namespace riddle
     string_item::string_item(string_type &tp) : item(tp) {}
     json::json string_item::to_json() const { return {{"type", std::string_view(get_type().get_name()), {"val", get_type().get_scope().get_core().string_value(*this)}}}; }
 
-    enum_item::enum_item(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) : item(tp), values(std::move(values)) {}
+    enum_item::enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) : item(tp), values(std::move(values)) {}
     json::json enum_item::to_json() const
     {
         json::json j_val{{"type", "enum"}}; // we add the type of the enum item..
@@ -67,7 +67,7 @@ namespace riddle
         auto vals = get_type().get_scope().get_core().enum_value(*this);
         json::json j_vals(json::json_type::array);
         for (const auto &val : vals)
-            j_vals.push_back(static_cast<uint64_t>(static_cast<item &>(val.get()).get_id()));
+            j_vals.push_back(static_cast<uint64_t>(static_cast<item &>(*val).get_id()));
         j_val["vals"] = std::move(j_vals);
 
         return j_val;
@@ -87,9 +87,9 @@ namespace riddle
         return j_itm;
     }
 
-    std::shared_ptr<bool_item> component::operator==(std::shared_ptr<item> rhs) const { return get_core().new_bool(this == rhs.get()); }
+    bool_expr component::operator==(expr rhs) const { return get_core().new_bool(this == rhs.get()); }
 
-    atom::atom(predicate &t, bool fact, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args) : item(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
+    atom::atom(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) : item(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
     json::json atom::to_json() const
     {
         json::json j_atm{{"is_fact", fact}, {"type", get_type().get_full_name()}};
@@ -114,7 +114,7 @@ namespace riddle
         return j_atm;
     }
 
-    env &atom::atom_parent(const predicate &t, const std::map<std::string, std::shared_ptr<item>, std::less<>> &args)
+    env &atom::atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args)
     {
         if (args.count(tau_kw))
             return *static_cast<component *>(args.at(tau_kw).get());

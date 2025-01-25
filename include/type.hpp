@@ -81,9 +81,9 @@ namespace riddle
      * This function is a pure virtual function that must be overridden by
      * derived classes to create and return a new instance of the item.
      *
-     * @return std::shared_ptr<item> A shared pointer to the newly created item instance.
+     * @return expr A shared pointer to the newly created item instance.
      */
-    [[nodiscard]] virtual std::shared_ptr<item> new_instance() = 0;
+    [[nodiscard]] virtual expr new_instance() = 0;
 
   private:
     scope &scp;
@@ -103,7 +103,7 @@ namespace riddle
     bool_type(core &cr) noexcept;
 
   private:
-    [[nodiscard]] std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] expr new_instance() override;
   };
 
   /**
@@ -120,7 +120,7 @@ namespace riddle
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
   private:
-    [[nodiscard]] std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] expr new_instance() override;
   };
 
   /**
@@ -137,7 +137,7 @@ namespace riddle
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
   private:
-    [[nodiscard]] std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] expr new_instance() override;
   };
 
   /**
@@ -154,7 +154,7 @@ namespace riddle
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
   private:
-    [[nodiscard]] std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] expr new_instance() override;
   };
 
   /**
@@ -169,7 +169,7 @@ namespace riddle
     string_type(core &cr) noexcept;
 
   private:
-    [[nodiscard]] std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] expr new_instance() override;
   };
 
   /**
@@ -183,7 +183,7 @@ namespace riddle
     friend class enum_declaration;
 
   public:
-    enum_type(scope &scp, std::string &&name, std::vector<std::shared_ptr<item>> &&domain) noexcept;
+    enum_type(scope &scp, std::string &&name, std::vector<expr> &&domain) noexcept;
 
     /**
      * @brief Retrieves the domain of items.
@@ -191,19 +191,19 @@ namespace riddle
      * This function returns a constant reference to a vector of shared pointers to items,
      * representing the domain.
      *
-     * @return const std::vector<std::shared_ptr<item>>& A constant reference to the domain vector.
+     * @return const std::vector<expr>& A constant reference to the domain vector.
      */
-    [[nodiscard]] const std::vector<std::shared_ptr<item>> &get_domain() const noexcept { return domain; }
-    [[nodiscard]] const std::vector<std::reference_wrapper<enum_type>> &get_enums() const noexcept { return enums; }
+    [[nodiscard]] const std::vector<expr> &get_domain() const noexcept { return domain; }
+    [[nodiscard]] const std::vector<utils::ref_wrapper<enum_type>> &get_enums() const noexcept { return enums; }
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
   private:
-    [[nodiscard]] std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] expr new_instance() override;
 
   private:
-    std::vector<std::shared_ptr<item>> domain;
-    std::vector<std::reference_wrapper<enum_type>> enums;
+    std::vector<expr> domain;
+    std::vector<utils::ref_wrapper<enum_type>> enums;
   };
 
   /**
@@ -228,7 +228,7 @@ namespace riddle
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
-    [[nodiscard]] const std::vector<std::reference_wrapper<component_type>> &get_parents() const noexcept { return parents; }
+    [[nodiscard]] const std::vector<utils::ref_wrapper<component_type>> &get_parents() const noexcept { return parents; }
 
     /**
      * @brief Retrieves a constructor that matches the given argument types.
@@ -241,23 +241,23 @@ namespace riddle
      * @return A reference to the constructor that matches the given argument types.
      * @throws std::out_of_range if the constructor is not found.
      */
-    [[nodiscard]] constructor &get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const;
+    [[nodiscard]] constructor &get_constructor(const std::vector<utils::ref_wrapper<const type>> &argument_types) const;
 
-    [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
+    [[nodiscard]] method &get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const override;
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
-    [[nodiscard]] const std::map<std::string, std::unique_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
-    [[nodiscard]] const std::map<std::string, std::unique_ptr<predicate>, std::less<>> &get_predicates() const noexcept { return predicates; }
+    [[nodiscard]] const std::map<std::string, utils::u_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
+    [[nodiscard]] const std::map<std::string, utils::u_ptr<predicate>, std::less<>> &get_predicates() const noexcept { return predicates; }
 
     /**
      * @brief retrieves the list of the instances of the type.
      *
      * This function returns a reference to the vector containing instances.
      *
-     * @return std::vector<std::shared_ptr<item>>& A reference to the vector of instances.
+     * @return std::vector<expr>& A reference to the vector of instances.
      */
-    [[nodiscard]] std::vector<std::shared_ptr<item>> &get_instances() noexcept { return instances; }
+    [[nodiscard]] std::vector<expr> &get_instances() noexcept { return instances; }
 
   protected:
     /**
@@ -276,7 +276,7 @@ namespace riddle
      *
      * @param ctr A unique pointer to the constructor to be added.
      */
-    void add_constructor(std::unique_ptr<constructor> ctr);
+    void add_constructor(utils::u_ptr<constructor> ctr);
 
     /**
      * @brief Adds a method to this component type.
@@ -286,7 +286,7 @@ namespace riddle
      *
      * @param mthd A unique pointer to the method to be added.
      */
-    void add_method(std::unique_ptr<method> mthd);
+    void add_method(utils::u_ptr<method> mthd);
 
     /**
      * @brief Adds a predicate to this component type.
@@ -296,7 +296,7 @@ namespace riddle
      *
      * @param pred A unique pointer to the predicate to be added.
      */
-    void add_predicate(std::unique_ptr<predicate> pred);
+    void add_predicate(utils::u_ptr<predicate> pred);
 
     /**
      * @brief Adds a type to this component type.
@@ -306,7 +306,7 @@ namespace riddle
      *
      * @param tp A unique pointer to the type to be added.
      */
-    void add_type(std::unique_ptr<type> tp);
+    void add_type(utils::u_ptr<type> tp);
 
     /**
      * @brief Adds a parent predicate to a child predicate.
@@ -319,17 +319,17 @@ namespace riddle
     void add_parent(predicate &child, predicate &parent);
 
   private:
-    [[nodiscard]] std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] expr new_instance() override;
 
     virtual void created_predicate([[maybe_unused]] predicate &pred) {}
 
   private:
-    std::vector<std::reference_wrapper<component_type>> parents;                      // the base types (i.e. the types this type inherits from)..
-    std::vector<std::unique_ptr<constructor>> constructors;                           // the constructors of the type..
-    std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the scope of the type..
-    std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the scope of the type..
-    std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the scope of the type..
-    std::vector<std::shared_ptr<item>> instances;                                     // the instances of the type..
+    std::vector<utils::ref_wrapper<component_type>> parents;                       // the base types (i.e. the types this type inherits from)..
+    std::vector<utils::u_ptr<constructor>> constructors;                           // the constructors of the type..
+    std::map<std::string, std::vector<utils::u_ptr<method>>, std::less<>> methods; // the methods declared in the scope of the type..
+    std::map<std::string, utils::u_ptr<type>, std::less<>> types;                  // the types declared in the scope of the type..
+    std::map<std::string, utils::u_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the scope of the type..
+    std::vector<expr> instances;                                                   // the instances of the type..
   };
 
   /**
@@ -345,12 +345,12 @@ namespace riddle
     friend class predicate_declaration;
 
   public:
-    predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args = {}, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
+    predicate(scope &scp, std::string &&name, std::vector<utils::u_ptr<field>> &&args = {}, const std::vector<utils::u_ptr<statement>> &body = {}) noexcept;
     virtual ~predicate() = default;
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
-    [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const noexcept { return parents; }
+    [[nodiscard]] const std::vector<utils::ref_wrapper<predicate>> &get_parents() const noexcept { return parents; }
 
     /**
      * @brief Retrieves the arguments of the predicate.
@@ -358,9 +358,9 @@ namespace riddle
      * This function returns a constant reference to a vector of references to fields,
      * representing the arguments of the predicate.
      *
-     * @return const std::vector<std::reference_wrapper<field>>& A constant reference to the arguments vector.
+     * @return const std::vector<utils::ref_wrapper<field>>& A constant reference to the arguments vector.
      */
-    [[nodiscard]] const std::vector<std::reference_wrapper<field>> &get_args() const noexcept { return args; }
+    [[nodiscard]] const std::vector<utils::ref_wrapper<field>> &get_args() const noexcept { return args; }
 
     /**
      * @brief Retrieves the list of atoms.
@@ -381,12 +381,12 @@ namespace riddle
     void call(atom_expr atm);
 
   private:
-    [[nodiscard]] std::shared_ptr<item> new_instance() override;
+    [[nodiscard]] expr new_instance() override;
 
   private:
-    std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
-    std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
-    const std::vector<std::unique_ptr<statement>> &body;    // the body of the predicate..
-    std::vector<atom_expr> atoms;                           // the atoms of the predicate..
+    std::vector<utils::ref_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
+    std::vector<utils::ref_wrapper<field>> args;        // the arguments of the predicate..
+    const std::vector<utils::u_ptr<statement>> &body;   // the body of the predicate..
+    std::vector<atom_expr> atoms;                       // the atoms of the predicate..
   };
 } // namespace riddle

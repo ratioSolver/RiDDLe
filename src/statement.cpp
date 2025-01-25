@@ -36,7 +36,7 @@ namespace riddle
                     break;
                 default:
                 { // multiple instances
-                    std::vector<std::reference_wrapper<utils::enum_val>> values;
+                    std::vector<utils::ref_wrapper<utils::enum_val>> values;
                     for (auto &inst : ct->get_instances())
                         values.emplace_back(*inst);
                     ctx.items.emplace(id.id, ctx.get_core().new_enum(*ct, std::move(values)));
@@ -73,7 +73,7 @@ namespace riddle
 
     void expression_statement::execute(const scope &scp, env &ctx) const
     { // evaluate an expression and assert it as a fact
-        scp.get_core().assert_fact(std::dynamic_pointer_cast<bool_item>(xpr->evaluate(scp, ctx)));
+        scp.get_core().assert_fact(utils::dynamic_pointer_cast<bool_item>(xpr->evaluate(scp, ctx)));
     }
 
     void conjunction_statement::execute(const scope &scp, env &ctx) const
@@ -84,8 +84,8 @@ namespace riddle
 
     void disjunction_statement::execute(const scope &scp, env &ctx) const
     { // execute a disjunction of conjunctions
-        std::vector<std::unique_ptr<conjunction>> conjs;
-        std::map<std::string, std::shared_ptr<item>, std::less<>> items;
+        std::vector<utils::u_ptr<conjunction>> conjs;
+        std::map<std::string, expr, std::less<>> items;
         env *tmp_ctx = &ctx; // find the nearest core, component or atom
         while (!(dynamic_cast<core *>(tmp_ctx) || dynamic_cast<component *>(tmp_ctx) || dynamic_cast<atom *>(tmp_ctx)))
         {
@@ -97,7 +97,7 @@ namespace riddle
             env cctx(scp.get_core(), *tmp_ctx);            // we create a new context
             cctx.items.insert(items.begin(), items.end()); // copy the items
             auto cst = conj->cst ? scp.get_core().arith_value(static_cast<arith_item &>(*conj->cst->evaluate(scp, ctx))).get_rational() : utils::rational::one;
-            conjs.emplace_back(std::make_unique<conjunction>(scp, std::move(cctx), cst, conj->stmts));
+            conjs.emplace_back(utils::make_u_ptr<conjunction>(scp, std::move(cctx), cst, conj->stmts));
         }
         scp.get_core().new_disjunction(std::move(conjs));
     }
@@ -129,7 +129,7 @@ namespace riddle
 
     void formula_statement::execute(const scope &scp, env &ctx) const
     { // create a new atom
-        std::map<std::string, std::shared_ptr<item>, std::less<>> c_args;
+        std::map<std::string, expr, std::less<>> c_args;
         for (auto &[id, expr] : args)
             c_args.emplace(id.id, expr->evaluate(scp, ctx));
 
@@ -170,7 +170,7 @@ namespace riddle
                             break;
                         default:
                         { // multiple instances
-                            std::vector<std::reference_wrapper<utils::enum_val>> values;
+                            std::vector<utils::ref_wrapper<utils::enum_val>> values;
                             for (auto &inst : ct->get_instances())
                                 values.emplace_back(*inst);
                             c_args.emplace(name, ctx.get_core().new_enum(*ct, std::move(values)));
@@ -181,7 +181,7 @@ namespace riddle
                 }
             q.pop();
             for (auto &parent : p->get_parents())
-                q.push(&parent.get());
+                q.push(parent.operator->());
         }
 
         auto atm = scp.get_core().new_atom(is_fact, pred, std::move(c_args));

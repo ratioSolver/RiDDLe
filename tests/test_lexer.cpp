@@ -229,6 +229,7 @@ void test_comment()
 
 int main()
 {
+    std::shared_ptr<riddle::token> t = std::make_shared<riddle::id_token>("a", 1, 0, 0);
     test_lexer0();
     test_lexer1();
     test_lexer2();

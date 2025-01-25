@@ -10,11 +10,11 @@ namespace riddle
 {
     core::core(std::string_view name) noexcept : scope(*this, *this), env(*this, *this), name(name)
     {
-        add_type(std::make_unique<bool_type>(*this));
-        add_type(std::make_unique<int_type>(*this));
-        add_type(std::make_unique<real_type>(*this));
-        add_type(std::make_unique<time_type>(*this));
-        add_type(std::make_unique<string_type>(*this));
+        add_type(utils::make_u_ptr<bool_type>(*this));
+        add_type(utils::make_u_ptr<int_type>(*this));
+        add_type(utils::make_u_ptr<real_type>(*this));
+        add_type(utils::make_u_ptr<time_type>(*this));
+        add_type(utils::make_u_ptr<string_type>(*this));
     }
 
     void core::read(std::string &&script)
@@ -32,7 +32,7 @@ namespace riddle
 
     void core::read(const std::vector<std::string> &files)
     {
-        std::vector<std::unique_ptr<compilation_unit>> c_cus;
+        std::vector<utils::u_ptr<compilation_unit>> c_cus;
         c_cus.reserve(files.size());
         for (const auto &file : files)
             if (std::ifstream ifs(file); ifs.is_open())
@@ -56,7 +56,7 @@ namespace riddle
         RECOMPUTE_NAMES();
     }
 
-    atom_expr core::new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args)
+    atom_expr core::new_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args)
     {
         auto atm = create_atom(is_fact, pred, std::move(args));
         std::queue<predicate *> q;
@@ -67,7 +67,7 @@ namespace riddle
             p->atoms.push_back(atm);
             q.pop();
             for (auto &parent : p->parents)
-                q.push(&parent.get());
+                q.push(parent.operator->());
         }
         return atm;
     }
@@ -79,7 +79,7 @@ namespace riddle
         throw std::out_of_range("field `" + std::string(name) + "` not found");
     }
 
-    method &core::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
+    method &core::get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const
     {
         if (auto it = methods.find(name); it != methods.end())
             for (const auto &m : it->second)
@@ -87,7 +87,7 @@ namespace riddle
                 {
                     bool match = true;
                     for (size_t i = 0; i < argument_types.size(); ++i)
-                        if (!m->get_field(m->get_args()[i]).get_type().is_assignable_from(argument_types[i].get()))
+                        if (!m->get_field(m->get_args()[i]).get_type().is_assignable_from(*argument_types[i]))
                         {
                             match = false;
                             break;
@@ -137,7 +137,7 @@ namespace riddle
         }
     }
 
-    std::shared_ptr<item> core::get(std::string_view name)
+    expr core::get(std::string_view name)
     {
         if (auto it = items.find(name); it != items.end())
             return it->second;
@@ -196,9 +196,9 @@ namespace riddle
         return j_core;
     }
 
-    void core::add_method(std::unique_ptr<method> mthd)
+    void core::add_method(utils::u_ptr<method> mthd)
     {
-        std::vector<std::reference_wrapper<const type>> args;
+        std::vector<utils::ref_wrapper<const type>> args;
         for (const auto &arg : mthd->get_args())
             args.push_back(mthd->get_field(arg).get_type());
         try
@@ -212,14 +212,14 @@ namespace riddle
         }
     }
 
-    void core::add_predicate(std::unique_ptr<predicate> pred)
+    void core::add_predicate(utils::u_ptr<predicate> pred)
     {
         std::string name = pred->get_name();
         if (!predicates.emplace(name, std::move(pred)).second)
             throw std::invalid_argument("predicate `" + name + "` already exists");
     }
 
-    void core::add_type(std::unique_ptr<type> t)
+    void core::add_type(utils::u_ptr<type> t)
     {
         std::string name = t->get_name();
         if (!types.emplace(name, std::move(t)).second)
@@ -231,7 +231,7 @@ namespace riddle
     {
         expr_names.clear();
 
-        std::queue<std::pair<std::string, std::shared_ptr<item>>> q;
+        std::queue<std::pair<std::string, expr>> q;
         for (const auto &xpr : items)
         {
             expr_names.emplace(xpr.second.get(), xpr.first);

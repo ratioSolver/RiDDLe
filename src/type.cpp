@@ -21,24 +21,24 @@ namespace riddle
     }
 
     bool_type::bool_type(core &cr) noexcept : type(cr, bool_kw, true) {}
-    std::shared_ptr<item> bool_type::new_instance() { return get_scope().get_core().new_bool(); }
+    expr bool_type::new_instance() { return get_scope().get_core().new_bool(); }
 
     int_type::int_type(core &cr) noexcept : type(cr, int_kw, true) {}
     bool int_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(real_kw) == &other || &get_scope().get_core().get_type(time_kw) == &other; }
-    std::shared_ptr<item> int_type::new_instance() { return get_scope().get_core().new_int(); }
+    expr int_type::new_instance() { return get_scope().get_core().new_int(); }
 
     real_type::real_type(core &cr) noexcept : type(cr, real_kw, true) {}
     bool real_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other || &get_scope().get_core().get_type(time_kw) == &other; }
-    std::shared_ptr<item> real_type::new_instance() { return get_scope().get_core().new_real(); }
+    expr real_type::new_instance() { return get_scope().get_core().new_real(); }
 
     time_type::time_type(core &cr) noexcept : type(cr, time_kw, true) {}
     bool time_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other || &get_scope().get_core().get_type(real_kw) == &other; }
-    std::shared_ptr<item> time_type::new_instance() { return get_scope().get_core().new_time(); }
+    expr time_type::new_instance() { return get_scope().get_core().new_time(); }
 
     string_type::string_type(core &cr) noexcept : type(cr, string_kw, true) {}
-    std::shared_ptr<item> string_type::new_instance() { return get_scope().get_core().new_string(); }
+    expr string_type::new_instance() { return get_scope().get_core().new_string(); }
 
-    enum_type::enum_type(scope &scp, std::string &&name, std::vector<std::shared_ptr<item>> &&domain) noexcept : type(scp, std::move(name), true), domain(std::move(domain)) {}
+    enum_type::enum_type(scope &scp, std::string &&name, std::vector<expr> &&domain) noexcept : type(scp, std::move(name), true), domain(std::move(domain)) {}
     bool enum_type::is_assignable_from(const type &other) const
     {
         if (this == &other)
@@ -54,12 +54,12 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &e : tp->get_enums())
-                    q.push(&e.get());
+                    q.push(e.operator->());
             }
         }
         return false;
     }
-    std::shared_ptr<item> enum_type::new_instance()
+    expr enum_type::new_instance()
     {
         switch (domain.size())
         {
@@ -69,7 +69,7 @@ namespace riddle
             return domain[0];
         default:
         {
-            std::vector<std::reference_wrapper<utils::enum_val>> items;
+            std::vector<utils::ref_wrapper<utils::enum_val>> items;
             for (const auto &i : domain)
                 items.push_back(*i);
             return get_scope().get_core().new_enum(*this, std::move(items));
@@ -94,20 +94,20 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &p : tp->parents)
-                    q.push(&p.get());
+                    q.push(p.operator->());
             }
         }
         return false;
     }
 
-    constructor &component_type::get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const
+    constructor &component_type::get_constructor(const std::vector<utils::ref_wrapper<const type>> &argument_types) const
     {
         for (const auto &c : constructors)
             if (c->get_args().size() == argument_types.size())
             {
                 bool match = true;
                 for (size_t i = 0; i < argument_types.size(); ++i)
-                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(argument_types[i].get()))
+                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(*argument_types[i]))
                     {
                         match = false;
                         break;
@@ -118,7 +118,7 @@ namespace riddle
         throw std::out_of_range("constructor not found");
     }
 
-    method &component_type::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
+    method &component_type::get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const
     {
         if (auto it = methods.find(name); it != methods.end())
             for (const auto &m : it->second)
@@ -126,7 +126,7 @@ namespace riddle
                 {
                     bool match = true;
                     for (size_t i = 0; i < argument_types.size(); ++i)
-                        if (!m->get_field(m->get_args()[i]).get_type().is_assignable_from(argument_types[i].get()))
+                        if (!m->get_field(m->get_args()[i]).get_type().is_assignable_from(*argument_types[i]))
                         {
                             match = false;
                             break;
@@ -143,7 +143,7 @@ namespace riddle
             for (const auto &p : parents)
                 try
                 {
-                    return p.get().get_method(name, argument_types);
+                    return p->get_method(name, argument_types);
                 }
                 catch (const std::out_of_range &)
                 {
@@ -164,7 +164,7 @@ namespace riddle
             for (const auto &p : parents)
                 try
                 {
-                    return p.get().get_type(name);
+                    return p->get_type(name);
                 }
                 catch (const std::out_of_range &)
                 {
@@ -185,7 +185,7 @@ namespace riddle
             for (const auto &p : parents)
                 try
                 {
-                    return p.get().get_predicate(name);
+                    return p->get_predicate(name);
                 }
                 catch (const std::out_of_range &)
                 {
@@ -196,9 +196,9 @@ namespace riddle
 
     void component_type::add_parent(component_type &parent) { parents.emplace_back(parent); }
 
-    void component_type::add_constructor(std::unique_ptr<constructor> ctr)
+    void component_type::add_constructor(utils::u_ptr<constructor> ctr)
     {
-        std::vector<std::reference_wrapper<const type>> args;
+        std::vector<utils::ref_wrapper<const type>> args;
         args.reserve(ctr->get_args().size());
         for (const auto &arg : ctr->get_args())
             args.push_back(get_field(arg).get_type());
@@ -207,7 +207,7 @@ namespace riddle
             {
                 bool match = true;
                 for (size_t i = 0; i < args.size(); ++i)
-                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(args[i]))
+                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(*args[i]))
                     {
                         match = false;
                         break;
@@ -218,9 +218,9 @@ namespace riddle
         constructors.emplace_back(std::move(ctr));
     }
 
-    void component_type::add_method(std::unique_ptr<method> mthd)
+    void component_type::add_method(utils::u_ptr<method> mthd)
     {
-        std::vector<std::reference_wrapper<const type>> args;
+        std::vector<utils::ref_wrapper<const type>> args;
         for (const auto &arg : mthd->get_args())
             args.push_back(mthd->get_field(arg).get_type());
         try
@@ -234,7 +234,7 @@ namespace riddle
         }
     }
 
-    void component_type::add_predicate(std::unique_ptr<predicate> pred)
+    void component_type::add_predicate(utils::u_ptr<predicate> pred)
     {
         std::string name = pred->get_name();
         if (!predicates.emplace(name, std::move(pred)).second)
@@ -247,11 +247,11 @@ namespace riddle
             q.pop();
             tp->created_predicate(*predicates[name]);
             for (const auto &p : tp->parents)
-                q.push(&p.get());
+                q.push(p.operator->());
         }
     }
 
-    void component_type::add_type(std::unique_ptr<type> t)
+    void component_type::add_type(utils::u_ptr<type> t)
     {
         std::string name = t->get_name();
         if (!types.emplace(name, std::move(t)).second)
@@ -260,9 +260,9 @@ namespace riddle
 
     void component_type::add_parent(predicate &child, predicate &parent) { child.parents.emplace_back(parent); }
 
-    std::shared_ptr<item> component_type::new_instance()
+    expr component_type::new_instance()
     {
-        auto itm = std::make_shared<component>(static_cast<component_type &>(*this));
+        auto itm = utils::make_s_ptr<component>(static_cast<component_type &>(*this));
         // we store the instance in type the hierarchy..
         std::queue<component_type *> q;
         q.push(this);
@@ -270,14 +270,14 @@ namespace riddle
         {
             auto tp = q.front();
             q.pop();
-            tp->instances.push_back(itm);
+            tp->instances.push_back(itm.get());
             for (const auto &p : tp->parents)
-                q.push(&p.get());
+                q.push(p.operator->());
         }
         return itm;
     }
 
-    predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
+    predicate::predicate(scope &scp, std::string &&name, std::vector<utils::u_ptr<field>> &&args, const std::vector<utils::u_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
 
     bool predicate::is_assignable_from(const type &other) const
     {
@@ -294,7 +294,7 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &p : tp->parents)
-                    q.push(&p.get());
+                    q.push(p.operator->());
             }
         }
         return false;
@@ -304,13 +304,13 @@ namespace riddle
     {
         assert(is_assignable_from(atm->get_type()));
         for (auto &p : parents)
-            p.get().call(atm);
+            p->call(atm);
         env ctx(get_core(), *atm);
         for (const auto &stmt : body)
             stmt->execute(*this, ctx);
     }
 
-    std::shared_ptr<item> predicate::new_instance()
+    expr predicate::new_instance()
     {
         auto atm = get_scope().get_core().new_atom(true, *this);
         // we store the atom in the predicate hierarchy..
@@ -322,7 +322,7 @@ namespace riddle
             q.pop();
             p->atoms.push_back(atm);
             for (const auto &par : p->parents)
-                q.push(&par.get());
+                q.push(par.operator->());
         }
         return atm;
     }

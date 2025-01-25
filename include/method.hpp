@@ -9,7 +9,7 @@ namespace riddle
   class method : public scope
   {
   public:
-    method(scope &scp, std::optional<std::reference_wrapper<type>> return_type, std::string_view name, std::vector<std::unique_ptr<field>> &&args = {}, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
+    method(scope &scp, std::optional<utils::ref_wrapper<type>> return_type, std::string_view name, std::vector<utils::u_ptr<field>> &&args = {}, const std::vector<utils::u_ptr<statement>> &body = {}) noexcept;
 
     /**
      * @brief Retrieves the name of the method.
@@ -40,12 +40,12 @@ namespace riddle
      * @param args A vector of shared pointers to `item` objects representing the arguments.
      * @return A shared pointer to an `item` object resulting from the method invocation.
      */
-    [[nodiscard]] std::shared_ptr<item> invoke(env &ctx, std::vector<std::shared_ptr<item>> &&args) const;
+    [[nodiscard]] expr invoke(env &ctx, std::vector<expr> &&args) const;
 
   private:
-    const std::optional<std::reference_wrapper<type>> return_type; // The return type of the method.
-    const std::string name;                                        // The name of the method.
-    std::vector<std::string> args;                                 // The names of the arguments.
-    const std::vector<std::unique_ptr<statement>> &body;           // The body of the method.
+    const std::optional<utils::ref_wrapper<type>> return_type; // The return type of the method.
+    const std::string name;                                    // The name of the method.
+    std::vector<std::string> args;                             // The names of the arguments.
+    const std::vector<utils::u_ptr<statement>> &body;          // The body of the method.
   };
 } // namespace riddle

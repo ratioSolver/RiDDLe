@@ -8,7 +8,7 @@ namespace riddle
   class constructor final : public scope
   {
   public:
-    constructor(scope &scp, std::vector<std::unique_ptr<field>> &&args = {}, const std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> &inits = {}, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
+    constructor(scope &scp, std::vector<utils::u_ptr<field>> &&args = {}, const std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>> &inits = {}, const std::vector<utils::u_ptr<statement>> &body = {}) noexcept;
     constructor(const constructor &) = delete;
 
     /**
@@ -20,11 +20,11 @@ namespace riddle
      */
     [[nodiscard]] const std::vector<std::string> &get_args() const noexcept { return args; }
 
-    void invoke(std::shared_ptr<component> self, std::vector<std::shared_ptr<item>> &&args) const;
+    void invoke(utils::s_ptr<component> self, std::vector<expr> &&args) const;
 
   private:
-    std::vector<std::string> args;                                                           // The names of the arguments.
-    const std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> &inits; // The initializations.
-    const std::vector<std::unique_ptr<statement>> &body;                                     // The body of the constructor.
+    std::vector<std::string> args;                                                        // The names of the arguments.
+    const std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>> &inits; // The initializations.
+    const std::vector<utils::u_ptr<statement>> &body;                                     // The body of the constructor.
   };
 } // namespace riddle

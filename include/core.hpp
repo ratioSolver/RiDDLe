@@ -213,7 +213,7 @@ namespace riddle
      *
      * @return A shared pointer to the newly created enum item.
      */
-    [[nodiscard]] virtual enum_expr new_enum(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
+    [[nodiscard]] virtual enum_expr new_enum(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) = 0;
     /**
      * @brief Retrieves the domain for the given enum item.
      *
@@ -223,7 +223,7 @@ namespace riddle
      * @param expr The enum item for which the domain is being retrieved.
      * @return A vector of references to the enum values that make up the domain of the enum item.
      */
-    [[nodiscard]] virtual std::vector<std::reference_wrapper<utils::enum_val>> enum_value(const enum_item &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const enum_item &expr) const noexcept = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.
@@ -383,7 +383,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side item.
      * @return A shared pointer to the newly created equality comparison item.
      */
-    [[nodiscard]] bool_expr new_eq(std::shared_ptr<item> lhs, std::shared_ptr<item> rhs) { return lhs->operator==(rhs); }
+    [[nodiscard]] bool_expr new_eq(expr lhs, expr rhs) { return lhs->operator==(rhs); }
 
     /**
      * @brief Pure virtual function to add a new disjunction.
@@ -392,7 +392,7 @@ namespace riddle
      *
      * @param disjuncts A vector of unique pointers to conjunction objects, representing the disjunction.
      */
-    virtual void new_disjunction(std::vector<std::unique_ptr<conjunction>> &&disjuncts) = 0;
+    virtual void new_disjunction(std::vector<utils::u_ptr<conjunction>> &&disjuncts) = 0;
 
     /**
      * @brief Asserts a fact in the system.
@@ -412,15 +412,15 @@ namespace riddle
      * @param args An optional map of arguments where the key is a string and the value is a shared pointer to an item. Defaults to an empty map.
      * @return A shared pointer to the newly created atom.
      */
-    [[nodiscard]] atom_expr new_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {});
+    [[nodiscard]] atom_expr new_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {});
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
-    [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
+    [[nodiscard]] method &get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const override;
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
-    [[nodiscard]] const std::map<std::string, std::unique_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
+    [[nodiscard]] const std::map<std::string, utils::u_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
 
     /**
      * @brief Promotes the type of the given arithmetic expressions.
@@ -434,7 +434,7 @@ namespace riddle
      */
     [[nodiscard]] type &type_promotion(const std::vector<arith_expr> &exprs) const;
 
-    [[nodiscard]] std::shared_ptr<item> get(std::string_view name) override;
+    [[nodiscard]] expr get(std::string_view name) override;
 
     [[nodiscard]] virtual json::json to_json() const override;
 
@@ -447,7 +447,7 @@ namespace riddle
      *
      * @param mthd A unique pointer to the method to be added.
      */
-    void add_method(std::unique_ptr<method> mthd);
+    void add_method(utils::u_ptr<method> mthd);
 
     /**
      * @brief Adds a predicate to this RiDDLe core.
@@ -457,7 +457,7 @@ namespace riddle
      *
      * @param pred A unique pointer to the predicate to be added.
      */
-    void add_predicate(std::unique_ptr<predicate> pred);
+    void add_predicate(utils::u_ptr<predicate> pred);
 
     /**
      * @brief Adds a type to this RiDDLe core.
@@ -467,7 +467,7 @@ namespace riddle
      *
      * @param tp A unique pointer to the type to be added.
      */
-    void add_type(std::unique_ptr<type> tp);
+    void add_type(utils::u_ptr<type> tp);
 
 #ifdef COMPUTE_NAMES
   protected:
@@ -500,14 +500,14 @@ namespace riddle
 #endif
 
   private:
-    [[nodiscard]] virtual atom_expr create_atom(bool is_fact, predicate &pred, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {}) = 0;
+    [[nodiscard]] virtual atom_expr create_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {}) = 0;
 
   private:
-    const std::string name;                                                           // the name of the core..
-    std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the core..
-    std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the core..
-    std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the core..
-    std::vector<std::unique_ptr<compilation_unit>> cus;                               // the compilation units read by the core..
+    const std::string name;                                                        // the name of the core..
+    std::map<std::string, std::vector<utils::u_ptr<method>>, std::less<>> methods; // the methods declared in the core..
+    std::map<std::string, utils::u_ptr<type>, std::less<>> types;                  // the types declared in the core..
+    std::map<std::string, utils::u_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the core..
+    std::vector<utils::u_ptr<compilation_unit>> cus;                               // the compilation units read by the core..
 
 #ifdef COMPUTE_NAMES
     std::unordered_map<const item *, const std::string> expr_names; // the names of the expressions..

@@ -16,6 +16,7 @@ namespace riddle
   class component_type;
   class predicate;
   class bool_item;
+  using bool_expr = utils::s_ptr<bool_item>;
 
   /**
    * @class item item.hpp "include/item.hpp"
@@ -41,7 +42,7 @@ namespace riddle
      */
     [[nodiscard]] type &get_type() const { return tp; }
 
-    [[nodiscard]] virtual std::shared_ptr<bool_item> operator==(std::shared_ptr<item> rhs) const = 0;
+    [[nodiscard]] virtual bool_expr operator==(expr rhs) const = 0;
 
     [[nodiscard]] virtual json::json to_json() const = 0;
 
@@ -58,8 +59,6 @@ namespace riddle
     type &tp;
   };
 
-  using expr = std::shared_ptr<item>;
-
   class bool_item : public item
   {
   public:
@@ -68,8 +67,6 @@ namespace riddle
 
     [[nodiscard]] virtual json::json to_json() const override;
   };
-
-  using bool_expr = std::shared_ptr<bool_item>;
 
   class arith_item : public item
   {
@@ -82,7 +79,7 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const override;
   };
 
-  using arith_expr = std::shared_ptr<arith_item>;
+  using arith_expr = utils::s_ptr<arith_item>;
 
   class string_item : public item
   {
@@ -93,23 +90,23 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const override;
   };
 
-  using string_expr = std::shared_ptr<string_item>;
+  using string_expr = utils::s_ptr<string_item>;
 
   class enum_item : public item
   {
   public:
-    enum_item(type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values);
+    enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values);
     virtual ~enum_item() = default;
 
-    [[nodiscard]] const std::vector<std::reference_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
+    [[nodiscard]] const std::vector<utils::ref_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
 
     [[nodiscard]] virtual json::json to_json() const override;
 
   private:
-    std::vector<std::reference_wrapper<utils::enum_val>> values;
+    std::vector<utils::ref_wrapper<utils::enum_val>> values;
   };
 
-  using enum_expr = std::shared_ptr<enum_item>;
+  using enum_expr = utils::s_ptr<enum_item>;
 
   class component : public item, public env
   {
@@ -117,7 +114,7 @@ namespace riddle
     component(component_type &tp);
     virtual ~component() = default;
 
-    [[nodiscard]] std::shared_ptr<bool_item> operator==(std::shared_ptr<item> rhs) const override;
+    [[nodiscard]] bool_expr operator==(expr rhs) const override;
 
     [[nodiscard]] virtual json::json to_json() const override;
   };
@@ -132,7 +129,7 @@ namespace riddle
   class atom : public item, public env
   {
   public:
-    atom(predicate &t, bool fact, std::map<std::string, std::shared_ptr<item>, std::less<>> &&args = {});
+    atom(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {});
     virtual ~atom() = default;
 
     [[nodiscard]] bool is_fact() const { return fact; }
@@ -142,11 +139,11 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const override;
 
   private:
-    static env &atom_parent(const predicate &t, const std::map<std::string, std::shared_ptr<item>, std::less<>> &args);
+    static env &atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args);
 
   private:
     bool fact; // whether the atom is a fact
   };
 
-  using atom_expr = std::shared_ptr<atom>;
+  using atom_expr = utils::s_ptr<atom>;
 } // namespace riddle
