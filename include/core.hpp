@@ -33,7 +33,6 @@ namespace riddle
 
   public:
     core(std::string_view name = "RiDDLe") noexcept;
-    virtual ~core() = default;
 
     /**
      * @brief Retrieves the unique identifier for the current core.
