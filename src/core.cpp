@@ -67,7 +67,7 @@ namespace riddle
             p->atoms.push_back(atm);
             q.pop();
             for (auto &parent : p->parents)
-                q.push(parent.operator->());
+                q.push(&*parent);
         }
         return atm;
     }

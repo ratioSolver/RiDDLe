@@ -54,7 +54,7 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &e : tp->get_enums())
-                    q.push(e.operator->());
+                    q.push(&*e);
             }
         }
         return false;
@@ -94,7 +94,7 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &p : tp->parents)
-                    q.push(p.operator->());
+                    q.push(&*p);
             }
         }
         return false;
@@ -247,7 +247,7 @@ namespace riddle
             q.pop();
             tp->created_predicate(*predicates[name]);
             for (const auto &p : tp->parents)
-                q.push(p.operator->());
+                q.push(&*p);
         }
     }
 
@@ -272,7 +272,7 @@ namespace riddle
             q.pop();
             tp->instances.push_back(utils::s_ptr(itm));
             for (const auto &p : tp->parents)
-                q.push(p.operator->());
+                q.push(&*p);
         }
         return itm;
     }
@@ -294,7 +294,7 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &p : tp->parents)
-                    q.push(p.operator->());
+                    q.push(&*p);
             }
         }
         return false;
@@ -322,7 +322,7 @@ namespace riddle
             q.pop();
             p->atoms.push_back(atm);
             for (const auto &par : p->parents)
-                q.push(par.operator->());
+                q.push(&*par);
         }
         return atm;
     }

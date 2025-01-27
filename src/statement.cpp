@@ -181,7 +181,7 @@ namespace riddle
                 }
             q.pop();
             for (auto &parent : p->get_parents())
-                q.push(parent.operator->());
+                q.push(&*parent);
         }
 
         auto atm = scp.get_core().new_atom(is_fact, pred, std::move(c_args));
