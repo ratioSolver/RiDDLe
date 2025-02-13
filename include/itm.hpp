@@ -42,7 +42,7 @@ namespace riddle
      */
     [[nodiscard]] type &get_type() const { return tp; }
 
-    [[nodiscard]] virtual bool_expr operator==(expr rhs) const = 0;
+    [[nodiscard]] virtual bool_expr operator==(expr rhs) const;
 
     [[nodiscard]] virtual json::json to_json() const = 0;
 
@@ -170,10 +170,10 @@ namespace riddle
     unified   // the atom is unified
   };
 
-  class atom : public item, public env
+  class atm : public item, public env
   {
   public:
-    atom(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {});
+    atm(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {});
 
     [[nodiscard]] bool is_fact() const { return fact; }
 
@@ -188,7 +188,7 @@ namespace riddle
     bool fact; // whether the atom is a fact
   };
 
-  using atom_expr = utils::s_ptr<atom>;
+  using atom_expr = utils::s_ptr<atm>;
 
   [[nodiscard]] bool_expr push_negations(bool_expr expr) noexcept;
   [[nodiscard]] bool_expr distribute(bool_expr expr) noexcept;

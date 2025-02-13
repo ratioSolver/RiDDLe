@@ -2,105 +2,37 @@
 #include "item.hpp"
 #include <cassert>
 
-class bool_item : public riddle::bool_item
-{
-public:
-    bool_item(riddle::bool_type &tp, utils::lit &&expr) : riddle::bool_item(tp, std::move(expr)) {}
-
-    [[nodiscard]] riddle::bool_expr operator==(riddle::expr) const override
-    {
-        auto f = utils::FALSE_lit;
-        return utils::make_s_ptr<bool_item>(static_cast<riddle::bool_type &>(get_type()), std::move(f));
-    }
-};
-
-class arith_item : public riddle::arith_item
-{
-public:
-    arith_item(riddle::int_type &tp, utils::lin &&expr) : riddle::arith_item(tp, std::move(expr)) {}
-    arith_item(riddle::real_type &tp, utils::lin &&expr) : riddle::arith_item(tp, std::move(expr)) {}
-    arith_item(riddle::time_type &tp, utils::lin &&expr) : riddle::arith_item(tp, std::move(expr)) {}
-
-    [[nodiscard]] riddle::bool_expr operator==(riddle::expr) const override
-    {
-        auto f = utils::FALSE_lit;
-        return utils::make_s_ptr<bool_item>(static_cast<riddle::bool_type &>(get_type()), std::move(f));
-    }
-};
-
-class string_item : public riddle::string_item
-{
-public:
-    string_item(riddle::string_type &tp, std::string &&expr) : riddle::string_item(tp, std::move(expr)) {}
-
-    [[nodiscard]] riddle::bool_expr operator==(riddle::expr) const override
-    {
-        auto f = utils::FALSE_lit;
-        return utils::make_s_ptr<bool_item>(static_cast<riddle::bool_type &>(get_type()), std::move(f));
-    }
-};
-
-class enum_item : public riddle::enum_item
-{
-public:
-    enum_item(riddle::type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, utils::var &&expr) : riddle::enum_item(tp, std::move(values), std::move(expr)) {}
-
-    [[nodiscard]] riddle::bool_expr operator==(riddle::expr) const override
-    {
-        auto f = utils::FALSE_lit;
-        return utils::make_s_ptr<bool_item>(static_cast<riddle::bool_type &>(get_type()), std::move(f));
-    }
-};
-
-class atom : public riddle::atom
-{
-public:
-    atom(riddle::predicate &pred, bool is_fact, utils::lit &&expr, std::map<std::string, utils::s_ptr<riddle::item>, std::less<>> &&args) : riddle::atom(pred, is_fact, std::move(args)), expr(expr) {}
-
-    [[nodiscard]] utils::lit &get_sigma() noexcept { return expr; }
-    [[nodiscard]] const utils::lit &get_sigma() const noexcept { return expr; }
-
-    [[nodiscard]] riddle::bool_expr operator==(riddle::expr) const override
-    {
-        auto f = utils::FALSE_lit;
-        return utils::make_s_ptr<bool_item>(static_cast<riddle::bool_type &>(get_type()), std::move(f));
-    }
-
-private:
-    utils::lit expr;
-};
-
 class test_core : public riddle::core
 {
 public:
     test_core() noexcept : riddle::core() {}
     ~test_core() override = default;
 
-    riddle::bool_expr new_bool(const bool) override { return utils::make_s_ptr<bool_item>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), utils::lit()); }
+    riddle::bool_expr new_bool(const bool) override { return utils::make_s_ptr<riddle::bool_item>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), utils::lit()); }
     riddle::bool_expr new_bool() override { return new_bool(false); }
     utils::lbool bool_value(const riddle::bool_itm &) const noexcept override { return utils::Undefined; }
-    riddle::arith_expr new_int(const INT_TYPE) override { return utils::make_s_ptr<arith_item>(static_cast<riddle::int_type &>(get_type(riddle::int_kw)), utils::lin()); }
+    riddle::arith_expr new_int(const INT_TYPE) override { return utils::make_s_ptr<riddle::arith_item>(static_cast<riddle::int_type &>(get_type(riddle::int_kw)), utils::lin()); }
     riddle::arith_expr new_int() override { return new_int(0); }
     riddle::arith_expr new_int(const INT_TYPE lb, const INT_TYPE) override { return new_int(lb); }
     riddle::arith_expr new_uncertain_int(const INT_TYPE lb, const INT_TYPE) override { return new_int(lb); }
-    riddle::arith_expr new_real(utils::rational &&) override { return utils::make_s_ptr<arith_item>(static_cast<riddle::real_type &>(get_type(riddle::real_kw)), utils::lin()); }
+    riddle::arith_expr new_real(utils::rational &&) override { return utils::make_s_ptr<riddle::arith_item>(static_cast<riddle::real_type &>(get_type(riddle::real_kw)), utils::lin()); }
     riddle::arith_expr new_real() override { return new_real(utils::rational(0)); }
     riddle::arith_expr new_real(utils::rational &&lb, utils::rational &&) override { return new_real(utils::rational(lb)); }
     riddle::arith_expr new_uncertain_real(utils::rational &&lb, utils::rational &&) override { return new_real(utils::rational(lb)); }
-    riddle::arith_expr new_time(utils::rational &&) override { return utils::make_s_ptr<arith_item>(static_cast<riddle::time_type &>(get_type(riddle::time_kw)), utils::lin()); }
+    riddle::arith_expr new_time(utils::rational &&) override { return utils::make_s_ptr<riddle::arith_item>(static_cast<riddle::time_type &>(get_type(riddle::time_kw)), utils::lin()); }
     riddle::arith_expr new_time() override { return new_time(utils::rational(0)); }
     utils::inf_rational arith_value(const riddle::arith_itm &) const noexcept override { return utils::inf_rational(); }
-    riddle::string_expr new_string(std::string &&) override { return utils::make_s_ptr<string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
+    riddle::string_expr new_string(std::string &&) override { return utils::make_s_ptr<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
     riddle::string_expr new_string() override { return new_string(""); }
     std::string string_value(const riddle::string_itm &) const noexcept override { return ""; }
-    riddle::enum_expr new_enum(riddle::type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) override { return utils::make_s_ptr<enum_item>(tp, std::move(values), 0); }
+    riddle::enum_expr new_enum(riddle::type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) override { return utils::make_s_ptr<riddle::enum_item>(tp, std::move(values), 0); }
     std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const riddle::enum_itm &itm) const noexcept override { return {*itm.get_values()[0]}; }
 
-    riddle::bool_expr new_and(std::vector<riddle::bool_expr> &&) override { return new_bool(false); }
-    riddle::bool_expr new_or(std::vector<riddle::bool_expr> &&) override { return new_bool(false); }
+    riddle::bool_expr new_and(std::vector<riddle::bool_expr> &&exprs) override { return utils::make_s_ptr<riddle::bool_and>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), std::move(exprs)); }
+    riddle::bool_expr new_or(std::vector<riddle::bool_expr> &&exprs) override { return utils::make_s_ptr<riddle::bool_or>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), std::move(exprs)); }
     riddle::bool_expr new_xor(std::vector<riddle::bool_expr> &&) override { return new_bool(false); }
 
-    riddle::bool_expr new_not(riddle::bool_expr) override { return new_bool(false); }
+    riddle::bool_expr new_not(riddle::bool_expr xpr) override { return utils::make_s_ptr<riddle::bool_not>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), std::move(xpr)); }
 
     riddle::arith_expr new_negation(riddle::arith_expr) override { return new_int(0); }
 
@@ -120,7 +52,7 @@ public:
     riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, utils::s_ptr<riddle::item>, std::less<>> &&args) override
     {
         auto f = utils::FALSE_lit;
-        return utils::make_s_ptr<atom>(pred, is_fact, std::move(f), std::move(args));
+        return utils::make_s_ptr<riddle::atom>(pred, is_fact, std::move(args), std::move(f));
     }
 };
 

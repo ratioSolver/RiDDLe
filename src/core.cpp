@@ -147,7 +147,7 @@ namespace riddle
     json::json core::to_json() const
     {
         std::set<item *> all_items; // we keep track of all the items..
-        std::set<atom *> all_atoms; // we keep track of all the atoms..
+        std::set<atm *> all_atoms;  // we keep track of all the atoms..
         std::queue<component_type *> q;
         for (const auto &tp : types)
             if (auto ct = dynamic_cast<component_type *>(tp.second.get()))
@@ -163,7 +163,7 @@ namespace riddle
                 all_items.insert(itm.get());
             for (const auto &pred : tp->get_predicates())
                 for (const auto &atm : pred.second->get_atoms())
-                    all_atoms.insert(static_cast<atom *>(atm.get()));
+                    all_atoms.insert(static_cast<riddle::atm *>(atm.get()));
             for (const auto &etp : tp->get_types())
                 if (auto ct = dynamic_cast<component_type *>(etp.second.get()))
                     q.push(ct);
@@ -173,7 +173,7 @@ namespace riddle
         }
         for (const auto &pred : predicates)
             for (const auto &atm : pred.second->get_atoms())
-                all_atoms.insert(static_cast<atom *>(atm.get()));
+                all_atoms.insert(static_cast<riddle::atm *>(atm.get()));
 
         json::json j_core{{"name", std::string_view(name)}};
         if (!all_items.empty())

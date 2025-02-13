@@ -18,7 +18,7 @@ namespace riddle
         for (size_t i = 1; i < object_id.size(); ++i)
             if (auto c = dynamic_cast<component *>(obj.get()))
                 obj = c->get(object_id[i].id);
-            else if (auto c = dynamic_cast<atom *>(obj.get()))
+            else if (auto c = dynamic_cast<atm *>(obj.get()))
                 obj = c->get(object_id[i].id);
             else
                 throw std::runtime_error("Invalid object reference");

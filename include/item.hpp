@@ -51,4 +51,15 @@ namespace riddle
   private:
     const utils::var expr;
   };
+
+  class atom : public riddle::atm
+  {
+  public:
+    atom(riddle::predicate &pred, bool is_fact, std::map<std::string, utils::s_ptr<riddle::item>, std::less<>> &&args, utils::lit &&sigma) : riddle::atm(pred, is_fact, std::move(args)), sigma(sigma) {}
+
+    [[nodiscard]] const utils::lit &get_sigma() const noexcept { return sigma; }
+
+  private:
+    const utils::lit sigma;
+  };
 } // namespace riddle

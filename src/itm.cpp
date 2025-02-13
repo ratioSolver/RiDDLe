@@ -3,6 +3,8 @@
 
 namespace riddle
 {
+    riddle::bool_expr item::operator==(riddle::expr) const { return get_type().get_scope().get_core().new_bool(false); }
+
     bool_itm::bool_itm(bool_type &tp) : item(tp) {}
     json::json bool_itm::to_json() const
     {
@@ -89,8 +91,8 @@ namespace riddle
 
     bool_expr component::operator==(expr rhs) const { return get_core().new_bool(this == rhs.get()); }
 
-    atom::atom(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) : item(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
-    json::json atom::to_json() const
+    atm::atm(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) : item(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
+    json::json atm::to_json() const
     {
         json::json j_atm{{"is_fact", fact}, {"type", get_type().get_full_name()}};
 
@@ -114,7 +116,7 @@ namespace riddle
         return j_atm;
     }
 
-    env &atom::atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args)
+    env &atm::atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args)
     {
         if (args.count(tau_kw))
             return *static_cast<component *>(args.at(tau_kw).get());
