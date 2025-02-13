@@ -61,14 +61,14 @@ namespace riddle
     friend class class_declaration;
 
   public:
-    field_declaration(std::vector<id_token> &&tp, std::vector<std::pair<id_token, utils::u_ptr<expression>>> &&fields) : tp(std::move(tp)), fields(std::move(fields)) {}
+    field_declaration(std::vector<id_token> &&tp, std::vector<std::pair<id_token, utils::s_ptr<expression>>> &&fields) : tp(std::move(tp)), fields(std::move(fields)) {}
 
   private:
     void refine(scope &scp) const;
 
   private:
     std::vector<id_token> tp;
-    std::vector<std::pair<id_token, utils::u_ptr<expression>>> fields;
+    std::vector<std::pair<id_token, utils::s_ptr<expression>>> fields;
   };
 
   class constructor_declaration final
@@ -76,14 +76,14 @@ namespace riddle
     friend class class_declaration;
 
   public:
-    constructor_declaration(std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>> &&inits, std::vector<utils::u_ptr<statement>> &&stmts) : params(std::move(params)), inits(std::move(inits)), stmts(std::move(stmts)) {}
+    constructor_declaration(std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::pair<id_token, std::vector<utils::s_ptr<expression>>>> &&inits, std::vector<utils::u_ptr<statement>> &&stmts) : params(std::move(params)), inits(std::move(inits)), stmts(std::move(stmts)) {}
 
   private:
     void refine(scope &scp) const;
 
   private:
     std::vector<std::pair<std::vector<id_token>, id_token>> params;
-    std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>> inits;
+    std::vector<std::pair<id_token, std::vector<utils::s_ptr<expression>>>> inits;
     std::vector<utils::u_ptr<statement>> stmts;
   };
 

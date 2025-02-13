@@ -4,7 +4,7 @@
 
 namespace riddle
 {
-    constructor::constructor(scope &scp, std::vector<utils::u_ptr<field>> &&args, const std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>> &inits, const std::vector<utils::u_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp), inits(inits), body(body)
+    constructor::constructor(scope &scp, std::vector<utils::u_ptr<field>> &&args, const std::vector<std::pair<id_token, std::vector<utils::s_ptr<expression>>>> &inits, const std::vector<utils::u_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp), inits(inits), body(body)
     {
         for (auto &arg : args)
         {

@@ -20,7 +20,7 @@ namespace riddle
   class field
   {
   public:
-    field(type &tp, std::string &&name, const utils::u_ptr<expression> &expr, bool synthetic = false) noexcept;
+    field(type &tp, std::string &&name, const utils::s_ptr<expression> &expr, bool synthetic = false) noexcept;
 
     /**
      * @brief Retrieves the type of the field.
@@ -47,7 +47,7 @@ namespace riddle
      *
      * @return A reference to the expression of the field.
      */
-    [[nodiscard]] const utils::u_ptr<expression> &get_expression() const noexcept { return expr; }
+    [[nodiscard]] const utils::s_ptr<expression> &get_expression() const noexcept { return expr; }
 
     /**
      * @brief Checks if the field is synthetic.
@@ -61,7 +61,7 @@ namespace riddle
   private:
     type &tp;
     std::string name;
-    const utils::u_ptr<expression> &expr;
+    const utils::s_ptr<expression> &expr;
     bool synthetic;
   };
 

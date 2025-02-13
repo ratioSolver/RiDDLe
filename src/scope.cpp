@@ -3,7 +3,7 @@
 
 namespace riddle
 {
-    field::field(type &tp, std::string &&name, const utils::u_ptr<expression> &expr, bool synthetic) noexcept : tp(tp), name(std::move(name)), expr(expr), synthetic(synthetic) {}
+    field::field(type &tp, std::string &&name, const utils::s_ptr<expression> &expr, bool synthetic) noexcept : tp(tp), name(std::move(name)), expr(expr), synthetic(synthetic) {}
 
     scope::scope(core &c, scope &parent, std::vector<utils::u_ptr<field>> &&args) : cr(c), parent(parent)
     {
