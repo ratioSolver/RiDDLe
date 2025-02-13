@@ -1,10 +1,7 @@
 #pragma once
 
-#include "memory.hpp"
-#include "bool.hpp"
-#include "integer.hpp"
-#include "rational.hpp"
-#include <vector>
+#include "lexer.hpp"
+#include <map>
 
 namespace riddle
 {
@@ -16,9 +13,6 @@ namespace riddle
     term(core &cr) : cr(cr) {}
     virtual ~term() = default;
 
-    [[nodiscard]] core &get_core() const noexcept { return cr; }
-
-  private:
     core &cr;
   };
 
@@ -28,8 +22,6 @@ namespace riddle
   {
   public:
     bool_term(core &cr) : term(cr) {}
-
-    [[nodiscard]] virtual utils::lbool value() const noexcept = 0;
   };
 
   using bool_expr = utils::s_ptr<bool_term>;
@@ -37,12 +29,9 @@ namespace riddle
   class bool_const final : public bool_term
   {
   public:
-    bool_const(core &cr, utils::lbool val) : bool_term(cr), val(val) {}
+    bool_const(core &cr, bool_token &&val) : bool_term(cr), val(val) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override { return val; }
-
-  private:
-    const utils::lbool val;
+    const bool_token val;
   };
 
   class bool_var : public bool_term
@@ -56,9 +45,6 @@ namespace riddle
   public:
     bool_not(core &cr, bool_expr arg) : bool_term(cr), arg(arg) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override { return !arg->value(); }
-
-  private:
     const bool_expr arg;
   };
 
@@ -67,15 +53,6 @@ namespace riddle
   public:
     bool_and(core &cr, std::vector<bool_expr> args) : bool_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      for (const auto &arg : args)
-        if (arg->value() == utils::False)
-          return utils::False;
-      return utils::True;
-    }
-
-  private:
     const std::vector<bool_expr> args;
   };
 
@@ -84,15 +61,14 @@ namespace riddle
   public:
     bool_or(core &cr, std::vector<bool_expr> args) : bool_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      for (const auto &arg : args)
-        if (arg->value() == utils::True)
-          return utils::True;
-      return utils::False;
-    }
+    const std::vector<bool_expr> args;
+  };
 
-  private:
+  class bool_xor final : public bool_term
+  {
+  public:
+    bool_xor(core &cr, std::vector<bool_expr> args) : bool_term(cr), args(std::move(args)) {}
+
     const std::vector<bool_expr> args;
   };
 
@@ -100,11 +76,6 @@ namespace riddle
   {
   public:
     int_term(core &cr) : term(cr) {}
-
-    [[nodiscard]] virtual utils::integer value() const noexcept = 0;
-
-    [[nodiscard]] virtual utils::integer lb() const noexcept = 0;
-    [[nodiscard]] virtual utils::integer ub() const noexcept = 0;
   };
 
   using int_expr = utils::s_ptr<int_term>;
@@ -112,14 +83,9 @@ namespace riddle
   class int_const final : public int_term
   {
   public:
-    int_const(core &cr, utils::integer val) : int_term(cr), val(val) {}
+    int_const(core &cr, int_token &&val) : int_term(cr), val(val) {}
 
-    [[nodiscard]] utils::integer value() const noexcept override { return val; }
-    [[nodiscard]] utils::integer lb() const noexcept override { return val; }
-    [[nodiscard]] utils::integer ub() const noexcept override { return val; }
-
-  private:
-    const utils::integer val;
+    const int_token val;
   };
 
   class int_var : public int_term
@@ -128,50 +94,36 @@ namespace riddle
     int_var(core &cr) : int_term(cr) {}
   };
 
+  class bounded_int_var : public int_term
+  {
+  public:
+    bounded_int_var(core &cr, int_token &&lb, int_token &&ub) : int_term(cr), lb(lb), ub(ub) {}
+
+    const int_token lb, ub;
+  };
+
+  class uncertain_int_var : public int_term
+  {
+  public:
+    uncertain_int_var(core &cr, int_token &&lb, int_token &&ub) : int_term(cr), lb(lb), ub(ub) {}
+
+    const int_token lb, ub;
+  };
+
   class int_add final : public int_term
   {
   public:
     int_add(core &cr, std::vector<int_expr> args) : int_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::integer value() const noexcept override
-    {
-      utils::integer sum = utils::integer::zero;
-      for (const auto &arg : args)
-        sum += arg->value();
-      return sum;
-    }
-
-    [[nodiscard]] utils::integer lb() const noexcept override
-    {
-      utils::integer sum = utils::integer::zero;
-      for (const auto &arg : args)
-        sum += arg->lb();
-      return sum;
-    }
-
-    [[nodiscard]] utils::integer ub() const noexcept override
-    {
-      utils::integer sum = utils::integer::zero;
-      for (const auto &arg : args)
-        sum += arg->ub();
-      return sum;
-    }
-
-  private:
     const std::vector<int_expr> args;
   };
 
   class int_sub final : public int_term
   {
   public:
-    int_sub(core &cr, int_expr lhs, int_expr rhs) : int_term(cr), lhs(lhs), rhs(rhs) {}
+    int_sub(core &cr, std::vector<int_expr> args) : int_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::integer value() const noexcept override { return lhs->value() - rhs->value(); }
-    [[nodiscard]] utils::integer lb() const noexcept override { return lhs->lb() - rhs->ub(); }
-    [[nodiscard]] utils::integer ub() const noexcept override { return lhs->ub() - rhs->lb(); }
-
-  private:
-    const int_expr lhs, rhs;
+    const std::vector<int_expr> args;
   };
 
   class int_mul final : public int_term
@@ -179,45 +131,15 @@ namespace riddle
   public:
     int_mul(core &cr, std::vector<int_expr> args) : int_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::integer value() const noexcept override
-    {
-      utils::integer prod = utils::integer::one;
-      for (const auto &arg : args)
-        prod *= arg->value();
-      return prod;
-    }
-
-    [[nodiscard]] utils::integer lb() const noexcept override
-    {
-      utils::integer prod = utils::integer::one;
-      for (const auto &arg : args)
-        prod *= arg->lb();
-      return prod;
-    }
-
-    [[nodiscard]] utils::integer ub() const noexcept override
-    {
-      utils::integer prod = utils::integer::one;
-      for (const auto &arg : args)
-        prod *= arg->ub();
-      return prod;
-    }
-
-  private:
     const std::vector<int_expr> args;
   };
 
   class int_div final : public int_term
   {
   public:
-    int_div(core &cr, int_expr lhs, int_expr rhs) : int_term(cr), lhs(lhs), rhs(rhs) {}
+    int_div(core &cr, std::vector<int_expr> args) : int_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::integer value() const noexcept override { return lhs->value() / rhs->value(); }
-    [[nodiscard]] utils::integer lb() const noexcept override { return lhs->lb() / rhs->ub(); }
-    [[nodiscard]] utils::integer ub() const noexcept override { return lhs->ub() / rhs->lb(); }
-
-  private:
-    const int_expr lhs, rhs;
+    const std::vector<int_expr> args;
   };
 
   class int_lt final : public bool_term
@@ -225,16 +147,6 @@ namespace riddle
   public:
     int_lt(core &cr, int_expr lhs, int_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() < rhs->lb())
-        return utils::True;
-      if (lhs->lb() >= rhs->ub())
-        return utils::False;
-      return utils::Undefined;
-    }
-
-  private:
     const int_expr lhs, rhs;
   };
 
@@ -243,16 +155,6 @@ namespace riddle
   public:
     int_le(core &cr, int_expr lhs, int_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() <= rhs->lb())
-        return utils::True;
-      if (lhs->lb() > rhs->ub())
-        return utils::False;
-      return utils::Undefined;
-    }
-
-  private:
     const int_expr lhs, rhs;
   };
 
@@ -261,16 +163,6 @@ namespace riddle
   public:
     int_eq(core &cr, int_expr lhs, int_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() < rhs->lb() || lhs->lb() > rhs->ub())
-        return utils::False;
-      if (lhs->lb() == rhs->lb() && lhs->ub() == rhs->ub())
-        return utils::True;
-      return utils::Undefined;
-    }
-
-  private:
     const int_expr lhs, rhs;
   };
 
@@ -279,16 +171,6 @@ namespace riddle
   public:
     int_ge(core &cr, int_expr lhs, int_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() >= rhs->lb())
-        return utils::True;
-      if (lhs->lb() < rhs->ub())
-        return utils::False;
-      return utils::Undefined;
-    }
-
-  private:
     const int_expr lhs, rhs;
   };
 
@@ -297,16 +179,6 @@ namespace riddle
   public:
     int_gt(core &cr, int_expr lhs, int_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() > rhs->lb())
-        return utils::True;
-      if (lhs->lb() <= rhs->ub())
-        return utils::False;
-      return utils::Undefined;
-    }
-
-  private:
     const int_expr lhs, rhs;
   };
 
@@ -314,11 +186,6 @@ namespace riddle
   {
   public:
     real_term(core &cr) : term(cr) {}
-
-    [[nodiscard]] virtual utils::rational value() const noexcept = 0;
-
-    [[nodiscard]] virtual utils::rational lb() const noexcept = 0;
-    [[nodiscard]] virtual utils::rational ub() const noexcept = 0;
   };
 
   using real_expr = utils::s_ptr<real_term>;
@@ -326,14 +193,9 @@ namespace riddle
   class real_const final : public real_term
   {
   public:
-    real_const(core &cr, utils::rational val) : real_term(cr), val(val) {}
+    real_const(core &cr, real_token &&val) : real_term(cr), val(val) {}
 
-    [[nodiscard]] utils::rational value() const noexcept override { return val; }
-    [[nodiscard]] utils::rational lb() const noexcept override { return val; }
-    [[nodiscard]] utils::rational ub() const noexcept override { return val; }
-
-  private:
-    const utils::rational val;
+    const real_token val;
   };
 
   class real_var : public real_term
@@ -342,50 +204,36 @@ namespace riddle
     real_var(core &cr) : real_term(cr) {}
   };
 
+  class bounded_real_var : public real_term
+  {
+  public:
+    bounded_real_var(core &cr, real_token &&lb, real_token &&ub) : real_term(cr), lb(lb), ub(ub) {}
+
+    const real_token lb, ub;
+  };
+
+  class uncertain_real_var : public real_term
+  {
+  public:
+    uncertain_real_var(core &cr, real_token &&lb, real_token &&ub) : real_term(cr), lb(lb), ub(ub) {}
+
+    const real_token lb, ub;
+  };
+
   class real_add final : public real_term
   {
   public:
     real_add(core &cr, std::vector<real_expr> args) : real_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::rational value() const noexcept override
-    {
-      utils::rational sum = utils::rational::zero;
-      for (const auto &arg : args)
-        sum += arg->value();
-      return sum;
-    }
-
-    [[nodiscard]] utils::rational lb() const noexcept override
-    {
-      utils::rational sum = utils::rational::zero;
-      for (const auto &arg : args)
-        sum += arg->lb();
-      return sum;
-    }
-
-    [[nodiscard]] utils::rational ub() const noexcept override
-    {
-      utils::rational sum = utils::rational::zero;
-      for (const auto &arg : args)
-        sum += arg->ub();
-      return sum;
-    }
-
-  private:
     const std::vector<real_expr> args;
   };
 
   class real_sub final : public real_term
   {
   public:
-    real_sub(core &cr, real_expr lhs, real_expr rhs) : real_term(cr), lhs(lhs), rhs(rhs) {}
+    real_sub(core &cr, std::vector<real_expr> args) : real_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::rational value() const noexcept override { return lhs->value() - rhs->value(); }
-    [[nodiscard]] utils::rational lb() const noexcept override { return lhs->lb() - rhs->ub(); }
-    [[nodiscard]] utils::rational ub() const noexcept override { return lhs->ub() - rhs->lb(); }
-
-  private:
-    const real_expr lhs, rhs;
+    const std::vector<real_expr> args;
   };
 
   class real_mul final : public real_term
@@ -393,45 +241,15 @@ namespace riddle
   public:
     real_mul(core &cr, std::vector<real_expr> args) : real_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::rational value() const noexcept override
-    {
-      utils::rational prod = utils::rational::one;
-      for (const auto &arg : args)
-        prod *= arg->value();
-      return prod;
-    }
-
-    [[nodiscard]] utils::rational lb() const noexcept override
-    {
-      utils::rational prod = utils::rational::one;
-      for (const auto &arg : args)
-        prod *= arg->lb();
-      return prod;
-    }
-
-    [[nodiscard]] utils::rational ub() const noexcept override
-    {
-      utils::rational prod = utils::rational::one;
-      for (const auto &arg : args)
-        prod *= arg->ub();
-      return prod;
-    }
-
-  private:
     const std::vector<real_expr> args;
   };
 
   class real_div final : public real_term
   {
   public:
-    real_div(core &cr, real_expr lhs, real_expr rhs) : real_term(cr), lhs(lhs), rhs(rhs) {}
+    real_div(core &cr, std::vector<real_expr> args) : real_term(cr), args(std::move(args)) {}
 
-    [[nodiscard]] utils::rational value() const noexcept override { return lhs->value() / rhs->value(); }
-    [[nodiscard]] utils::rational lb() const noexcept override { return lhs->lb() / rhs->ub(); }
-    [[nodiscard]] utils::rational ub() const noexcept override { return lhs->ub() / rhs->lb(); }
-
-  private:
-    const real_expr lhs, rhs;
+    const std::vector<real_expr> args;
   };
 
   class real_lt final : public bool_term
@@ -439,16 +257,6 @@ namespace riddle
   public:
     real_lt(core &cr, real_expr lhs, real_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() < rhs->lb())
-        return utils::True;
-      if (lhs->lb() >= rhs->ub())
-        return utils::False;
-      return utils::Undefined;
-    }
-
-  private:
     const real_expr lhs, rhs;
   };
 
@@ -457,16 +265,6 @@ namespace riddle
   public:
     real_le(core &cr, real_expr lhs, real_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() <= rhs->lb())
-        return utils::True;
-      if (lhs->lb() > rhs->ub())
-        return utils::False;
-      return utils::Undefined;
-    }
-
-  private:
     const real_expr lhs, rhs;
   };
 
@@ -475,16 +273,6 @@ namespace riddle
   public:
     real_eq(core &cr, real_expr lhs, real_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() < rhs->lb() || lhs->lb() > rhs->ub())
-        return utils::False;
-      if (lhs->lb() == rhs->lb() && lhs->ub() == rhs->ub())
-        return utils::True;
-      return utils::Undefined;
-    }
-
-  private:
     const real_expr lhs, rhs;
   };
 
@@ -493,16 +281,6 @@ namespace riddle
   public:
     real_ge(core &cr, real_expr lhs, real_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() >= rhs->lb())
-        return utils::True;
-      if (lhs->lb() < rhs->ub())
-        return utils::False;
-      return utils::Undefined;
-    }
-
-  private:
     const real_expr lhs, rhs;
   };
 
@@ -511,16 +289,6 @@ namespace riddle
   public:
     real_gt(core &cr, real_expr lhs, real_expr rhs) : bool_term(cr), lhs(lhs), rhs(rhs) {}
 
-    [[nodiscard]] utils::lbool value() const noexcept override
-    {
-      if (lhs->ub() > rhs->lb())
-        return utils::True;
-      if (lhs->lb() <= rhs->ub())
-        return utils::False;
-      return utils::Undefined;
-    }
-
-  private:
     const real_expr lhs, rhs;
   };
 
@@ -539,117 +307,13 @@ namespace riddle
   public:
     string_const(core &cr, std::string val) : string_term(cr), val(std::move(val)) {}
 
-    [[nodiscard]] std::string value() const noexcept override { return val; }
-
-  private:
     const std::string val;
   };
 
-  [[nodiscard]] bool_expr operator&&(bool_expr lhs, bool_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator&&(bool_expr lhs, bool rhs) noexcept;
-  [[nodiscard]] bool_expr operator&&(bool lhs, bool_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator||(bool_expr lhs, bool_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator||(bool_expr lhs, bool rhs) noexcept;
-  [[nodiscard]] bool_expr operator||(bool lhs, bool_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator!(bool_expr arg) noexcept;
+  bool_expr push_negations(bool_expr expr) noexcept;
+  bool_expr distribute(bool_expr expr) noexcept;
+  bool_expr to_cnf(bool_expr expr) noexcept { return distribute(push_negations(expr)); }
 
-  [[nodiscard]] int_expr operator+(int_expr lhs, int_expr rhs) noexcept;
-  [[nodiscard]] int_expr operator+(int_expr lhs, utils::integer rhs) noexcept;
-  [[nodiscard]] int_expr operator+(utils::integer lhs, int_expr rhs) noexcept;
-  [[nodiscard]] int_expr operator+(int_expr lhs, int rhs) noexcept;
-  [[nodiscard]] int_expr operator+(int lhs, int_expr rhs) noexcept;
-
-  [[nodiscard]] int_expr operator-(int_expr lhs, int_expr rhs) noexcept;
-  [[nodiscard]] int_expr operator-(int_expr lhs, utils::integer rhs) noexcept;
-  [[nodiscard]] int_expr operator-(utils::integer lhs, int_expr rhs) noexcept;
-  [[nodiscard]] int_expr operator-(int_expr lhs, int rhs) noexcept;
-  [[nodiscard]] int_expr operator-(int lhs, int_expr rhs) noexcept;
-
-  [[nodiscard]] int_expr operator*(int_expr lhs, int_expr rhs) noexcept;
-  [[nodiscard]] int_expr operator*(int_expr lhs, utils::integer rhs) noexcept;
-  [[nodiscard]] int_expr operator*(utils::integer lhs, int_expr rhs) noexcept;
-  [[nodiscard]] int_expr operator*(int_expr lhs, int rhs) noexcept;
-  [[nodiscard]] int_expr operator*(int lhs, int_expr rhs) noexcept;
-
-  [[nodiscard]] int_expr operator/(int_expr lhs, int_expr rhs) noexcept;
-  [[nodiscard]] int_expr operator/(int_expr lhs, utils::integer rhs) noexcept;
-  [[nodiscard]] int_expr operator/(utils::integer lhs, int_expr rhs) noexcept;
-  [[nodiscard]] int_expr operator/(int_expr lhs, int rhs) noexcept;
-  [[nodiscard]] int_expr operator/(int lhs, int_expr rhs) noexcept;
-
-  [[nodiscard]] bool_expr operator<(int_expr lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<(int_expr lhs, utils::integer rhs) noexcept;
-  [[nodiscard]] bool_expr operator<(utils::integer lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<(int_expr lhs, int rhs) noexcept;
-  [[nodiscard]] bool_expr operator<(int lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(int_expr lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(int_expr lhs, utils::integer rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(utils::integer lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(int_expr lhs, int rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(int lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(int_expr lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(int_expr lhs, utils::integer rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(utils::integer lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(int_expr lhs, int rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(int lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(int_expr lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(int_expr lhs, utils::integer rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(utils::integer lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(int_expr lhs, int rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(int lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(int_expr lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(int_expr lhs, utils::integer rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(utils::integer lhs, int_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(int_expr lhs, int rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(int lhs, int_expr rhs) noexcept;
-
-  [[nodiscard]] real_expr operator+(real_expr lhs, real_expr rhs) noexcept;
-  [[nodiscard]] real_expr operator+(real_expr lhs, utils::rational rhs) noexcept;
-  [[nodiscard]] real_expr operator+(utils::rational lhs, real_expr rhs) noexcept;
-  [[nodiscard]] real_expr operator+(real_expr lhs, double rhs) noexcept;
-  [[nodiscard]] real_expr operator+(double lhs, real_expr rhs) noexcept;
-
-  [[nodiscard]] real_expr operator-(real_expr lhs, real_expr rhs) noexcept;
-  [[nodiscard]] real_expr operator-(real_expr lhs, utils::rational rhs) noexcept;
-  [[nodiscard]] real_expr operator-(utils::rational lhs, real_expr rhs) noexcept;
-  [[nodiscard]] real_expr operator-(real_expr lhs, double rhs) noexcept;
-  [[nodiscard]] real_expr operator-(double lhs, real_expr rhs) noexcept;
-
-  [[nodiscard]] real_expr operator*(real_expr lhs, real_expr rhs) noexcept;
-  [[nodiscard]] real_expr operator*(real_expr lhs, utils::rational rhs) noexcept;
-  [[nodiscard]] real_expr operator*(utils::rational lhs, real_expr rhs) noexcept;
-  [[nodiscard]] real_expr operator*(real_expr lhs, double rhs) noexcept;
-  [[nodiscard]] real_expr operator*(double lhs, real_expr rhs) noexcept;
-
-  [[nodiscard]] real_expr operator/(real_expr lhs, real_expr rhs) noexcept;
-  [[nodiscard]] real_expr operator/(real_expr lhs, utils::rational rhs) noexcept;
-  [[nodiscard]] real_expr operator/(utils::rational lhs, real_expr rhs) noexcept;
-  [[nodiscard]] real_expr operator/(real_expr lhs, double rhs) noexcept;
-  [[nodiscard]] real_expr operator/(double lhs, real_expr rhs) noexcept;
-
-  [[nodiscard]] bool_expr operator<(real_expr lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<(real_expr lhs, utils::rational rhs) noexcept;
-  [[nodiscard]] bool_expr operator<(utils::rational lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<(real_expr lhs, double rhs) noexcept;
-  [[nodiscard]] bool_expr operator<(double lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(real_expr lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(real_expr lhs, utils::rational rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(utils::rational lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(real_expr lhs, double rhs) noexcept;
-  [[nodiscard]] bool_expr operator<=(double lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(real_expr lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(real_expr lhs, utils::rational rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(utils::rational lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(real_expr lhs, double rhs) noexcept;
-  [[nodiscard]] bool_expr operator==(double lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(real_expr lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(real_expr lhs, utils::rational rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(utils::rational lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(real_expr lhs, double rhs) noexcept;
-  [[nodiscard]] bool_expr operator>=(double lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(real_expr lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(real_expr lhs, utils::rational rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(utils::rational lhs, real_expr rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(real_expr lhs, double rhs) noexcept;
-  [[nodiscard]] bool_expr operator>(double lhs, real_expr rhs) noexcept;
+  std::map<int_expr, INT_TYPE> linearize(int_expr expr);
+  std::map<real_expr, utils::rational> linearize(real_expr expr);
 } // namespace riddle
