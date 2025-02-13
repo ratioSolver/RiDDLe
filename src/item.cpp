@@ -3,8 +3,8 @@
 
 namespace riddle
 {
-    bool_item::bool_item(bool_type &tp) : item(tp) {}
-    json::json bool_item::to_json() const
+    bool_itm::bool_itm(bool_type &tp) : item(tp) {}
+    json::json bool_itm::to_json() const
     {
         json::json j_val{{"type", std::string_view(get_type().get_name())}}; // we add the type of the item..
         switch (get_type().get_scope().get_core().bool_value(*this))
@@ -22,10 +22,10 @@ namespace riddle
         return j_val;
     }
 
-    arith_item::arith_item(int_type &tp) : item(tp) {}
-    arith_item::arith_item(real_type &tp) : item(tp) {}
-    arith_item::arith_item(time_type &tp) : item(tp) {}
-    json::json arith_item::to_json() const
+    arith_itm::arith_itm(int_type &tp) : item(tp) {}
+    arith_itm::arith_itm(real_type &tp) : item(tp) {}
+    arith_itm::arith_itm(time_type &tp) : item(tp) {}
+    json::json arith_itm::to_json() const
     {
         json::json j_val{{"type", std::string_view(get_type().get_name())}}; // we add the type of the item..
         const auto val = get_type().get_scope().get_core().arith_value(*this);
@@ -45,11 +45,11 @@ namespace riddle
         return j_val;
     }
 
-    string_item::string_item(string_type &tp) : item(tp) {}
-    json::json string_item::to_json() const { return {{"type", std::string_view(get_type().get_name()), {"val", get_type().get_scope().get_core().string_value(*this)}}}; }
+    string_itm::string_itm(string_type &tp) : item(tp) {}
+    json::json string_itm::to_json() const { return {{"type", std::string_view(get_type().get_name()), {"val", get_type().get_scope().get_core().string_value(*this)}}}; }
 
-    enum_item::enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) : item(tp), values(std::move(values)) {}
-    json::json enum_item::to_json() const
+    enum_itm::enum_itm(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) : item(tp), values(std::move(values)) {}
+    json::json enum_itm::to_json() const
     {
         json::json j_val{{"type", "enum"}}; // we add the type of the enum item..
 

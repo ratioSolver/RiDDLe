@@ -1,5 +1,5 @@
 #include "env.hpp"
-#include "item.hpp"
+#include "itm.hpp"
 #include "core.hpp"
 #include <cassert>
 
@@ -21,7 +21,7 @@ namespace riddle
         for (const auto &[name, itm] : items)
             if (itm->get_type().is_primitive()) // we add the json representation of the item..
                 j_itms[name] = itm->to_json();
-            else if (auto e = dynamic_cast<enum_item *>(itm.get()))
+            else if (auto e = dynamic_cast<enum_itm *>(itm.get()))
                 j_itms[name] = e->to_json();
             else if (auto c = dynamic_cast<component *>(itm.get()))
                 j_itms[name] = {{"type", "item"}, {"val", static_cast<uint64_t>(c->get_id())}};
