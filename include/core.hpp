@@ -233,7 +233,7 @@ namespace riddle
      * @param exprs A vector of shared pointers to boolean items to be combined.
      * @return A shared pointer to the newly created boolean item representing the AND operation.
      */
-    [[nodiscard]] virtual bool_expr new_and(std::vector<bool_expr> &&exprs) = 0;
+    [[nodiscard]] bool_expr new_and(std::vector<bool_expr> &&exprs);
     /**
      * @brief Creates a new boolean OR item from a list of boolean expressions.
      *
@@ -244,7 +244,7 @@ namespace riddle
      * the boolean expressions to be OR-ed together.
      * @return A shared pointer to the newly created boolean OR item.
      */
-    [[nodiscard]] virtual bool_expr new_or(std::vector<bool_expr> &&exprs) = 0;
+    [[nodiscard]] bool_expr new_or(std::vector<bool_expr> &&exprs);
     /**
      * @brief Creates a new XOR (exclusive OR) boolean item.
      *
@@ -254,7 +254,7 @@ namespace riddle
      * @param exprs A vector of shared pointers to boolean items, which will be used as the operands for the XOR operation.
      * @return A shared pointer to the newly created XOR boolean item.
      */
-    [[nodiscard]] virtual bool_expr new_xor(std::vector<bool_expr> &&exprs) = 0;
+    [[nodiscard]] bool_expr new_xor(std::vector<bool_expr> &&exprs);
 
     /**
      * @brief Creates a new boolean item representing the logical NOT of the given expression.
@@ -265,7 +265,7 @@ namespace riddle
      * @param expr A shared pointer to the boolean item to be negated.
      * @return A shared pointer to a new boolean item representing the logical NOT of the input expression.
      */
-    [[nodiscard]] virtual bool_expr new_not(bool_expr expr) = 0;
+    [[nodiscard]] bool_expr new_not(bool_expr expr);
 
     /**
      * @brief Creates a new arithmetic item representing the negation of the given expression.

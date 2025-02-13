@@ -28,12 +28,6 @@ public:
     riddle::enum_expr new_enum(riddle::type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) override { return utils::make_s_ptr<riddle::enum_item>(tp, std::move(values), 0); }
     std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const riddle::enum_itm &itm) const noexcept override { return {*itm.get_values()[0]}; }
 
-    riddle::bool_expr new_and(std::vector<riddle::bool_expr> &&exprs) override { return utils::make_s_ptr<riddle::bool_and>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), std::move(exprs)); }
-    riddle::bool_expr new_or(std::vector<riddle::bool_expr> &&exprs) override { return utils::make_s_ptr<riddle::bool_or>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), std::move(exprs)); }
-    riddle::bool_expr new_xor(std::vector<riddle::bool_expr> &&) override { return new_bool(false); }
-
-    riddle::bool_expr new_not(riddle::bool_expr xpr) override { return utils::make_s_ptr<riddle::bool_not>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), std::move(xpr)); }
-
     riddle::arith_expr new_negation(riddle::arith_expr) override { return new_int(0); }
 
     riddle::arith_expr new_sum(std::vector<riddle::arith_expr> &&) override { return new_int(0); }

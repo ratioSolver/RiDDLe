@@ -56,6 +56,26 @@ namespace riddle
         RECOMPUTE_NAMES();
     }
 
+    bool_expr core::new_and(std::vector<bool_expr> &&exprs)
+    {
+        assert(!exprs.empty());
+        return utils::make_s_ptr<bool_and>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
+    }
+
+    bool_expr core::new_or(std::vector<bool_expr> &&exprs)
+    {
+        assert(!exprs.empty());
+        return utils::make_s_ptr<bool_or>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
+    }
+
+    bool_expr core::new_xor(std::vector<bool_expr> &&exprs)
+    {
+        assert(!exprs.empty());
+        return utils::make_s_ptr<bool_xor>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
+    }
+
+    bool_expr core::new_not(bool_expr expr) { return utils::make_s_ptr<bool_not>(static_cast<bool_type &>(get_type(bool_kw)), std::move(expr)); }
+
     atom_expr core::new_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args)
     {
         auto atm = create_atom(is_fact, pred, std::move(args));

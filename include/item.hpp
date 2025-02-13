@@ -35,7 +35,7 @@ namespace riddle
   public:
     string_item(string_type &tp, std::string &&expr) : string_itm(tp), expr(expr) {}
 
-    [[nodiscard]] const std::string &get_expr() const noexcept { return expr; }
+    [[nodiscard]] const std::string &get_string() const noexcept { return expr; }
 
   private:
     const std::string expr;
