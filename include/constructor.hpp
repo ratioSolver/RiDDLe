@@ -8,7 +8,7 @@ namespace riddle
   class constructor final : public scope
   {
   public:
-    constructor(scope &scp, std::vector<utils::u_ptr<field>> &&args = {}, const std::vector<std::pair<id_token, std::vector<utils::s_ptr<expression>>>> &inits = {}, const std::vector<utils::u_ptr<statement>> &body = {}) noexcept;
+    constructor(scope &scp, std::vector<utils::u_ptr<field>> &&args = {}, const std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>> &inits = {}, const std::vector<utils::u_ptr<statement>> &body = {}) noexcept;
     constructor(const constructor &) = delete;
 
     /**
@@ -24,7 +24,7 @@ namespace riddle
 
   private:
     std::vector<std::string> args;                                                        // The names of the arguments.
-    const std::vector<std::pair<id_token, std::vector<utils::s_ptr<expression>>>> &inits; // The initializations.
+    const std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>> &inits; // The initializations.
     const std::vector<utils::u_ptr<statement>> &body;                                     // The body of the constructor.
   };
 } // namespace riddle

@@ -248,7 +248,7 @@ namespace riddle
             error("Expected `;` after class declaration");
 
         if (constructors.empty()) // default constructor..
-            constructors.emplace_back(utils::make_u_ptr<constructor_declaration>(std::vector<std::pair<std::vector<id_token>, id_token>>(), std::vector<std::pair<id_token, std::vector<utils::s_ptr<expression>>>>(), std::vector<utils::u_ptr<statement>>()));
+            constructors.emplace_back(utils::make_u_ptr<constructor_declaration>(std::vector<std::pair<std::vector<id_token>, id_token>>(), std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>>(), std::vector<utils::u_ptr<statement>>()));
 
         return utils::make_u_ptr<class_declaration>(std::move(id), std::move(base_classes), std::move(fields), std::move(constructors), std::move(methods), std::move(predicates), std::move(types));
     }
@@ -256,7 +256,7 @@ namespace riddle
     utils::u_ptr<field_declaration> parser::parse_field_declaration()
     {
         std::vector<id_token> tp;
-        std::vector<std::pair<id_token, utils::s_ptr<expression>>> fields;
+        std::vector<std::pair<id_token, utils::u_ptr<expression>>> fields;
 
         switch (tokens.at(pos++)->sym)
         {
@@ -300,7 +300,7 @@ namespace riddle
                 fields.emplace_back(std::move(id), parse_expression());
             else if (match(LPAREN))
             {
-                std::vector<utils::s_ptr<expression>> args;
+                std::vector<utils::u_ptr<expression>> args;
                 if (!match(RPAREN))
                 {
                     do
@@ -314,7 +314,7 @@ namespace riddle
                 f_tp.reserve(tp.size());
                 for (const auto &t : tp)
                     f_tp.emplace_back(std::string(t.id), t.line, t.start_pos, t.end_pos);
-                fields.emplace_back(std::move(id), utils::make_s_ptr<constructor_expression>(std::move(f_tp), std::move(args)));
+                fields.emplace_back(std::move(id), utils::make_u_ptr<constructor_expression>(std::move(f_tp), std::move(args)));
             }
             else
                 fields.emplace_back(std::move(id), nullptr);
@@ -430,7 +430,7 @@ namespace riddle
     utils::u_ptr<constructor_declaration> parser::parse_constructor_declaration()
     {
         std::vector<std::pair<std::vector<id_token>, id_token>> params;
-        std::vector<std::pair<id_token, std::vector<utils::s_ptr<expression>>>> inits;
+        std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>> inits;
         std::vector<utils::u_ptr<statement>> stmts;
 
         if (!match(ID)) // constructor name..
@@ -495,7 +495,7 @@ namespace riddle
                 if (!match(LPAREN))
                     error("Expected `(` after identifier");
 
-                std::vector<utils::s_ptr<expression>> args;
+                std::vector<utils::u_ptr<expression>> args;
                 if (!match(RPAREN))
                 {
                     do
@@ -608,7 +608,7 @@ namespace riddle
         case BOOL:
         { // a local field having a bool type..
             std::vector<id_token> field_type;
-            std::vector<std::pair<id_token, utils::s_ptr<expression>>> fields;
+            std::vector<std::pair<id_token, utils::u_ptr<expression>>> fields;
 
             field_type.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
@@ -633,7 +633,7 @@ namespace riddle
         case INT:
         { // a local field having a int type..
             std::vector<id_token> field_type;
-            std::vector<std::pair<id_token, utils::s_ptr<expression>>> fields;
+            std::vector<std::pair<id_token, utils::u_ptr<expression>>> fields;
 
             field_type.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
@@ -658,7 +658,7 @@ namespace riddle
         case REAL:
         { // a local field having a real type..
             std::vector<id_token> field_type;
-            std::vector<std::pair<id_token, utils::s_ptr<expression>>> fields;
+            std::vector<std::pair<id_token, utils::u_ptr<expression>>> fields;
 
             field_type.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
@@ -683,7 +683,7 @@ namespace riddle
         case TIME:
         { // a local field having a time type..
             std::vector<id_token> field_type;
-            std::vector<std::pair<id_token, utils::s_ptr<expression>>> fields;
+            std::vector<std::pair<id_token, utils::u_ptr<expression>>> fields;
 
             field_type.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
@@ -708,7 +708,7 @@ namespace riddle
         case STRING:
         { // a local field having a string type..
             std::vector<id_token> field_type;
-            std::vector<std::pair<id_token, utils::s_ptr<expression>>> fields;
+            std::vector<std::pair<id_token, utils::u_ptr<expression>>> fields;
 
             field_type.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
 
@@ -743,7 +743,7 @@ namespace riddle
             {
                 pos = c_pos - 1;
                 std::vector<id_token> field_type;
-                std::vector<std::pair<id_token, utils::s_ptr<expression>>> fields;
+                std::vector<std::pair<id_token, utils::u_ptr<expression>>> fields;
 
                 if (!match(ID))
                     error("Expected identifier");
@@ -876,7 +876,7 @@ namespace riddle
         { // a fact or a goal..
             bool is_fact = tokens.at(pos - 1)->sym == FACT;
             std::vector<id_token> tau;
-            std::vector<std::pair<id_token, utils::s_ptr<expression>>> args;
+            std::vector<std::pair<id_token, utils::u_ptr<expression>>> args;
 
             if (!match(ID))
                 error("Expected identifier");
@@ -937,22 +937,22 @@ namespace riddle
         }
     }
 
-    utils::s_ptr<expression> parser::parse_expression(std::size_t precedence)
+    utils::u_ptr<expression> parser::parse_expression(std::size_t precedence)
     {
-        utils::s_ptr<expression> expr;
+        utils::u_ptr<expression> expr;
         switch (tokens.at(pos++)->sym)
         {
         case Bool:
-            expr = utils::make_s_ptr<bool_expression>(bool_token(static_cast<const bool_token &>(*tokens.at(pos - 1)).value, tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            expr = utils::make_u_ptr<bool_expression>(bool_token(static_cast<const bool_token &>(*tokens.at(pos - 1)).value, tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
             break;
         case Int:
-            expr = utils::make_s_ptr<int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 1)).value, tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            expr = utils::make_u_ptr<int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 1)).value, tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
             break;
         case Real:
-            expr = utils::make_s_ptr<real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 1)).value), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            expr = utils::make_u_ptr<real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 1)).value), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
             break;
         case String:
-            expr = utils::make_s_ptr<string_expression>(string_token(std::string(static_cast<const string_token &>(*tokens.at(pos - 1)).value), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            expr = utils::make_u_ptr<string_expression>(string_token(std::string(static_cast<const string_token &>(*tokens.at(pos - 1)).value), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
             break;
         case LBRACKET:
             switch (tokens.at(pos++)->sym)
@@ -964,7 +964,7 @@ namespace riddle
                     error("Expected int literal after `,`");
                 if (!match(RBRACKET))
                     error("Expected `]` after int literal");
-                expr = utils::make_s_ptr<bounded_int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 4)).value, tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), int_token(static_cast<const int_token &>(*tokens.at(pos - 2)).value, tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                expr = utils::make_u_ptr<bounded_int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 4)).value, tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), int_token(static_cast<const int_token &>(*tokens.at(pos - 2)).value, tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
                 break;
             case Real:
                 if (!match(COMMA))
@@ -973,7 +973,7 @@ namespace riddle
                     error("Expected real literal after `,`");
                 if (!match(RBRACKET))
                     error("Expected `]` after real literal");
-                expr = utils::make_s_ptr<bounded_real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 4)).value), tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 2)).value), tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                expr = utils::make_u_ptr<bounded_real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 4)).value), tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 2)).value), tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
                 break;
             default:
                 error("Expected int literal or real literal after `[`");
@@ -991,7 +991,7 @@ namespace riddle
                     error("Expected int literal after `,`");
                 if (!match(RBRACKET))
                     error("Expected `]` after int literal");
-                expr = utils::make_s_ptr<uncertain_int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 4)).value, tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), int_token(static_cast<const int_token &>(*tokens.at(pos - 2)).value, tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                expr = utils::make_u_ptr<uncertain_int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 4)).value, tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), int_token(static_cast<const int_token &>(*tokens.at(pos - 2)).value, tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
                 break;
             case Real:
                 if (!match(COMMA))
@@ -1000,17 +1000,17 @@ namespace riddle
                     error("Expected real literal after `,`");
                 if (!match(RBRACKET))
                     error("Expected `]` after real literal");
-                expr = utils::make_s_ptr<uncertain_real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 4)).value), tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 2)).value), tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                expr = utils::make_u_ptr<uncertain_real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 4)).value), tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 2)).value), tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
                 break;
             default:
                 error("Expected int literal or real literal after `[`");
             }
             break;
         case MINUS:
-            expr = utils::make_s_ptr<minus_expression>(parse_expression());
+            expr = utils::make_u_ptr<minus_expression>(parse_expression());
             break;
         case BANG:
-            expr = utils::make_s_ptr<not_expression>(parse_expression());
+            expr = utils::make_u_ptr<not_expression>(parse_expression());
             break;
         case ID:
         {
@@ -1027,7 +1027,7 @@ namespace riddle
                 id_token fn_id = std::move(object_id.back());
                 object_id.pop_back();
 
-                std::vector<utils::s_ptr<expression>> args;
+                std::vector<utils::u_ptr<expression>> args;
                 if (!match(RPAREN))
                 {
                     do
@@ -1037,10 +1037,10 @@ namespace riddle
                     if (!match(RPAREN))
                         error("Expected `)` after arguments");
                 }
-                expr = utils::make_s_ptr<call_expression>(std::move(object_id), std::move(fn_id), std::move(args));
+                expr = utils::make_u_ptr<call_expression>(std::move(object_id), std::move(fn_id), std::move(args));
             }
             else // id expression..
-                expr = utils::make_s_ptr<id_expression>(std::move(object_id));
+                expr = utils::make_u_ptr<id_expression>(std::move(object_id));
             break;
         }
         case NEW:
@@ -1057,7 +1057,7 @@ namespace riddle
             }
             if (!match(LPAREN))
                 error("Expected `(` after type");
-            std::vector<utils::s_ptr<expression>> args;
+            std::vector<utils::u_ptr<expression>> args;
             if (!match(RPAREN))
             {
                 do
@@ -1067,7 +1067,7 @@ namespace riddle
                 if (!match(RPAREN))
                     error("Expected `)` after arguments");
             }
-            expr = utils::make_s_ptr<constructor_expression>(std::move(type_id), std::move(args));
+            expr = utils::make_u_ptr<constructor_expression>(std::move(type_id), std::move(args));
             break;
         }
         case LPAREN:
@@ -1090,111 +1090,111 @@ namespace riddle
             case EQEQ:
                 assert(0 >= precedence);
                 pos++; // we parse the `==` operator..
-                expr = utils::make_s_ptr<eq_expression>(std::move(expr), parse_expression(1));
+                expr = utils::make_u_ptr<eq_expression>(std::move(expr), parse_expression(1));
                 break;
             case BANGEQ:
                 assert(0 >= precedence);
                 pos++; // we parse the `!=` operator..
-                expr = utils::make_s_ptr<not_expression>(utils::make_s_ptr<eq_expression>(std::move(expr), parse_expression(1)));
+                expr = utils::make_u_ptr<not_expression>(utils::make_u_ptr<eq_expression>(std::move(expr), parse_expression(1)));
                 break;
             case IMPLICATION:
             {
                 assert(1 >= precedence);
-                std::vector<utils::s_ptr<expression>> xprs;
-                xprs.emplace_back(utils::make_s_ptr<not_expression>(std::move(expr)));
+                std::vector<utils::u_ptr<expression>> xprs;
+                xprs.emplace_back(utils::make_u_ptr<not_expression>(std::move(expr)));
                 pos++; // we parse the `=>` operator..
                 xprs.emplace_back(parse_expression(2));
-                expr = utils::make_s_ptr<or_expression>(std::move(xprs));
+                expr = utils::make_u_ptr<or_expression>(std::move(xprs));
                 break;
             }
             case BAR:
             {
                 assert(1 >= precedence);
-                std::vector<utils::s_ptr<expression>> xprs;
+                std::vector<utils::u_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
                 while (match(BAR))
                     xprs.emplace_back(parse_expression(2));
-                expr = utils::make_s_ptr<or_expression>(std::move(xprs));
+                expr = utils::make_u_ptr<or_expression>(std::move(xprs));
                 break;
             }
             case AMP:
             {
                 assert(1 >= precedence);
-                std::vector<utils::s_ptr<expression>> xprs;
+                std::vector<utils::u_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
                 while (match(AMP))
                     xprs.emplace_back(parse_expression(2));
-                expr = utils::make_s_ptr<and_expression>(std::move(xprs));
+                expr = utils::make_u_ptr<and_expression>(std::move(xprs));
                 break;
             }
             case CARET:
             {
                 assert(1 >= precedence);
-                std::vector<utils::s_ptr<expression>> xprs;
+                std::vector<utils::u_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
                 while (match(CARET))
                     xprs.emplace_back(parse_expression(2));
-                expr = utils::make_s_ptr<xor_expression>(std::move(xprs));
+                expr = utils::make_u_ptr<xor_expression>(std::move(xprs));
                 break;
             }
             case LT:
                 assert(2 >= precedence);
                 pos++; // we parse the `<` operator..
-                expr = utils::make_s_ptr<lt_expression>(std::move(expr), parse_expression(3));
+                expr = utils::make_u_ptr<lt_expression>(std::move(expr), parse_expression(3));
                 break;
             case LTEQ:
                 assert(2 >= precedence);
                 pos++; // we parse the `<=` operator..
-                expr = utils::make_s_ptr<le_expression>(std::move(expr), parse_expression(3));
+                expr = utils::make_u_ptr<le_expression>(std::move(expr), parse_expression(3));
                 break;
             case GTEQ:
                 assert(2 >= precedence);
                 pos++; // we parse the `>=` operator..
-                expr = utils::make_s_ptr<ge_expression>(std::move(expr), parse_expression(3));
+                expr = utils::make_u_ptr<ge_expression>(std::move(expr), parse_expression(3));
                 break;
             case GT:
                 assert(2 >= precedence);
                 pos++; // we parse the `>` operator..
-                expr = utils::make_s_ptr<gt_expression>(std::move(expr), parse_expression(3));
+                expr = utils::make_u_ptr<gt_expression>(std::move(expr), parse_expression(3));
                 break;
             case PLUS:
             {
                 assert(3 >= precedence);
-                std::vector<utils::s_ptr<expression>> xprs;
+                std::vector<utils::u_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
                 while (match(PLUS))
                     xprs.emplace_back(parse_expression(4));
-                expr = utils::make_s_ptr<sum_expression>(std::move(xprs));
+                expr = utils::make_u_ptr<sum_expression>(std::move(xprs));
                 break;
             }
             case MINUS:
             {
                 assert(3 >= precedence);
-                std::vector<utils::s_ptr<expression>> xprs;
+                std::vector<utils::u_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
                 while (match(MINUS))
                     xprs.emplace_back(parse_expression(4));
-                expr = utils::make_s_ptr<subtraction_expression>(std::move(xprs));
+                expr = utils::make_u_ptr<subtraction_expression>(std::move(xprs));
                 break;
             }
             case STAR:
             {
                 assert(4 >= precedence);
-                std::vector<utils::s_ptr<expression>> xprs;
+                std::vector<utils::u_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
                 while (match(STAR))
                     xprs.emplace_back(parse_expression(5));
-                expr = utils::make_s_ptr<product_expression>(std::move(xprs));
+                expr = utils::make_u_ptr<product_expression>(std::move(xprs));
                 break;
             }
             case SLASH:
             {
                 assert(4 >= precedence);
-                std::vector<utils::s_ptr<expression>> xprs;
+                std::vector<utils::u_ptr<expression>> xprs;
                 xprs.emplace_back(std::move(expr));
                 while (match(SLASH))
                     xprs.emplace_back(parse_expression(5));
-                expr = utils::make_s_ptr<division_expression>(std::move(xprs));
+                expr = utils::make_u_ptr<division_expression>(std::move(xprs));
                 break;
             }
             break;

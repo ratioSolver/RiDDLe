@@ -17,37 +17,37 @@ namespace riddle
   class local_field_statement final : public statement
   {
   public:
-    local_field_statement(std::vector<id_token> &&field_type, std::vector<std::pair<id_token, utils::s_ptr<expression>>> &&fields) : field_type(std::move(field_type)), fields(std::move(fields)) {}
+    local_field_statement(std::vector<id_token> &&field_type, std::vector<std::pair<id_token, utils::u_ptr<expression>>> &&fields) : field_type(std::move(field_type)), fields(std::move(fields)) {}
 
     void execute(const scope &scp, env &ctx) const override;
 
   private:
     std::vector<id_token> field_type;
-    std::vector<std::pair<id_token, utils::s_ptr<expression>>> fields;
+    std::vector<std::pair<id_token, utils::u_ptr<expression>>> fields;
   };
 
   class assignment_statement final : public statement
   {
   public:
-    assignment_statement(std::vector<id_token> &&object_id, id_token &&field_id, utils::s_ptr<expression> value) : object_id(std::move(object_id)), field_id(std::move(field_id)), value(std::move(value)) {}
+    assignment_statement(std::vector<id_token> &&object_id, id_token &&field_id, utils::u_ptr<expression> value) : object_id(std::move(object_id)), field_id(std::move(field_id)), value(std::move(value)) {}
 
     void execute(const scope &scp, env &ctx) const override;
 
   private:
     std::vector<id_token> object_id;
     id_token field_id;
-    utils::s_ptr<expression> value;
+    utils::u_ptr<expression> value;
   };
 
   class expression_statement final : public statement
   {
   public:
-    expression_statement(utils::s_ptr<expression> xpr) : xpr(std::move(xpr)) {}
+    expression_statement(utils::u_ptr<expression> xpr) : xpr(std::move(xpr)) {}
 
     void execute(const scope &scp, env &ctx) const override;
 
   private:
-    utils::s_ptr<expression> xpr;
+    utils::u_ptr<expression> xpr;
   };
 
   class disjunction_statement;
@@ -57,13 +57,13 @@ namespace riddle
     friend class disjunction_statement;
 
   public:
-    conjunction_statement(std::vector<utils::u_ptr<statement>> &&stmts, utils::s_ptr<expression> cst = nullptr) : stmts(std::move(stmts)), cst(std::move(cst)) {}
+    conjunction_statement(std::vector<utils::u_ptr<statement>> &&stmts, utils::u_ptr<expression> cst = nullptr) : stmts(std::move(stmts)), cst(std::move(cst)) {}
 
     void execute(const scope &scp, env &ctx) const override;
 
   private:
     std::vector<utils::u_ptr<statement>> stmts;
-    utils::s_ptr<expression> cst;
+    utils::u_ptr<expression> cst;
   };
 
   class disjunction_statement final : public statement
@@ -93,18 +93,18 @@ namespace riddle
   class return_statement final : public statement
   {
   public:
-    return_statement(utils::s_ptr<expression> xpr) : xpr(std::move(xpr)) {}
+    return_statement(utils::u_ptr<expression> xpr) : xpr(std::move(xpr)) {}
 
     void execute(const scope &scp, env &ctx) const override;
 
   private:
-    utils::s_ptr<expression> xpr;
+    utils::u_ptr<expression> xpr;
   };
 
   class formula_statement final : public statement
   {
   public:
-    formula_statement(bool is_fact, id_token &&id, std::vector<id_token> &&tau, id_token &&predicate_name, std::vector<std::pair<id_token, utils::s_ptr<expression>>> &&args) : is_fact(is_fact), id(std::move(id)), tau(std::move(tau)), predicate_name(std::move(predicate_name)), args(std::move(args)) {}
+    formula_statement(bool is_fact, id_token &&id, std::vector<id_token> &&tau, id_token &&predicate_name, std::vector<std::pair<id_token, utils::u_ptr<expression>>> &&args) : is_fact(is_fact), id(std::move(id)), tau(std::move(tau)), predicate_name(std::move(predicate_name)), args(std::move(args)) {}
 
     void execute(const scope &scp, env &ctx) const override;
 
@@ -113,6 +113,6 @@ namespace riddle
     id_token id;
     std::vector<id_token> tau;
     id_token predicate_name;
-    std::vector<std::pair<id_token, utils::s_ptr<expression>>> args;
+    std::vector<std::pair<id_token, utils::u_ptr<expression>>> args;
   };
 } // namespace riddle
