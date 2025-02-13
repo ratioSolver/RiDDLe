@@ -121,4 +121,72 @@ namespace riddle
         else
             return t.get_core();
     }
+
+    bool_expr push_negations(bool_expr expr) noexcept
+    {
+        if (auto not_xpr = utils::s_ptr_cast<bool_not>(expr))
+        {
+            if (auto not_not_xpr = utils::s_ptr_cast<bool_not>(not_xpr->arg))
+                return push_negations(not_not_xpr->arg);
+            else if (auto and_xpr = utils::s_ptr_cast<bool_and>(not_xpr->arg))
+            {
+                std::vector<bool_expr> args;
+                for (const auto &arg : and_xpr->args)
+                    args.push_back(push_negations(expr->get_type().get_scope().get_core().new_not(arg)));
+                return expr->get_type().get_scope().get_core().new_or(std::move(args));
+            }
+            else if (auto or_xpr = utils::s_ptr_cast<bool_or>(not_xpr->arg))
+            {
+                std::vector<bool_expr> args;
+                for (const auto &arg : or_xpr->args)
+                    args.push_back(push_negations(expr->get_type().get_scope().get_core().new_not(arg)));
+                return expr->get_type().get_scope().get_core().new_and(std::move(args));
+            }
+            else
+                return not_xpr;
+        }
+        else if (auto and_xpr = utils::s_ptr_cast<bool_and>(expr))
+        {
+            std::vector<bool_expr> args;
+            for (const auto &arg : and_xpr->args)
+                args.push_back(push_negations(arg));
+            return expr->get_type().get_scope().get_core().new_and(std::move(args));
+        }
+        else if (auto or_xpr = utils::s_ptr_cast<bool_or>(expr))
+        {
+            std::vector<bool_expr> args;
+            for (const auto &arg : or_xpr->args)
+                args.push_back(push_negations(arg));
+            return expr->get_type().get_scope().get_core().new_or(std::move(args));
+        }
+        else
+            return expr;
+    }
+
+    bool_expr distribute(bool_expr expr) noexcept
+    {
+        if (auto or_xpr = utils::s_ptr_cast<bool_or>(expr))
+        {
+            std::vector<bool_expr> args;
+            for (const auto &arg : or_xpr->args)
+                args.push_back(distribute(arg));
+            std::vector<bool_expr> new_args;
+            for (const auto &arg : args)
+                if (auto and_xpr = utils::s_ptr_cast<bool_and>(arg))
+                    for (const auto &a : and_xpr->args)
+                        new_args.push_back(a);
+                else
+                    new_args.push_back(arg);
+            return expr->get_type().get_scope().get_core().new_or(std::move(new_args));
+        }
+        else if (auto and_xpr = utils::s_ptr_cast<bool_and>(expr))
+        {
+            std::vector<bool_expr> args;
+            for (const auto &arg : and_xpr->args)
+                args.push_back(distribute(arg));
+            return expr->get_type().get_scope().get_core().new_and(std::move(args));
+        }
+        else
+            return expr;
+    }
 } // namespace riddle

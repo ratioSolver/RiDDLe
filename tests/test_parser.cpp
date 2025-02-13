@@ -140,7 +140,7 @@ public:
     riddle::bool_expr new_ge(riddle::arith_expr, riddle::arith_expr) override { return new_bool(false); }
 
     void new_disjunction(std::vector<utils::u_ptr<riddle::conjunction>> &&) override {}
-    void assert_fact(riddle::bool_expr) override {}
+    void assert_clause(std::vector<riddle::bool_expr> &&) override {}
 
     riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, utils::s_ptr<riddle::item>, std::less<>> &&args) override
     {

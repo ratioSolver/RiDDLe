@@ -72,8 +72,26 @@ namespace riddle
     }
 
     void expression_statement::execute(const scope &scp, env &ctx) const
-    { // evaluate an expression and assert it as a fact
-        scp.get_core().assert_fact(utils::s_ptr_cast<bool_item>(xpr->evaluate(scp, ctx)));
+    {
+        auto val = to_cnf(utils::s_ptr_cast<bool_item>(xpr->evaluate(scp, ctx))); // convert the expression to conjunctive normal form..
+        if (auto and_val = utils::s_ptr_cast<bool_and>(val))
+            for (auto &arg : and_val->args)
+            { // we assert each clause
+                if (auto or_val = utils::s_ptr_cast<bool_or>(arg))
+                {
+                    std::vector<bool_expr> args;
+                    for (auto &val : or_val->args)
+                        args.emplace_back(utils::s_ptr_cast<bool_item>(val));
+                    scp.get_core().assert_clause(std::move(args));
+                }
+            }
+        else if (auto or_val = utils::s_ptr_cast<bool_or>(val))
+        { // we assert the single clause
+            std::vector<bool_expr> args;
+            for (auto &val : or_val->args)
+                args.emplace_back(utils::s_ptr_cast<bool_item>(val));
+            scp.get_core().assert_clause(std::move(args));
+        }
     }
 
     void conjunction_statement::execute(const scope &scp, env &ctx) const

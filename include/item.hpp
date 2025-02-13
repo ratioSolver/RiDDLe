@@ -17,6 +17,7 @@ namespace riddle
   class predicate;
   class bool_item;
   using bool_expr = utils::s_ptr<bool_item>;
+  class expression_statement;
 
   /**
    * @class item item.hpp "include/item.hpp"
@@ -31,7 +32,6 @@ namespace riddle
   public:
     item(type &tp) noexcept : tp(tp) {}
     item(const item &) = delete;
-    virtual ~item() = default;
 
     /**
      * @brief Get the type of the item.
@@ -63,9 +63,56 @@ namespace riddle
   {
   public:
     bool_item(bool_type &tp);
-    virtual ~bool_item() = default;
 
     [[nodiscard]] virtual json::json to_json() const override;
+  };
+
+  class bool_and : public bool_item
+  {
+    friend expression_statement;
+
+  public:
+    bool_and(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_item(tp), args(std::move(args)) {}
+
+    friend bool_expr push_negations(bool_expr expr) noexcept;
+    friend bool_expr distribute(bool_expr expr) noexcept;
+
+  private:
+    std::vector<bool_expr> args;
+  };
+
+  class bool_or : public bool_item
+  {
+    friend expression_statement;
+
+  public:
+    bool_or(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_item(tp), args(std::move(args)) {}
+
+    friend bool_expr push_negations(bool_expr expr) noexcept;
+    friend bool_expr distribute(bool_expr expr) noexcept;
+
+  private:
+    std::vector<bool_expr> args;
+  };
+
+  class bool_xor : public bool_item
+  {
+  public:
+    bool_xor(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_item(tp), args(std::move(args)) {}
+
+  private:
+    std::vector<bool_expr> args;
+  };
+
+  class bool_not : public bool_item
+  {
+  public:
+    bool_not(bool_type &tp, bool_expr arg) noexcept : bool_item(tp), arg(std::move(arg)) {}
+
+    friend bool_expr push_negations(bool_expr expr) noexcept;
+
+  private:
+    bool_expr arg;
   };
 
   class arith_item : public item
@@ -74,7 +121,6 @@ namespace riddle
     arith_item(int_type &tp);
     arith_item(real_type &tp);
     arith_item(time_type &tp);
-    virtual ~arith_item() = default;
 
     [[nodiscard]] virtual json::json to_json() const override;
   };
@@ -96,7 +142,6 @@ namespace riddle
   {
   public:
     enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values);
-    virtual ~enum_item() = default;
 
     [[nodiscard]] const std::vector<utils::ref_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
 
@@ -112,7 +157,6 @@ namespace riddle
   {
   public:
     component(component_type &tp);
-    virtual ~component() = default;
 
     [[nodiscard]] bool_expr operator==(expr rhs) const override;
 
@@ -130,7 +174,6 @@ namespace riddle
   {
   public:
     atom(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {});
-    virtual ~atom() = default;
 
     [[nodiscard]] bool is_fact() const { return fact; }
 
@@ -146,4 +189,8 @@ namespace riddle
   };
 
   using atom_expr = utils::s_ptr<atom>;
+
+  [[nodiscard]] bool_expr push_negations(bool_expr expr) noexcept;
+  [[nodiscard]] bool_expr distribute(bool_expr expr) noexcept;
+  [[nodiscard]] inline bool_expr to_cnf(bool_expr expr) noexcept { return distribute(push_negations(expr)); }
 } // namespace riddle

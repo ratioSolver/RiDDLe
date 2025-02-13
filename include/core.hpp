@@ -394,14 +394,14 @@ namespace riddle
     virtual void new_disjunction(std::vector<utils::u_ptr<conjunction>> &&disjuncts) = 0;
 
     /**
-     * @brief Asserts a fact in the system.
+     * @brief Asserts a clause composed of a vector of boolean expressions.
      *
-     * This pure virtual function is intended to be overridden by derived classes
-     * to assert a fact represented by a shared pointer to a bool_item object.
+     * This pure virtual function must be implemented by derived classes to handle
+     * the assertion of a clause, which is represented as a vector of boolean expressions.
      *
-     * @param fact A shared pointer to a bool_item object representing the fact to be asserted.
+     * @param exprs A vector of boolean expressions (bool_expr) to be asserted.
      */
-    virtual void assert_fact(bool_expr fact) = 0;
+    virtual void assert_clause(std::vector<bool_expr> &&exprs) = 0;
 
     /**
      * @brief Creates a new atom.

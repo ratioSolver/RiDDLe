@@ -318,8 +318,4 @@ namespace riddle
     id_token function_id;
     std::vector<utils::s_ptr<expression>> arguments;
   };
-
-  [[nodiscard]] utils::s_ptr<expression> push_negations(utils::s_ptr<expression> expr) noexcept;
-  [[nodiscard]] utils::s_ptr<expression> distribute(utils::s_ptr<expression> expr) noexcept;
-  [[nodiscard]] inline utils::s_ptr<expression> to_cnf(utils::s_ptr<expression> expr) noexcept { return distribute(push_negations(expr)); }
 } // namespace riddle
