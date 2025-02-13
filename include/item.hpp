@@ -13,6 +13,13 @@ namespace riddle
 
     [[nodiscard]] const utils::lit &get_lit() const noexcept { return expr; }
 
+    [[nodiscard]] virtual json::json to_json() const override
+    {
+      auto j_val = bool_itm::to_json();
+      j_val["lit"] = to_string(expr).c_str();
+      return j_val;
+    }
+
   private:
     const utils::lit expr;
   };
@@ -26,6 +33,13 @@ namespace riddle
 
     [[nodiscard]] const utils::lin &get_lin() const noexcept { return expr; }
 
+    [[nodiscard]] virtual json::json to_json() const override
+    {
+      auto j_val = arith_itm::to_json();
+      j_val["lin"] = to_string(expr).c_str();
+      return j_val;
+    }
+
   private:
     const utils::lin expr;
   };
@@ -36,6 +50,13 @@ namespace riddle
     string_item(string_type &tp, std::string &&expr) : string_itm(tp), expr(expr) {}
 
     [[nodiscard]] const std::string &get_string() const noexcept { return expr; }
+
+    [[nodiscard]] virtual json::json to_json() const override
+    {
+      auto j_val = string_itm::to_json();
+      j_val["str"] = expr;
+      return j_val;
+    }
 
   private:
     const std::string expr;
@@ -48,6 +69,13 @@ namespace riddle
 
     [[nodiscard]] const utils::var &get_var() const noexcept { return expr; }
 
+    [[nodiscard]] virtual json::json to_json() const override
+    {
+      auto j_val = enum_itm::to_json();
+      j_val["var"] = expr;
+      return j_val;
+    }
+
   private:
     const utils::var expr;
   };
@@ -58,6 +86,13 @@ namespace riddle
     atom(riddle::predicate &pred, bool is_fact, std::map<std::string, utils::s_ptr<riddle::item>, std::less<>> &&args, utils::lit &&sigma) : riddle::atm(pred, is_fact, std::move(args)), sigma(sigma) {}
 
     [[nodiscard]] const utils::lit &get_sigma() const noexcept { return sigma; }
+
+    [[nodiscard]] virtual json::json to_json() const override
+    {
+      auto j_atm = riddle::atm::to_json();
+      j_atm["sigma"] = to_string(sigma).c_str();
+      return j_atm;
+    }
 
   private:
     const utils::lit sigma;
