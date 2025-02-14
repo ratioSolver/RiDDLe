@@ -107,6 +107,8 @@ namespace riddle
   public:
     bool_not(bool_type &tp, bool_expr arg) noexcept : bool_term(tp), arg(std::move(arg)) {}
 
+    bool_expr get_arg() const noexcept { return arg; }
+
     friend bool_expr push_negations(bool_expr expr) noexcept;
 
   private:
@@ -125,19 +127,25 @@ namespace riddle
 
   using arith_expr = utils::s_ptr<arith_term>;
 
-  class le_term : public bool_term
+  class lt_term : public bool_term
   {
   public:
-    le_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    lt_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+    arith_expr get_lhs() const noexcept { return lhs; }
+    arith_expr get_rhs() const noexcept { return rhs; }
 
   private:
     arith_expr lhs, rhs;
   };
 
-  class lt_term : public bool_term
+  class le_term : public bool_term
   {
   public:
-    lt_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    le_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+    arith_expr get_lhs() const noexcept { return lhs; }
+    arith_expr get_rhs() const noexcept { return rhs; }
 
   private:
     arith_expr lhs, rhs;
@@ -148,6 +156,9 @@ namespace riddle
   public:
     eq_term(bool_type &tp, expr lhs, expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
+    expr get_lhs() const noexcept { return lhs; }
+    expr get_rhs() const noexcept { return rhs; }
+
   private:
     expr lhs, rhs;
   };
@@ -157,6 +168,9 @@ namespace riddle
   public:
     ge_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
+    arith_expr get_lhs() const noexcept { return lhs; }
+    arith_expr get_rhs() const noexcept { return rhs; }
+
   private:
     arith_expr lhs, rhs;
   };
@@ -165,6 +179,9 @@ namespace riddle
   {
   public:
     gt_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+    arith_expr get_lhs() const noexcept { return lhs; }
+    arith_expr get_rhs() const noexcept { return rhs; }
 
   private:
     arith_expr lhs, rhs;
