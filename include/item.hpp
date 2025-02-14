@@ -1,6 +1,6 @@
 #pragma once
 
-#include "itm.hpp"
+#include "term.hpp"
 #include "lit.hpp"
 #include "lin.hpp"
 

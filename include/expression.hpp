@@ -1,6 +1,6 @@
 #pragma once
 
-#include "itm.hpp"
+#include "term.hpp"
 #include "lexer.hpp"
 
 namespace riddle
