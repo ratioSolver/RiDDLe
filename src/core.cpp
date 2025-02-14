@@ -59,19 +59,19 @@ namespace riddle
     bool_expr core::new_and(std::vector<bool_expr> &&exprs)
     {
         assert(!exprs.empty());
-        return utils::make_s_ptr<bool_and>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
+        return utils::make_s_ptr<and_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
     }
 
     bool_expr core::new_or(std::vector<bool_expr> &&exprs)
     {
         assert(!exprs.empty());
-        return utils::make_s_ptr<bool_or>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
+        return utils::make_s_ptr<or_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
     }
 
     bool_expr core::new_xor(std::vector<bool_expr> &&exprs)
     {
         assert(!exprs.empty());
-        return utils::make_s_ptr<bool_xor>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
+        return utils::make_s_ptr<xor_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
     }
 
     bool_expr core::new_not(bool_expr expr) { return utils::make_s_ptr<bool_not>(static_cast<bool_type &>(get_type(bool_kw)), std::move(expr)); }

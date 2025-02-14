@@ -74,10 +74,10 @@ namespace riddle
     void expression_statement::execute(const scope &scp, env &ctx) const
     {
         auto val = to_cnf(utils::s_ptr_cast<bool_term>(xpr->evaluate(scp, ctx))); // convert the expression to conjunctive normal form..
-        if (auto and_val = utils::s_ptr_cast<bool_and>(val))
+        if (auto and_val = utils::s_ptr_cast<and_term>(val))
             for (auto &arg : and_val->args)
             { // we assert each clause
-                if (auto or_val = utils::s_ptr_cast<bool_or>(arg))
+                if (auto or_val = utils::s_ptr_cast<or_term>(arg))
                 {
                     std::vector<bool_expr> args;
                     for (auto &val : or_val->args)
@@ -85,7 +85,7 @@ namespace riddle
                     scp.get_core().assert_clause(std::move(args));
                 }
             }
-        else if (auto or_val = utils::s_ptr_cast<bool_or>(val))
+        else if (auto or_val = utils::s_ptr_cast<or_term>(val))
         { // we assert the single clause
             std::vector<bool_expr> args;
             for (auto &val : or_val->args)

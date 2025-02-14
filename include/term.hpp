@@ -67,12 +67,12 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const override;
   };
 
-  class bool_and : public bool_term
+  class and_term : public bool_term
   {
     friend expression_statement;
 
   public:
-    bool_and(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
+    and_term(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
 
     friend bool_expr push_negations(bool_expr expr) noexcept;
     friend bool_expr distribute(bool_expr expr) noexcept;
@@ -81,12 +81,12 @@ namespace riddle
     std::vector<bool_expr> args;
   };
 
-  class bool_or : public bool_term
+  class or_term : public bool_term
   {
     friend expression_statement;
 
   public:
-    bool_or(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
+    or_term(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
 
     friend bool_expr push_negations(bool_expr expr) noexcept;
     friend bool_expr distribute(bool_expr expr) noexcept;
@@ -95,10 +95,10 @@ namespace riddle
     std::vector<bool_expr> args;
   };
 
-  class bool_xor : public bool_term
+  class xor_term : public bool_term
   {
   public:
-    bool_xor(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
+    xor_term(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
 
   private:
     std::vector<bool_expr> args;
@@ -126,6 +126,51 @@ namespace riddle
   };
 
   using arith_expr = utils::s_ptr<arith_term>;
+
+  class le_term : public bool_term
+  {
+  public:
+    le_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+  private:
+    arith_expr lhs, rhs;
+  };
+
+  class lt_term : public bool_term
+  {
+  public:
+    lt_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+  private:
+    arith_expr lhs, rhs;
+  };
+
+  class eq_term : public bool_term
+  {
+  public:
+    eq_term(bool_type &tp, expr lhs, expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+  private:
+    expr lhs, rhs;
+  };
+
+  class ge_term : public bool_term
+  {
+  public:
+    ge_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+  private:
+    arith_expr lhs, rhs;
+  };
+
+  class gt_term : public bool_term
+  {
+  public:
+    gt_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+
+  private:
+    arith_expr lhs, rhs;
+  };
 
   class string_term : public term
   {
