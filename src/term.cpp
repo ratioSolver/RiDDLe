@@ -3,8 +3,6 @@
 
 namespace riddle
 {
-    riddle::bool_expr term::operator==(riddle::expr) const { return get_type().get_scope().get_core().new_bool(false); }
-
     bool_term::bool_term(bool_type &tp) : term(tp) {}
     json::json bool_term::to_json() const
     {
@@ -50,8 +48,8 @@ namespace riddle
     string_term::string_term(string_type &tp) : term(tp) {}
     json::json string_term::to_json() const { return {{"type", std::string_view(get_type().get_name()), {"val", get_type().get_scope().get_core().string_value(*this)}}}; }
 
-    enum_itm::enum_itm(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) : term(tp), values(std::move(values)) {}
-    json::json enum_itm::to_json() const
+    enum_term::enum_term(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) : term(tp), values(std::move(values)) {}
+    json::json enum_term::to_json() const
     {
         json::json j_val{{"type", "enum"}}; // we add the type of the enum item..
 
@@ -88,8 +86,6 @@ namespace riddle
 
         return j_itm;
     }
-
-    bool_expr component::operator==(expr rhs) const { return get_core().new_bool(this == rhs.get()); }
 
     atom_term::atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) : term(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
     json::json atom_term::to_json() const

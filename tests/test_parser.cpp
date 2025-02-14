@@ -26,7 +26,7 @@ public:
     riddle::string_expr new_string() override { return new_string(""); }
     std::string string_value(const riddle::string_term &) const noexcept override { return ""; }
     riddle::enum_expr new_enum(riddle::type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) override { return utils::make_s_ptr<riddle::enum_item>(tp, std::move(values), 0); }
-    std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const riddle::enum_itm &itm) const noexcept override { return {*itm.get_values()[0]}; }
+    std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const riddle::enum_term &itm) const noexcept override { return {*itm.get_values()[0]}; }
 
     riddle::arith_expr new_negation(riddle::arith_expr) override { return new_int(0); }
 
@@ -34,11 +34,6 @@ public:
     riddle::arith_expr new_subtraction(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
     riddle::arith_expr new_product(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
     riddle::arith_expr new_division(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
-
-    riddle::bool_expr new_lt(riddle::arith_expr, riddle::arith_expr) override { return new_bool(false); }
-    riddle::bool_expr new_le(riddle::arith_expr, riddle::arith_expr) override { return new_bool(false); }
-    riddle::bool_expr new_gt(riddle::arith_expr, riddle::arith_expr) override { return new_bool(false); }
-    riddle::bool_expr new_ge(riddle::arith_expr, riddle::arith_expr) override { return new_bool(false); }
 
     void new_disjunction(std::vector<utils::u_ptr<riddle::conjunction>> &&) override {}
     void assert_clause(std::vector<riddle::bool_expr> &&) override {}

@@ -51,8 +51,6 @@ namespace riddle
      */
     [[nodiscard]] type &get_type() const { return tp; }
 
-    [[nodiscard]] virtual bool_expr operator==(expr rhs) const;
-
     [[nodiscard]] virtual json::json to_json() const = 0;
 
   private:
@@ -183,10 +181,10 @@ namespace riddle
 
   using string_expr = utils::s_ptr<string_term>;
 
-  class enum_itm : public term
+  class enum_term : public term
   {
   public:
-    enum_itm(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values);
+    enum_term(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values);
 
     [[nodiscard]] const std::vector<utils::ref_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
 
@@ -196,14 +194,12 @@ namespace riddle
     std::vector<utils::ref_wrapper<utils::enum_val>> values;
   };
 
-  using enum_expr = utils::s_ptr<enum_itm>;
+  using enum_expr = utils::s_ptr<enum_term>;
 
   class component : public term, public env
   {
   public:
     component(component_type &tp);
-
-    [[nodiscard]] bool_expr operator==(expr rhs) const override;
 
     [[nodiscard]] virtual json::json to_json() const override;
   };

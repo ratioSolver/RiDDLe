@@ -62,16 +62,16 @@ namespace riddle
     const std::string expr;
   };
 
-  class enum_item : public enum_itm
+  class enum_item : public enum_term
   {
   public:
-    enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, utils::var &&expr) : enum_itm(tp, std::move(values)), expr(expr) {}
+    enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, utils::var &&expr) : enum_term(tp, std::move(values)), expr(expr) {}
 
     [[nodiscard]] const utils::var &get_var() const noexcept { return expr; }
 
     [[nodiscard]] virtual json::json to_json() const override
     {
-      auto j_val = enum_itm::to_json();
+      auto j_val = enum_term::to_json();
       j_val["var"] = expr;
       return j_val;
     }

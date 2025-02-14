@@ -76,6 +76,12 @@ namespace riddle
 
     bool_expr core::new_not(bool_expr expr) { return utils::make_s_ptr<bool_not>(static_cast<bool_type &>(get_type(bool_kw)), std::move(expr)); }
 
+    bool_expr core::new_lt(arith_expr lhs, arith_expr rhs) { return utils::make_s_ptr<lt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_le(arith_expr lhs, arith_expr rhs) { return utils::make_s_ptr<le_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_eq(expr lhs, expr rhs) { return utils::make_s_ptr<eq_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_gt(arith_expr lhs, arith_expr rhs) { return utils::make_s_ptr<gt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_ge(arith_expr lhs, arith_expr rhs) { return utils::make_s_ptr<ge_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+
     atom_expr core::new_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args)
     {
         auto atm = create_atom(is_fact, pred, std::move(args));

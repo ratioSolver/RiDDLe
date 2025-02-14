@@ -222,7 +222,7 @@ namespace riddle
      * @param expr The enum item for which the domain is being retrieved.
      * @return A vector of references to the enum values that make up the domain of the enum item.
      */
-    [[nodiscard]] virtual std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const enum_itm &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const enum_term &expr) const noexcept = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.
@@ -336,7 +336,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to the newly created less-than comparison item.
      */
-    [[nodiscard]] virtual bool_expr new_lt(arith_expr lhs, arith_expr rhs) = 0;
+    [[nodiscard]] bool_expr new_lt(arith_expr lhs, arith_expr rhs);
     /**
      * @brief Creates a new less-than-or-equal-to (<=) boolean item.
      *
@@ -348,7 +348,7 @@ namespace riddle
      * @return A shared pointer to the newly created boolean item representing
      *         the result of the <= comparison.
      */
-    [[nodiscard]] virtual bool_expr new_le(arith_expr lhs, arith_expr rhs) = 0;
+    [[nodiscard]] bool_expr new_le(arith_expr lhs, arith_expr rhs);
     /**
      * @brief Creates a new greater-than comparison item.
      *
@@ -360,7 +360,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to a boolean item representing the result of the comparison.
      */
-    [[nodiscard]] virtual bool_expr new_gt(arith_expr lhs, arith_expr rhs) = 0;
+    [[nodiscard]] bool_expr new_gt(arith_expr lhs, arith_expr rhs);
     /**
      * @brief Creates a new greater-than-or-equal-to boolean item.
      *
@@ -371,7 +371,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to the newly created boolean item representing the comparison.
      */
-    [[nodiscard]] virtual bool_expr new_ge(arith_expr lhs, arith_expr rhs) = 0;
+    [[nodiscard]] bool_expr new_ge(arith_expr lhs, arith_expr rhs);
     /**
      * @brief Creates a new equality comparison item.
      *
@@ -382,7 +382,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side item.
      * @return A shared pointer to the newly created equality comparison item.
      */
-    [[nodiscard]] bool_expr new_eq(expr lhs, expr rhs) { return lhs->operator==(rhs); }
+    [[nodiscard]] bool_expr new_eq(expr lhs, expr rhs);
 
     /**
      * @brief Pure virtual function to add a new disjunction.
