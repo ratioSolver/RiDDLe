@@ -385,15 +385,6 @@ namespace riddle
     [[nodiscard]] bool_expr new_eq(expr lhs, expr rhs);
 
     /**
-     * @brief Pure virtual function to add a new disjunction.
-     *
-     * This function is responsible for adding a new disjunction composed of multiple conjunctions.
-     *
-     * @param disjuncts A vector of unique pointers to conjunction objects, representing the disjunction.
-     */
-    virtual void new_disjunction(std::vector<utils::u_ptr<conjunction>> &&disjuncts) = 0;
-
-    /**
      * @brief Asserts a clause composed of a vector of boolean expressions.
      *
      * This pure virtual function must be implemented by derived classes to handle
@@ -401,7 +392,16 @@ namespace riddle
      *
      * @param exprs A vector of boolean expressions (bool_expr) to be asserted.
      */
-    virtual void assert_clause(std::vector<bool_expr> &&exprs) = 0;
+    virtual void new_clause(std::vector<bool_expr> &&exprs) = 0;
+
+    /**
+     * @brief Pure virtual function to add a new disjunction.
+     *
+     * This function is responsible for adding a new disjunction composed of multiple conjunctions.
+     *
+     * @param disjuncts A vector of unique pointers to conjunction objects, representing the disjunction.
+     */
+    virtual void new_disjunction(std::vector<utils::u_ptr<conjunction>> &&disjuncts) = 0;
 
     /**
      * @brief Creates a new atom.

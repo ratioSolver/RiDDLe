@@ -82,7 +82,7 @@ namespace riddle
                     std::vector<bool_expr> args;
                     for (auto &val : or_val->args)
                         args.emplace_back(utils::s_ptr_cast<bool_term>(val));
-                    scp.get_core().assert_clause(std::move(args));
+                    scp.get_core().new_clause(std::move(args));
                 }
             }
         else if (auto or_val = utils::s_ptr_cast<or_term>(val))
@@ -90,7 +90,7 @@ namespace riddle
             std::vector<bool_expr> args;
             for (auto &val : or_val->args)
                 args.emplace_back(utils::s_ptr_cast<bool_term>(val));
-            scp.get_core().assert_clause(std::move(args));
+            scp.get_core().new_clause(std::move(args));
         }
     }
 

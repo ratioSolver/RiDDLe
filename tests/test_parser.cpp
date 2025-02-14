@@ -36,7 +36,7 @@ public:
     riddle::arith_expr new_division(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
 
     void new_disjunction(std::vector<utils::u_ptr<riddle::conjunction>> &&) override {}
-    void assert_clause(std::vector<riddle::bool_expr> &&) override {}
+    void new_clause(std::vector<riddle::bool_expr> &&) override {}
 
     riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, utils::s_ptr<riddle::term>, std::less<>> &&args) override
     {

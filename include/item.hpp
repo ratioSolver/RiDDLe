@@ -72,7 +72,7 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const override
     {
       auto j_val = enum_term::to_json();
-      j_val["var"] = expr;
+      j_val["var"] = static_cast<uint64_t>(expr);
       return j_val;
     }
 
