@@ -15,30 +15,39 @@ namespace riddle
   class enum_type;
   class component_type;
   class predicate;
-  class bool_itm;
-  using bool_expr = utils::s_ptr<bool_itm>;
+  class bool_term;
+  using bool_expr = utils::s_ptr<bool_term>;
   class expression_statement;
 
   /**
-   * @class item item.hpp "include/item.hpp"
-   * @brief The item class.
+   * @class term term.hpp "include/term.hpp"
+   * @brief The term class.
    *
-   * The item class is the base class for all items in the RiDDLe language. An item
-   * is a named entity that has a type. Items are stored in environments and can be
+   * The term class is the base class for all terms in the RiDDLe language. A term
+   * is a named entity that has a type. Terms are stored in environments and can be
    * retrieved by their name.
    */
-  class item : public utils::enum_val
+  class term : public utils::enum_val
   {
   public:
-    item(type &tp) noexcept : tp(tp) {}
-    item(const item &) = delete;
+    term(type &tp) noexcept : tp(tp) {}
+    term(const term &) = delete;
 
     /**
-     * @brief Get the type of the item.
+     * @brief Get the unique identifier of the term.
      *
-     * This function returns a reference to the type of the item.
+     * This function returns the unique identifier of the term.
      *
-     * @return A reference to the type of the item.
+     * @return The unique identifier of the term.
+     */
+    [[nodiscard]] uintptr_t get_id() const noexcept { return reinterpret_cast<uintptr_t>(this); }
+
+    /**
+     * @brief Get the type of the term.
+     *
+     * This function returns a reference to the type of the term.
+     *
+     * @return A reference to the type of the term.
      */
     [[nodiscard]] type &get_type() const { return tp; }
 
@@ -46,33 +55,24 @@ namespace riddle
 
     [[nodiscard]] virtual json::json to_json() const = 0;
 
-    /**
-     * @brief Get the unique identifier of the item.
-     *
-     * This function returns the unique identifier of the item.
-     *
-     * @return The unique identifier of the item.
-     */
-    [[nodiscard]] uintptr_t get_id() const noexcept { return reinterpret_cast<uintptr_t>(this); }
-
   private:
     type &tp;
   };
 
-  class bool_itm : public item
+  class bool_term : public term
   {
   public:
-    bool_itm(bool_type &tp);
+    bool_term(bool_type &tp);
 
     [[nodiscard]] virtual json::json to_json() const override;
   };
 
-  class bool_and : public bool_itm
+  class bool_and : public bool_term
   {
     friend expression_statement;
 
   public:
-    bool_and(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_itm(tp), args(std::move(args)) {}
+    bool_and(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
 
     friend bool_expr push_negations(bool_expr expr) noexcept;
     friend bool_expr distribute(bool_expr expr) noexcept;
@@ -81,12 +81,12 @@ namespace riddle
     std::vector<bool_expr> args;
   };
 
-  class bool_or : public bool_itm
+  class bool_or : public bool_term
   {
     friend expression_statement;
 
   public:
-    bool_or(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_itm(tp), args(std::move(args)) {}
+    bool_or(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
 
     friend bool_expr push_negations(bool_expr expr) noexcept;
     friend bool_expr distribute(bool_expr expr) noexcept;
@@ -95,19 +95,19 @@ namespace riddle
     std::vector<bool_expr> args;
   };
 
-  class bool_xor : public bool_itm
+  class bool_xor : public bool_term
   {
   public:
-    bool_xor(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_itm(tp), args(std::move(args)) {}
+    bool_xor(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
 
   private:
     std::vector<bool_expr> args;
   };
 
-  class bool_not : public bool_itm
+  class bool_not : public bool_term
   {
   public:
-    bool_not(bool_type &tp, bool_expr arg) noexcept : bool_itm(tp), arg(std::move(arg)) {}
+    bool_not(bool_type &tp, bool_expr arg) noexcept : bool_term(tp), arg(std::move(arg)) {}
 
     friend bool_expr push_negations(bool_expr expr) noexcept;
 
@@ -115,30 +115,30 @@ namespace riddle
     bool_expr arg;
   };
 
-  class arith_itm : public item
+  class arith_term : public term
   {
   public:
-    arith_itm(int_type &tp);
-    arith_itm(real_type &tp);
-    arith_itm(time_type &tp);
+    arith_term(int_type &tp);
+    arith_term(real_type &tp);
+    arith_term(time_type &tp);
 
     [[nodiscard]] virtual json::json to_json() const override;
   };
 
-  using arith_expr = utils::s_ptr<arith_itm>;
+  using arith_expr = utils::s_ptr<arith_term>;
 
-  class string_itm : public item
+  class string_term : public term
   {
   public:
-    string_itm(string_type &tp);
-    virtual ~string_itm() = default;
+    string_term(string_type &tp);
+    virtual ~string_term() = default;
 
     [[nodiscard]] virtual json::json to_json() const override;
   };
 
-  using string_expr = utils::s_ptr<string_itm>;
+  using string_expr = utils::s_ptr<string_term>;
 
-  class enum_itm : public item
+  class enum_itm : public term
   {
   public:
     enum_itm(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values);
@@ -153,7 +153,7 @@ namespace riddle
 
   using enum_expr = utils::s_ptr<enum_itm>;
 
-  class component : public item, public env
+  class component : public term, public env
   {
   public:
     component(component_type &tp);
@@ -170,10 +170,10 @@ namespace riddle
     unified   // the atom is unified
   };
 
-  class atm : public item, public env
+  class atom_term : public term, public env
   {
   public:
-    atm(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {});
+    atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {});
 
     [[nodiscard]] bool is_fact() const { return fact; }
 
@@ -188,7 +188,7 @@ namespace riddle
     bool fact; // whether the atom is a fact
   };
 
-  using atom_expr = utils::s_ptr<atm>;
+  using atom_expr = utils::s_ptr<atom_term>;
 
   [[nodiscard]] bool_expr push_negations(bool_expr expr) noexcept;
   [[nodiscard]] bool_expr distribute(bool_expr expr) noexcept;

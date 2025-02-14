@@ -91,7 +91,7 @@ namespace riddle
      * @param expr The boolean expression to evaluate.
      * @return utils::lbool The logical value of the expression.
      */
-    [[nodiscard]] virtual utils::lbool bool_value(const bool_itm &expr) const noexcept = 0;
+    [[nodiscard]] virtual utils::lbool bool_value(const bool_term &expr) const noexcept = 0;
 
     /**
      * @brief Create a new int expression.
@@ -176,7 +176,7 @@ namespace riddle
      * @param expr The arithmetic item expression to be evaluated.
      * @return utils::inf_rational The computed arithmetic value of the expression.
      */
-    [[nodiscard]] virtual utils::inf_rational arith_value(const arith_itm &expr) const noexcept = 0;
+    [[nodiscard]] virtual utils::inf_rational arith_value(const arith_term &expr) const noexcept = 0;
 
     /**
      * @brief Create a new string expression.
@@ -199,7 +199,7 @@ namespace riddle
      * @param expr The string expression.
      * @return std::string The string value of the expression.
      */
-    [[nodiscard]] virtual std::string string_value(const string_itm &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::string string_value(const string_term &expr) const noexcept = 0;
 
     /**
      * @brief Creates a new enum item.

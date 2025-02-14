@@ -73,7 +73,7 @@ namespace riddle
 
     void expression_statement::execute(const scope &scp, env &ctx) const
     {
-        auto val = to_cnf(utils::s_ptr_cast<bool_itm>(xpr->evaluate(scp, ctx))); // convert the expression to conjunctive normal form..
+        auto val = to_cnf(utils::s_ptr_cast<bool_term>(xpr->evaluate(scp, ctx))); // convert the expression to conjunctive normal form..
         if (auto and_val = utils::s_ptr_cast<bool_and>(val))
             for (auto &arg : and_val->args)
             { // we assert each clause
@@ -81,7 +81,7 @@ namespace riddle
                 {
                     std::vector<bool_expr> args;
                     for (auto &val : or_val->args)
-                        args.emplace_back(utils::s_ptr_cast<bool_itm>(val));
+                        args.emplace_back(utils::s_ptr_cast<bool_term>(val));
                     scp.get_core().assert_clause(std::move(args));
                 }
             }
@@ -89,7 +89,7 @@ namespace riddle
         { // we assert the single clause
             std::vector<bool_expr> args;
             for (auto &val : or_val->args)
-                args.emplace_back(utils::s_ptr_cast<bool_itm>(val));
+                args.emplace_back(utils::s_ptr_cast<bool_term>(val));
             scp.get_core().assert_clause(std::move(args));
         }
     }
@@ -105,7 +105,7 @@ namespace riddle
         std::vector<utils::u_ptr<conjunction>> conjs;
         std::map<std::string, expr, std::less<>> items;
         env *tmp_ctx = &ctx; // find the nearest core, component or atom
-        while (!(dynamic_cast<core *>(tmp_ctx) || dynamic_cast<component *>(tmp_ctx) || dynamic_cast<atm *>(tmp_ctx)))
+        while (!(dynamic_cast<core *>(tmp_ctx) || dynamic_cast<component *>(tmp_ctx) || dynamic_cast<atom_term *>(tmp_ctx)))
         {
             items.insert(tmp_ctx->items.begin(), tmp_ctx->items.end());
             tmp_ctx = &tmp_ctx->get_parent();
@@ -114,7 +114,7 @@ namespace riddle
         {
             env cctx(scp.get_core(), *tmp_ctx);            // we create a new context
             cctx.items.insert(items.begin(), items.end()); // copy the items
-            auto cst = conj->cst ? scp.get_core().arith_value(static_cast<arith_itm &>(*conj->cst->evaluate(scp, ctx))).get_rational() : utils::rational::one;
+            auto cst = conj->cst ? scp.get_core().arith_value(static_cast<arith_term &>(*conj->cst->evaluate(scp, ctx))).get_rational() : utils::rational::one;
             conjs.emplace_back(utils::make_u_ptr<conjunction>(scp, std::move(cctx), cst, conj->stmts));
         }
         scp.get_core().new_disjunction(std::move(conjs));
@@ -161,7 +161,7 @@ namespace riddle
                     throw std::runtime_error("Invalid type reference");
             c_args.emplace(tau_kw, c_tau);
         }
-        else if (auto atm = dynamic_cast<riddle::atm *>(&ctx))
+        else if (auto atm = dynamic_cast<riddle::atom_term *>(&ctx))
             c_args.emplace(tau_kw, atm->get(tau_kw));
 
         auto &pred = tau.empty() ? scp.get_predicate(predicate_name.id) : static_cast<component_type &>(c_args.at(tau_kw).get()->get_type()).get_predicate(predicate_name.id);

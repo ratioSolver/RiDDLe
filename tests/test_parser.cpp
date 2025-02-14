@@ -10,7 +10,7 @@ public:
 
     riddle::bool_expr new_bool(const bool) override { return utils::make_s_ptr<riddle::bool_item>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), utils::lit()); }
     riddle::bool_expr new_bool() override { return new_bool(false); }
-    utils::lbool bool_value(const riddle::bool_itm &) const noexcept override { return utils::Undefined; }
+    utils::lbool bool_value(const riddle::bool_term &) const noexcept override { return utils::Undefined; }
     riddle::arith_expr new_int(const INT_TYPE) override { return utils::make_s_ptr<riddle::arith_item>(static_cast<riddle::int_type &>(get_type(riddle::int_kw)), utils::lin()); }
     riddle::arith_expr new_int() override { return new_int(0); }
     riddle::arith_expr new_int(const INT_TYPE lb, const INT_TYPE) override { return new_int(lb); }
@@ -21,10 +21,10 @@ public:
     riddle::arith_expr new_uncertain_real(utils::rational &&lb, utils::rational &&) override { return new_real(utils::rational(lb)); }
     riddle::arith_expr new_time(utils::rational &&) override { return utils::make_s_ptr<riddle::arith_item>(static_cast<riddle::time_type &>(get_type(riddle::time_kw)), utils::lin()); }
     riddle::arith_expr new_time() override { return new_time(utils::rational(0)); }
-    utils::inf_rational arith_value(const riddle::arith_itm &) const noexcept override { return utils::inf_rational(); }
+    utils::inf_rational arith_value(const riddle::arith_term &) const noexcept override { return utils::inf_rational(); }
     riddle::string_expr new_string(std::string &&) override { return utils::make_s_ptr<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
     riddle::string_expr new_string() override { return new_string(""); }
-    std::string string_value(const riddle::string_itm &) const noexcept override { return ""; }
+    std::string string_value(const riddle::string_term &) const noexcept override { return ""; }
     riddle::enum_expr new_enum(riddle::type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) override { return utils::make_s_ptr<riddle::enum_item>(tp, std::move(values), 0); }
     std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const riddle::enum_itm &itm) const noexcept override { return {*itm.get_values()[0]}; }
 
@@ -43,7 +43,7 @@ public:
     void new_disjunction(std::vector<utils::u_ptr<riddle::conjunction>> &&) override {}
     void assert_clause(std::vector<riddle::bool_expr> &&) override {}
 
-    riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, utils::s_ptr<riddle::item>, std::less<>> &&args) override
+    riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, utils::s_ptr<riddle::term>, std::less<>> &&args) override
     {
         auto f = utils::FALSE_lit;
         return utils::make_s_ptr<riddle::atom>(pred, is_fact, std::move(args), std::move(f));

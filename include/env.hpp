@@ -9,8 +9,8 @@
 namespace riddle
 {
   class core;
-  class item;
-  using expr = utils::s_ptr<item>;
+  class term;
+  using expr = utils::s_ptr<term>;
   class constructor;
   class method;
   class local_field_statement;

@@ -18,7 +18,7 @@ namespace riddle
         for (size_t i = 1; i < object_id.size(); ++i)
             if (auto c = dynamic_cast<component *>(obj.get()))
                 obj = c->get(object_id[i].id);
-            else if (auto c = dynamic_cast<atm *>(obj.get()))
+            else if (auto c = dynamic_cast<atom_term *>(obj.get()))
                 obj = c->get(object_id[i].id);
             else
                 throw std::runtime_error("Invalid object reference");
@@ -29,7 +29,7 @@ namespace riddle
     {
         std::vector<bool_expr> exprs;
         for (const auto &expr : xprs)
-            exprs.emplace_back(utils::s_ptr_cast<bool_itm>(expr->evaluate(scp, ctx)));
+            exprs.emplace_back(utils::s_ptr_cast<bool_term>(expr->evaluate(scp, ctx)));
         return ctx.get_core().new_and(std::move(exprs));
     }
 
@@ -37,7 +37,7 @@ namespace riddle
     {
         std::vector<bool_expr> exprs;
         for (const auto &expr : xprs)
-            exprs.emplace_back(utils::s_ptr_cast<bool_itm>(expr->evaluate(scp, ctx)));
+            exprs.emplace_back(utils::s_ptr_cast<bool_term>(expr->evaluate(scp, ctx)));
         return ctx.get_core().new_or(std::move(exprs));
     }
 
@@ -45,19 +45,19 @@ namespace riddle
     {
         std::vector<bool_expr> exprs;
         for (const auto &expr : xprs)
-            exprs.emplace_back(utils::s_ptr_cast<bool_itm>(expr->evaluate(scp, ctx)));
+            exprs.emplace_back(utils::s_ptr_cast<bool_term>(expr->evaluate(scp, ctx)));
         return ctx.get_core().new_xor(std::move(exprs));
     }
 
-    expr not_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_not(utils::s_ptr_cast<bool_itm>(xpr->evaluate(scp, ctx))); }
+    expr not_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_not(utils::s_ptr_cast<bool_term>(xpr->evaluate(scp, ctx))); }
 
-    expr minus_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_negation(utils::s_ptr_cast<arith_itm>(xpr->evaluate(scp, ctx))); }
+    expr minus_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_negation(utils::s_ptr_cast<arith_term>(xpr->evaluate(scp, ctx))); }
 
     expr sum_expression::evaluate(const scope &scp, env &ctx) const
     {
         std::vector<arith_expr> c_xprs;
         for (const auto &xpr : xprs)
-            c_xprs.emplace_back(utils::s_ptr_cast<arith_itm>(xpr->evaluate(scp, ctx)));
+            c_xprs.emplace_back(utils::s_ptr_cast<arith_term>(xpr->evaluate(scp, ctx)));
         return ctx.get_core().new_sum(std::move(c_xprs));
     }
 
@@ -65,7 +65,7 @@ namespace riddle
     {
         std::vector<arith_expr> c_xprs;
         for (const auto &xpr : xprs)
-            c_xprs.emplace_back(utils::s_ptr_cast<arith_itm>(xpr->evaluate(scp, ctx)));
+            c_xprs.emplace_back(utils::s_ptr_cast<arith_term>(xpr->evaluate(scp, ctx)));
         return ctx.get_core().new_subtraction(std::move(c_xprs));
     }
 
@@ -73,7 +73,7 @@ namespace riddle
     {
         std::vector<arith_expr> c_xprs;
         for (const auto &xpr : xprs)
-            c_xprs.emplace_back(utils::s_ptr_cast<arith_itm>(xpr->evaluate(scp, ctx)));
+            c_xprs.emplace_back(utils::s_ptr_cast<arith_term>(xpr->evaluate(scp, ctx)));
         return ctx.get_core().new_product(std::move(c_xprs));
     }
 
@@ -81,17 +81,17 @@ namespace riddle
     {
         std::vector<arith_expr> c_xprs;
         for (const auto &xpr : xprs)
-            c_xprs.emplace_back(utils::s_ptr_cast<arith_itm>(xpr->evaluate(scp, ctx)));
+            c_xprs.emplace_back(utils::s_ptr_cast<arith_term>(xpr->evaluate(scp, ctx)));
         return ctx.get_core().new_division(std::move(c_xprs));
     }
 
-    expr lt_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_lt(utils::s_ptr_cast<arith_itm>(lhs->evaluate(scp, ctx)), utils::s_ptr_cast<arith_itm>(rhs->evaluate(scp, ctx))); }
+    expr lt_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_lt(utils::s_ptr_cast<arith_term>(lhs->evaluate(scp, ctx)), utils::s_ptr_cast<arith_term>(rhs->evaluate(scp, ctx))); }
 
-    expr le_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_le(utils::s_ptr_cast<arith_itm>(lhs->evaluate(scp, ctx)), utils::s_ptr_cast<arith_itm>(rhs->evaluate(scp, ctx))); }
+    expr le_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_le(utils::s_ptr_cast<arith_term>(lhs->evaluate(scp, ctx)), utils::s_ptr_cast<arith_term>(rhs->evaluate(scp, ctx))); }
 
-    expr gt_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_gt(utils::s_ptr_cast<arith_itm>(lhs->evaluate(scp, ctx)), utils::s_ptr_cast<arith_itm>(rhs->evaluate(scp, ctx))); }
+    expr gt_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_gt(utils::s_ptr_cast<arith_term>(lhs->evaluate(scp, ctx)), utils::s_ptr_cast<arith_term>(rhs->evaluate(scp, ctx))); }
 
-    expr ge_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_ge(utils::s_ptr_cast<arith_itm>(lhs->evaluate(scp, ctx)), utils::s_ptr_cast<arith_itm>(rhs->evaluate(scp, ctx))); }
+    expr ge_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_ge(utils::s_ptr_cast<arith_term>(lhs->evaluate(scp, ctx)), utils::s_ptr_cast<arith_term>(rhs->evaluate(scp, ctx))); }
 
     expr eq_expression::evaluate(const scope &scp, env &ctx) const { return ctx.get_core().new_eq(lhs->evaluate(scp, ctx), rhs->evaluate(scp, ctx)); }
 

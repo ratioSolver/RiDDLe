@@ -5,7 +5,7 @@
 
 namespace riddle
 {
-  class item;
+  class term;
   class predicate;
   class enum_declaration;
   class method_declaration;

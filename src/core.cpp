@@ -166,15 +166,15 @@ namespace riddle
 
     json::json core::to_json() const
     {
-        std::set<item *> all_items; // we keep track of all the items..
-        std::set<atm *> all_atoms;  // we keep track of all the atoms..
+        std::set<term *> all_items;      // we keep track of all the items..
+        std::set<atom_term *> all_atoms; // we keep track of all the atoms..
         std::queue<component_type *> q;
         for (const auto &tp : types)
             if (auto ct = dynamic_cast<component_type *>(tp.second.get()))
                 q.push(ct);
             else if (auto et = dynamic_cast<enum_type *>(tp.second.get()))
                 for (const auto &val : et->get_domain())
-                    all_items.insert(static_cast<item *>(val.get()));
+                    all_items.insert(static_cast<term *>(val.get()));
         while (!q.empty())
         {
             auto tp = q.front();
@@ -183,17 +183,17 @@ namespace riddle
                 all_items.insert(itm.get());
             for (const auto &pred : tp->get_predicates())
                 for (const auto &atm : pred.second->get_atoms())
-                    all_atoms.insert(static_cast<riddle::atm *>(atm.get()));
+                    all_atoms.insert(static_cast<riddle::atom_term *>(atm.get()));
             for (const auto &etp : tp->get_types())
                 if (auto ct = dynamic_cast<component_type *>(etp.second.get()))
                     q.push(ct);
                 else if (auto et = dynamic_cast<enum_type *>(etp.second.get()))
                     for (const auto &val : et->get_domain())
-                        all_items.insert(static_cast<item *>(val.get()));
+                        all_items.insert(static_cast<term *>(val.get()));
         }
         for (const auto &pred : predicates)
             for (const auto &atm : pred.second->get_atoms())
-                all_atoms.insert(static_cast<riddle::atm *>(atm.get()));
+                all_atoms.insert(static_cast<riddle::atom_term *>(atm.get()));
 
         json::json j_core{{"name", std::string_view(name)}};
         if (!all_items.empty())

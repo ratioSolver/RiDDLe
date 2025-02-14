@@ -3,10 +3,10 @@
 
 namespace riddle
 {
-    riddle::bool_expr item::operator==(riddle::expr) const { return get_type().get_scope().get_core().new_bool(false); }
+    riddle::bool_expr term::operator==(riddle::expr) const { return get_type().get_scope().get_core().new_bool(false); }
 
-    bool_itm::bool_itm(bool_type &tp) : item(tp) {}
-    json::json bool_itm::to_json() const
+    bool_term::bool_term(bool_type &tp) : term(tp) {}
+    json::json bool_term::to_json() const
     {
         json::json j_val{{"type", std::string_view(get_type().get_name())}}; // we add the type of the item..
         switch (get_type().get_scope().get_core().bool_value(*this))
@@ -24,10 +24,10 @@ namespace riddle
         return j_val;
     }
 
-    arith_itm::arith_itm(int_type &tp) : item(tp) {}
-    arith_itm::arith_itm(real_type &tp) : item(tp) {}
-    arith_itm::arith_itm(time_type &tp) : item(tp) {}
-    json::json arith_itm::to_json() const
+    arith_term::arith_term(int_type &tp) : term(tp) {}
+    arith_term::arith_term(real_type &tp) : term(tp) {}
+    arith_term::arith_term(time_type &tp) : term(tp) {}
+    json::json arith_term::to_json() const
     {
         json::json j_val{{"type", std::string_view(get_type().get_name())}}; // we add the type of the item..
         const auto val = get_type().get_scope().get_core().arith_value(*this);
@@ -47,10 +47,10 @@ namespace riddle
         return j_val;
     }
 
-    string_itm::string_itm(string_type &tp) : item(tp) {}
-    json::json string_itm::to_json() const { return {{"type", std::string_view(get_type().get_name()), {"val", get_type().get_scope().get_core().string_value(*this)}}}; }
+    string_term::string_term(string_type &tp) : term(tp) {}
+    json::json string_term::to_json() const { return {{"type", std::string_view(get_type().get_name()), {"val", get_type().get_scope().get_core().string_value(*this)}}}; }
 
-    enum_itm::enum_itm(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) : item(tp), values(std::move(values)) {}
+    enum_itm::enum_itm(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) : term(tp), values(std::move(values)) {}
     json::json enum_itm::to_json() const
     {
         json::json j_val{{"type", "enum"}}; // we add the type of the enum item..
@@ -69,13 +69,13 @@ namespace riddle
         auto vals = get_type().get_scope().get_core().enum_value(*this);
         json::json j_vals(json::json_type::array);
         for (const auto &val : vals)
-            j_vals.push_back(static_cast<uint64_t>(static_cast<item &>(*val).get_id()));
+            j_vals.push_back(static_cast<uint64_t>(static_cast<term &>(*val).get_id()));
         j_val["vals"] = std::move(j_vals);
 
         return j_val;
     }
 
-    component::component(component_type &t) : item(t), env(t.get_core(), t.get_core()) {}
+    component::component(component_type &t) : term(t), env(t.get_core(), t.get_core()) {}
     json::json component::to_json() const
     {
         json::json j_itm{{"type", get_type().get_full_name()}}; // we add the type of the item..
@@ -91,8 +91,8 @@ namespace riddle
 
     bool_expr component::operator==(expr rhs) const { return get_core().new_bool(this == rhs.get()); }
 
-    atm::atm(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) : item(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
-    json::json atm::to_json() const
+    atom_term::atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) : term(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
+    json::json atom_term::to_json() const
     {
         json::json j_atm{{"is_fact", fact}, {"type", get_type().get_full_name()}};
 
@@ -116,7 +116,7 @@ namespace riddle
         return j_atm;
     }
 
-    env &atm::atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args)
+    env &atom_term::atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args)
     {
         if (args.count(tau_kw))
             return *static_cast<component *>(args.at(tau_kw).get());
