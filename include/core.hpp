@@ -471,17 +471,17 @@ namespace riddle
 #ifdef COMPUTE_NAMES
   protected:
     /**
-     * @brief Guesses the name of the given item.
+     * @brief Guesses the name of the given term.
      *
-     * This function attempts to find the name associated with the provided item
-     * by looking it up in the `expr_names` map. If the item is found, its
+     * This function attempts to find the name associated with the provided term
+     * by looking it up in the `expr_names` map. If the term is found, its
      * corresponding name is returned. Otherwise, an empty string is returned.
      *
-     * @param itm The item for which the name is to be guessed.
-     * @return A string representing the name of the item, or an empty string if
-     *         the item is not found in the `expr_names` map.
+     * @param itm The term for which the name is to be guessed.
+     * @return A string representing the name of the term, or an empty string if
+     *         the term is not found in the `expr_names` map.
      */
-    std::string guess_name(const item &itm) const noexcept
+    std::string guess_name(const term &itm) const noexcept
     {
       if (const auto at_f = expr_names.find(&itm); at_f != expr_names.cend())
         return at_f->second;
@@ -509,7 +509,7 @@ namespace riddle
     std::vector<utils::u_ptr<compilation_unit>> cus;                               // the compilation units read by the core..
 
 #ifdef COMPUTE_NAMES
-    std::unordered_map<const item *, const std::string> expr_names; // the names of the expressions..
+    std::unordered_map<const term *, const std::string> expr_names; // the names of the expressions..
 #endif
   };
 
