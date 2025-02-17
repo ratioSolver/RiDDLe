@@ -69,10 +69,10 @@ namespace riddle
     enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) : enum_term(tp, std::move(values))
     {
       for (size_t i = 0; i < get_values().size(); i++)
-        domain[&*get_values()[i]] = lits[i];
+        domain.emplace(&*get_values()[i], lits[i]);
     }
 
-    [[nodiscard]] const utils::lit &get_lit(utils::enum_val &val) const noexcept { return domain.at(&val); }
+    [[nodiscard]] const utils::lit &get_lit(const utils::enum_val &val) const noexcept { return domain.at(&val); }
 
     [[nodiscard]] virtual json::json to_json() const override
     {
@@ -85,7 +85,7 @@ namespace riddle
     }
 
   private:
-    std::unordered_map<utils::enum_val *, utils::lit> domain;
+    std::unordered_map<const utils::enum_val *, const utils::lit> domain;
   };
 
   class atom : public riddle::atom_term
