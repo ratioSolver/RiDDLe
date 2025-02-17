@@ -3,6 +3,7 @@
 #include "term.hpp"
 #include "lit.hpp"
 #include "lin.hpp"
+#include <unordered_map>
 
 namespace riddle
 {
@@ -65,19 +66,26 @@ namespace riddle
   class enum_item : public enum_term
   {
   public:
-    enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, utils::var &&expr) : enum_term(tp, std::move(values)), expr(expr) {}
+    enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) : enum_term(tp, std::move(values))
+    {
+      for (size_t i = 0; i < get_values().size(); i++)
+        domain[&*get_values()[i]] = lits[i];
+    }
 
-    [[nodiscard]] const utils::var &get_var() const noexcept { return expr; }
+    [[nodiscard]] const utils::lit &get_lit(utils::enum_val &val) const noexcept { return domain.at(&val); }
 
     [[nodiscard]] virtual json::json to_json() const override
     {
       auto j_val = enum_term::to_json();
-      j_val["var"] = static_cast<uint64_t>(expr);
+      json::json j_vals(json::json_type::array);
+      for (const auto &val : get_type().get_scope().get_core().enum_value(*this))
+        j_vals.push_back(static_cast<term &>(*val).get_id());
+      j_val["vals"] = std::move(j_vals);
       return j_val;
     }
 
   private:
-    const utils::var expr;
+    std::unordered_map<utils::enum_val *, utils::lit> domain;
   };
 
   class atom : public riddle::atom_term
