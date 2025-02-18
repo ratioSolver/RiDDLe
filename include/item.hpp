@@ -52,13 +52,6 @@ namespace riddle
 
     [[nodiscard]] const std::string &get_string() const noexcept { return expr; }
 
-    [[nodiscard]] virtual json::json to_json() const override
-    {
-      auto j_val = string_term::to_json();
-      j_val["str"] = expr;
-      return j_val;
-    }
-
   private:
     const std::string expr;
   };

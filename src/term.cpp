@@ -46,7 +46,7 @@ namespace riddle
     }
 
     string_term::string_term(string_type &tp) : term(tp) {}
-    json::json string_term::to_json() const { return {{"type", std::string_view(get_type().get_name()), {"val", get_type().get_scope().get_core().string_value(*this)}}}; }
+    json::json string_term::to_json() const { return {{"type", std::string_view(get_type().get_name())}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
 
     enum_term::enum_term(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) : term(tp), values(std::move(values)) {}
     json::json enum_term::to_json() const
