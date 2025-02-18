@@ -72,6 +72,8 @@ namespace riddle
         domain.emplace(&*get_values()[i], lits[i]);
     }
 
+    [[nodiscard]] bool has_lit(const utils::enum_val &val) const noexcept { return domain.find(&val) != domain.end(); }
+
     [[nodiscard]] const utils::lit &get_lit(const utils::enum_val &val) const noexcept { return domain.at(&val); }
 
     [[nodiscard]] virtual json::json to_json() const override
