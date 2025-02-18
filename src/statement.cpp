@@ -92,6 +92,8 @@ namespace riddle
                 args.emplace_back(utils::s_ptr_cast<bool_term>(val));
             scp.get_core().new_clause(std::move(args));
         }
+        else
+            scp.get_core().new_clause({val});
     }
 
     void conjunction_statement::execute(const scope &scp, env &ctx) const
