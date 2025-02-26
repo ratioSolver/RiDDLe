@@ -78,7 +78,6 @@ namespace riddle
   public:
     constructor_declaration(std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::pair<id_token, std::vector<utils::u_ptr<expression>>>> &&inits, std::vector<utils::u_ptr<statement>> &&stmts) : params(std::move(params)), inits(std::move(inits)), stmts(std::move(stmts)) {}
 
-  private:
     void refine(scope &scp) const;
 
   private:
@@ -95,7 +94,6 @@ namespace riddle
   public:
     method_declaration(std::vector<id_token> &&rt, id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<utils::u_ptr<statement>> &&stmts) : rt(std::move(rt)), name(std::move(name)), params(std::move(params)), stmts(std::move(stmts)) {}
 
-  private:
     void refine(scope &scp) const;
 
   private:
@@ -113,7 +111,6 @@ namespace riddle
   public:
     predicate_declaration(id_token &&name, std::vector<std::pair<std::vector<id_token>, id_token>> &&params, std::vector<std::vector<id_token>> &&base_predicates, std::vector<utils::u_ptr<statement>> &&body) : name(std::move(name)), params(std::move(params)), base_predicates(std::move(base_predicates)), body(std::move(body)) {}
 
-  private:
     void declare(scope &scp) const;
     void refine(scope &scp) const;
 
