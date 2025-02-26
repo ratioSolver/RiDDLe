@@ -29,6 +29,7 @@ namespace riddle
     friend class predicate_declaration;
 #ifdef COMPUTE_NAMES
     friend class component;
+    friend class component_type;
 #endif
 
   public:

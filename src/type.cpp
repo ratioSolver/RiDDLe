@@ -259,6 +259,10 @@ namespace riddle
 
     void component_type::add_parent(predicate &child, predicate &parent) { child.parents.emplace_back(parent); }
 
+#ifdef COMPUTE_NAMES
+    std::string component_type::guess_name(const term &itm) const noexcept { return get_core().guess_name(itm); }
+#endif
+
     expr component_type::new_instance()
     {
         auto itm = utils::make_s_ptr<component>(static_cast<component_type &>(*this));

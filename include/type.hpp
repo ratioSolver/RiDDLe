@@ -214,6 +214,7 @@ namespace riddle
    */
   class component_type : public scope, public type
   {
+    friend class core;
     friend class enum_declaration;
     friend class method_declaration;
     friend class class_declaration;
@@ -257,7 +258,16 @@ namespace riddle
      *
      * @return std::vector<expr>& A reference to the vector of instances.
      */
-    [[nodiscard]] std::vector<expr> &get_instances() noexcept { return instances; }
+    [[nodiscard]] const std::vector<expr> &get_instances() const noexcept { return instances; }
+
+    /**
+     * @brief retrieves the list of the atoms of the type.
+     *
+     * This function returns a reference to the vector containing atoms.
+     *
+     * @return std::vector<atom_expr>& A reference to the vector of atoms.
+     */
+    [[nodiscard]] const std::vector<atom_expr> &get_atoms() const noexcept { return atoms; }
 
   protected:
     /**
@@ -318,10 +328,16 @@ namespace riddle
      */
     void add_parent(predicate &child, predicate &parent);
 
+#ifdef COMPUTE_NAMES
+    std::string guess_name(const term &itm) const noexcept;
+#endif
+
   private:
     [[nodiscard]] expr new_instance() override;
 
     virtual void created_predicate([[maybe_unused]] predicate &pred) {}
+
+    virtual void created_atom([[maybe_unused]] atom_expr atm) {}
 
   private:
     std::vector<utils::ref_wrapper<component_type>> parents;                       // the base types (i.e. the types this type inherits from)..
@@ -330,6 +346,7 @@ namespace riddle
     std::map<std::string, utils::u_ptr<type>, std::less<>> types;                  // the types declared in the scope of the type..
     std::map<std::string, utils::u_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the scope of the type..
     std::vector<expr> instances;                                                   // the instances of the type..
+    std::vector<atom_expr> atoms;                                                  // the atoms of the component type..
   };
 
   /**

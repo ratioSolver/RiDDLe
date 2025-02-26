@@ -91,6 +91,11 @@ namespace riddle
         {
             auto p = q.front();
             p->atoms.push_back(atm);
+            if (auto ct = dynamic_cast<component_type *>(&p->get_scope()))
+            {
+                ct->atoms.emplace_back(atm);
+                ct->created_atom(atm);
+            }
             q.pop();
             for (auto &parent : p->parents)
                 q.push(&*parent);
