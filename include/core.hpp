@@ -416,11 +416,14 @@ namespace riddle
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
+    [[nodiscard]] const std::map<std::string, std::vector<utils::u_ptr<method>>, std::less<>> &get_methods() const { return methods; }
     [[nodiscard]] method &get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const override;
-    [[nodiscard]] type &get_type(std::string_view name) const override;
-    [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
-    [[nodiscard]] const std::map<std::string, utils::u_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
+    [[nodiscard]] const std::map<std::string, utils::u_ptr<type>, std::less<>> &get_types() const noexcept override { return types; }
+    [[nodiscard]] type &get_type(std::string_view name) const override;
+
+    [[nodiscard]] const std::map<std::string, utils::u_ptr<predicate>, std::less<>> &get_predicates() const { return predicates; }
+    [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
     /**
      * @brief Promotes the type of the given arithmetic expressions.

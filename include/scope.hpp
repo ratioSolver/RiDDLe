@@ -108,6 +108,8 @@ namespace riddle
      */
     [[nodiscard]] virtual field &get_field(std::string_view name) const;
 
+    [[nodiscard]] virtual const std::map<std::string, std::vector<utils::u_ptr<method>>, std::less<>> &get_methods() const { return parent.get_methods(); }
+
     /**
      * @brief Retrieves the method associated with the given name and argument types.
      *
@@ -122,6 +124,8 @@ namespace riddle
      */
     [[nodiscard]] virtual method &get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const { return parent.get_method(name, argument_types); }
 
+    [[nodiscard]] virtual const std::map<std::string, utils::u_ptr<type>, std::less<>> &get_types() const { return parent.get_types(); }
+
     /**
      * @brief Retrieves the type associated with the given name.
      *
@@ -134,6 +138,8 @@ namespace riddle
      * @throws std::out_of_range if the type is not found in the current or parent scope.
      */
     [[nodiscard]] virtual type &get_type(std::string_view name) const { return parent.get_type(name); }
+
+    [[nodiscard]] virtual const std::map<std::string, utils::u_ptr<predicate>, std::less<>> &get_predicates() const { return parent.get_predicates(); }
 
     /**
      * @brief Retrieves the predicate associated with the given name.
