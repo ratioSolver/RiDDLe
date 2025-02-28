@@ -239,7 +239,8 @@ namespace riddle
         if (!predicates.emplace(name, std::move(pred)).second)
             throw std::invalid_argument("predicate " + name + " already exists");
         std::queue<component_type *> q;
-        q.push(this);
+        for (const auto &p : parents)
+            q.push(&*p);
         while (!q.empty())
         {
             auto tp = q.front();

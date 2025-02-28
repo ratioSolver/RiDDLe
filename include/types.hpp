@@ -27,7 +27,7 @@ namespace riddle
     [[nodiscard]] virtual json::json extract() const override;
 
   private:
-    void created_predicate(predicate &pred) override;
+    void created_predicate(predicate &pred) noexcept override;
   };
 
   class reusable_resource : public component_type, public timeline
@@ -36,6 +36,9 @@ namespace riddle
     reusable_resource(core &cr) noexcept;
 
     [[nodiscard]] virtual json::json extract() const override;
+
+  private:
+    void created_predicate(predicate &pred) noexcept override;
 
   private:
     utils::u_ptr<constructor_declaration> ctr;
@@ -48,6 +51,9 @@ namespace riddle
     consumable_resource(core &cr) noexcept;
 
     [[nodiscard]] virtual json::json extract() const override;
+
+  private:
+    void created_predicate(predicate &pred) noexcept override;
 
   private:
     utils::u_ptr<constructor_declaration> ctr;

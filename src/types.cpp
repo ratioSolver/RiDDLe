@@ -8,7 +8,7 @@ namespace riddle
 {
     state_variable::state_variable(core &cr) noexcept : component_type(cr, state_variable_kw) { add_constructor(utils::make_u_ptr<constructor>(*this)); }
 
-    void state_variable::created_predicate(predicate &pred) { add_parent(pred, get_core().get_predicate(interval_kw)); }
+    void state_variable::created_predicate(predicate &pred) noexcept { add_parent(pred, get_core().get_predicate(interval_kw)); }
 
     json::json state_variable::extract() const
     {
@@ -104,6 +104,8 @@ namespace riddle
         use_pred->declare(*this);
         use_pred->refine(*this);
     }
+
+    void reusable_resource::created_predicate(predicate &pred) noexcept { add_parent(pred, get_core().get_predicate(interval_kw)); }
 
     json::json reusable_resource::extract() const
     {
@@ -212,6 +214,8 @@ namespace riddle
         cons_pred->declare(*this);
         cons_pred->refine(*this);
     }
+
+    void consumable_resource::created_predicate(predicate &pred) noexcept { add_parent(pred, get_core().get_predicate(interval_kw)); }
 
     json::json consumable_resource::extract() const
     {
