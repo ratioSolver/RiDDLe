@@ -12,6 +12,9 @@ namespace riddle
   class class_declaration;
   class predicate_declaration;
 
+  constexpr const char *impulse_kw = "Impulse";
+  constexpr const char *interval_kw = "Interval";
+
   /**
    * @class type type.hpp "include/type.hpp"
    * @brief The type class.
@@ -405,5 +408,14 @@ namespace riddle
     std::vector<utils::ref_wrapper<field>> args;        // the arguments of the predicate..
     const std::vector<utils::u_ptr<statement>> &body;   // the body of the predicate..
     std::vector<atom_expr> atoms;                       // the atoms of the predicate..
+  };
+
+  class timeline
+  {
+  public:
+    timeline() = default;
+    virtual ~timeline() = default;
+
+    [[nodiscard]] virtual json::json extract() const = 0;
   };
 } // namespace riddle

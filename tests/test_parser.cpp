@@ -1,5 +1,5 @@
 #include "core.hpp"
-#include "item.hpp"
+#include "items.hpp"
 #include <cassert>
 
 class test_core : public riddle::core

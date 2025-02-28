@@ -177,6 +177,9 @@ namespace riddle
 
     json::json core::to_json() const
     {
+        json::json j_core{{"name", std::string_view(name)}};
+        json::json j_timelines(json::json_type::array);
+
         std::set<term *> all_items;      // we keep track of all the items..
         std::set<atom_term *> all_atoms; // we keep track of all the atoms..
         std::queue<component_type *> q;
@@ -201,12 +204,18 @@ namespace riddle
                 else if (auto et = dynamic_cast<enum_type *>(etp.second.get()))
                     for (const auto &val : et->get_domain())
                         all_items.insert(static_cast<term *>(val.get()));
+
+            if (auto tl_tp = dynamic_cast<riddle::timeline *>(tp)) // we have a timeline type..
+            {                                                      // we extract the timeline..
+                json::json j_tls = tl_tp->extract();
+                for (size_t i = 0; i < j_tls.size(); ++i)
+                    j_timelines.push_back(std::move(j_tls[i]));
+            }
         }
         for (const auto &pred : predicates)
             for (const auto &atm : pred.second->get_atoms())
                 all_atoms.insert(static_cast<riddle::atom_term *>(atm.get()));
 
-        json::json j_core{{"name", std::string_view(name)}};
         if (!all_items.empty())
         { // we add the items of the core..
             json::json j_items;
@@ -223,6 +232,41 @@ namespace riddle
         }
         if (!items.empty()) // we add the fields of the core..
             j_core["exprs"] = env::to_json();
+
+        // for each pulse, the root atoms starting at that pulse..
+        std::map<utils::inf_rational, std::set<riddle::atom_term *>> starting_atoms;
+        // all the pulses of the solver timeline..
+        std::set<utils::inf_rational> pulses;
+        for (const auto &[_, pred] : get_predicates())
+            for (const auto &atm : pred->get_atoms())
+                if (atm->get_state() == riddle::atom_state::active)
+                { // we get only the active atoms..
+                    if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
+                    { // we have an impulse atom..
+                        const auto start = arith_value(static_cast<riddle::arith_term &>(*atm->get(riddle::at_kw)));
+                        starting_atoms[start].insert(static_cast<riddle::atom_term *>(&*atm));
+                        pulses.insert(start);
+                    }
+                    else if (get_predicate(interval_kw).is_assignable_from(atm->get_type()))
+                    { // we have an interval atom..
+                        const auto start = arith_value(static_cast<riddle::arith_term &>(*atm->get(riddle::start_kw)));
+                        starting_atoms[start].insert(static_cast<riddle::atom_term *>(&*atm));
+                        pulses.insert(start);
+                    }
+                }
+        if (!starting_atoms.empty())
+        { // we have some root atoms in the solver timeline..
+            json::json slv_tl{{"id", static_cast<uint64_t>(get_id())}, {"type", "Solver"}, {"name", get_name().c_str()}};
+            json::json j_atms(json::json_type::array);
+            for (const auto &p : pulses)
+                for (const auto &atm : starting_atoms.at(p))
+                    j_atms.push_back(static_cast<uint64_t>(atm->get_id()));
+            slv_tl["values"] = std::move(j_atms);
+            j_timelines.push_back(std::move(slv_tl));
+        }
+
+        if (j_timelines.size() > 0)
+            j_core["timelines"] = std::move(j_timelines);
 
         return j_core;
     }
