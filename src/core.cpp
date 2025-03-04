@@ -260,7 +260,17 @@ namespace riddle
             json::json j_atms(json::json_type::array);
             for (const auto &p : pulses)
                 for (const auto &atm : starting_atoms.at(p))
-                    j_atms.push_back(static_cast<uint64_t>(atm->get_id()));
+                    if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
+                    {
+                        const auto at = arith_value(static_cast<arith_term &>(*atm->get(at_kw)));
+                        j_atms.push_back({{"atom", static_cast<uint64_t>(atm->get_id())}, {"at", {{"num", static_cast<int64_t>(at.get_rational().numerator())}, {"den", static_cast<int64_t>(at.get_rational().denominator())}}}});
+                    }
+                    else if (get_predicate(interval_kw).is_assignable_from(atm->get_type()))
+                    {
+                        const auto start = arith_value(static_cast<arith_term &>(*atm->get(start_kw)));
+                        const auto end = arith_value(static_cast<arith_term &>(*atm->get(end_kw)));
+                        j_atms.push_back({{"atom", static_cast<uint64_t>(atm->get_id())}, {"start", {{"num", static_cast<int64_t>(start.get_rational().numerator())}, {"den", static_cast<int64_t>(start.get_rational().denominator())}}}, {"end", {{"num", static_cast<int64_t>(end.get_rational().numerator())}, {"den", static_cast<int64_t>(end.get_rational().denominator())}}}});
+                    }
             slv_tl["values"] = std::move(j_atms);
             j_timelines.push_back(std::move(slv_tl));
         }
