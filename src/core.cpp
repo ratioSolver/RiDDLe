@@ -85,20 +85,33 @@ namespace riddle
     atom_expr core::new_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args)
     {
         auto atm = create_atom(is_fact, pred, std::move(args));
+
+        // we add the atom to the predicate and to its parents..
         std::queue<predicate *> q;
         q.push(&pred);
         while (!q.empty())
         {
             auto p = q.front();
             p->atoms.push_back(atm);
-            if (auto ct = dynamic_cast<component_type *>(&p->get_scope()))
-            {
-                ct->atoms.emplace_back(atm);
-                ct->created_atom(atm);
-            }
             q.pop();
             for (auto &parent : p->parents)
                 q.push(&*parent);
+        }
+
+        // we add the atom to the predicate's scope, if a component-type, and to its parents..
+        if (auto ct = dynamic_cast<component_type *>(&pred.get_scope()))
+        {
+            std::queue<component_type *> q;
+            q.push(ct);
+            while (!q.empty())
+            {
+                auto t = q.front();
+                t->atoms.push_back(atm);
+                t->created_atom(atm);
+                q.pop();
+                for (auto &parent : t->parents)
+                    q.push(&*parent);
+            }
         }
         return atm;
     }
@@ -238,22 +251,23 @@ namespace riddle
         // all the pulses of the solver timeline..
         std::set<utils::inf_rational> pulses;
         for (const auto &[_, pred] : get_predicates())
-            for (const auto &atm : pred->get_atoms())
-                if (atm->get_state() == riddle::atom_state::active)
-                { // we get only the active atoms..
-                    if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
-                    { // we have an impulse atom..
-                        const auto start = arith_value(static_cast<riddle::arith_term &>(*atm->get(riddle::at_kw)));
-                        starting_atoms[start].insert(static_cast<riddle::atom_term *>(&*atm));
-                        pulses.insert(start);
+            if (pred->get_name() != impulse_kw && pred->get_name() != interval_kw)
+                for (const auto &atm : pred->get_atoms())
+                    if (atm->get_state() == riddle::atom_state::active)
+                    { // we get only the active atoms..
+                        if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
+                        { // we have an impulse atom..
+                            const auto start = arith_value(static_cast<riddle::arith_term &>(*atm->get(riddle::at_kw)));
+                            starting_atoms[start].insert(static_cast<riddle::atom_term *>(&*atm));
+                            pulses.insert(start);
+                        }
+                        else if (get_predicate(interval_kw).is_assignable_from(atm->get_type()))
+                        { // we have an interval atom..
+                            const auto start = arith_value(static_cast<riddle::arith_term &>(*atm->get(riddle::start_kw)));
+                            starting_atoms[start].insert(static_cast<riddle::atom_term *>(&*atm));
+                            pulses.insert(start);
+                        }
                     }
-                    else if (get_predicate(interval_kw).is_assignable_from(atm->get_type()))
-                    { // we have an interval atom..
-                        const auto start = arith_value(static_cast<riddle::arith_term &>(*atm->get(riddle::start_kw)));
-                        starting_atoms[start].insert(static_cast<riddle::atom_term *>(&*atm));
-                        pulses.insert(start);
-                    }
-                }
         if (!starting_atoms.empty())
         { // we have some root atoms in the solver timeline..
             json::json slv_tl{{"id", static_cast<uint64_t>(get_id())}, {"type", "Solver"}, {"name", get_name().c_str()}};

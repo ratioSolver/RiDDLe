@@ -3,6 +3,7 @@
 #include "conjunction.hpp"
 #include "exceptions.hpp"
 #include <queue>
+#include <cassert>
 
 namespace riddle
 {
@@ -163,8 +164,15 @@ namespace riddle
                     throw std::runtime_error("Invalid type reference");
             c_args.emplace(tau_kw, c_tau);
         }
-        else if (auto atm = dynamic_cast<riddle::atom_term *>(&ctx))
-            c_args.emplace(tau_kw, atm->get(tau_kw));
+        else
+            try
+            {
+                c_args.emplace(tau_kw, ctx.get(tau_kw));
+            }
+            catch (const std::exception &)
+            { // there is no tau..
+                assert(dynamic_cast<const core *>(&scp));
+            }
 
         auto &pred = tau.empty() ? scp.get_predicate(predicate_name.id) : static_cast<component_type &>(c_args.at(tau_kw).get()->get_type()).get_predicate(predicate_name.id);
 
