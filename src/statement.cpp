@@ -171,7 +171,6 @@ namespace riddle
             }
             catch (const std::exception &)
             { // there is no tau..
-                assert(dynamic_cast<const core *>(&scp));
             }
 
         auto &pred = tau.empty() ? scp.get_predicate(predicate_name.id) : static_cast<component_type &>(c_args.at(tau_kw).get()->get_type()).get_predicate(predicate_name.id);
