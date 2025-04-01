@@ -213,12 +213,12 @@ namespace riddle
                             error("Expected identifier after `.`");
                     if (match(LPAREN))
                     { // method declaration..
-                        pos = c_pos;
+                        pos = c_pos - 1;
                         methods.emplace_back(parse_method_declaration());
                     }
                     else
                     { // field declaration..
-                        pos = c_pos;
+                        pos = c_pos - 1;
                         fields.emplace_back(parse_field_declaration());
                     }
                 }
@@ -277,12 +277,13 @@ namespace riddle
             break;
         case ID:
         {
+            tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             while (match(DOT))
+            {
                 if (!match(ID))
                     error("Expected identifier after `.`");
-            if (!match(ID))
-                error("Expected identifier after `.`");
-            tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            }
             break;
         }
         default:
@@ -353,12 +354,13 @@ namespace riddle
             break;
         case ID:
         {
+            rt.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
             while (match(DOT))
+            {
                 if (!match(ID))
                     error("Expected identifier after `.`");
-            if (!match(ID))
-                error("Expected identifier after `.`");
-            rt.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                rt.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            }
             break;
         }
         default:
@@ -397,12 +399,13 @@ namespace riddle
                     break;
                 case ID:
                 {
+                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                     while (match(DOT))
+                    {
                         if (!match(ID))
                             error("Expected identifier after `.`");
-                    if (!match(ID))
-                        error("Expected identifier after `.`");
-                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                        tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    }
                     break;
                 }
                 default:
@@ -463,12 +466,13 @@ namespace riddle
                     break;
                 case ID:
                 {
+                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                     while (match(DOT))
+                    {
                         if (!match(ID))
                             error("Expected identifier after `.`");
-                    if (!match(ID))
-                        error("Expected identifier after `.`");
-                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                        tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    }
                     break;
                 }
                 default:
@@ -558,12 +562,13 @@ namespace riddle
                     break;
                 case ID:
                 {
+                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
                     while (match(DOT))
+                    {
                         if (!match(ID))
                             error("Expected identifier after `.`");
-                    if (!match(ID))
-                        error("Expected identifier after `.`");
-                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                        tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    }
                     break;
                 }
                 default:
