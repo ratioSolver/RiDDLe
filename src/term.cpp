@@ -115,7 +115,7 @@ namespace riddle
     env &atom_term::atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args)
     {
         if (args.count(tau_kw))
-            return *static_cast<component *>(args.at(tau_kw).get());
+            return *dynamic_cast<component *>(args.at(tau_kw).get());
         else
             return t.get_core();
     }

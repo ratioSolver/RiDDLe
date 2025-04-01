@@ -198,7 +198,7 @@ namespace riddle
 
   using string_expr = utils::s_ptr<string_term>;
 
-  class enum_term : public term
+  class enum_term : virtual public term
   {
   public:
     enum_term(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values);
@@ -213,12 +213,16 @@ namespace riddle
 
   using enum_expr = utils::s_ptr<enum_term>;
 
-  class component : public term, public env
+  class component : virtual public term, public env
   {
   public:
     component(component_type &tp);
 
     [[nodiscard]] virtual json::json to_json() const override;
+  };
+
+  class enum_comp
+  {
   };
 
   enum atom_state

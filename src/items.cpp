@@ -25,7 +25,7 @@ namespace riddle
 
     string_item::string_item(string_type &tp, std::string &&expr) noexcept : string_term(tp), expr(expr) {}
 
-    enum_item::enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept : enum_term(tp, std::move(values))
+    enum_item::enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept : term(tp), enum_term(tp, std::move(values))
     {
         for (size_t i = 0; i < get_values().size(); i++)
             domain.emplace(&*get_values()[i], lits[i]);

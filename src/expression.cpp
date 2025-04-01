@@ -20,6 +20,8 @@ namespace riddle
                 obj = c->get(object_id[i].id);
             else if (auto c = dynamic_cast<atom_term *>(obj.get()))
                 obj = c->get(object_id[i].id);
+            // else if (auto c = dynamic_cast<enum_term *>(obj.get()))
+            //     obj = c->get(object_id[i].id);
             else
                 throw std::runtime_error("Invalid object reference");
         return obj;
@@ -126,7 +128,7 @@ namespace riddle
     {
         auto obj = &ctx;
         for (size_t i = 0; i < object_id.size(); ++i)
-            obj = static_cast<component *>(obj->get(object_id[i].id).get());
+            obj = dynamic_cast<component *>(obj->get(object_id[i].id).get());
 
         std::vector<expr> args;
         for (const auto &arg : arguments)

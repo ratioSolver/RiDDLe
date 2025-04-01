@@ -64,7 +64,7 @@ namespace riddle
         {
             auto field = ct->get_field(field_id.id);
             if (field.get_type().is_assignable_from(value->evaluate(scp, ctx)->get_type()))
-                static_cast<component &>(*obj->second).items.emplace(field_id.id, value->evaluate(scp, ctx));
+                dynamic_cast<component &>(*obj->second).items.emplace(field_id.id, value->evaluate(scp, ctx));
             else
                 throw std::runtime_error("Invalid assignment");
         }
