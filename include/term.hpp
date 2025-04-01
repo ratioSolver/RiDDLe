@@ -49,9 +49,9 @@ namespace riddle
      *
      * @return A reference to the type of the term.
      */
-    [[nodiscard]] type &get_type() const { return tp; }
+    [[nodiscard]] type &get_type() const noexcept { return tp; }
 
-    [[nodiscard]] virtual json::json to_json() const = 0;
+    [[nodiscard]] virtual json::json to_json() const noexcept = 0;
 
   private:
     type &tp;
@@ -60,9 +60,9 @@ namespace riddle
   class bool_term : public term
   {
   public:
-    bool_term(bool_type &tp);
+    bool_term(bool_type &tp) noexcept;
 
-    [[nodiscard]] virtual json::json to_json() const override;
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
   };
 
   class and_term : public bool_term
@@ -118,11 +118,11 @@ namespace riddle
   class arith_term : public term
   {
   public:
-    arith_term(int_type &tp);
-    arith_term(real_type &tp);
-    arith_term(time_type &tp);
+    arith_term(int_type &tp) noexcept;
+    arith_term(real_type &tp) noexcept;
+    arith_term(time_type &tp) noexcept;
 
-    [[nodiscard]] virtual json::json to_json() const override;
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
   };
 
   using arith_expr = utils::s_ptr<arith_term>;
@@ -190,22 +190,22 @@ namespace riddle
   class string_term : public term
   {
   public:
-    string_term(string_type &tp);
+    string_term(string_type &tp) noexcept;
     virtual ~string_term() = default;
 
-    [[nodiscard]] virtual json::json to_json() const override;
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
   };
 
   using string_expr = utils::s_ptr<string_term>;
 
-  class enum_term : virtual public term
+  class enum_term : public term
   {
   public:
-    enum_term(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values);
+    enum_term(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) noexcept;
 
     [[nodiscard]] const std::vector<utils::ref_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
 
-    [[nodiscard]] virtual json::json to_json() const override;
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
     std::vector<utils::ref_wrapper<utils::enum_val>> values;
@@ -213,16 +213,12 @@ namespace riddle
 
   using enum_expr = utils::s_ptr<enum_term>;
 
-  class component : virtual public term, public env
+  class component : public term, public env
   {
   public:
-    component(component_type &tp);
+    component(component_type &tp) noexcept;
 
-    [[nodiscard]] virtual json::json to_json() const override;
-  };
-
-  class enum_comp
-  {
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
   };
 
   enum atom_state
@@ -235,13 +231,13 @@ namespace riddle
   class atom_term : public term, public env
   {
   public:
-    atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {});
+    atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {}) noexcept;
 
     [[nodiscard]] bool is_fact() const { return fact; }
 
     [[nodiscard]] virtual atom_state get_state() const { return atom_state::active; }
 
-    [[nodiscard]] virtual json::json to_json() const override;
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
     static env &atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args);

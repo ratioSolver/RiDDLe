@@ -16,16 +16,16 @@ namespace riddle
         // we partition atoms for each state-variable they might insist on..
         std::unordered_map<const component *, std::vector<atom_term *>> sv_instances;
         for (const auto &sv : get_instances())
-            sv_instances.emplace(dynamic_cast<component *>(&*sv), std::vector<atom_term *>());
+            sv_instances.emplace(static_cast<component *>(&*sv), std::vector<atom_term *>());
         for (const auto &atm : get_atoms())
             if (atm->get_state() == atom_state::active)
             { // the atom is active..
                 const auto tau = atm->get(tau_kw);
                 if (auto c_svs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..
                     for (const auto &c_sv : get_core().enum_value(*c_svs))
-                        sv_instances.at(dynamic_cast<component *>(&*c_sv)).push_back(&*atm);
+                        sv_instances.at(static_cast<component *>(&*c_sv)).push_back(&*atm);
                 else // the `tau` parameter is a constant..
-                    sv_instances.at(dynamic_cast<component *>(tau.get())).push_back(&*atm);
+                    sv_instances.at(static_cast<component *>(tau.get())).push_back(&*atm);
             }
 
         for (const auto &[sv, atms] : sv_instances)
@@ -113,16 +113,16 @@ namespace riddle
         // we partition atoms for each state-variable they might insist on..
         std::unordered_map<component *, std::vector<atom_term *>> rr_instances;
         for (const auto &rr : get_instances())
-            rr_instances.emplace(dynamic_cast<component *>(&*rr), std::vector<atom_term *>());
+            rr_instances.emplace(static_cast<component *>(&*rr), std::vector<atom_term *>());
         for (const auto &atm : get_atoms())
             if (atm->get_state() == atom_state::active)
             { // the atom is active..
                 const auto tau = atm->get(tau_kw);
                 if (auto c_rrs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..
                     for (const auto &c_rr : get_core().enum_value(*c_rrs))
-                        rr_instances.at(dynamic_cast<component *>(&*c_rr)).push_back(&*atm);
+                        rr_instances.at(static_cast<component *>(&*c_rr)).push_back(&*atm);
                 else // the `tau` parameter is a constant..
-                    rr_instances.at(dynamic_cast<component *>(tau.get())).push_back(&*atm);
+                    rr_instances.at(static_cast<component *>(tau.get())).push_back(&*atm);
             }
 
         for (const auto &[rr, atms] : rr_instances)
@@ -223,16 +223,16 @@ namespace riddle
         // we partition atoms for each state-variable they might insist on..
         std::unordered_map<component *, std::vector<atom_term *>> cr_instances;
         for (const auto &cr : get_instances())
-            cr_instances.emplace(dynamic_cast<component *>(&*cr), std::vector<atom_term *>());
+            cr_instances.emplace(static_cast<component *>(&*cr), std::vector<atom_term *>());
         for (const auto &atm : get_atoms())
             if (atm->get_state() == atom_state::active)
             { // the atom is active..
                 const auto tau = atm->get(tau_kw);
                 if (auto c_crs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..
                     for (const auto &c_cr : get_core().enum_value(*c_crs))
-                        cr_instances.at(dynamic_cast<component *>(&*c_cr)).push_back(&*atm);
+                        cr_instances.at(static_cast<component *>(&*c_cr)).push_back(&*atm);
                 else // the `tau` parameter is a constant..
-                    cr_instances.at(dynamic_cast<component *>(tau.get())).push_back(&*atm);
+                    cr_instances.at(static_cast<component *>(tau.get())).push_back(&*atm);
             }
 
         for (const auto &[cr, atms] : cr_instances)

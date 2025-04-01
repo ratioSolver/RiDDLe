@@ -128,7 +128,7 @@ namespace riddle
     {
         auto obj = &ctx;
         for (size_t i = 0; i < object_id.size(); ++i)
-            obj = dynamic_cast<component *>(obj->get(object_id[i].id).get());
+            obj = static_cast<component *>(obj->get(object_id[i].id).get());
 
         std::vector<expr> args;
         for (const auto &arg : arguments)

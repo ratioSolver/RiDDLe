@@ -17,7 +17,7 @@ namespace riddle
 
     [[nodiscard]] const utils::lit &get_lit() const noexcept { return expr; }
 
-    [[nodiscard]] virtual json::json to_json() const override;
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
     const utils::lit expr;
@@ -32,7 +32,7 @@ namespace riddle
 
     [[nodiscard]] const utils::lin &get_lin() const noexcept { return expr; }
 
-    [[nodiscard]] virtual json::json to_json() const override;
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
     const utils::lin expr;
@@ -58,10 +58,16 @@ namespace riddle
 
     [[nodiscard]] const utils::lit &get_lit(const utils::enum_val &val) const noexcept { return domain.at(&val); }
 
-    [[nodiscard]] virtual json::json to_json() const override;
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
     std::unordered_map<const utils::enum_val *, const utils::lit> domain;
+  };
+
+  class enum_component : public enum_item, public env
+  {
+  public:
+    enum_component(component_type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept;
   };
 
   class atom : public riddle::atom_term
@@ -71,7 +77,7 @@ namespace riddle
 
     [[nodiscard]] const utils::lit &get_sigma() const noexcept { return sigma; }
 
-    [[nodiscard]] virtual json::json to_json() const override;
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
     const utils::lit sigma;
