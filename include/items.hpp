@@ -52,7 +52,7 @@ namespace riddle
   class enum_item : public enum_term
   {
   public:
-    enum_item(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept;
+    enum_item(component_type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept;
 
     [[nodiscard]] bool has_lit(const utils::enum_val &val) const noexcept { return domain.find(&val) != domain.end(); }
 
@@ -62,12 +62,6 @@ namespace riddle
 
   private:
     std::unordered_map<const utils::enum_val *, const utils::lit> domain;
-  };
-
-  class enum_component : public enum_item, public env
-  {
-  public:
-    enum_component(component_type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept;
   };
 
   class atom : public riddle::atom_term

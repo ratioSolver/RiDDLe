@@ -20,8 +20,8 @@ namespace riddle
                 obj = c->get(object_id[i].id);
             else if (auto c = dynamic_cast<atom_term *>(obj.get()))
                 obj = c->get(object_id[i].id);
-            // else if (auto c = dynamic_cast<enum_term *>(obj.get()))
-            //     obj = c->get(object_id[i].id);
+            else if (auto c = dynamic_cast<enum_term *>(obj.get()))
+                obj = c->get(object_id[i].id);
             else
                 throw std::runtime_error("Invalid object reference");
         return obj;

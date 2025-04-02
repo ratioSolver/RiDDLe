@@ -198,10 +198,18 @@ namespace riddle
 
   using string_expr = utils::s_ptr<string_term>;
 
-  class enum_term : public term
+  class component : public term, public env
   {
   public:
-    enum_term(type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) noexcept;
+    component(component_type &tp) noexcept;
+
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
+  };
+
+  class enum_term : public term, public env
+  {
+  public:
+    enum_term(component_type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) noexcept;
 
     [[nodiscard]] const std::vector<utils::ref_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
 
@@ -212,14 +220,6 @@ namespace riddle
   };
 
   using enum_expr = utils::s_ptr<enum_term>;
-
-  class component : public term, public env
-  {
-  public:
-    component(component_type &tp) noexcept;
-
-    [[nodiscard]] virtual json::json to_json() const noexcept override;
-  };
 
   enum atom_state
   {

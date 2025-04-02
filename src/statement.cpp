@@ -27,6 +27,8 @@ namespace riddle
             }
             else if (tp->is_primitive()) // initialize with a default value
                 ctx.items.emplace(id.id, tp->new_instance());
+            else if (auto et = dynamic_cast<enum_type *>(tp))
+                ctx.items.emplace(id.id, et->new_instance());
             else if (auto ct = dynamic_cast<component_type *>(tp))
                 switch (ct->get_instances().size())
                 {

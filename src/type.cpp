@@ -37,45 +37,6 @@ namespace riddle
     string_type::string_type(core &cr) noexcept : type(cr, string_kw, true) {}
     expr string_type::new_instance() { return get_scope().get_core().new_string(); }
 
-    enum_type::enum_type(scope &scp, std::string &&name, std::vector<expr> &&domain) noexcept : type(scp, std::move(name), true), domain(std::move(domain)) {}
-    bool enum_type::is_assignable_from(const type &other) const
-    {
-        if (this == &other)
-            return true;
-        else if (auto et = dynamic_cast<const enum_type *>(&other))
-        {
-            std::queue<const enum_type *> q;
-            q.push(et);
-            while (!q.empty())
-            {
-                auto tp = q.front();
-                q.pop();
-                if (tp == this)
-                    return true;
-                for (const auto &e : tp->get_enums())
-                    q.push(&*e);
-            }
-        }
-        return false;
-    }
-    expr enum_type::new_instance()
-    {
-        switch (domain.size())
-        {
-        case 0:
-            throw inconsistency_exception();
-        case 1:
-            return domain[0];
-        default:
-        {
-            std::vector<utils::ref_wrapper<utils::enum_val>> items;
-            for (const auto &i : domain)
-                items.push_back(*i);
-            return get_scope().get_core().new_enum(*this, std::move(items));
-        }
-        }
-    }
-
     component_type::component_type(scope &scp, std::string &&name) noexcept : scope(scp.get_core(), scp), type(scp, std::move(name), false) {}
 
     bool component_type::is_assignable_from(const type &other) const
@@ -279,6 +240,38 @@ namespace riddle
                 q.push(&*p);
         }
         return itm;
+    }
+
+    enum_type::enum_type(scope &scp, std::string &&name, std::vector<expr> &&domain) noexcept : component_type(scp, std::move(name)), domain(std::move(domain)) {}
+    expr enum_type::new_instance()
+    {
+        std::vector<riddle::expr> c_domain; // the enum domain..
+        std::queue<enum_type *> q;
+        q.push(this);
+        while (!q.empty())
+        {
+            auto tp = q.front();
+            q.pop();
+            for (const auto &e : tp->domain)
+                c_domain.emplace_back(e);
+            for (const auto &p : tp->get_parents())
+                q.push(static_cast<enum_type *>(&*p));
+        }
+
+        switch (c_domain.size())
+        {
+        case 0:
+            throw inconsistency_exception();
+        case 1:
+            return c_domain[0];
+        default:
+        {
+            std::vector<utils::ref_wrapper<utils::enum_val>> items;
+            for (const auto &i : c_domain)
+                items.push_back(*i);
+            return get_scope().get_core().new_enum(*this, std::move(items));
+        }
+        }
     }
 
     predicate::predicate(scope &scp, std::string &&name, std::vector<utils::u_ptr<field>> &&args, const std::vector<utils::u_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}

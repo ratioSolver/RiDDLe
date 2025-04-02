@@ -176,40 +176,6 @@ namespace riddle
   };
 
   /**
-   * @class enum_type type.hpp "include/type.hpp"
-   * @brief The enum type class.
-   *
-   * The enum type class is used to represent the enumeration type.
-   */
-  class enum_type final : public type
-  {
-    friend class enum_declaration;
-
-  public:
-    enum_type(scope &scp, std::string &&name, std::vector<expr> &&domain) noexcept;
-
-    /**
-     * @brief Retrieves the domain of items.
-     *
-     * This function returns a constant reference to a vector of shared pointers to items,
-     * representing the domain.
-     *
-     * @return const std::vector<expr>& A constant reference to the domain vector.
-     */
-    [[nodiscard]] const std::vector<expr> &get_domain() const noexcept { return domain; }
-    [[nodiscard]] const std::vector<utils::ref_wrapper<enum_type>> &get_enums() const noexcept { return enums; }
-
-    [[nodiscard]] bool is_assignable_from(const type &other) const override;
-
-  private:
-    [[nodiscard]] expr new_instance() override;
-
-  private:
-    std::vector<expr> domain;
-    std::vector<utils::ref_wrapper<enum_type>> enums;
-  };
-
-  /**
    * @class component_type type.hpp "include/type.hpp"
    * @brief The component type class.
    *
@@ -350,6 +316,37 @@ namespace riddle
     std::map<std::string, utils::u_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the scope of the type..
     std::vector<expr> instances;                                                   // the instances of the type..
     std::vector<atom_expr> atoms;                                                  // the atoms of the component type..
+  };
+
+  /**
+   * @class enum_type type.hpp "include/type.hpp"
+   * @brief The enum type class.
+   *
+   * The enum type class is used to represent the enumeration type.
+   */
+  class enum_type final : public component_type
+  {
+    friend class enum_declaration;
+    friend class local_field_statement;
+
+  public:
+    enum_type(scope &scp, std::string &&name, std::vector<expr> &&domain) noexcept;
+
+    /**
+     * @brief Retrieves the domain of items.
+     *
+     * This function returns a constant reference to a vector of shared pointers to items,
+     * representing the domain.
+     *
+     * @return const std::vector<expr>& A constant reference to the domain vector.
+     */
+    [[nodiscard]] const std::vector<expr> &get_domain() const noexcept { return domain; }
+
+  private:
+    [[nodiscard]] expr new_instance() override;
+
+  private:
+    std::vector<expr> domain;
   };
 
   /**

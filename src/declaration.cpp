@@ -31,7 +31,7 @@ namespace riddle
                 else
                     throw std::runtime_error("Invalid type reference");
             if (auto etp = dynamic_cast<enum_type *>(tp))
-                et.enums.emplace_back(*etp);
+                et.parents.emplace_back(*etp);
             else
                 throw std::runtime_error("Invalid enum reference");
         }

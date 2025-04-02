@@ -25,7 +25,7 @@ public:
     riddle::string_expr new_string(std::string &&) override { return utils::make_s_ptr<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
     riddle::string_expr new_string() override { return new_string(""); }
     std::string string_value(const riddle::string_term &) const noexcept override { return ""; }
-    riddle::enum_expr new_enum(riddle::type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) override
+    riddle::enum_expr new_enum(riddle::component_type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) override
     {
         std::vector<utils::lit> lits;
         if (values.size() == 1)
