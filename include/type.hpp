@@ -415,4 +415,9 @@ namespace riddle
 
     [[nodiscard]] virtual json::json extract() const = 0;
   };
+
+  [[nodiscard]] inline bool is_bool(const type &tp) noexcept { return tp.get_name() == bool_kw; }
+  [[nodiscard]] inline bool is_int(const type &tp) noexcept { return tp.get_name() == int_kw; }
+  [[nodiscard]] inline bool is_real(const type &tp) noexcept { return tp.get_name() == real_kw; }
+  [[nodiscard]] inline bool is_time(const type &tp) noexcept { return tp.get_name() == time_kw; }
 } // namespace riddle

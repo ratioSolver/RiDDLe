@@ -49,4 +49,7 @@ namespace riddle
         j_atm["sigma"] = to_string(sigma).c_str();
         return j_atm;
     }
+
+    bool is_arith(const type &tp) noexcept { return tp.get_name() == int_kw || tp.get_name() == real_kw || tp.get_name() == time_kw; }
+    bool is_arith(expr xpr) noexcept { return is_arith(xpr->get_type()); }
 } // namespace riddle

@@ -187,4 +187,9 @@ namespace riddle
         else
             return expr;
     }
+
+    bool is_bool(expr xpr) noexcept { return is_bool(xpr->get_type()); }
+    bool is_int(expr xpr) noexcept { return is_int(xpr->get_type()); }
+    bool is_real(expr xpr) noexcept { return is_real(xpr->get_type()); }
+    bool is_time(expr xpr) noexcept { return is_time(xpr->get_type()); }
 } // namespace riddle

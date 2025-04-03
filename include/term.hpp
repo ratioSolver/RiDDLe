@@ -251,4 +251,9 @@ namespace riddle
   [[nodiscard]] bool_expr push_negations(bool_expr expr) noexcept;
   [[nodiscard]] bool_expr distribute(bool_expr expr) noexcept;
   [[nodiscard]] inline bool_expr to_cnf(bool_expr expr) noexcept { return distribute(push_negations(expr)); }
+
+  [[nodiscard]] bool is_bool(expr xpr) noexcept;
+  [[nodiscard]] bool is_int(expr xpr) noexcept;
+  [[nodiscard]] bool is_real(expr xpr) noexcept;
+  [[nodiscard]] bool is_time(expr xpr) noexcept;
 } // namespace riddle

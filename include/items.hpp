@@ -76,4 +76,7 @@ namespace riddle
   private:
     const utils::lit sigma;
   };
+
+  [[nodiscard]] bool is_arith(const type &tp) noexcept;
+  [[nodiscard]] bool is_arith(expr xpr) noexcept;
 } // namespace riddle
