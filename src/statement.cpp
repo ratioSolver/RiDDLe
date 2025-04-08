@@ -17,6 +17,7 @@ namespace riddle
                 throw std::runtime_error("Invalid type reference");
 
         for (auto &[id, expr] : fields)
+        {
             if (expr)
             { // initialize with an expression
                 auto val = expr->evaluate(scp, ctx);
@@ -47,6 +48,10 @@ namespace riddle
                 }
             else
                 throw std::runtime_error("Invalid type reference");
+
+            if (auto cr = dynamic_cast<core *>(&ctx)) // we have a global field..
+                cr->add_field(utils::make_u_ptr<field>(*tp, std::string(id.id), nullptr));
+        }
     }
 
     void assignment_statement::execute(const scope &scp, env &ctx) const

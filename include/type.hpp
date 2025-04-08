@@ -213,6 +213,7 @@ namespace riddle
      */
     [[nodiscard]] constructor &get_constructor(const std::vector<utils::ref_wrapper<const type>> &argument_types) const;
 
+    [[nodiscard]] field &get_field(std::string_view name) const override;
     [[nodiscard]] method &get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const override;
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;

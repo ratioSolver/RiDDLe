@@ -78,6 +78,26 @@ namespace riddle
         throw std::out_of_range("constructor not found");
     }
 
+    field &component_type::get_field(std::string_view name) const
+    {
+        try
+        { // first check in any enclosing scope
+            return scope::get_field(name);
+        }
+        catch (const std::out_of_range &)
+        { // if not in any enclosing scope, check any superclass
+            for (const auto &p : parents)
+                try
+                {
+                    return p->get_field(name);
+                }
+                catch (const std::out_of_range &)
+                {
+                }
+            throw std::out_of_range("field `" + std::string(name) + "` not found");
+        }
+    }
+
     method &component_type::get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const
     {
         if (auto it = methods.find(name); it != methods.end())
@@ -96,7 +116,7 @@ namespace riddle
                 }
         try
         { // first check in any enclosing scope
-            return get_scope().get_method(name, argument_types);
+            return scope::get_method(name, argument_types);
         }
         catch (const std::out_of_range &)
         { // if not in any enclosing scope, check any superclass
@@ -108,7 +128,7 @@ namespace riddle
                 catch (const std::out_of_range &)
                 {
                 }
-            throw std::out_of_range("method " + std::string(name) + " not found");
+            throw std::out_of_range("method `" + std::string(name) + "` not found");
         }
     }
     type &component_type::get_type(std::string_view name) const
@@ -117,7 +137,7 @@ namespace riddle
             return *it->second;
         try
         { // first check in any enclosing scope
-            return get_scope().get_type(name);
+            return scope::get_type(name);
         }
         catch (const std::out_of_range &)
         { // if not in any enclosing scope, check any superclass
@@ -129,7 +149,7 @@ namespace riddle
                 catch (const std::out_of_range &)
                 {
                 }
-            throw std::out_of_range("type " + std::string(name) + " not found");
+            throw std::out_of_range("type `" + std::string(name) + "` not found");
         }
     }
     predicate &component_type::get_predicate(std::string_view name) const
@@ -138,7 +158,7 @@ namespace riddle
             return *it->second;
         try
         { // first check in any enclosing scope
-            return get_scope().get_predicate(name);
+            return scope::get_predicate(name);
         }
         catch (const std::out_of_range &)
         { // if not in any enclosing scope, check any superclass
@@ -150,7 +170,7 @@ namespace riddle
                 catch (const std::out_of_range &)
                 {
                 }
-            throw std::out_of_range("predicate " + std::string(name) + " not found");
+            throw std::out_of_range("predicate `" + std::string(name) + "` not found");
         }
     }
 
@@ -198,7 +218,7 @@ namespace riddle
     {
         std::string name = pred->get_name();
         if (!predicates.emplace(name, std::move(pred)).second)
-            throw std::invalid_argument("predicate " + name + " already exists");
+            throw std::invalid_argument("predicate `" + name + "` already exists");
         std::queue<component_type *> q;
         for (const auto &p : parents)
             q.push(&*p);
@@ -216,7 +236,7 @@ namespace riddle
     {
         std::string name = t->get_name();
         if (!types.emplace(name, std::move(t)).second)
-            throw std::invalid_argument("type " + name + " already exists");
+            throw std::invalid_argument("type `" + name + "` already exists");
     }
 
     void component_type::add_parent(predicate &child, predicate &parent) { child.parents.emplace_back(parent); }

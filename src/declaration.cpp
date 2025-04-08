@@ -125,6 +125,8 @@ namespace riddle
     void predicate_declaration::refine(scope &scp) const
     {
         auto &pred = static_cast<predicate &>(scp.get_predicate(name.id)); // we retrieve the predicate.. we know it exists, because we declared it, so we can safely cast it..
+
+        // the predicate's arguments..
         for (const auto &par : params)
         {
             auto *c_tp = &scp.get_type(par.first[0].id);
@@ -137,6 +139,24 @@ namespace riddle
             pred.args.push_back(*arg);
             pred.add_field(std::move(arg));
         }
+
+        // the predicate's parents..
+        for (const auto &base : base_predicates)
+            if (base.size() == 1)
+                pred.parents.emplace_back(scp.get_predicate(base.begin()->id));
+            else
+            {
+                auto tp = &scp.get_type(base[0].id);
+                for (size_t i = 1; i < base.size() - 1; ++i)
+                    if (auto ct = dynamic_cast<component_type *>(tp))
+                        tp = &ct->get_type(base[i].id);
+                    else
+                        throw std::runtime_error("Invalid type reference");
+                if (auto ctp = dynamic_cast<component_type *>(tp))
+                    pred.parents.emplace_back(ctp->get_predicate(base[base.size() - 1].id));
+                else
+                    throw std::runtime_error("Invalid class reference");
+            }
     }
 
     void class_declaration::declare(scope &scp) const

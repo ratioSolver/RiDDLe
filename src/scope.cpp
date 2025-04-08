@@ -22,6 +22,6 @@ namespace riddle
     {
         std::string name = field->get_name();
         if (!fields.emplace(name, std::move(field)).second)
-            throw std::invalid_argument("field " + name + " already exists");
+            throw std::invalid_argument("field `" + name + "` already exists");
     }
 } // namespace riddle

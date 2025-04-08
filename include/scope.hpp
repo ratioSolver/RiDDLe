@@ -68,6 +68,7 @@ namespace riddle
   class scope
   {
     friend class field_declaration;
+    friend class local_field_statement;
 
   public:
     scope(core &c, scope &parent, std::vector<utils::u_ptr<field>> &&args = {});
