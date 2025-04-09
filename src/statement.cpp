@@ -115,7 +115,7 @@ namespace riddle
         std::vector<utils::u_ptr<conjunction>> conjs;
         std::map<std::string, expr, std::less<>> items;
         env *tmp_ctx = &ctx; // find the nearest core, component or atom
-        while (!(dynamic_cast<core *>(tmp_ctx) || dynamic_cast<component *>(tmp_ctx) || dynamic_cast<atom_term *>(tmp_ctx)))
+        while (!(dynamic_cast<core *>(tmp_ctx) || dynamic_cast<component *>(tmp_ctx) || dynamic_cast<enum_term *>(tmp_ctx) || dynamic_cast<atom_term *>(tmp_ctx)))
         {
             items.insert(tmp_ctx->items.begin(), tmp_ctx->items.end());
             tmp_ctx = &tmp_ctx->get_parent();
@@ -167,6 +167,8 @@ namespace riddle
             for (size_t i = 1; i < tau.size(); ++i)
                 if (auto ct = dynamic_cast<component *>(c_tau.get()))
                     c_tau = ct->get(tau[i].id);
+                else if (auto c = dynamic_cast<enum_term *>(c_tau.get()))
+                    c_tau = c->get(tau[i].id);
                 else
                     throw std::runtime_error("Invalid type reference");
             c_args.emplace(tau_kw, c_tau);
