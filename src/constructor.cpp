@@ -21,13 +21,14 @@ namespace riddle
             if (!args[i]->get_type().is_assignable_from(get_field(this->args[i]).get_type()))
                 throw std::invalid_argument("invalid argument type");
 
+        auto &tp = static_cast<component_type &>(get_parent());
         env ctx(get_core(), *self); // the context in which the constructor is invoked..
         for (size_t i = 0; i < args.size(); ++i)
             ctx.items.emplace(this->args[i], args[i]);
 
         // we initialize the instance
         for (const auto &init : inits)
-            if (auto f = fields.find(init.first.id); f != fields.end())
+            if (auto f = tp.fields.find(init.first.id); f != tp.fields.end())
             {
                 if (init.second.empty()) // we initialize the field with a new instance
                     self->items.emplace(f->first, f->second->get_type().new_instance());
@@ -54,7 +55,6 @@ namespace riddle
             }
             else
             {
-                auto &tp = static_cast<component_type &>(get_parent());
                 if (auto st = std::find_if(tp.get_parents().begin(), tp.get_parents().end(), [&init](const auto &parent)
                                            { return parent->get_name() == init.first.id; });
                     st != tp.get_parents().end())
@@ -72,7 +72,7 @@ namespace riddle
             }
 
         // we initialize the uninitialized fields
-        for (const auto &[name, f] : fields)
+        for (const auto &[name, f] : tp.fields)
             if (!f->is_synthetic() && self->items.find(name) == self->items.end()) // the field is not initialized
             {
                 if (f->get_expression())
