@@ -115,7 +115,15 @@ namespace riddle
     env &atom_term::atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args)
     {
         if (args.count(tau_kw))
-            return *static_cast<component *>(args.at(tau_kw).get());
+        {
+            auto tau = args.at(tau_kw);
+            if (auto c_tau = dynamic_cast<component *>(tau.get()))
+                return *c_tau;
+            else if (auto c_tau = dynamic_cast<enum_term *>(tau.get()))
+                return *c_tau;
+            else
+                throw std::runtime_error("Invalid object reference");
+        }
         else
             return t.get_core();
     }
