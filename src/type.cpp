@@ -37,7 +37,7 @@ namespace riddle
     string_type::string_type(core &cr) noexcept : type(cr, string_kw, true) {}
     expr string_type::new_instance() { return get_scope().get_core().new_string(); }
 
-    component_type::component_type(scope &scp, std::string &&name) noexcept : scope(scp.get_core(), scp), type(scp, std::move(name), false) { add_field(utils::make_u_ptr<field>(*this, this_kw, nullptr, true)); }
+    component_type::component_type(scope &scp, std::string &&name) noexcept : scope(scp.get_core(), scp), type(scp, std::move(name), false) {}
 
     bool component_type::is_assignable_from(const type &other) const
     {
@@ -248,7 +248,6 @@ namespace riddle
     expr component_type::new_instance()
     {
         auto itm = utils::make_s_ptr<component>(static_cast<component_type &>(*this));
-        itm->items.emplace(this_kw, itm);
         // we store the instance in type the hierarchy..
         std::queue<component_type *> q;
         q.push(this);

@@ -40,7 +40,7 @@ namespace riddle
      * @param args A vector of shared pointers to `item` objects representing the arguments.
      * @return A shared pointer to an `item` object resulting from the method invocation.
      */
-    [[nodiscard]] expr invoke(env &ctx, std::vector<expr> &&args) const;
+    [[nodiscard]] expr invoke(utils::s_ptr<component> self, std::vector<expr> &&args) const;
 
   private:
     const std::optional<utils::ref_wrapper<type>> return_type; // The return type of the method.

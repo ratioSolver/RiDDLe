@@ -11,17 +11,20 @@ namespace riddle
         }
     }
 
-    expr method::invoke(env &ctx, std::vector<expr> &&args) const
+    expr method::invoke(utils::s_ptr<component> self, std::vector<expr> &&args) const
     {
-        env local(ctx.get_core(), ctx);
-
+        // the context in which the method is invoked..
+        env ctx(get_core(), *self);
+        if (self)
+            ctx.items.emplace(this_kw, self); // the current instance
         for (size_t i = 0; i < this->args.size(); ++i)
-            local.items.emplace(this->args[i], args[i]);
+            ctx.items.emplace(this->args[i], args[i]); // the arguments
 
+        // we execute the body of the method
         for (const auto &stmt : body)
-            stmt->execute(*this, local);
+            stmt->execute(*this, ctx);
 
-        if (auto it = local.items.find("return"); it != local.items.end())
+        if (auto it = ctx.items.find("return"); it != ctx.items.end())
             return it->second;
         return nullptr;
     }

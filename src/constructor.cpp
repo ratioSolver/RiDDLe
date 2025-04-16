@@ -22,9 +22,11 @@ namespace riddle
                 throw std::invalid_argument("invalid argument type");
 
         auto &tp = static_cast<component_type &>(get_parent());
-        env ctx(get_core(), *self); // the context in which the constructor is invoked..
+        // the context in which the constructor is invoked..
+        env ctx(get_core(), *self);
+        ctx.items.emplace(this_kw, self); // the current instance
         for (size_t i = 0; i < args.size(); ++i)
-            ctx.items.emplace(this->args[i], args[i]);
+            ctx.items.emplace(this->args[i], args[i]); // the arguments
 
         // we initialize the instance
         for (const auto &init : inits)
@@ -73,7 +75,7 @@ namespace riddle
 
         // we initialize the uninitialized fields
         for (const auto &[name, f] : tp.fields)
-            if (!f->is_synthetic() && self->items.find(name) == self->items.end()) // the field is not initialized
+            if (self->items.find(name) == self->items.end()) // the field is not initialized
             {
                 if (f->get_expression())
                 { // initialize with an expression
@@ -105,7 +107,7 @@ namespace riddle
                     throw std::runtime_error("Invalid type reference");
             }
 
-        // we execute the constructor statements
+        // we execute the body of the constructor
         for (const auto &stmt : body)
             stmt->execute(*this, ctx);
     }

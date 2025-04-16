@@ -126,9 +126,20 @@ namespace riddle
 
     expr call_expression::evaluate(const scope &scp, env &ctx) const
     {
-        auto obj = &ctx;
-        for (size_t i = 0; i < object_id.size(); ++i)
-            obj = static_cast<component *>(obj->get(object_id[i].id).get());
+        expr obj;
+        if (!object_id.empty())
+        {
+            obj = ctx.get(object_id[0].id);
+            for (size_t i = 1; i < object_id.size(); ++i)
+                if (auto c = dynamic_cast<component *>(obj.get()))
+                    obj = c->get(object_id[i].id);
+                else if (auto c = dynamic_cast<atom_term *>(obj.get()))
+                    obj = c->get(object_id[i].id);
+                else if (auto c = dynamic_cast<enum_term *>(obj.get()))
+                    obj = c->get(object_id[i].id);
+                else
+                    throw std::runtime_error("Invalid object reference");
+        }
 
         std::vector<expr> args;
         for (const auto &arg : arguments)
@@ -138,10 +149,10 @@ namespace riddle
         for (const auto &arg : args)
             argument_types.emplace_back(arg->get_type());
 
-        if (auto c = dynamic_cast<component *>(obj))
-            return static_cast<component_type &>(c->get_type()).get_method(function_id.id, argument_types).invoke(*obj, std::move(args));
-        else if (auto c = dynamic_cast<core *>(obj))
-            return c->get_method(function_id.id, argument_types).invoke(*obj, std::move(args));
+        if (auto c = dynamic_cast<component *>(&*obj))
+            return static_cast<component_type &>(c->get_type()).get_method(function_id.id, argument_types).invoke(obj, std::move(args));
+        else if (auto c = dynamic_cast<core *>(&*obj))
+            return c->get_method(function_id.id, argument_types).invoke(obj, std::move(args));
         else
             throw std::runtime_error("Invalid object reference");
     }
