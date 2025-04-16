@@ -169,6 +169,8 @@ namespace riddle
                     c_tau = ct->get(tau[i].id);
                 else if (auto c = dynamic_cast<enum_term *>(c_tau.get()))
                     c_tau = c->get(tau[i].id);
+                else if (auto c = dynamic_cast<atom_term *>(c_tau.get()))
+                    c_tau = c->get(tau[i].id);
                 else
                     throw std::runtime_error("Invalid type reference");
             c_args.emplace(tau_kw, c_tau);

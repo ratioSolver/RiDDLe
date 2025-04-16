@@ -13,6 +13,7 @@ namespace riddle
   using expr = utils::s_ptr<term>;
   class constructor;
   class method;
+  class component_type;
   class local_field_statement;
   class assignment_statement;
   class for_all_statement;
@@ -36,6 +37,7 @@ namespace riddle
   {
     friend class constructor;
     friend class method;
+    friend class component_type;
     friend class local_field_statement;
     friend class assignment_statement;
     friend class for_all_statement;

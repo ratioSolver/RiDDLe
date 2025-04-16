@@ -18,6 +18,7 @@ namespace riddle
   constexpr const char *end_kw = "end";
   constexpr const char *duration_kw = "duration";
   constexpr const char *tau_kw = "tau";
+  constexpr const char *this_kw = "this";
 
   enum symbol
   {

@@ -1048,6 +1048,37 @@ namespace riddle
                 expr = utils::make_u_ptr<id_expression>(std::move(object_id));
             break;
         }
+        case THIS:
+        {
+            std::vector<id_token> object_id;
+            object_id.emplace_back(this_kw, tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            while (match(DOT))
+            {
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+                object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            }
+            if (match(LPAREN))
+            { // call expression..
+                id_token fn_id = std::move(object_id.back());
+                object_id.pop_back();
+
+                std::vector<utils::u_ptr<expression>> args;
+                if (!match(RPAREN))
+                {
+                    do
+                    {
+                        args.emplace_back(parse_expression());
+                    } while (match(COMMA));
+                    if (!match(RPAREN))
+                        error("Expected `)` after arguments");
+                }
+                expr = utils::make_u_ptr<call_expression>(std::move(object_id), std::move(fn_id), std::move(args));
+            }
+            else // id expression..
+                expr = utils::make_u_ptr<id_expression>(std::move(object_id));
+            break;
+        }
         case NEW:
         {
             std::vector<id_token> type_id;
