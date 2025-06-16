@@ -48,7 +48,7 @@ namespace riddle
     string_term::string_term(string_type &tp) noexcept : term(tp) {}
     json::json string_term::to_json() const noexcept { return {{"type", std::string_view(get_type().get_name())}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
 
-    enum_term::enum_term(component_type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) noexcept : term(tp), env(tp.get_core(), tp.get_core()), values(std::move(values)) {}
+    enum_term::enum_term(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) noexcept : term(tp), env(tp.get_core(), tp.get_core()), values(std::move(values)) {}
     json::json enum_term::to_json() const noexcept
     {
         json::json j_val{{"type", "enum"}}; // we add the type of the enum item..
@@ -67,7 +67,7 @@ namespace riddle
         auto vals = get_type().get_scope().get_core().enum_value(*this);
         json::json j_vals(json::json_type::array);
         for (const auto &val : vals)
-            j_vals.push_back(static_cast<uint64_t>(static_cast<term &>(*val).get_id()));
+            j_vals.push_back(static_cast<uint64_t>(static_cast<term &>(val.get()).get_id()));
         j_val["vals"] = std::move(j_vals);
 
         return j_val;
@@ -130,18 +130,18 @@ namespace riddle
 
     bool_expr push_negations(bool_expr expr) noexcept
     {
-        if (auto not_xpr = utils::s_ptr_cast<bool_not>(expr))
+        if (auto not_xpr = std::dynamic_pointer_cast<bool_not>(expr))
         {
-            if (auto not_not_xpr = utils::s_ptr_cast<bool_not>(not_xpr->arg))
+            if (auto not_not_xpr = std::dynamic_pointer_cast<bool_not>(not_xpr->arg))
                 return push_negations(not_not_xpr->arg);
-            else if (auto and_xpr = utils::s_ptr_cast<and_term>(not_xpr->arg))
+            else if (auto and_xpr = std::dynamic_pointer_cast<and_term>(not_xpr->arg))
             {
                 std::vector<bool_expr> args;
                 for (const auto &arg : and_xpr->args)
                     args.push_back(push_negations(expr->get_type().get_scope().get_core().new_not(arg)));
                 return expr->get_type().get_scope().get_core().new_or(std::move(args));
             }
-            else if (auto or_xpr = utils::s_ptr_cast<or_term>(not_xpr->arg))
+            else if (auto or_xpr = std::dynamic_pointer_cast<or_term>(not_xpr->arg))
             {
                 std::vector<bool_expr> args;
                 for (const auto &arg : or_xpr->args)
@@ -151,14 +151,14 @@ namespace riddle
             else
                 return not_xpr;
         }
-        else if (auto and_xpr = utils::s_ptr_cast<and_term>(expr))
+        else if (auto and_xpr = std::dynamic_pointer_cast<and_term>(expr))
         {
             std::vector<bool_expr> args;
             for (const auto &arg : and_xpr->args)
                 args.push_back(push_negations(arg));
             return expr->get_type().get_scope().get_core().new_and(std::move(args));
         }
-        else if (auto or_xpr = utils::s_ptr_cast<or_term>(expr))
+        else if (auto or_xpr = std::dynamic_pointer_cast<or_term>(expr))
         {
             std::vector<bool_expr> args;
             for (const auto &arg : or_xpr->args)
@@ -171,21 +171,21 @@ namespace riddle
 
     bool_expr distribute(bool_expr expr) noexcept
     {
-        if (auto or_xpr = utils::s_ptr_cast<or_term>(expr))
+        if (auto or_xpr = std::dynamic_pointer_cast<or_term>(expr))
         {
             std::vector<bool_expr> args;
             for (const auto &arg : or_xpr->args)
                 args.push_back(distribute(arg));
             std::vector<bool_expr> new_args;
             for (const auto &arg : args)
-                if (auto and_xpr = utils::s_ptr_cast<and_term>(arg))
+                if (auto and_xpr = std::dynamic_pointer_cast<and_term>(arg))
                     for (const auto &a : and_xpr->args)
                         new_args.push_back(a);
                 else
                     new_args.push_back(arg);
             return expr->get_type().get_scope().get_core().new_or(std::move(new_args));
         }
-        else if (auto and_xpr = utils::s_ptr_cast<and_term>(expr))
+        else if (auto and_xpr = std::dynamic_pointer_cast<and_term>(expr))
         {
             std::vector<bool_expr> args;
             for (const auto &arg : and_xpr->args)

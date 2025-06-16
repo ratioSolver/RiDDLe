@@ -52,7 +52,7 @@ namespace riddle
   class enum_item : public enum_term
   {
   public:
-    enum_item(component_type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept;
+    enum_item(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept;
 
     [[nodiscard]] bool has_lit(const utils::enum_val &val) const noexcept { return domain.find(&val) != domain.end(); }
 
@@ -67,7 +67,7 @@ namespace riddle
   class atom : public riddle::atom_term
   {
   public:
-    atom(riddle::predicate &pred, bool is_fact, std::map<std::string, utils::s_ptr<riddle::term>, std::less<>> &&args, utils::lit &&sigma) noexcept;
+    atom(riddle::predicate &pred, bool is_fact, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args, utils::lit &&sigma) noexcept;
 
     [[nodiscard]] const utils::lit &get_sigma() const noexcept { return sigma; }
 

@@ -59,28 +59,28 @@ namespace riddle
     bool_expr core::new_and(std::vector<bool_expr> &&exprs)
     {
         assert(!exprs.empty());
-        return utils::make_s_ptr<and_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
+        return std::make_shared<and_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
     }
 
     bool_expr core::new_or(std::vector<bool_expr> &&exprs)
     {
         assert(!exprs.empty());
-        return utils::make_s_ptr<or_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
+        return std::make_shared<or_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
     }
 
     bool_expr core::new_xor(std::vector<bool_expr> &&exprs)
     {
         assert(!exprs.empty());
-        return utils::make_s_ptr<xor_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
+        return std::make_shared<xor_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(exprs));
     }
 
-    bool_expr core::new_not(bool_expr expr) { return utils::make_s_ptr<bool_not>(static_cast<bool_type &>(get_type(bool_kw)), std::move(expr)); }
+    bool_expr core::new_not(bool_expr expr) { return std::make_shared<bool_not>(static_cast<bool_type &>(get_type(bool_kw)), std::move(expr)); }
 
-    bool_expr core::new_lt(arith_expr lhs, arith_expr rhs) { return utils::make_s_ptr<lt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
-    bool_expr core::new_le(arith_expr lhs, arith_expr rhs) { return utils::make_s_ptr<le_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
-    bool_expr core::new_eq(expr lhs, expr rhs) { return utils::make_s_ptr<eq_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
-    bool_expr core::new_gt(arith_expr lhs, arith_expr rhs) { return utils::make_s_ptr<gt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
-    bool_expr core::new_ge(arith_expr lhs, arith_expr rhs) { return utils::make_s_ptr<ge_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_lt(arith_expr lhs, arith_expr rhs) { return std::make_shared<lt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_le(arith_expr lhs, arith_expr rhs) { return std::make_shared<le_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_eq(expr lhs, expr rhs) { return std::make_shared<eq_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_gt(arith_expr lhs, arith_expr rhs) { return std::make_shared<gt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_ge(arith_expr lhs, arith_expr rhs) { return std::make_shared<ge_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
 
     atom_expr core::new_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args)
     {
@@ -95,7 +95,7 @@ namespace riddle
             p->atoms.push_back(atm);
             q.pop();
             for (auto &parent : p->parents)
-                q.push(&*parent);
+                q.push(&parent.get());
         }
 
         // we add the atom to the predicate's scope, if a component-type, and to its parents..
@@ -110,7 +110,7 @@ namespace riddle
                 t->created_atom(atm);
                 q.pop();
                 for (auto &parent : t->parents)
-                    q.push(&*parent);
+                    q.push(&parent.get());
             }
         }
         return atm;
@@ -123,7 +123,7 @@ namespace riddle
         throw std::out_of_range("field `" + std::string(name) + "` not found");
     }
 
-    method &core::get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const
+    method &core::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
     {
         if (auto it = methods.find(name); it != methods.end())
             for (const auto &m : it->second)
@@ -131,7 +131,7 @@ namespace riddle
                 {
                     bool match = true;
                     for (size_t i = 0; i < argument_types.size(); ++i)
-                        if (!m->get_field(m->get_args()[i]).get_type().is_assignable_from(*argument_types[i]))
+                        if (!m->get_field(m->get_args()[i]).get_type().is_assignable_from(argument_types[i].get()))
                         {
                             match = false;
                             break;
@@ -297,7 +297,7 @@ namespace riddle
 
     void core::add_method(utils::u_ptr<method> mthd)
     {
-        std::vector<utils::ref_wrapper<const type>> args;
+        std::vector<std::reference_wrapper<const type>> args;
         for (const auto &arg : mthd->get_args())
             args.push_back(mthd->get_field(arg).get_type());
         try

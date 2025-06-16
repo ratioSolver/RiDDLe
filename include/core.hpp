@@ -213,7 +213,7 @@ namespace riddle
      *
      * @return A shared pointer to the newly created enum item.
      */
-    [[nodiscard]] virtual enum_expr new_enum(component_type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) = 0;
+    [[nodiscard]] virtual enum_expr new_enum(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
     /**
      * @brief Retrieves the domain for the given enum item.
      *
@@ -223,7 +223,7 @@ namespace riddle
      * @param expr The enum item for which the domain is being retrieved.
      * @return A vector of references to the enum values that make up the domain of the enum item.
      */
-    [[nodiscard]] virtual std::vector<utils::ref_wrapper<utils::enum_val>> enum_value(const enum_term &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::vector<std::reference_wrapper<utils::enum_val>> enum_value(const enum_term &expr) const noexcept = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.
@@ -417,7 +417,7 @@ namespace riddle
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
     [[nodiscard]] const std::map<std::string, std::vector<utils::u_ptr<method>>, std::less<>> &get_methods() const { return methods; }
-    [[nodiscard]] method &get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const override;
+    [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
 
     [[nodiscard]] const std::map<std::string, utils::u_ptr<type>, std::less<>> &get_types() const noexcept override { return types; }
     [[nodiscard]] type &get_type(std::string_view name) const override;

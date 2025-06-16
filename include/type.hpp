@@ -198,7 +198,7 @@ namespace riddle
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
-    [[nodiscard]] const std::vector<utils::ref_wrapper<component_type>> &get_parents() const noexcept { return parents; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<component_type>> &get_parents() const noexcept { return parents; }
 
     /**
      * @brief Retrieves a constructor that matches the given argument types.
@@ -211,10 +211,10 @@ namespace riddle
      * @return A reference to the constructor that matches the given argument types.
      * @throws std::out_of_range if the constructor is not found.
      */
-    [[nodiscard]] constructor &get_constructor(const std::vector<utils::ref_wrapper<const type>> &argument_types) const;
+    [[nodiscard]] constructor &get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const;
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
-    [[nodiscard]] method &get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const override;
+    [[nodiscard]] method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const override;
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
@@ -310,7 +310,7 @@ namespace riddle
     virtual void created_atom([[maybe_unused]] atom_expr atm) {}
 
   private:
-    std::vector<utils::ref_wrapper<component_type>> parents;                       // the base types (i.e. the types this type inherits from)..
+    std::vector<std::reference_wrapper<component_type>> parents;                       // the base types (i.e. the types this type inherits from)..
     std::vector<utils::u_ptr<constructor>> constructors;                           // the constructors of the type..
     std::map<std::string, std::vector<utils::u_ptr<method>>, std::less<>> methods; // the methods declared in the scope of the type..
     std::map<std::string, utils::u_ptr<type>, std::less<>> types;                  // the types declared in the scope of the type..
@@ -368,7 +368,7 @@ namespace riddle
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
-    [[nodiscard]] const std::vector<utils::ref_wrapper<predicate>> &get_parents() const noexcept { return parents; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<predicate>> &get_parents() const noexcept { return parents; }
 
     /**
      * @brief Retrieves the arguments of the predicate.
@@ -376,9 +376,9 @@ namespace riddle
      * This function returns a constant reference to a vector of references to fields,
      * representing the arguments of the predicate.
      *
-     * @return const std::vector<utils::ref_wrapper<field>>& A constant reference to the arguments vector.
+     * @return const std::vector<std::reference_wrapper<field>>& A constant reference to the arguments vector.
      */
-    [[nodiscard]] const std::vector<utils::ref_wrapper<field>> &get_args() const noexcept { return args; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<field>> &get_args() const noexcept { return args; }
 
     /**
      * @brief Retrieves the list of atoms.
@@ -402,8 +402,8 @@ namespace riddle
     [[nodiscard]] expr new_instance() override;
 
   private:
-    std::vector<utils::ref_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
-    std::vector<utils::ref_wrapper<field>> args;        // the arguments of the predicate..
+    std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
+    std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
     const std::vector<utils::u_ptr<statement>> &body;   // the body of the predicate..
     std::vector<atom_expr> atoms;                       // the atoms of the predicate..
   };

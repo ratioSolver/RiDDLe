@@ -16,7 +16,7 @@ namespace riddle
   class component_type;
   class predicate;
   class bool_term;
-  using bool_expr = utils::s_ptr<bool_term>;
+  using bool_expr = std::shared_ptr<bool_term>;
   class expression_statement;
 
   /**
@@ -125,7 +125,7 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const noexcept override;
   };
 
-  using arith_expr = utils::s_ptr<arith_term>;
+  using arith_expr = std::shared_ptr<arith_term>;
 
   class lt_term : public bool_term
   {
@@ -196,7 +196,7 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const noexcept override;
   };
 
-  using string_expr = utils::s_ptr<string_term>;
+  using string_expr = std::shared_ptr<string_term>;
 
   class component : public term, public env
   {
@@ -209,17 +209,17 @@ namespace riddle
   class enum_term : public term, public env
   {
   public:
-    enum_term(component_type &tp, std::vector<utils::ref_wrapper<utils::enum_val>> &&values) noexcept;
+    enum_term(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) noexcept;
 
-    [[nodiscard]] const std::vector<utils::ref_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
 
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
-    std::vector<utils::ref_wrapper<utils::enum_val>> values;
+    std::vector<std::reference_wrapper<utils::enum_val>> values;
   };
 
-  using enum_expr = utils::s_ptr<enum_term>;
+  using enum_expr = std::shared_ptr<enum_term>;
 
   enum atom_state
   {
@@ -246,7 +246,7 @@ namespace riddle
     bool fact; // whether the atom is a fact
   };
 
-  using atom_expr = utils::s_ptr<atom_term>;
+  using atom_expr = std::shared_ptr<atom_term>;
 
   [[nodiscard]] bool_expr push_negations(bool_expr expr) noexcept;
   [[nodiscard]] bool_expr distribute(bool_expr expr) noexcept;

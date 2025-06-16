@@ -1,16 +1,16 @@
 #pragma once
 
 #include "json.hpp"
-#include "memory.hpp"
 #include <map>
 #include <string>
 #include <string_view>
+#include <memory>
 
 namespace riddle
 {
   class core;
   class term;
-  using expr = utils::s_ptr<term>;
+  using expr = std::shared_ptr<term>;
   class constructor;
   class method;
   class component_type;

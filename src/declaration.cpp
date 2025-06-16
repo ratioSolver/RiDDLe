@@ -91,7 +91,7 @@ namespace riddle
             args.emplace_back(utils::make_u_ptr<field>(*c_tp, std::string(param.second.id), nullptr));
         }
 
-        std::optional<utils::ref_wrapper<type>> rt;
+        std::optional<std::reference_wrapper<type>> rt;
         if (!this->rt.empty())
         {
             auto *c_tp = &scp.get_type(this->rt[0].id);

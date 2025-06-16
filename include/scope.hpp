@@ -113,7 +113,7 @@ namespace riddle
      * @return method& A reference to the method associated with the given name and argument types.
      * @throws std::out_of_range if the method is not found in the current or parent scope.
      */
-    [[nodiscard]] virtual method &get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const { return parent.get_method(name, argument_types); }
+    [[nodiscard]] virtual method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent.get_method(name, argument_types); }
 
     [[nodiscard]] virtual const std::map<std::string, utils::u_ptr<type>, std::less<>> &get_types() const { return parent.get_types(); }
 

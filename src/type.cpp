@@ -54,20 +54,20 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &p : tp->parents)
-                    q.push(&*p);
+                    q.push(&p.get());
             }
         }
         return false;
     }
 
-    constructor &component_type::get_constructor(const std::vector<utils::ref_wrapper<const type>> &argument_types) const
+    constructor &component_type::get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const
     {
         for (const auto &c : constructors)
             if (c->get_args().size() == argument_types.size())
             {
                 bool match = true;
                 for (size_t i = 0; i < argument_types.size(); ++i)
-                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(*argument_types[i]))
+                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(argument_types[i].get()))
                     {
                         match = false;
                         break;
@@ -89,7 +89,7 @@ namespace riddle
             for (const auto &p : parents)
                 try
                 {
-                    return p->get_field(name);
+                    return p.get().get_field(name);
                 }
                 catch (const std::out_of_range &)
                 {
@@ -98,7 +98,7 @@ namespace riddle
         }
     }
 
-    method &component_type::get_method(std::string_view name, const std::vector<utils::ref_wrapper<const type>> &argument_types) const
+    method &component_type::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
     {
         if (auto it = methods.find(name); it != methods.end())
             for (const auto &m : it->second)
@@ -106,7 +106,7 @@ namespace riddle
                 {
                     bool match = true;
                     for (size_t i = 0; i < argument_types.size(); ++i)
-                        if (!m->get_field(m->get_args()[i]).get_type().is_assignable_from(*argument_types[i]))
+                        if (!m->get_field(m->get_args()[i]).get_type().is_assignable_from(argument_types[i].get()))
                         {
                             match = false;
                             break;
@@ -123,7 +123,7 @@ namespace riddle
             for (const auto &p : parents)
                 try
                 {
-                    return p->get_method(name, argument_types);
+                    return p.get().get_method(name, argument_types);
                 }
                 catch (const std::out_of_range &)
                 {
@@ -144,7 +144,7 @@ namespace riddle
             for (const auto &p : parents)
                 try
                 {
-                    return p->get_type(name);
+                    return p.get().get_type(name);
                 }
                 catch (const std::out_of_range &)
                 {
@@ -165,7 +165,7 @@ namespace riddle
             for (const auto &p : parents)
                 try
                 {
-                    return p->get_predicate(name);
+                    return p.get().get_predicate(name);
                 }
                 catch (const std::out_of_range &)
                 {
@@ -178,7 +178,7 @@ namespace riddle
 
     void component_type::add_constructor(utils::u_ptr<constructor> ctr)
     {
-        std::vector<utils::ref_wrapper<const type>> args;
+        std::vector<std::reference_wrapper<const type>> args;
         args.reserve(ctr->get_args().size());
         for (const auto &arg : ctr->get_args())
             args.push_back(get_field(arg).get_type());
@@ -187,7 +187,7 @@ namespace riddle
             {
                 bool match = true;
                 for (size_t i = 0; i < args.size(); ++i)
-                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(*args[i]))
+                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(args[i].get()))
                     {
                         match = false;
                         break;
@@ -200,7 +200,7 @@ namespace riddle
 
     void component_type::add_method(utils::u_ptr<method> mthd)
     {
-        std::vector<utils::ref_wrapper<const type>> args;
+        std::vector<std::reference_wrapper<const type>> args;
         for (const auto &arg : mthd->get_args())
             args.push_back(mthd->get_field(arg).get_type());
         try
@@ -221,14 +221,14 @@ namespace riddle
             throw std::invalid_argument("predicate `" + name + "` already exists");
         std::queue<component_type *> q;
         for (const auto &p : parents)
-            q.push(&*p);
+            q.push(&p.get());
         while (!q.empty())
         {
             auto tp = q.front();
             q.pop();
             tp->created_predicate(*predicates[name]);
             for (const auto &p : tp->parents)
-                q.push(&*p);
+                q.push(&p.get());
         }
     }
 
@@ -247,7 +247,7 @@ namespace riddle
 
     expr component_type::new_instance()
     {
-        auto itm = utils::make_s_ptr<component>(static_cast<component_type &>(*this));
+        auto itm = std::make_shared<component>(static_cast<component_type &>(*this));
         // we store the instance in type the hierarchy..
         std::queue<component_type *> q;
         q.push(this);
@@ -255,9 +255,9 @@ namespace riddle
         {
             auto tp = q.front();
             q.pop();
-            tp->instances.push_back(utils::s_ptr(itm));
+            tp->instances.push_back(itm);
             for (const auto &p : tp->parents)
-                q.push(&*p);
+                q.push(&p.get());
         }
         return itm;
     }
@@ -275,7 +275,7 @@ namespace riddle
             for (const auto &e : tp->domain)
                 c_domain.emplace_back(e);
             for (const auto &p : tp->get_parents())
-                q.push(static_cast<enum_type *>(&*p));
+                q.push(static_cast<enum_type *>(&p.get()));
         }
 
         switch (c_domain.size())
@@ -286,7 +286,7 @@ namespace riddle
             return c_domain[0];
         default:
         {
-            std::vector<utils::ref_wrapper<utils::enum_val>> items;
+            std::vector<std::reference_wrapper<utils::enum_val>> items;
             for (const auto &i : c_domain)
                 items.push_back(*i);
             return get_scope().get_core().new_enum(*this, std::move(items));
@@ -311,7 +311,7 @@ namespace riddle
                 if (tp == this)
                     return true;
                 for (const auto &p : tp->parents)
-                    q.push(&*p);
+                    q.push(&p.get());
             }
         }
         return false;
@@ -321,7 +321,7 @@ namespace riddle
     {
         assert(is_assignable_from(atm->get_type()));
         for (auto &p : parents)
-            p->call(atm);
+            p.get().call(atm);
         env ctx(get_core(), *atm);
         for (const auto &stmt : body)
             stmt->execute(*this, ctx);
@@ -339,7 +339,7 @@ namespace riddle
             q.pop();
             p->atoms.push_back(atm);
             for (const auto &par : p->parents)
-                q.push(&*par);
+                q.push(&par.get());
         }
         return atm;
     }

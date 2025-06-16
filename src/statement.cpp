@@ -40,7 +40,7 @@ namespace riddle
                     break;
                 default:
                 { // multiple instances
-                    std::vector<utils::ref_wrapper<utils::enum_val>> values;
+                    std::vector<std::reference_wrapper<utils::enum_val>> values;
                     for (auto &inst : ct->get_instances())
                         values.emplace_back(*inst);
                     ctx.items.emplace(id.id, ctx.get_core().new_enum(*ct, std::move(values)));
@@ -81,23 +81,23 @@ namespace riddle
 
     void expression_statement::execute(const scope &scp, env &ctx) const
     {
-        auto val = to_cnf(utils::s_ptr_cast<bool_term>(xpr->evaluate(scp, ctx))); // convert the expression to conjunctive normal form..
-        if (auto and_val = utils::s_ptr_cast<and_term>(val))
+        auto val = to_cnf(std::dynamic_pointer_cast<bool_term>(xpr->evaluate(scp, ctx))); // convert the expression to conjunctive normal form..
+        if (auto and_val = std::dynamic_pointer_cast<and_term>(val))
             for (auto &arg : and_val->args)
             { // we assert each clause
-                if (auto or_val = utils::s_ptr_cast<or_term>(arg))
+                if (auto or_val = std::dynamic_pointer_cast<or_term>(arg))
                 {
                     std::vector<bool_expr> args;
                     for (auto &val : or_val->args)
-                        args.emplace_back(utils::s_ptr_cast<bool_term>(val));
+                        args.emplace_back(std::dynamic_pointer_cast<bool_term>(val));
                     scp.get_core().new_clause(std::move(args));
                 }
             }
-        else if (auto or_val = utils::s_ptr_cast<or_term>(val))
+        else if (auto or_val = std::dynamic_pointer_cast<or_term>(val))
         { // we assert the single clause
             std::vector<bool_expr> args;
             for (auto &val : or_val->args)
-                args.emplace_back(utils::s_ptr_cast<bool_term>(val));
+                args.emplace_back(std::dynamic_pointer_cast<bool_term>(val));
             scp.get_core().new_clause(std::move(args));
         }
         else
@@ -208,7 +208,7 @@ namespace riddle
                             break;
                         default:
                         { // multiple instances
-                            std::vector<utils::ref_wrapper<utils::enum_val>> values;
+                            std::vector<std::reference_wrapper<utils::enum_val>> values;
                             for (auto &inst : ct->get_instances())
                                 values.emplace_back(*inst);
                             c_args.emplace(name, ctx.get_core().new_enum(*ct, std::move(values)));
@@ -219,7 +219,7 @@ namespace riddle
                 }
             q.pop();
             for (auto &parent : p->get_parents())
-                q.push(&*parent);
+                q.push(&parent.get());
         }
 
         auto atm = scp.get_core().new_atom(is_fact, pred, std::move(c_args));

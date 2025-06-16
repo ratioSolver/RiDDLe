@@ -20,7 +20,7 @@ namespace riddle
      */
     [[nodiscard]] const std::vector<std::string> &get_args() const noexcept { return args; }
 
-    void invoke(utils::s_ptr<component> self, std::vector<expr> &&args) const;
+    void invoke(std::shared_ptr<component> self, std::vector<expr> &&args) const;
 
   private:
     std::vector<std::string> args;                                                        // The names of the arguments.

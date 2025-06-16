@@ -13,7 +13,7 @@ namespace riddle
         }
     }
 
-    void constructor::invoke(utils::s_ptr<component> self, std::vector<expr> &&args) const
+    void constructor::invoke(std::shared_ptr<component> self, std::vector<expr> &&args) const
     {
         if (args.size() != this->args.size())
             throw std::invalid_argument("invalid number of arguments");
@@ -37,19 +37,19 @@ namespace riddle
                 else
                 {
                     std::vector<expr> init_args;
-                    std::vector<utils::ref_wrapper<const type>> argument_types;
+                    std::vector<std::reference_wrapper<const type>> argument_types;
 
                     for (const auto &arg : init.second)
                         init_args.emplace_back(arg->evaluate(*this, ctx));
                     for (const auto &arg : init_args)
                         argument_types.emplace_back(arg->get_type());
 
-                    if (init_args.size() == 1 && argument_types[0]->is_assignable_from(f->second->get_type()))
+                    if (init_args.size() == 1 && argument_types[0].get().is_assignable_from(f->second->get_type()))
                         self->items.emplace(f->first, init_args[0]); // we assign the argument to the field
                     else
                     { // we invoke the constructor of the field
                         auto &ctp = static_cast<component_type &>(f->second->get_type());
-                        auto instance = utils::s_ptr_cast<component>(ctp.new_instance());
+                        auto instance = std::dynamic_pointer_cast<component>(ctp.new_instance());
                         ctp.get_constructor(argument_types).invoke(instance, std::move(init_args));
                         self->items.emplace(f->first, std::move(instance));
                     }
@@ -58,18 +58,18 @@ namespace riddle
             else
             {
                 if (auto st = std::find_if(tp.get_parents().begin(), tp.get_parents().end(), [&init](const auto &parent)
-                                           { return parent->get_name() == init.first.id; });
+                                           { return parent.get().get_name() == init.first.id; });
                     st != tp.get_parents().end())
                 { // we invoke a supertype constructor
                     std::vector<expr> init_args;
-                    std::vector<utils::ref_wrapper<const type>> argument_types;
+                    std::vector<std::reference_wrapper<const type>> argument_types;
 
                     for (const auto &arg : init.second)
                         init_args.emplace_back(arg->evaluate(*this, ctx));
                     for (const auto &arg : init_args)
                         argument_types.emplace_back(arg->get_type());
 
-                    (*st)->get_constructor(argument_types).invoke(self, std::move(init_args));
+                    (*st).get().get_constructor(argument_types).invoke(self, std::move(init_args));
                 }
             }
 
@@ -97,7 +97,7 @@ namespace riddle
                         break;
                     default:
                     { // multiple instances
-                        std::vector<utils::ref_wrapper<utils::enum_val>> values;
+                        std::vector<std::reference_wrapper<utils::enum_val>> values;
                         for (auto &inst : ct->get_instances())
                             values.emplace_back(*inst);
                         self->items.emplace(name, get_core().new_enum(*ct, std::move(values)));
