@@ -10,11 +10,11 @@ namespace riddle
 {
     core::core(std::string_view name) noexcept : scope(*this, *this), env(*this, *this), name(name)
     {
-        add_type(utils::make_u_ptr<bool_type>(*this));
-        add_type(utils::make_u_ptr<int_type>(*this));
-        add_type(utils::make_u_ptr<real_type>(*this));
-        add_type(utils::make_u_ptr<time_type>(*this));
-        add_type(utils::make_u_ptr<string_type>(*this));
+        add_type(std::make_unique<bool_type>(*this));
+        add_type(std::make_unique<int_type>(*this));
+        add_type(std::make_unique<real_type>(*this));
+        add_type(std::make_unique<time_type>(*this));
+        add_type(std::make_unique<string_type>(*this));
     }
 
     void core::read(std::string &&script)
@@ -32,7 +32,7 @@ namespace riddle
 
     void core::read(const std::vector<std::string> &files)
     {
-        std::vector<utils::u_ptr<compilation_unit>> c_cus;
+        std::vector<std::unique_ptr<compilation_unit>> c_cus;
         c_cus.reserve(files.size());
         for (const auto &file : files)
             if (std::ifstream ifs(file); ifs.is_open())
@@ -295,7 +295,7 @@ namespace riddle
         return j_core;
     }
 
-    void core::add_method(utils::u_ptr<method> mthd)
+    void core::add_method(std::unique_ptr<method> mthd)
     {
         std::vector<std::reference_wrapper<const type>> args;
         for (const auto &arg : mthd->get_args())
@@ -311,14 +311,14 @@ namespace riddle
         }
     }
 
-    void core::add_predicate(utils::u_ptr<predicate> pred)
+    void core::add_predicate(std::unique_ptr<predicate> pred)
     {
         std::string name = pred->get_name();
         if (!predicates.emplace(name, std::move(pred)).second)
             throw std::invalid_argument("predicate `" + name + "` already exists");
     }
 
-    void core::add_type(utils::u_ptr<type> t)
+    void core::add_type(std::unique_ptr<type> t)
     {
         std::string name = t->get_name();
         if (!types.emplace(name, std::move(t)).second)

@@ -6,7 +6,7 @@
 
 namespace riddle
 {
-    state_variable::state_variable(core &cr) noexcept : component_type(cr, state_variable_kw) { add_constructor(utils::make_u_ptr<constructor>(*this)); }
+    state_variable::state_variable(core &cr) noexcept : component_type(cr, state_variable_kw) { add_constructor(std::make_unique<constructor>(*this)); }
 
     void state_variable::created_predicate(predicate &pred) noexcept { add_parent(pred, get_core().get_predicate(interval_kw)); }
 
@@ -91,7 +91,7 @@ namespace riddle
 
     reusable_resource::reusable_resource(core &cr) noexcept : component_type(cr, reusable_resource_kw)
     {
-        add_field(utils::make_u_ptr<field>(cr.get_type(real_kw), reusable_resource_capacity_kw, nullptr));
+        add_field(std::make_unique<field>(cr.get_type(real_kw), reusable_resource_capacity_kw, nullptr));
 
         std::istringstream ctr_decl("ReusableResource(real capacity) : capacity(capacity) { capacity >= 0.0; }");
         parser ctr_p(ctr_decl);
@@ -194,8 +194,8 @@ namespace riddle
 
     consumable_resource::consumable_resource(core &cr) noexcept : component_type(cr, consumable_resource_kw)
     {
-        add_field(utils::make_u_ptr<field>(cr.get_type(real_kw), consumable_resource_capacity_kw, nullptr));
-        add_field(utils::make_u_ptr<field>(cr.get_type(real_kw), consumable_resource_initial_amount_kw, nullptr));
+        add_field(std::make_unique<field>(cr.get_type(real_kw), consumable_resource_capacity_kw, nullptr));
+        add_field(std::make_unique<field>(cr.get_type(real_kw), consumable_resource_initial_amount_kw, nullptr));
 
         std::istringstream ctr_decl("ConsumableResource(real capacity, real initial_amount) : capacity(capacity), initial_amount(initial_amount) { capacity >= 0.0; initial_amount <= capacity; }");
         parser ctr_p(ctr_decl);

@@ -10,7 +10,7 @@ namespace riddle
         for (const auto &val : values)
             vals.emplace_back(scp.get_core().new_string(std::string(val.value)));
         // we create the enum and add it to the scope..
-        auto et = utils::make_u_ptr<enum_type>(scp, std::string(name.id), std::move(vals));
+        auto et = std::make_unique<enum_type>(scp, std::string(name.id), std::move(vals));
 
         if (auto cr = dynamic_cast<core *>(&scp))
             cr->add_type(std::move(et));
@@ -48,16 +48,16 @@ namespace riddle
 
         for (const auto &f : fields)
             if (auto cr = dynamic_cast<core *>(&scp))
-                cr->add_field(utils::make_u_ptr<field>(*c_tp, std::string(f.first.id), f.second));
+                cr->add_field(std::make_unique<field>(*c_tp, std::string(f.first.id), f.second));
             else if (auto ct = dynamic_cast<component_type *>(&scp))
-                ct->add_field(utils::make_u_ptr<field>(*c_tp, std::string(f.first.id), f.second));
+                ct->add_field(std::make_unique<field>(*c_tp, std::string(f.first.id), f.second));
             else
                 throw std::runtime_error("Invalid scope type");
     }
 
     void constructor_declaration::refine(scope &scp) const
     {
-        std::vector<utils::u_ptr<field>> args; // the parameters of the constructor..
+        std::vector<std::unique_ptr<field>> args; // the parameters of the constructor..
         args.reserve(this->params.size());
         for (const auto &param : this->params)
         {
@@ -67,18 +67,18 @@ namespace riddle
                     c_tp = &ct->get_type(param.first[i].id);
                 else
                     throw std::runtime_error("Invalid type reference");
-            args.emplace_back(utils::make_u_ptr<field>(*c_tp, std::string(param.second.id), nullptr));
+            args.emplace_back(std::make_unique<field>(*c_tp, std::string(param.second.id), nullptr));
         }
 
         if (auto tp = dynamic_cast<component_type *>(&scp))
-            tp->add_constructor(utils::make_u_ptr<constructor>(*tp, std::move(args), inits, stmts));
+            tp->add_constructor(std::make_unique<constructor>(*tp, std::move(args), inits, stmts));
         else
             throw std::runtime_error("Invalid scope type");
     }
 
     void method_declaration::refine(scope &scp) const
     {
-        std::vector<utils::u_ptr<field>> args; // the parameters of the method..
+        std::vector<std::unique_ptr<field>> args; // the parameters of the method..
         args.reserve(this->params.size());
         for (const auto &param : this->params)
         {
@@ -88,7 +88,7 @@ namespace riddle
                     c_tp = &ct->get_type(param.first[i].id);
                 else
                     throw std::runtime_error("Invalid type reference");
-            args.emplace_back(utils::make_u_ptr<field>(*c_tp, std::string(param.second.id), nullptr));
+            args.emplace_back(std::make_unique<field>(*c_tp, std::string(param.second.id), nullptr));
         }
 
         std::optional<std::reference_wrapper<type>> rt;
@@ -103,7 +103,7 @@ namespace riddle
             rt = *c_tp;
         }
 
-        auto mthd = utils::make_u_ptr<method>(scp, rt, name.id, std::move(args), stmts);
+        auto mthd = std::make_unique<method>(scp, rt, name.id, std::move(args), stmts);
         if (auto ct = dynamic_cast<component_type *>(&scp))
             ct->add_method(std::move(mthd));
         else if (auto cr = dynamic_cast<core *>(&scp))
@@ -114,7 +114,7 @@ namespace riddle
 
     void predicate_declaration::declare(scope &scp) const
     {
-        auto pred = utils::make_u_ptr<predicate>(scp, std::string(name.id), std::vector<utils::u_ptr<field>>(), body);
+        auto pred = std::make_unique<predicate>(scp, std::string(name.id), std::vector<std::unique_ptr<field>>(), body);
         if (auto ct = dynamic_cast<component_type *>(&scp))
             ct->add_predicate(std::move(pred));
         else if (auto cr = dynamic_cast<core *>(&scp))
@@ -135,7 +135,7 @@ namespace riddle
                     c_tp = &ct->get_type(par.first[i].id);
                 else
                     throw std::runtime_error("Invalid type reference");
-            auto arg = utils::make_u_ptr<field>(*c_tp, std::string(par.second.id), nullptr);
+            auto arg = std::make_unique<field>(*c_tp, std::string(par.second.id), nullptr);
             pred.args.push_back(*arg);
             pred.add_field(std::move(arg));
         }
@@ -161,7 +161,7 @@ namespace riddle
 
     void class_declaration::declare(scope &scp) const
     { // we create the class and add it to the scope..
-        auto new_ct = utils::make_u_ptr<component_type>(scp, std::string(name.id));
+        auto new_ct = std::make_unique<component_type>(scp, std::string(name.id));
         if (auto cr = dynamic_cast<core *>(&scp))
             cr->add_type(std::move(new_ct));
         else if (auto ct = dynamic_cast<component_type *>(&scp))

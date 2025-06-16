@@ -130,192 +130,192 @@ namespace riddle
   class and_expression final : public expression
   {
   public:
-    and_expression(std::vector<utils::u_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
+    and_expression(std::vector<std::unique_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
-    friend utils::u_ptr<expression> push_negations(utils::u_ptr<expression> expr) noexcept;
-    friend utils::u_ptr<expression> distribute(utils::u_ptr<expression> expr) noexcept;
+    friend std::unique_ptr<expression> push_negations(std::unique_ptr<expression> expr) noexcept;
+    friend std::unique_ptr<expression> distribute(std::unique_ptr<expression> expr) noexcept;
 
   private:
-    std::vector<utils::u_ptr<expression>> xprs;
+    std::vector<std::unique_ptr<expression>> xprs;
   };
 
   class or_expression final : public expression
   {
   public:
-    or_expression(std::vector<utils::u_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
+    or_expression(std::vector<std::unique_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
-    friend utils::u_ptr<expression> push_negations(utils::u_ptr<expression> expr) noexcept;
-    friend utils::u_ptr<expression> distribute(utils::u_ptr<expression> expr) noexcept;
+    friend std::unique_ptr<expression> push_negations(std::unique_ptr<expression> expr) noexcept;
+    friend std::unique_ptr<expression> distribute(std::unique_ptr<expression> expr) noexcept;
 
   private:
-    std::vector<utils::u_ptr<expression>> xprs;
+    std::vector<std::unique_ptr<expression>> xprs;
   };
 
   class xor_expression final : public expression
   {
   public:
-    xor_expression(std::vector<utils::u_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
+    xor_expression(std::vector<std::unique_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    std::vector<utils::u_ptr<expression>> xprs;
+    std::vector<std::unique_ptr<expression>> xprs;
   };
 
   class not_expression final : public expression
   {
   public:
-    not_expression(utils::u_ptr<expression> xpr) noexcept : xpr(std::move(xpr)) {}
+    not_expression(std::unique_ptr<expression> xpr) noexcept : xpr(std::move(xpr)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
-    friend utils::u_ptr<expression> push_negations(utils::u_ptr<expression> expr) noexcept;
+    friend std::unique_ptr<expression> push_negations(std::unique_ptr<expression> expr) noexcept;
 
   private:
-    utils::u_ptr<expression> xpr;
+    std::unique_ptr<expression> xpr;
   };
 
   class minus_expression final : public expression
   {
   public:
-    minus_expression(utils::u_ptr<expression> xpr) noexcept : xpr(std::move(xpr)) {}
+    minus_expression(std::unique_ptr<expression> xpr) noexcept : xpr(std::move(xpr)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    utils::u_ptr<expression> xpr;
+    std::unique_ptr<expression> xpr;
   };
 
   class sum_expression final : public expression
   {
   public:
-    sum_expression(std::vector<utils::u_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
+    sum_expression(std::vector<std::unique_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    std::vector<utils::u_ptr<expression>> xprs;
+    std::vector<std::unique_ptr<expression>> xprs;
   };
 
   class subtraction_expression final : public expression
   {
   public:
-    subtraction_expression(std::vector<utils::u_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
+    subtraction_expression(std::vector<std::unique_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    std::vector<utils::u_ptr<expression>> xprs;
+    std::vector<std::unique_ptr<expression>> xprs;
   };
 
   class product_expression final : public expression
   {
   public:
-    product_expression(std::vector<utils::u_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
+    product_expression(std::vector<std::unique_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    std::vector<utils::u_ptr<expression>> xprs;
+    std::vector<std::unique_ptr<expression>> xprs;
   };
 
   class division_expression final : public expression
   {
   public:
-    division_expression(std::vector<utils::u_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
+    division_expression(std::vector<std::unique_ptr<expression>> &&xprs) noexcept : xprs(std::move(xprs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    std::vector<utils::u_ptr<expression>> xprs;
+    std::vector<std::unique_ptr<expression>> xprs;
   };
 
   class lt_expression final : public expression
   {
   public:
-    lt_expression(utils::u_ptr<expression> lhs, utils::u_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    lt_expression(std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    utils::u_ptr<expression> lhs;
-    utils::u_ptr<expression> rhs;
+    std::unique_ptr<expression> lhs;
+    std::unique_ptr<expression> rhs;
   };
 
   class le_expression final : public expression
   {
   public:
-    le_expression(utils::u_ptr<expression> lhs, utils::u_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    le_expression(std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    utils::u_ptr<expression> lhs;
-    utils::u_ptr<expression> rhs;
+    std::unique_ptr<expression> lhs;
+    std::unique_ptr<expression> rhs;
   };
 
   class gt_expression final : public expression
   {
   public:
-    gt_expression(utils::u_ptr<expression> lhs, utils::u_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    gt_expression(std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    utils::u_ptr<expression> lhs;
-    utils::u_ptr<expression> rhs;
+    std::unique_ptr<expression> lhs;
+    std::unique_ptr<expression> rhs;
   };
 
   class ge_expression final : public expression
   {
   public:
-    ge_expression(utils::u_ptr<expression> lhs, utils::u_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    ge_expression(std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    utils::u_ptr<expression> lhs;
-    utils::u_ptr<expression> rhs;
+    std::unique_ptr<expression> lhs;
+    std::unique_ptr<expression> rhs;
   };
 
   class eq_expression final : public expression
   {
   public:
-    eq_expression(utils::u_ptr<expression> lhs, utils::u_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    eq_expression(std::unique_ptr<expression> lhs, std::unique_ptr<expression> rhs) noexcept : lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
-    utils::u_ptr<expression> lhs;
-    utils::u_ptr<expression> rhs;
+    std::unique_ptr<expression> lhs;
+    std::unique_ptr<expression> rhs;
   };
 
   class constructor_expression final : public expression
   {
   public:
-    constructor_expression(std::vector<id_token> &&tp_id, std::vector<utils::u_ptr<expression>> &&args) noexcept : type_id(std::move(tp_id)), arguments(std::move(args)) {}
+    constructor_expression(std::vector<id_token> &&tp_id, std::vector<std::unique_ptr<expression>> &&args) noexcept : type_id(std::move(tp_id)), arguments(std::move(args)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
     std::vector<id_token> type_id;
-    std::vector<utils::u_ptr<expression>> arguments;
+    std::vector<std::unique_ptr<expression>> arguments;
   };
 
   class call_expression final : public expression
   {
   public:
-    call_expression(std::vector<id_token> &&obj_id, id_token &&fn_id, std::vector<utils::u_ptr<expression>> &&args) noexcept : object_id(std::move(obj_id)), function_id(std::move(fn_id)), arguments(std::move(args)) {}
+    call_expression(std::vector<id_token> &&obj_id, id_token &&fn_id, std::vector<std::unique_ptr<expression>> &&args) noexcept : object_id(std::move(obj_id)), function_id(std::move(fn_id)), arguments(std::move(args)) {}
 
     [[nodiscard]] expr evaluate(const scope &scp, env &ctx) const override;
 
   private:
     std::vector<id_token> object_id;
     id_token function_id;
-    std::vector<utils::u_ptr<expression>> arguments;
+    std::vector<std::unique_ptr<expression>> arguments;
   };
 } // namespace riddle

@@ -7,7 +7,7 @@ namespace riddle
   class conjunction final
   {
   public:
-    conjunction(const scope &scp, env &&ctx, const utils::rational cst = utils::rational::one, const std::vector<utils::u_ptr<statement>> &body = {}) noexcept;
+    conjunction(const scope &scp, env &&ctx, const utils::rational cst = utils::rational::one, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
 
     /**
      * @brief Executes the conjunction operation.
@@ -18,9 +18,9 @@ namespace riddle
     void execute();
 
   private:
-    const scope &scp;                                 // the scope in which the conjunction is evaluated
-    env ctx;                                          // the environment context
-    utils::rational cst;                              // the cost of the conjunction
-    const std::vector<utils::u_ptr<statement>> &body; // the body of the conjunction
+    const scope &scp;                                    // the scope in which the conjunction is evaluated
+    env ctx;                                             // the environment context
+    utils::rational cst;                                 // the cost of the conjunction
+    const std::vector<std::unique_ptr<statement>> &body; // the body of the conjunction
   };
 } // namespace riddle

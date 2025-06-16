@@ -50,7 +50,7 @@ namespace riddle
                 throw std::runtime_error("Invalid type reference");
 
             if (auto cr = dynamic_cast<core *>(&ctx)) // we have a global field..
-                cr->add_field(utils::make_u_ptr<field>(*tp, std::string(id.id), nullptr));
+                cr->add_field(std::make_unique<field>(*tp, std::string(id.id), nullptr));
         }
     }
 
@@ -112,7 +112,7 @@ namespace riddle
 
     void disjunction_statement::execute(const scope &scp, env &ctx) const
     { // execute a disjunction of conjunctions
-        std::vector<utils::u_ptr<conjunction>> conjs;
+        std::vector<std::unique_ptr<conjunction>> conjs;
         std::map<std::string, expr, std::less<>> items;
         env *tmp_ctx = &ctx; // find the nearest core, component or atom
         while (!(dynamic_cast<core *>(tmp_ctx) || dynamic_cast<component *>(tmp_ctx) || dynamic_cast<enum_term *>(tmp_ctx) || dynamic_cast<atom_term *>(tmp_ctx)))
@@ -125,7 +125,7 @@ namespace riddle
             env cctx(scp.get_core(), *tmp_ctx);            // we create a new context
             cctx.items.insert(items.begin(), items.end()); // copy the items
             auto cst = conj->cst ? scp.get_core().arith_value(static_cast<arith_term &>(*conj->cst->evaluate(scp, ctx))).get_rational() : utils::rational::one;
-            conjs.emplace_back(utils::make_u_ptr<conjunction>(scp, std::move(cctx), cst, conj->stmts));
+            conjs.emplace_back(std::make_unique<conjunction>(scp, std::move(cctx), cst, conj->stmts));
         }
         scp.get_core().new_disjunction(std::move(conjs));
     }

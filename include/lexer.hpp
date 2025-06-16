@@ -1,8 +1,8 @@
 #pragma once
 
 #include "rational.hpp"
-#include "memory.hpp"
 #include <vector>
+#include <memory>
 #include <istream>
 
 namespace riddle
@@ -207,11 +207,11 @@ namespace riddle
   class lexer final
   {
   public:
-    std::vector<utils::u_ptr<const token>> parse(std::istream &is);
+    std::vector<std::unique_ptr<const token>> parse(std::istream &is);
 
   private:
     bool match(std::istream &is, char expected) noexcept;
-    utils::u_ptr<const token> finish_token() noexcept;
+    std::unique_ptr<const token> finish_token() noexcept;
 
     static bool is_id_part(const char &ch) noexcept { return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9'); }
 

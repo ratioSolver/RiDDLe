@@ -4,9 +4,9 @@
 
 namespace riddle
 {
-    std::vector<utils::u_ptr<const token>> lexer::parse(std::istream &is)
+    std::vector<std::unique_ptr<const token>> lexer::parse(std::istream &is)
     {
-        std::vector<utils::u_ptr<const token>> tokens;
+        std::vector<std::unique_ptr<const token>> tokens;
 
         current_state = START;
         line = 1;
@@ -25,7 +25,7 @@ namespace riddle
                     ++line;
                     start = 0;
                     if (!is.good()) // end of file before `\n`
-                        tokens.push_back(utils::make_u_ptr<token>(EoF, line, start, start));
+                        tokens.push_back(std::make_unique<token>(EoF, line, start, start));
                     break;
                 case '*': // multi-line comment
                     is.ignore();
@@ -948,7 +948,7 @@ namespace riddle
             case EOF:
                 if (!text.empty())
                     tokens.push_back(finish_token());
-                tokens.push_back(utils::make_u_ptr<token>(EoF, line, start, start));
+                tokens.push_back(std::make_unique<token>(EoF, line, start, start));
                 break;
             default:
                 if (current_state == START)
@@ -970,34 +970,34 @@ namespace riddle
         return false;
     }
 
-    utils::u_ptr<const token> lexer::finish_token() noexcept
+    std::unique_ptr<const token> lexer::finish_token() noexcept
     {
-        utils::u_ptr<token> tok;
+        std::unique_ptr<token> tok;
         auto end = start + text.size() - 1;
         switch (current_state)
         {
         case Bool:
-            tok = utils::make_u_ptr<bool_token>(text == "true", line, start, end);
+            tok = std::make_unique<bool_token>(text == "true", line, start, end);
             break;
         case Int:
-            tok = utils::make_u_ptr<int_token>(std::stoll(text), line, start, end);
+            tok = std::make_unique<int_token>(std::stoll(text), line, start, end);
             break;
         case Real:
         {
             size_t dot_pos = text.find('.');
             std::string intgr = text.substr(0, dot_pos);
             std::string dec = text.substr(dot_pos + 1);
-            tok = utils::make_u_ptr<real_token>(utils::rational(static_cast<INT_TYPE>(std::stol(intgr + dec)), static_cast<INT_TYPE>(std::pow(10, dec.size()))), line, start, end);
+            tok = std::make_unique<real_token>(utils::rational(static_cast<INT_TYPE>(std::stol(intgr + dec)), static_cast<INT_TYPE>(std::pow(10, dec.size()))), line, start, end);
             break;
         }
         case String:
-            tok = utils::make_u_ptr<string_token>(text.substr(1, text.size() - 2), line, start, end);
+            tok = std::make_unique<string_token>(text.substr(1, text.size() - 2), line, start, end);
             break;
         case ID:
-            tok = utils::make_u_ptr<id_token>(std::move(text), line, start, end);
+            tok = std::make_unique<id_token>(std::move(text), line, start, end);
             break;
         default:
-            tok = utils::make_u_ptr<token>(current_state, line, start, end);
+            tok = std::make_unique<token>(current_state, line, start, end);
         }
         start = end + 1;
         current_state = START;

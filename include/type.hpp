@@ -218,8 +218,8 @@ namespace riddle
     [[nodiscard]] type &get_type(std::string_view name) const override;
     [[nodiscard]] predicate &get_predicate(std::string_view name) const override;
 
-    [[nodiscard]] const std::map<std::string, utils::u_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
-    [[nodiscard]] const std::map<std::string, utils::u_ptr<predicate>, std::less<>> &get_predicates() const noexcept { return predicates; }
+    [[nodiscard]] const std::map<std::string, std::unique_ptr<type>, std::less<>> &get_types() const noexcept { return types; }
+    [[nodiscard]] const std::map<std::string, std::unique_ptr<predicate>, std::less<>> &get_predicates() const noexcept { return predicates; }
 
     /**
      * @brief retrieves the list of the instances of the type.
@@ -256,7 +256,7 @@ namespace riddle
      *
      * @param ctr A unique pointer to the constructor to be added.
      */
-    void add_constructor(utils::u_ptr<constructor> ctr);
+    void add_constructor(std::unique_ptr<constructor> ctr);
 
     /**
      * @brief Adds a method to this component type.
@@ -266,7 +266,7 @@ namespace riddle
      *
      * @param mthd A unique pointer to the method to be added.
      */
-    void add_method(utils::u_ptr<method> mthd);
+    void add_method(std::unique_ptr<method> mthd);
 
     /**
      * @brief Adds a predicate to this component type.
@@ -276,7 +276,7 @@ namespace riddle
      *
      * @param pred A unique pointer to the predicate to be added.
      */
-    void add_predicate(utils::u_ptr<predicate> pred);
+    void add_predicate(std::unique_ptr<predicate> pred);
 
     /**
      * @brief Adds a type to this component type.
@@ -286,7 +286,7 @@ namespace riddle
      *
      * @param tp A unique pointer to the type to be added.
      */
-    void add_type(utils::u_ptr<type> tp);
+    void add_type(std::unique_ptr<type> tp);
 
     /**
      * @brief Adds a parent predicate to a child predicate.
@@ -310,13 +310,13 @@ namespace riddle
     virtual void created_atom([[maybe_unused]] atom_expr atm) {}
 
   private:
-    std::vector<std::reference_wrapper<component_type>> parents;                       // the base types (i.e. the types this type inherits from)..
-    std::vector<utils::u_ptr<constructor>> constructors;                           // the constructors of the type..
-    std::map<std::string, std::vector<utils::u_ptr<method>>, std::less<>> methods; // the methods declared in the scope of the type..
-    std::map<std::string, utils::u_ptr<type>, std::less<>> types;                  // the types declared in the scope of the type..
-    std::map<std::string, utils::u_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the scope of the type..
-    std::vector<expr> instances;                                                   // the instances of the type..
-    std::vector<atom_expr> atoms;                                                  // the atoms of the component type..
+    std::vector<std::reference_wrapper<component_type>> parents;                      // the base types (i.e. the types this type inherits from)..
+    std::vector<std::unique_ptr<constructor>> constructors;                           // the constructors of the type..
+    std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the scope of the type..
+    std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the scope of the type..
+    std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the scope of the type..
+    std::vector<expr> instances;                                                      // the instances of the type..
+    std::vector<atom_expr> atoms;                                                     // the atoms of the component type..
   };
 
   /**
@@ -363,7 +363,7 @@ namespace riddle
     friend class predicate_declaration;
 
   public:
-    predicate(scope &scp, std::string &&name, std::vector<utils::u_ptr<field>> &&args = {}, const std::vector<utils::u_ptr<statement>> &body = {}) noexcept;
+    predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args = {}, const std::vector<std::unique_ptr<statement>> &body = {}) noexcept;
     virtual ~predicate() = default;
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
@@ -404,8 +404,8 @@ namespace riddle
   private:
     std::vector<std::reference_wrapper<predicate>> parents; // the base predicates (i.e. the predicates this predicate inherits from)..
     std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
-    const std::vector<utils::u_ptr<statement>> &body;   // the body of the predicate..
-    std::vector<atom_expr> atoms;                       // the atoms of the predicate..
+    const std::vector<std::unique_ptr<statement>> &body;    // the body of the predicate..
+    std::vector<atom_expr> atoms;                           // the atoms of the predicate..
   };
 
   class timeline

@@ -176,7 +176,7 @@ namespace riddle
 
     void component_type::add_parent(component_type &parent) { parents.emplace_back(parent); }
 
-    void component_type::add_constructor(utils::u_ptr<constructor> ctr)
+    void component_type::add_constructor(std::unique_ptr<constructor> ctr)
     {
         std::vector<std::reference_wrapper<const type>> args;
         args.reserve(ctr->get_args().size());
@@ -198,7 +198,7 @@ namespace riddle
         constructors.emplace_back(std::move(ctr));
     }
 
-    void component_type::add_method(utils::u_ptr<method> mthd)
+    void component_type::add_method(std::unique_ptr<method> mthd)
     {
         std::vector<std::reference_wrapper<const type>> args;
         for (const auto &arg : mthd->get_args())
@@ -214,7 +214,7 @@ namespace riddle
         }
     }
 
-    void component_type::add_predicate(utils::u_ptr<predicate> pred)
+    void component_type::add_predicate(std::unique_ptr<predicate> pred)
     {
         std::string name = pred->get_name();
         if (!predicates.emplace(name, std::move(pred)).second)
@@ -232,7 +232,7 @@ namespace riddle
         }
     }
 
-    void component_type::add_type(utils::u_ptr<type> t)
+    void component_type::add_type(std::unique_ptr<type> t)
     {
         std::string name = t->get_name();
         if (!types.emplace(name, std::move(t)).second)
@@ -294,7 +294,7 @@ namespace riddle
         }
     }
 
-    predicate::predicate(scope &scp, std::string &&name, std::vector<utils::u_ptr<field>> &&args, const std::vector<utils::u_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
+    predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
 
     bool predicate::is_assignable_from(const type &other) const
     {

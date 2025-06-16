@@ -1,6 +1,6 @@
 #pragma once
 
-#include "memory.hpp"
+#include <memory>
 #include <string>
 #include <vector>
 #include <map>
@@ -20,7 +20,7 @@ namespace riddle
   class field
   {
   public:
-    field(type &tp, std::string &&name, const utils::u_ptr<expression> &expr) noexcept;
+    field(type &tp, std::string &&name, const std::unique_ptr<expression> &expr) noexcept;
 
     /**
      * @brief Retrieves the type of the field.
@@ -47,12 +47,12 @@ namespace riddle
      *
      * @return A reference to the expression of the field.
      */
-    [[nodiscard]] const utils::u_ptr<expression> &get_expression() const noexcept { return expr; }
+    [[nodiscard]] const std::unique_ptr<expression> &get_expression() const noexcept { return expr; }
 
   private:
     type &tp;
     std::string name;
-    const utils::u_ptr<expression> &expr;
+    const std::unique_ptr<expression> &expr;
   };
 
   class scope
@@ -61,7 +61,7 @@ namespace riddle
     friend class local_field_statement;
 
   public:
-    scope(core &c, scope &parent, std::vector<utils::u_ptr<field>> &&args = {});
+    scope(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args = {});
     scope(const scope &) = delete;
     virtual ~scope() = default;
 
@@ -84,7 +84,7 @@ namespace riddle
      *
      * @return A constant reference to a map with field names as keys and unique pointers to fields as values.
      */
-    [[nodiscard]] const std::map<std::string, utils::u_ptr<field>, std::less<>> &get_fields() const noexcept { return fields; }
+    [[nodiscard]] const std::map<std::string, std::unique_ptr<field>, std::less<>> &get_fields() const noexcept { return fields; }
 
     /**
      * @brief Retrieves the field associated with the given name.
@@ -99,7 +99,7 @@ namespace riddle
      */
     [[nodiscard]] virtual field &get_field(std::string_view name) const;
 
-    [[nodiscard]] virtual const std::map<std::string, std::vector<utils::u_ptr<method>>, std::less<>> &get_methods() const { return parent.get_methods(); }
+    [[nodiscard]] virtual const std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> &get_methods() const { return parent.get_methods(); }
 
     /**
      * @brief Retrieves the method associated with the given name and argument types.
@@ -115,7 +115,7 @@ namespace riddle
      */
     [[nodiscard]] virtual method &get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const { return parent.get_method(name, argument_types); }
 
-    [[nodiscard]] virtual const std::map<std::string, utils::u_ptr<type>, std::less<>> &get_types() const { return parent.get_types(); }
+    [[nodiscard]] virtual const std::map<std::string, std::unique_ptr<type>, std::less<>> &get_types() const { return parent.get_types(); }
 
     /**
      * @brief Retrieves the type associated with the given name.
@@ -130,7 +130,7 @@ namespace riddle
      */
     [[nodiscard]] virtual type &get_type(std::string_view name) const { return parent.get_type(name); }
 
-    [[nodiscard]] virtual const std::map<std::string, utils::u_ptr<predicate>, std::less<>> &get_predicates() const { return parent.get_predicates(); }
+    [[nodiscard]] virtual const std::map<std::string, std::unique_ptr<predicate>, std::less<>> &get_predicates() const { return parent.get_predicates(); }
 
     /**
      * @brief Retrieves the predicate associated with the given name.
@@ -153,13 +153,13 @@ namespace riddle
      *
      * @param field A unique pointer to the field to be added.
      */
-    void add_field(utils::u_ptr<field> field);
+    void add_field(std::unique_ptr<field> field);
 
   private:
     core &cr;
     scope &parent;
 
   protected:
-    std::map<std::string, utils::u_ptr<field>, std::less<>> fields;
+    std::map<std::string, std::unique_ptr<field>, std::less<>> fields;
   };
 } // namespace riddle

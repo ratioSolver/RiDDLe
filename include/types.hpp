@@ -41,8 +41,8 @@ namespace riddle
     void created_predicate(predicate &pred) noexcept override;
 
   private:
-    utils::u_ptr<constructor_declaration> ctr;
-    utils::u_ptr<predicate_declaration> use_pred;
+    std::unique_ptr<constructor_declaration> ctr;
+    std::unique_ptr<predicate_declaration> use_pred;
   };
 
   class consumable_resource : public component_type, public timeline
@@ -56,8 +56,8 @@ namespace riddle
     void created_predicate(predicate &pred) noexcept override;
 
   private:
-    utils::u_ptr<constructor_declaration> ctr;
-    utils::u_ptr<predicate_declaration> prod_pred;
-    utils::u_ptr<predicate_declaration> cons_pred;
+    std::unique_ptr<constructor_declaration> ctr;
+    std::unique_ptr<predicate_declaration> prod_pred;
+    std::unique_ptr<predicate_declaration> cons_pred;
   };
 } // namespace riddle
