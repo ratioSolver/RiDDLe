@@ -60,7 +60,7 @@ namespace riddle
      *
      * @param script The RiDDLe script.
      */
-    virtual void read(std::string &&script);
+    virtual void read(std::string_view script);
     /**
      * @brief Reads and processes the given list of RiDDLe files.
      *

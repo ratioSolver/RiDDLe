@@ -17,9 +17,9 @@ namespace riddle
         add_type(std::make_unique<string_type>(*this));
     }
 
-    void core::read(std::string &&script)
+    void core::read(std::string_view script)
     {
-        std::stringstream ss(script);
+        std::stringstream ss(script.data());
         parser p(ss);
         auto cu = p.parse_compilation_unit();
         cu->declare(*this);

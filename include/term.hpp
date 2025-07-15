@@ -235,6 +235,14 @@ namespace riddle
 
     [[nodiscard]] bool is_fact() const { return fact; }
 
+    /**
+     * @brief Retrieves the current state of the atom.
+     *
+     * This virtual function returns the state of the atom as an `atom_state` enumeration.
+     * Derived classes may override this method to provide custom state logic.
+     *
+     * @return The current state of the atom.
+     */
     [[nodiscard]] virtual atom_state get_state() const { return atom_state::active; }
 
     [[nodiscard]] virtual json::json to_json() const noexcept override;
