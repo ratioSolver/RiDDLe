@@ -87,6 +87,25 @@ namespace riddle
      */
     [[nodiscard]] virtual expr get(std::string_view name);
 
+    /**
+     * @brief Retrieves the items in the environment.
+     *
+     * This function returns a reference to the map containing the items in the
+     * environment.
+     *
+     * @return A reference to the map of items.
+     */
+    [[nodiscard]] const std::map<std::string, expr, std::less<>> &get_items() const noexcept { return items; }
+
+    /**
+     * @brief Converts the environment to a JSON object.
+     *
+     * This function converts the environment's items to a JSON object. Each
+     * item is represented by its name and value. The value is converted to JSON
+     * using the `to_json` method of the item.
+     *
+     * @return A JSON object representing the environment's items.
+     */
     [[nodiscard]] virtual json::json to_json() const;
 
   private:
