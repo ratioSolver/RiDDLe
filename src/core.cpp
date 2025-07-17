@@ -270,7 +270,7 @@ namespace riddle
                     }
         if (!starting_atoms.empty())
         { // we have some root atoms in the solver timeline..
-            json::json slv_tl{{"id", static_cast<uint64_t>(get_id())}, {"type", "Solver"}, {"name", get_name().c_str()}};
+            json::json slv_tl{{"id", static_cast<uint64_t>(get_id())}, {"type", "Solver"}, {"name", get_name()}};
             json::json j_atms(json::json_type::array);
             for (const auto &p : pulses)
                 for (const auto &atm : starting_atoms.at(p))

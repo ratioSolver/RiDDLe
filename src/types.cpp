@@ -32,7 +32,7 @@ namespace riddle
         {
             json::json tl{{"id", static_cast<uint64_t>(sv->get_id())}, {"type", state_variable_kw}};
 #ifdef COMPUTE_NAMES
-            tl["name"] = guess_name(*sv).c_str();
+            tl["name"] = guess_name(*sv);
 #endif
 
             // for each pulse, the atoms starting at that pulse..
@@ -129,7 +129,7 @@ namespace riddle
         {
             json::json tl{{"id", static_cast<uint64_t>(rr->get_id())}, {"type", reusable_resource_kw}};
 #ifdef COMPUTE_NAMES
-            tl["name"] = guess_name(*rr).c_str();
+            tl["name"] = guess_name(*rr);
 #endif
             const auto c_capacity = get_core().arith_value(static_cast<arith_term &>(*rr->get(reusable_resource_capacity_kw)));
             tl[reusable_resource_capacity_kw] = {{"num", static_cast<int64_t>(c_capacity.get_rational().numerator())}, {"den", static_cast<int64_t>(c_capacity.get_rational().denominator())}};
@@ -239,7 +239,7 @@ namespace riddle
         {
             json::json tl{{"id", static_cast<uint64_t>(cr->get_id())}, {"type", consumable_resource_kw}};
 #ifdef COMPUTE_NAMES
-            tl["name"] = guess_name(*cr).c_str();
+            tl["name"] = guess_name(*cr);
 #endif
             const auto c_capacity = get_core().arith_value(static_cast<arith_term &>(*cr->get(consumable_resource_capacity_kw)));
             tl[consumable_resource_capacity_kw] = {{"num", static_cast<int64_t>(c_capacity.get_rational().numerator())}, {"den", static_cast<int64_t>(c_capacity.get_rational().denominator())}};

@@ -8,7 +8,7 @@ namespace riddle
     json::json bool_item::to_json() const noexcept
     {
         auto j_val = bool_term::to_json();
-        j_val["lit"] = to_string(expr).c_str();
+        j_val["lit"] = to_string(expr);
         return j_val;
     }
 
@@ -19,7 +19,7 @@ namespace riddle
     json::json arith_item::to_json() const noexcept
     {
         auto j_val = arith_term::to_json();
-        j_val["lin"] = to_string(expr).c_str();
+        j_val["lin"] = to_string(expr);
         return j_val;
     }
 
@@ -46,7 +46,7 @@ namespace riddle
     json::json atom::to_json() const noexcept
     {
         auto j_atm = riddle::atom_term::to_json();
-        j_atm["sigma"] = to_string(sigma).c_str();
+        j_atm["sigma"] = to_string(sigma);
         return j_atm;
     }
 
