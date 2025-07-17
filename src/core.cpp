@@ -190,7 +190,7 @@ namespace riddle
 
     json::json core::to_json() const
     {
-        json::json j_core{{"name", std::string_view(name)}};
+        json::json j_core{{"name", name}};
         json::json j_timelines(json::json_type::array);
 
         std::set<term *> all_items;      // we keep track of all the items..

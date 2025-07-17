@@ -6,7 +6,7 @@ namespace riddle
     bool_term::bool_term(bool_type &tp) noexcept : term(tp) {}
     json::json bool_term::to_json() const noexcept
     {
-        json::json j_val{{"type", std::string_view(get_type().get_name())}}; // we add the type of the item..
+        json::json j_val{{"type", get_type().get_name()}}; // we add the type of the item..
         switch (get_type().get_scope().get_core().bool_value(*this))
         {
         case utils::True:
@@ -27,7 +27,7 @@ namespace riddle
     arith_term::arith_term(time_type &tp) noexcept : term(tp) {}
     json::json arith_term::to_json() const noexcept
     {
-        json::json j_val{{"type", std::string_view(get_type().get_name())}}; // we add the type of the item..
+        json::json j_val{{"type", get_type().get_name()}}; // we add the type of the item..
         const auto val = get_type().get_scope().get_core().arith_value(*this);
         if (get_type().get_name() == "int")
         {
@@ -46,7 +46,7 @@ namespace riddle
     }
 
     string_term::string_term(string_type &tp) noexcept : term(tp) {}
-    json::json string_term::to_json() const noexcept { return {{"type", std::string_view(get_type().get_name())}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
+    json::json string_term::to_json() const noexcept { return {{"type", get_type().get_name()}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
 
     enum_term::enum_term(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) noexcept : term(tp), env(tp.get_core(), tp.get_core()), values(std::move(values)) {}
     json::json enum_term::to_json() const noexcept
