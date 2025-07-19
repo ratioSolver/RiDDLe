@@ -270,20 +270,20 @@ namespace riddle
                     }
         if (!starting_atoms.empty())
         { // we have some root atoms in the solver timeline..
-            json::json slv_tl{{"id", static_cast<uint64_t>(get_id())}, {"type", "Solver"}, {"name", get_name()}};
+            json::json slv_tl{{"id", get_id()}, {"type", "Solver"}, {"name", get_name()}};
             json::json j_atms(json::json_type::array);
             for (const auto &p : pulses)
                 for (const auto &atm : starting_atoms.at(p))
                     if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
                     {
                         const auto at = arith_value(static_cast<arith_term &>(*atm->get(at_kw)));
-                        j_atms.push_back({{"atom", static_cast<uint64_t>(atm->get_id())}, {"at", {{"num", static_cast<int64_t>(at.get_rational().numerator())}, {"den", static_cast<int64_t>(at.get_rational().denominator())}}}});
+                        j_atms.push_back({{"atom", atm->get_id()}, {"at", {{"num", at.get_rational().numerator()}, {"den", at.get_rational().denominator()}}}});
                     }
                     else if (get_predicate(interval_kw).is_assignable_from(atm->get_type()))
                     {
                         const auto start = arith_value(static_cast<arith_term &>(*atm->get(start_kw)));
                         const auto end = arith_value(static_cast<arith_term &>(*atm->get(end_kw)));
-                        j_atms.push_back({{"atom", static_cast<uint64_t>(atm->get_id())}, {"start", {{"num", static_cast<int64_t>(start.get_rational().numerator())}, {"den", static_cast<int64_t>(start.get_rational().denominator())}}}, {"end", {{"num", static_cast<int64_t>(end.get_rational().numerator())}, {"den", static_cast<int64_t>(end.get_rational().denominator())}}}});
+                        j_atms.push_back({{"atom", atm->get_id()}, {"start", {{"num", start.get_rational().numerator()}, {"den", start.get_rational().denominator()}}}, {"end", {{"num", end.get_rational().numerator()}, {"den", end.get_rational().denominator()}}}});
                     }
             slv_tl["values"] = std::move(j_atms);
             j_timelines.push_back(std::move(slv_tl));
