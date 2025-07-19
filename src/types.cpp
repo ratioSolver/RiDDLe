@@ -44,15 +44,15 @@ namespace riddle
 
             for (const auto &atm : atms)
             {
-                const auto start = get_core().arith_value(static_cast<arith_term &>(*atm->get(start_kw)));
-                const auto end = get_core().arith_value(static_cast<arith_term &>(*atm->get(end_kw)));
+                const auto start = get_core().arith_value(*atm->get<arith_term>(start_kw));
+                const auto end = get_core().arith_value(*atm->get<arith_term>(end_kw));
                 starting_atoms[start].insert(atm);
                 ending_atoms[end].insert(atm);
                 pulses.insert(start);
                 pulses.insert(end);
             }
-            pulses.insert(get_core().arith_value(static_cast<arith_term &>(*get_core().get(origin_kw))));
-            pulses.insert(get_core().arith_value(static_cast<arith_term &>(*get_core().get(horizon_kw))));
+            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(origin_kw)));
+            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(horizon_kw)));
 
             std::set<atom_term *> overlapping_atoms;
             std::set<utils::inf_rational>::iterator p = pulses.begin();
@@ -131,7 +131,7 @@ namespace riddle
 #ifdef COMPUTE_NAMES
             tl["name"] = guess_name(*rr);
 #endif
-            const auto c_capacity = get_core().arith_value(static_cast<arith_term &>(*rr->get(reusable_resource_capacity_kw)));
+            const auto c_capacity = get_core().arith_value(*rr->get<arith_term>(reusable_resource_capacity_kw));
             tl[reusable_resource_capacity_kw] = {{"num", static_cast<int64_t>(c_capacity.get_rational().numerator())}, {"den", static_cast<int64_t>(c_capacity.get_rational().denominator())}};
 
             // for each pulse, the atoms starting at that pulse..
@@ -143,15 +143,15 @@ namespace riddle
 
             for (const auto &atm : atms)
             {
-                const auto start = get_core().arith_value(static_cast<arith_term &>(*atm->get(start_kw)));
-                const auto end = get_core().arith_value(static_cast<arith_term &>(*atm->get(end_kw)));
+                const auto start = get_core().arith_value(*atm->get<arith_term>(start_kw));
+                const auto end = get_core().arith_value(*atm->get<arith_term>(end_kw));
                 starting_atoms[start].insert(atm);
                 ending_atoms[end].insert(atm);
                 pulses.insert(start);
                 pulses.insert(end);
             }
-            pulses.insert(get_core().arith_value(static_cast<arith_term &>(*get_core().get(origin_kw))));
-            pulses.insert(get_core().arith_value(static_cast<arith_term &>(*get_core().get(horizon_kw))));
+            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(origin_kw)));
+            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(horizon_kw)));
 
             std::set<atom_term *> overlapping_atoms;
             std::set<utils::inf_rational>::iterator p = pulses.begin();
@@ -172,7 +172,7 @@ namespace riddle
                 utils::inf_rational c_usage; // the concurrent resource usage..
                 for (const auto &atm : overlapping_atoms)
                 {
-                    c_usage += get_core().arith_value(static_cast<arith_term &>(*atm->get(reusable_resource_amount_kw)));
+                    c_usage += get_core().arith_value(*atm->get<arith_term>(reusable_resource_amount_kw));
                     j_atms.push_back(static_cast<uint64_t>(atm->get_id()));
                 }
                 j_val[reusable_resource_amount_kw] = {{"num", static_cast<int64_t>(c_usage.get_rational().numerator())}, {"den", static_cast<int64_t>(c_usage.get_rational().denominator())}};
@@ -241,9 +241,9 @@ namespace riddle
 #ifdef COMPUTE_NAMES
             tl["name"] = guess_name(*cr);
 #endif
-            const auto c_capacity = get_core().arith_value(static_cast<arith_term &>(*cr->get(consumable_resource_capacity_kw)));
+            const auto c_capacity = get_core().arith_value(*cr->get<arith_term>(consumable_resource_capacity_kw));
             tl[consumable_resource_capacity_kw] = {{"num", static_cast<int64_t>(c_capacity.get_rational().numerator())}, {"den", static_cast<int64_t>(c_capacity.get_rational().denominator())}};
-            const auto c_initial_amount = get_core().arith_value(static_cast<arith_term &>(*cr->get(consumable_resource_initial_amount_kw)));
+            const auto c_initial_amount = get_core().arith_value(*cr->get<arith_term>(consumable_resource_initial_amount_kw));
             tl[consumable_resource_initial_amount_kw] = {{"num", static_cast<int64_t>(c_initial_amount.get_rational().numerator())}, {"den", static_cast<int64_t>(c_initial_amount.get_rational().denominator())}};
 
             // for each pulse, the atoms starting at that pulse..
@@ -255,15 +255,15 @@ namespace riddle
 
             for (const auto &atm : atms)
             {
-                const auto start = get_core().arith_value(static_cast<arith_term &>(*atm->get(start_kw)));
-                const auto end = get_core().arith_value(static_cast<arith_term &>(*atm->get(end_kw)));
+                const auto start = get_core().arith_value(*atm->get<arith_term>(start_kw));
+                const auto end = get_core().arith_value(*atm->get<arith_term>(end_kw));
                 starting_atoms[start].insert(atm);
                 ending_atoms[end].insert(atm);
                 pulses.insert(start);
                 pulses.insert(end);
             }
-            pulses.insert(get_core().arith_value(static_cast<arith_term &>(*get_core().get(origin_kw))));
-            pulses.insert(get_core().arith_value(static_cast<arith_term &>(*get_core().get(horizon_kw))));
+            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(origin_kw)));
+            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(horizon_kw)));
 
             std::set<atom_term *> overlapping_atoms;
             std::set<utils::inf_rational>::iterator p = pulses.begin();
@@ -285,9 +285,9 @@ namespace riddle
                 utils::inf_rational c_angular_coefficient; // the concurrent resource update..
                 for (const auto &atm : overlapping_atoms)
                 {
-                    const auto c_amount = get_core().arith_value(static_cast<arith_term &>(*atm->get(consumable_resource_amount_kw)));
+                    const auto c_amount = get_core().arith_value(*atm->get<arith_term>(consumable_resource_amount_kw));
                     auto c_coeff = get_predicate(consumable_resource_produce_predicate_kw).is_assignable_from(atm->get_type()) ? c_amount : -c_amount;
-                    c_coeff /= (get_core().arith_value(static_cast<arith_term &>(*atm->get(start_kw))) - get_core().arith_value(static_cast<arith_term &>(*atm->get(end_kw)))).get_rational();
+                    c_coeff /= (get_core().arith_value(*atm->get<arith_term>(start_kw)) - get_core().arith_value(*atm->get<arith_term>(end_kw))).get_rational();
                     c_angular_coefficient += c_coeff;
                     j_atms.push_back(static_cast<uint64_t>(atm->get_id()));
                 }

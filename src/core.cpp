@@ -257,13 +257,13 @@ namespace riddle
                     { // we get only the active atoms..
                         if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
                         { // we have an impulse atom..
-                            const auto start = arith_value(static_cast<riddle::arith_term &>(*atm->get(riddle::at_kw)));
+                            const auto start = arith_value(*atm->get<arith_term>(riddle::at_kw));
                             starting_atoms[start].insert(static_cast<riddle::atom_term *>(&*atm));
                             pulses.insert(start);
                         }
                         else if (get_predicate(interval_kw).is_assignable_from(atm->get_type()))
                         { // we have an interval atom..
-                            const auto start = arith_value(static_cast<riddle::arith_term &>(*atm->get(riddle::start_kw)));
+                            const auto start = arith_value(*atm->get<arith_term>(riddle::start_kw));
                             starting_atoms[start].insert(static_cast<riddle::atom_term *>(&*atm));
                             pulses.insert(start);
                         }
@@ -276,13 +276,13 @@ namespace riddle
                 for (const auto &atm : starting_atoms.at(p))
                     if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
                     {
-                        const auto at = arith_value(static_cast<arith_term &>(*atm->get(at_kw)));
+                        const auto at = arith_value(*atm->get<arith_term>(at_kw));
                         j_atms.push_back({{"atom", atm->get_id()}, {"at", {{"num", at.get_rational().numerator()}, {"den", at.get_rational().denominator()}}}});
                     }
                     else if (get_predicate(interval_kw).is_assignable_from(atm->get_type()))
                     {
-                        const auto start = arith_value(static_cast<arith_term &>(*atm->get(start_kw)));
-                        const auto end = arith_value(static_cast<arith_term &>(*atm->get(end_kw)));
+                        const auto start = arith_value(*atm->get<arith_term>(start_kw));
+                        const auto end = arith_value(*atm->get<arith_term>(end_kw));
                         j_atms.push_back({{"atom", atm->get_id()}, {"start", {{"num", start.get_rational().numerator()}, {"den", start.get_rational().denominator()}}}, {"end", {{"num", end.get_rational().numerator()}, {"den", end.get_rational().denominator()}}}});
                     }
             slv_tl["values"] = std::move(j_atms);

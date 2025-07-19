@@ -87,6 +87,20 @@ namespace riddle
      */
     [[nodiscard]] virtual expr get(std::string_view name);
 
+    template <typename T>
+    [[nodiscard]] std::shared_ptr<T> get(std::string_view name)
+    {
+      if (auto item = get(name); item)
+      {
+        if (auto term_ptr = std::dynamic_pointer_cast<T>(item))
+          return term_ptr;
+        else
+          throw std::bad_cast();
+      }
+      else
+        throw std::out_of_range("Item not found: " + std::string(name));
+    }
+
     /**
      * @brief Retrieves the items in the environment.
      *
