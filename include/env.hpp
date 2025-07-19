@@ -87,6 +87,19 @@ namespace riddle
      */
     [[nodiscard]] virtual expr get(std::string_view name);
 
+    /**
+     * @brief Retrieves an item by its name and casts it to a specific type.
+     *
+     * This function retrieves an item by its name and attempts to cast it to
+     * the specified type. If the item is not found or cannot be cast to the
+     * specified type, an exception is thrown.
+     *
+     * @tparam T The type to cast the item to.
+     * @param name The name of the item to retrieve.
+     * @return A shared pointer to the item casted to type T.
+     * @throws std::out_of_range if the item is not found.
+     * @throws std::bad_cast if the item cannot be cast to type T.
+     */
     template <typename T>
     [[nodiscard]] std::shared_ptr<T> get(std::string_view name)
     {
