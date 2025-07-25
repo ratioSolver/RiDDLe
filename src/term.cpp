@@ -78,7 +78,7 @@ namespace riddle
     {
         json::json j_itm{{"type", get_type().get_full_name()}}; // we add the type of the item..
 #ifdef COMPUTE_NAMES
-        j_itm["name"] = std::string_view(get_type().get_scope().get_core().guess_name(*this));
+        j_itm["name"] = get_type().get_scope().get_core().guess_name(*this);
 #endif
 
         if (!items.empty()) // we add the fields of the item..
