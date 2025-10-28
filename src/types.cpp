@@ -18,7 +18,7 @@ namespace riddle
         for (const auto &sv : get_instances())
             sv_instances.emplace(static_cast<component *>(&*sv), std::vector<atom_term *>());
         for (const auto &atm : get_atoms())
-            if (atm->get_state() == atom_state::active)
+            if (get_core().get_atom_state(*atm) == atom_state::active)
             { // the atom is active..
                 const auto tau = atm->get(tau_kw);
                 if (auto c_svs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..
@@ -115,7 +115,7 @@ namespace riddle
         for (const auto &rr : get_instances())
             rr_instances.emplace(static_cast<component *>(&*rr), std::vector<atom_term *>());
         for (const auto &atm : get_atoms())
-            if (atm->get_state() == atom_state::active)
+            if (get_core().get_atom_state(*atm) == atom_state::active)
             { // the atom is active..
                 const auto tau = atm->get(tau_kw);
                 if (auto c_rrs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..
@@ -225,7 +225,7 @@ namespace riddle
         for (const auto &cr : get_instances())
             cr_instances.emplace(static_cast<component *>(&*cr), std::vector<atom_term *>());
         for (const auto &atm : get_atoms())
-            if (atm->get_state() == atom_state::active)
+            if (get_core().get_atom_state(*atm) == atom_state::active)
             { // the atom is active..
                 const auto tau = atm->get(tau_kw);
                 if (auto c_crs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..

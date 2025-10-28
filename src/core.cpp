@@ -253,7 +253,7 @@ namespace riddle
         for (const auto &[_, pred] : get_predicates())
             if (pred->get_name() != impulse_kw && pred->get_name() != interval_kw)
                 for (const auto &atm : pred->get_atoms())
-                    if (atm->get_state() == riddle::atom_state::active)
+                    if (get_atom_state(*atm) == riddle::atom_state::active)
                     { // we get only the active atoms..
                         if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
                         { // we have an impulse atom..

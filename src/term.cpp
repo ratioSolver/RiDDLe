@@ -93,7 +93,7 @@ namespace riddle
         json::json j_atm{{"is_fact", fact}, {"type", get_type().get_full_name()}};
 
         // we add the state of the atom..
-        switch (get_state())
+        switch (get_type().get_scope().get_core().get_atom_state(*this))
         {
         case atom_state::active:
             j_atm["state"] = "active";

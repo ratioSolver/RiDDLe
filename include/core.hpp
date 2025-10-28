@@ -413,6 +413,7 @@ namespace riddle
      * @return A shared pointer to the newly created atom.
      */
     [[nodiscard]] atom_expr new_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {});
+    [[nodiscard]] virtual atom_state get_atom_state(const atom_term &atom) const noexcept = 0;
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 

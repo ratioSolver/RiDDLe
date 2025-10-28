@@ -52,7 +52,20 @@ namespace riddle
   class enum_item : public enum_term
   {
   public:
-    enum_item(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept;
+    enum_item(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values, utils::var ev) noexcept;
+
+    [[nodiscard]] const utils::var &get_var() const noexcept { return var; }
+
+    [[nodiscard]] virtual json::json to_json() const noexcept override;
+
+  private:
+    const utils::var var;
+  };
+
+  class sat_enum_item : public enum_term
+  {
+  public:
+    sat_enum_item(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept;
 
     [[nodiscard]] bool has_lit(const utils::enum_val &val) const noexcept { return domain.find(&val) != domain.end(); }
 

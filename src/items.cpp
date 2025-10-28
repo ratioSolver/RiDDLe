@@ -25,13 +25,22 @@ namespace riddle
 
     string_item::string_item(string_type &tp, std::string &&expr) noexcept : string_term(tp), expr(expr) {}
 
-    enum_item::enum_item(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept : enum_term(tp, std::move(values))
+    enum_item::enum_item(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values, utils::var ev) noexcept : enum_term(tp, std::move(values)), var(ev) {}
+
+    json::json enum_item::to_json() const noexcept
+    {
+        auto j_val = enum_term::to_json();
+        j_val["var"] = static_cast<uint64_t>(var);
+        return j_val;
+    }
+
+    sat_enum_item::sat_enum_item(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept : enum_term(tp, std::move(values))
     {
         for (size_t i = 0; i < get_values().size(); i++)
             domain.emplace(&get_values()[i].get(), lits[i]);
     }
 
-    json::json enum_item::to_json() const noexcept
+    json::json sat_enum_item::to_json() const noexcept
     {
         auto j_val = enum_term::to_json();
         json::json j_vals(json::json_type::array);

@@ -25,16 +25,7 @@ public:
     riddle::string_expr new_string(std::string &&) override { return std::make_shared<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
     riddle::string_expr new_string() override { return new_string(""); }
     std::string string_value(const riddle::string_term &) const noexcept override { return ""; }
-    riddle::enum_expr new_enum(riddle::component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) override
-    {
-        std::vector<utils::lit> lits;
-        if (values.size() == 1)
-            lits.push_back(utils::TRUE_lit);
-        else
-            for (size_t i = 0; i < values.size(); i++)
-                lits.push_back(utils::lit());
-        return std::make_shared<riddle::enum_item>(tp, std::move(values), std::move(lits));
-    }
+    riddle::enum_expr new_enum(riddle::component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) override { return std::make_shared<riddle::enum_item>(tp, std::move(values), 0); }
     std::vector<std::reference_wrapper<utils::enum_val>> enum_value(const riddle::enum_term &itm) const noexcept override { return {itm.get_values()[0].get()}; }
 
     riddle::arith_expr new_negation(riddle::arith_expr) override { return new_int(0); }
@@ -52,6 +43,7 @@ public:
         auto f = utils::FALSE_lit;
         return std::make_shared<riddle::atom>(pred, is_fact, std::move(args), std::move(f));
     }
+    riddle::atom_state get_atom_state(const riddle::atom_term &) const noexcept override { return riddle::atom_state::active; }
 };
 
 void test_class_declaration()
