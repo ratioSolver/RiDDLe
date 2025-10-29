@@ -10,13 +10,10 @@ namespace riddle
         switch (get_type().get_scope().get_core().bool_value(*this))
         {
         case utils::True:
-            j_val["val"] = "True";
+            j_val["val"] = true;
             break;
         case utils::False:
-            j_val["val"] = "False";
-            break;
-        default:
-            j_val["val"] = "Undefined";
+            j_val["val"] = false;
             break;
         }
         return j_val;
