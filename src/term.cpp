@@ -85,6 +85,7 @@ namespace riddle
     }
 
     atom_term::atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) noexcept : term(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
+    atom_state atom_term::get_state() const noexcept { return get_type().get_scope().get_core().get_atom_state(*this); }
     json::json atom_term::to_json() const noexcept
     {
         json::json j_atm{{"is_fact", fact}, {"type", get_type().get_full_name()}};

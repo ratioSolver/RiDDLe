@@ -235,6 +235,8 @@ namespace riddle
 
     [[nodiscard]] bool is_fact() const { return fact; }
 
+    [[nodiscard]] atom_state get_state() const noexcept;
+
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
