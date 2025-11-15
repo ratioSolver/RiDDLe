@@ -11,7 +11,7 @@ class Clear : StateVariable {
     predicate False() {
         goal us_b = new hand.Stack(b1:tau.b, end:start);
     }
-}
+};
 
 class Block : StateVariable {
 
@@ -27,7 +27,7 @@ class Block : StateVariable {
         duration >= 1.0;
         goal pd = new hand.PutDown(b:tau, end:start);
     }
-}
+};
 
 class Hand : StateVariable {
 
@@ -67,4 +67,4 @@ class Hand : StateVariable {
         goal b1c = new b1.clear.True(end:start);
         fact b0c = new b0.clear.True(start:start); b0c.duration >= 1.0;
     }
-}
+};

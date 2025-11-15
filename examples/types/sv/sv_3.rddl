@@ -9,7 +9,7 @@ class TestSV : StateVariable {
         duration >= 1.0;
         goal at = new At(end:start);
     }
-}
+};
 
 TestSV test = new TestSV();
 

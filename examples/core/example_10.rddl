@@ -14,7 +14,7 @@ class Navigator : StateVariable {
         duration >= 1;
         goal at = new At(end:start, l:from);
     }
-}
+};
 
 Navigator nav = new Navigator();
 

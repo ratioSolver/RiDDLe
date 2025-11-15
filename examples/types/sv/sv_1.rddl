@@ -4,7 +4,7 @@ class TestSV : StateVariable {
         duration >= 10.0;
         goal p = new P(end:start, x:x - 1.0);
     }
-}
+};
 
 TestSV test = new TestSV();
 

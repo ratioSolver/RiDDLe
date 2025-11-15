@@ -12,15 +12,14 @@ Building b1 = new Building();
 GreenSpace gs0 = new GreenSpace();
 GreenSpace gs1 = new GreenSpace();
 
-Maintenance agnt = new Maintenance();
-goal bm0 = new agnt.BuildingMaintenance(b:b0);
-goal gm0 = new agnt.GreenSpacesMaintenance(gs:gs0);
-goal rm0 = new agnt.RoadMaintenance(r:r0);
+goal bm0 = new BuildingMaintenance(b:b0);
+goal gm0 = new GreenSpacesMaintenance(gs:gs0);
+goal rm0 = new RoadMaintenance(r:r0);
 rm0.start >= bm0.end;
 rm0.start >= gm0.end;
 
-goal bm1 = new agnt.BuildingMaintenance(b:b1);
-goal gm1 = new agnt.GreenSpacesMaintenance(gs:gs1);
-goal rm1 = new agnt.RoadMaintenance(r:r1);
+goal bm1 = new BuildingMaintenance(b:b1);
+goal gm1 = new GreenSpacesMaintenance(gs:gs1);
+goal rm1 = new RoadMaintenance(r:r1);
 rm1.start >= bm1.end;
 rm1.start >= gm1.end;

@@ -3,7 +3,7 @@ class TestSV : StateVariable {
     predicate P(real x) {
         duration >= 10.0;
     }
-}
+};
 
 TestSV test = new TestSV();
 

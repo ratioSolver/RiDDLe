@@ -1,13 +1,12 @@
-#include "conjunction.h"
-#include "item.h"
+#include "conjunction.hpp"
 
 namespace riddle
 {
-    conjunction::conjunction(scope &scp, env ctx, const utils::rational cst, const std::vector<ast::statement_ptr> &body) : scope(scp), ctx(ctx), cost(cst), body(body) {}
+    conjunction::conjunction(const scope &scp, env &&ctx, const utils::rational cst, const std::vector<std::unique_ptr<statement>> &body) noexcept : scp(scp), ctx(std::move(ctx)), cst(cst), body(body) {}
 
-    RIDDLE_EXPORT void conjunction::execute()
-    { // execute the body of the conjunction..
+    void conjunction::execute()
+    {
         for (auto &stmt : body)
-            stmt->execute(*this, ctx);
+            stmt->execute(scp, ctx);
     }
 } // namespace riddle

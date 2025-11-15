@@ -1,1882 +1,1255 @@
-#include "parser.h"
-#include "core.h"
-#include "item.h"
-#include "constructor.h"
-#include "method.h"
-#include "conjunction.h"
-#include <queue>
+#include "parser.hpp"
 #include <cassert>
 
 namespace riddle
 {
-    using namespace ast;
+    parser::parser(std::istream &is) : lex(), tokens(lex.parse(is)), pos(0) {}
 
-    RIDDLE_EXPORT expr bool_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_bool(literal.val); }
-    RIDDLE_EXPORT expr int_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_int(literal.val); }
-    RIDDLE_EXPORT expr real_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_real(literal.val); }
-    RIDDLE_EXPORT expr string_literal_expression::evaluate(scope &scp, env &) const { return scp.get_core().new_string(literal.str); }
-
-    RIDDLE_EXPORT expr cast_expression::evaluate(scope &scp, env &ctx) const { return xpr->evaluate(scp, ctx); }
-
-    RIDDLE_EXPORT expr plus_expression::evaluate(scope &scp, env &ctx) const { return xpr->evaluate(scp, ctx); }
-    RIDDLE_EXPORT expr minus_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().minus(xpr->evaluate(scp, ctx)); }
-
-    RIDDLE_EXPORT expr not_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().negate(xpr->evaluate(scp, ctx)); }
-
-    RIDDLE_EXPORT expr constructor_expression::evaluate(scope &scp, env &ctx) const
+    std::unique_ptr<compilation_unit> parser::parse_compilation_unit()
     {
-        complex_type *t = dynamic_cast<complex_type *>(&scp.get_type(instance_type.front().id));
-        if (!t)
-            throw std::runtime_error("cannot invoke constructor on non-complex type");
-        for (auto it = instance_type.begin() + 1; it != instance_type.end(); ++it)
-            if (auto ct = dynamic_cast<complex_type *>(t))
-                t = dynamic_cast<complex_type *>(&ct->get_type(it->id));
-            else
-                throw std::runtime_error("cannot invoke constructor on non-complex type");
+        std::vector<std::unique_ptr<type_declaration>> types;           // the type declarations..
+        std::vector<std::unique_ptr<predicate_declaration>> predicates; // the predicate declarations..
+        std::vector<std::unique_ptr<method_declaration>> methods;       // the method declarations..
+        std::vector<std::unique_ptr<statement>> statements;             // the statements..
 
-        std::vector<expr> args;
-        args.reserve(expressions.size());
-        std::vector<std::reference_wrapper<type>> arg_types;
-        arg_types.reserve(expressions.size());
-        for (auto &xpr : expressions)
+        while (!match(EoF))
         {
-            auto e = xpr->evaluate(scp, ctx);
-            args.emplace_back(e);
-            arg_types.emplace_back(e->get_type());
-        }
-
-        auto inst = t->new_instance();
-        t->get_constructor(arg_types).call(inst, args);
-        return inst;
-    }
-
-    RIDDLE_EXPORT expr eq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().eq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
-    RIDDLE_EXPORT expr neq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().negate(scp.get_core().eq(left->evaluate(scp, ctx), right->evaluate(scp, ctx))); }
-
-    RIDDLE_EXPORT expr lt_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().lt(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
-    RIDDLE_EXPORT expr leq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().leq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
-    RIDDLE_EXPORT expr gt_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().gt(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
-    RIDDLE_EXPORT expr geq_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().geq(left->evaluate(scp, ctx), right->evaluate(scp, ctx)); }
-
-    RIDDLE_EXPORT expr function_expression::evaluate(scope &scp, env &ctx) const
-    {
-        auto self = ctx.get(ids.front().id);
-        for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto c_env = dynamic_cast<env *>(self.operator->()))
-                self = c_env->get(it->id);
-            else
-                throw std::runtime_error("cannot find `" + it->id + "` item..");
-
-        std::vector<expr> args;
-        std::vector<std::reference_wrapper<type>> arg_types;
-        for (auto &xpr : expressions)
-        {
-            auto e = xpr->evaluate(scp, ctx);
-            args.emplace_back(e);
-            arg_types.emplace_back(e->get_type());
-        }
-
-        if (auto t = dynamic_cast<complex_type *>(&self->get_type()))
-        {
-            auto &m = t->get_method(function_name.id, arg_types);
-            return m.call(self, args);
-        }
-        else
-            throw std::runtime_error("cannot find function");
-    }
-
-    RIDDLE_EXPORT expr id_expression::evaluate(scope &, env &ctx) const
-    {
-        auto e = ctx.get(ids.front().id);
-        for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto c_env = dynamic_cast<env *>(e.operator->()))
-                e = c_env->get(it->id);
-            else
-                throw std::runtime_error("cannot find `" + it->id + "` item..");
-        return e;
-    }
-
-    RIDDLE_EXPORT expr implication_expression::evaluate(scope &scp, env &ctx) const { return scp.get_core().disj({scp.get_core().negate(left->evaluate(scp, ctx)), right->evaluate(scp, ctx)}); }
-
-    RIDDLE_EXPORT expr disjunction_expression::evaluate(scope &scp, env &ctx) const
-    {
-        std::vector<expr> args;
-        args.reserve(expressions.size());
-        for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(scp, ctx));
-        return scp.get_core().disj(args);
-    }
-
-    RIDDLE_EXPORT expr conjunction_expression::evaluate(scope &scp, env &ctx) const
-    {
-        std::vector<expr> args;
-        args.reserve(expressions.size());
-        for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(scp, ctx));
-        return scp.get_core().conj(args);
-    }
-
-    RIDDLE_EXPORT expr exct_one_expression::evaluate(scope &scp, env &ctx) const
-    {
-        std::vector<expr> args;
-        args.reserve(expressions.size());
-        for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(scp, ctx));
-        return scp.get_core().exct_one(args);
-    }
-
-    RIDDLE_EXPORT expr addition_expression::evaluate(scope &scp, env &ctx) const
-    {
-        std::vector<expr> args;
-        args.reserve(expressions.size());
-        for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(scp, ctx));
-        return scp.get_core().add(args);
-    }
-
-    RIDDLE_EXPORT expr subtraction_expression::evaluate(scope &scp, env &ctx) const
-    {
-        std::vector<expr> args;
-        args.reserve(expressions.size());
-        for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(scp, ctx));
-        return scp.get_core().sub(args);
-    }
-
-    RIDDLE_EXPORT expr multiplication_expression::evaluate(scope &scp, env &ctx) const
-    {
-        std::vector<expr> args;
-        args.reserve(expressions.size());
-        for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(scp, ctx));
-        return scp.get_core().mul(args);
-    }
-
-    RIDDLE_EXPORT expr division_expression::evaluate(scope &scp, env &ctx) const
-    {
-        std::vector<expr> args;
-        args.reserve(expressions.size());
-        for (auto &xpr : expressions)
-            args.emplace_back(xpr->evaluate(scp, ctx));
-        return scp.get_core().div(args);
-    }
-
-    RIDDLE_EXPORT void local_field_statement::execute(scope &scp, env &ctx) const
-    {
-        for (size_t i = 0; i < names.size(); ++i)
-            if (xprs[i])
-                ctx.items.emplace(names[i].id, xprs[i]->evaluate(scp, ctx));
-            else
+            switch (tokens.at(pos)->sym)
             {
-                type *t = &scp.get_type(field_type.front().id);
-                for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
-                    if (auto ct = dynamic_cast<complex_type *>(t))
-                        t = &ct->get_type(it->id);
-                    else
-                        throw std::runtime_error("cannot find type `" + it->id + "`..");
-
-                if (t->is_primitive())
-                    ctx.items.emplace(names[i].id, t->new_instance());
-                else if (auto ct = dynamic_cast<complex_type *>(t))
-                    switch (ct->get_instances().size())
-                    {
-                    case 0:
-                        throw inconsistency_exception();
-                    case 1:
-                        ctx.items.emplace(names[i].id, ct->get_instances().front());
-                        break;
-                    default:
-                        ctx.items.emplace(names[i].id, scp.get_core().new_enum(*ct, ct->get_instances()));
-                    }
-                else if (auto et = dynamic_cast<enum_type *>(t))
-                {
-                    auto all_values = et->get_all_values();
-                    switch (all_values.size())
-                    {
-                    case 0:
-                        throw inconsistency_exception();
-                    case 1:
-                        ctx.items.emplace(names[i].id, all_values.front());
-                        break;
-                    default:
-                        ctx.items.emplace(names[i].id, scp.get_core().new_enum(*et, all_values));
-                    }
-                }
-                else if (auto td = dynamic_cast<typedef_type *>(t))
-                    ctx.items.emplace(names[i].id, td->new_instance());
-                else
-                    throw std::runtime_error("cannot create instance of type `" + t->get_name() + "`..");
-            }
-    }
-
-    RIDDLE_EXPORT void assignment_statement::execute(scope &scp, env &ctx) const
-    {
-        auto e = ctx.get(ids.front().id);
-        for (auto it = ids.begin() + 1; it != ids.end(); ++it)
-            if (auto c_env = dynamic_cast<env *>(e.operator->()))
-                e = c_env->get(it->id);
-            else
-                throw std::runtime_error("cannot find `" + it->id + "` item..");
-
-        if (auto c_env = dynamic_cast<env *>(e.operator->()))
-            c_env->items.emplace(id.id, xpr->evaluate(scp, ctx));
-        else
-            throw std::runtime_error("cannot find `" + id.id + "` item..");
-    }
-
-    RIDDLE_EXPORT void expression_statement::execute(scope &scp, env &ctx) const { scp.get_core().assert_fact(xpr->evaluate(scp, ctx)); }
-
-    RIDDLE_EXPORT void disjunction_statement::execute(scope &scp, env &ctx) const
-    {
-        std::vector<conjunction_ptr> conjs;
-        conjs.reserve(conjunctions.size());
-
-        for (size_t i = 0; i < conjunctions.size(); ++i)
-            conjs.emplace_back(new conjunction(scp, ctx, conjunction_costs[i] ? scp.get_core().arith_value(conjunction_costs[i]->evaluate(scp, ctx)).get_rational() : utils::rational::ONE, conjunctions[i]));
-
-        scp.get_core().new_disjunction(std::move(conjs));
-    }
-
-    RIDDLE_EXPORT void for_all_statement::execute(scope &scp, env &ctx) const
-    {
-        type *t = &scp.get_type(field_type.front().id);
-        for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
-            if (auto ct = dynamic_cast<complex_type *>(t))
-                t = &ct->get_type(it->id);
-            else
-                throw std::runtime_error("cannot find type `" + it->id + "`..");
-
-        if (auto ct = dynamic_cast<complex_type *>(t))
-        {
-            auto is = ct->get_instances();
-            if (is.empty())
-                throw inconsistency_exception();
-            else
-                for (auto ci : is)
-                {
-                    env c_ctx(ctx);
-                    c_ctx.items.emplace(id.id, ci);
-                    for (auto &stmnt : body)
-                        stmnt->execute(scp, c_ctx);
-                }
-        }
-        else
-            throw std::runtime_error("cannot iterate over type `" + t->get_name() + "`..");
-    }
-
-    RIDDLE_EXPORT void conjunction_statement::execute(scope &scp, env &ctx) const
-    {
-        for (auto &stmnt : body)
-            stmnt->execute(scp, ctx);
-    }
-
-    RIDDLE_EXPORT void formula_statement::execute(scope &scp, env &ctx) const
-    {
-        predicate *p;
-        std::map<std::string, expr> assgnments;
-        if (!formula_scope.empty())
-        { // the formula's scope is explicitely declared..
-            auto e = ctx.get(formula_scope.front().id);
-            for (auto it = formula_scope.begin() + 1; it != formula_scope.end(); ++it)
-                if (auto c_env = dynamic_cast<env *>(e.operator->()))
-                    e = c_env->get(it->id);
-                else
-                    throw std::runtime_error("cannot find `" + it->id + "` item..");
-
-            p = &static_cast<complex_type &>(e->get_type()).get_predicate(predicate_name.id);
-            assgnments.emplace(TAU_KW, e);
-        }
-        else
-        { // we inherit the formula's scope..
-            p = &scp.get_predicate(predicate_name.id);
-            if (!is_core(p->scope::get_scope()))
-                assgnments.emplace(TAU_KW, ctx.get(TAU_KW));
-        }
-
-        for (size_t i = 0; i < assignment_names.size(); ++i)
-        {
-            auto v = assignment_values[i]->evaluate(scp, ctx);
-            const auto &t = p->get_field(assignment_names[i].id).get_type();
-            if (t.is_assignable_from(v->get_type())) // the target type is a superclass of the assignment..
-                assgnments.emplace(assignment_names[i].id, v);
-            else if (v->get_type().is_assignable_from(t)) // the assignment is a superclass of the target type..
+            case ENUM:
+                types.emplace_back(parse_enum_declaration());
+                break;
+            case CLASS:
+                types.emplace_back(parse_class_declaration());
+                break;
+            case PREDICATE:
+                predicates.emplace_back(parse_predicate_declaration());
+                break;
+            case VOID:
+                methods.emplace_back(parse_method_declaration());
+                break;
+            case BOOL:
+            case INT:
+            case REAL:
+            case TIME:
+            case STRING:
             {
-                if (scp.get_core().is_enum(v))
-                { // the assignment is an enum (we prune the unassignable values)..
-                    for (auto &val : scp.get_core().domain(v))
-                        if (!t.is_assignable_from(val->get_type()))
-                            scp.get_core().prune(v, val);
+                pos++;
+                if (!match(ID))
+                    error("Expected identifier");
+
+                if (match(LPAREN))
+                { // method declaration..
+                    pos -= 2;
+                    methods.emplace_back(parse_method_declaration());
                 }
-                else // the assignment is a constant (which cannot be assigned to the target type)..
-                    throw inconsistency_exception();
-                assgnments.emplace(assignment_names[i].id, v);
+                else
+                { // statement..
+                    pos -= 2;
+                    statements.emplace_back(parse_statement());
+                }
+
+                break;
             }
-            else
-                throw std::runtime_error("unrelated types");
-        }
-
-        auto atm_xpr = is_fact ? p->new_fact() : p->new_goal();
-        auto &atm = static_cast<atom &>(*atm_xpr);
-        atm.items.insert(assgnments.begin(), assgnments.end());
-
-        // we initialize the unassigned atom's fields..
-        std::queue<predicate *> q;
-        q.push(p);
-        while (!q.empty())
-        {
-            for (const auto &arg : q.front()->get_args())
-                if (auto arg_it = atm.items.find(arg.get().get_name()); arg_it == atm.items.end())
-                {
-                    type &tp = arg.get().get_type();
-                    if (tp.is_primitive())
-                        atm.items.emplace(arg.get().get_name(), tp.new_instance());
-                    else if (auto ct = dynamic_cast<complex_type *>(&tp))
-                        switch (ct->get_instances().size())
-                        {
-                        case 0:
-                            throw inconsistency_exception();
-                        case 1:
-                            atm.items.emplace(arg.get().get_name(), ct->get_instances().front());
-                            break;
-                        default:
-                            atm.items.emplace(arg.get().get_name(), scp.get_core().new_enum(*ct, ct->get_instances()));
-                        }
-                    else
-                        throw std::runtime_error("cannot find type");
+            case ID:
+            {
+                size_t c_pos = pos++;
+                while (match(DOT))
+                    if (!match(ID))
+                        error("Expected identifier after `.`");
+                if (match(LPAREN))
+                { // method declaration..
+                    pos = c_pos;
+                    methods.emplace_back(parse_method_declaration());
                 }
-            for (const auto &sp : q.front()->get_parents())
-                q.push(&sp.get());
-            q.pop();
-        }
-
-        scp.get_core().new_atom(atm_xpr);
-
-        ctx.items.emplace(formula_name.id, atm_xpr);
-    }
-
-    RIDDLE_EXPORT void return_statement::execute(scope &scp, env &ctx) const { ctx.items.emplace(RETURN_KW, xpr->evaluate(scp, ctx)); }
-
-    RIDDLE_EXPORT void method_declaration::refine(scope &scp) const
-    {
-        type *rt = nullptr; // the method's return type..
-        if (!return_type.empty())
-        {
-            rt = &scp.get_type(return_type.front().id);
-            for (auto it = return_type.begin() + 1; it != return_type.end(); ++it)
-                if (auto ci = dynamic_cast<complex_type *>(rt))
-                    rt = &ci->get_type(it->id);
                 else
-                    throw std::runtime_error("cannot find type");
-        }
-
-        std::vector<field_ptr> args; // the method's arguments..
-        for (const auto &[tp_id_tkns, id_tkn] : parameters)
-        {
-            auto tp = &scp.get_type(tp_id_tkns.front().id);
-            for (auto it = tp_id_tkns.begin() + 1; it != tp_id_tkns.end(); ++it)
-                if (auto ci = dynamic_cast<complex_type *>(tp))
-                    tp = &ci->get_type(it->id);
-                else
-                    throw std::runtime_error("cannot find type");
-            args.emplace_back(new field(*tp, id_tkn.id));
-        }
-
-        // we create the method and add it to the scope..
-        auto mtd = new method(scp, name.id, std::move(args), body, rt);
-        if (auto cr = dynamic_cast<core *>(&scp))
-            cr->add_method(mtd); // we add the method to the core..
-        else if (auto ct = dynamic_cast<complex_type *>(&scp))
-            ct->add_method(mtd); // we add the method to the complex type..
-        else
-            throw std::runtime_error("cannot add method");
-    }
-
-    RIDDLE_EXPORT void predicate_declaration::declare(scope &scp) const
-    { // we create the predicate and add it to the scope..
-        auto p = new predicate(scp, name.id, std::vector<field_ptr>(), body);
-        if (auto cr = dynamic_cast<core *>(&scp))
-            cr->add_predicate(p); // we add the predicate to the core..
-        else if (auto ct = dynamic_cast<complex_type *>(&scp))
-            ct->add_predicate(p); // we add the predicate to the complex type..
-        else
-            throw std::runtime_error("cannot add predicate");
-    }
-
-    RIDDLE_EXPORT void predicate_declaration::refine(scope &scp) const
-    {
-        auto &p = scp.get_predicate(name.id); // the predicate to refine..
-
-        // the predicate's arguments..
-        for (const auto &[tp_id_tkns, id_tkn] : parameters)
-        { // we find the type..
-            auto tp = &scp.get_type(tp_id_tkns.front().id);
-            for (auto it = tp_id_tkns.begin() + 1; it != tp_id_tkns.end(); ++it)
-                if (auto ci = dynamic_cast<complex_type *>(tp))
-                    tp = &ci->get_type(it->id);
-                else
-                    throw std::runtime_error("cannot find type");
-
-            // we add the argument to the predicate..
-            p.add_arg(new field(*tp, id_tkn.id));
-        }
-
-        // the predicate's parents..
-        for (const auto &sp : predicate_list)
-        {
-            auto sp_p = &scp.get_predicate(sp.front().id);
-            for (auto it = sp.begin() + 1; it != sp.end(); ++it)
-                sp_p = &sp_p->get_predicate(it->id);
-            p.add_parent(*sp_p);
-        }
-    }
-
-    RIDDLE_EXPORT void typedef_declaration::declare(scope &scp) const
-    { // we create the typedef and add it to the scope..
-        auto td = new typedef_type(scp, name.id, scp.get_type(primitive_type.id), xpr);
-        if (auto cr = dynamic_cast<core *>(&scp))
-            cr->add_type(td); // we add the typedef to the core..
-        else if (auto ct = dynamic_cast<complex_type *>(&scp))
-            ct->add_type(td); // we add the typedef to the complex type..
-        else
-            throw std::runtime_error("cannot add typedef");
-    }
-
-    RIDDLE_EXPORT void enum_declaration::declare(scope &scp) const
-    { // we create the enum and add it to the scope..
-        auto en = new enum_type(scp, name.id);
-
-        // the enum's instances..
-        for (const auto &e : enums)
-            en->instances.emplace_back(scp.get_core().new_string(e.str));
-
-        if (auto cr = dynamic_cast<core *>(&scp))
-            cr->add_type(en); // we add the enum to the core..
-        else if (auto ct = dynamic_cast<complex_type *>(&scp))
-            ct->add_type(en); // we add the enum to the complex type..
-        else
-            throw std::runtime_error("cannot add enum");
-    }
-
-    RIDDLE_EXPORT void enum_declaration::refine(scope &scp) const
-    {
-        if (!type_refs.empty())
-        {
-            if (auto en = dynamic_cast<enum_type *>(&scp.get_type(name.id))) // the enum to refine..
-                for (const auto &tr : type_refs)
-                {
-                    auto tp = &scp.get_type(tr.front().id);
-                    for (auto it = tr.begin() + 1; it != tr.end(); ++it)
-                        if (auto ci = dynamic_cast<complex_type *>(tp))
-                            tp = &ci->get_type(it->id);
-                        else
-                            throw std::runtime_error("cannot find type");
-                    if (auto e = dynamic_cast<enum_type *>(tp))
-                        en->enums.emplace_back(*e);
-                    else
-                        throw std::runtime_error("cannot refine enum with non-enum type");
+                { // statement..
+                    pos = c_pos;
+                    statements.emplace_back(parse_statement());
                 }
-            else
-                throw std::runtime_error("cannot refine non-enum type");
+                break;
+            }
+            case LBRACE:
+            case BANG:
+            case FACT:
+            case GOAL:
+            case Bool:
+            case Int:
+            case Real:
+            case String:
+            { // statement..
+                statements.emplace_back(parse_statement());
+                break;
+            }
+            default:
+                error("Unexpected token");
+            }
         }
+        return std::make_unique<compilation_unit>(std::move(types), std::move(methods), std::move(predicates), std::move(statements));
     }
 
-    RIDDLE_EXPORT void field_declaration::refine(scope &scp) const
+    std::unique_ptr<enum_declaration> parser::parse_enum_declaration()
     {
-        auto tp = &scp.get_type(field_type.front().id);
-        for (auto it = field_type.begin() + 1; it != field_type.end(); ++it)
-            if (auto ci = dynamic_cast<complex_type *>(tp))
-                tp = &ci->get_type(it->id);
-            else
-                throw std::runtime_error("cannot find type");
+        if (!match(ENUM))
+            error("Expected `enum` keyword");
+        if (!match(ID))
+            error("Expected identifier after `enum` keyword");
 
-        for (const auto &d : declarations)
+        id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+        std::vector<string_token> values;             // the values of the enum..
+        std::vector<std::vector<id_token>> enum_refs; // the enum references..
+
+        do
         {
-            auto fld = new field(*tp, d->name.id, d->xpr);
-            if (auto cr = dynamic_cast<core *>(&scp))
-                cr->add_field(fld); // we add the field to the core..
-            else if (auto ct = dynamic_cast<complex_type *>(&scp))
-                ct->add_field(fld); // we add the field to the complex type..
-            else
-                throw std::runtime_error("cannot add field");
-        }
+            switch (tokens.at(pos++)->sym)
+            {
+            case LBRACE:
+                if (!match(RBRACE))
+                {
+                    do
+                    {
+                        if (!match(String))
+                            error("Expected string literal");
+                        values.emplace_back(std::string(static_cast<const string_token &>(*tokens.at(pos - 1)).value), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    } while (match(COMMA));
+                    if (!match(RBRACE))
+                        error("Expected `}` after string literals");
+                }
+                break;
+            case ID:
+            {
+                std::vector<id_token> refs;
+                refs.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                while (match(DOT))
+                {
+                    if (!match(ID))
+                        error("Expected identifier after `.`");
+                    refs.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                }
+                enum_refs.emplace_back(std::move(refs));
+                break;
+            }
+            default:
+                error("Expected `{` or `|`");
+            }
+        } while (match(BAR));
+
+        if (!match(SEMICOLON))
+            error("Expected `;` after enum declaration");
+
+        return std::make_unique<enum_declaration>(std::move(id), std::move(values), std::move(enum_refs));
     }
 
-    RIDDLE_EXPORT void constructor_declaration::refine(scope &scp) const
+    std::unique_ptr<class_declaration> parser::parse_class_declaration()
     {
-        std::vector<field_ptr> args;
-        args.reserve(parameters.size());
-        for (const auto &[tp_id_tkns, id_tkn] : parameters)
-        { // we find the type..
-            auto tp = &scp.get_type(tp_id_tkns.front().id);
-            for (auto it = tp_id_tkns.begin() + 1; it != tp_id_tkns.end(); ++it)
-                if (auto ci = dynamic_cast<complex_type *>(tp))
-                    tp = &ci->get_type(it->id);
+        std::vector<std::vector<id_token>> base_classes;                    // the base classes of the class..
+        std::vector<std::unique_ptr<field_declaration>> fields;             // the fields of the class..
+        std::vector<std::unique_ptr<constructor_declaration>> constructors; // the constructors of the class..
+        std::vector<std::unique_ptr<method_declaration>> methods;           // the methods of the class..
+        std::vector<std::unique_ptr<predicate_declaration>> predicates;     // the predicates of the class..
+        std::vector<std::unique_ptr<type_declaration>> types;               // the types of the class..
+
+        if (!match(CLASS))
+            error("Expected `class` keyword");
+
+        if (!match(ID))
+            error("Expected identifier after `class` keyword");
+
+        id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+        if (match(COLON))
+            do
+            {
+                std::vector<id_token> base_class;
+                do
+                {
+                    if (!match(ID))
+                        error("Expected identifier after `:`");
+                    base_class.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                } while (match(DOT));
+                base_classes.emplace_back(std::move(base_class));
+            } while (match(COMMA));
+
+        if (!match(LBRACE))
+            error("Expected `{` after class declaration");
+
+        while (!match(RBRACE))
+            switch (tokens.at(pos++)->sym)
+            {
+            case BOOL:
+            case INT:
+            case REAL:
+            case TIME:
+            case STRING:
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+
+                if (match(LPAREN))
+                { // method declaration..
+                    pos -= 3;
+                    methods.emplace_back(parse_method_declaration());
+                }
                 else
-                    throw std::runtime_error("cannot find type");
+                { // field declaration..
+                    pos -= 2;
+                    fields.emplace_back(parse_field_declaration());
+                }
 
-            // we add the argument to the constructor..
-            args.emplace_back(new field(*tp, id_tkn.id));
-        }
-
-        if (auto c = dynamic_cast<complex_type *>(&scp))
-            c->add_constructor(new constructor(*c, std::move(args), init_names, init_vals, body)); // we add the constructor to the complex type..
-        else
-            throw std::runtime_error("cannot add constructor");
-    }
-
-    RIDDLE_EXPORT void class_declaration::declare(scope &scp) const
-    { // we create the class and add it to the scope..
-        auto cl = new complex_type(scp, name.id);
-        if (auto cr = dynamic_cast<core *>(&scp))
-            cr->add_type(cl); // we add the class to the core..
-        else if (auto ct = dynamic_cast<complex_type *>(&scp))
-            ct->add_type(cl); // we add the class to the complex type..
-        else
-            throw std::runtime_error("cannot add class");
-
-        // we declare the enclosed types..
-        for (const auto &t : types)
-            t->declare(*cl);
-    }
-
-    RIDDLE_EXPORT void class_declaration::refine(scope &scp) const
-    {
-        auto &tp = scp.get_type(name.id);
-        if (auto c_tp = dynamic_cast<complex_type *>(&tp))
-        { // we add the base classes..
-            for (const auto &t : base_classes)
-            { // we find the base class..
-                auto bc = &scp.get_type(t.front().id);
-                for (auto it = t.begin() + 1; it != t.end(); ++it)
-                    if (auto ci = dynamic_cast<complex_type *>(bc))
-                        bc = &ci->get_type(it->id);
+                break;
+            }
+            case ID:
+            {
+                if (match(LPAREN))
+                { // constructor declaration..
+                    pos -= 2;
+                    constructors.emplace_back(parse_constructor_declaration());
+                }
+                else
+                {
+                    size_t c_pos = pos;
+                    while (match(DOT))
+                        if (!match(ID))
+                            error("Expected identifier after `.`");
+                    if (match(LPAREN))
+                    { // method declaration..
+                        pos = c_pos - 1;
+                        methods.emplace_back(parse_method_declaration());
+                    }
                     else
-                        throw std::runtime_error("cannot find type");
-
-                if (auto bc_ct = dynamic_cast<complex_type *>(bc))
-                    c_tp->parents.emplace_back(*bc_ct); // we add the base class to the class..
-                else
-                    throw std::runtime_error("cannot add non-class type as base class");
+                    { // field declaration..
+                        pos = c_pos - 1;
+                        fields.emplace_back(parse_field_declaration());
+                    }
+                }
+                break;
+            }
+            case ENUM:
+                pos--;
+                types.emplace_back(parse_enum_declaration());
+                break;
+            case CLASS:
+                pos--;
+                types.emplace_back(parse_class_declaration());
+                break;
+            case PREDICATE:
+                pos--;
+                predicates.emplace_back(parse_predicate_declaration());
+                break;
+            case VOID:
+                pos--;
+                methods.emplace_back(parse_method_declaration());
+                break;
+            default:
+                error("Unexpected token");
             }
 
-            // we refine the fields..
-            for (const auto &f : fields)
-                f->refine(*c_tp);
-            // we refine the constructors..
-            for (const auto &c : constructors)
-                c->refine(*c_tp);
-            // we refine the methods..
-            for (const auto &m : methods)
-                m->refine(*c_tp);
-            // we refine the enclosed types..
-            for (const auto &t : types)
-                t->refine(*c_tp);
-            // we declare the enclosed predicates..
-            for (const auto &p : predicates)
-                p->declare(*c_tp);
-        }
-        else
-            throw std::runtime_error("cannot refine non-class type");
+        if (!match(SEMICOLON))
+            error("Expected `;` after class declaration");
+
+        if (constructors.empty()) // default constructor..
+            constructors.emplace_back(std::make_unique<constructor_declaration>(std::vector<std::pair<std::vector<id_token>, id_token>>(), std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>>(), std::vector<std::unique_ptr<statement>>()));
+
+        return std::make_unique<class_declaration>(std::move(id), std::move(base_classes), std::move(fields), std::move(constructors), std::move(methods), std::move(predicates), std::move(types));
     }
 
-    RIDDLE_EXPORT void class_declaration::refine_predicates(scope &scp) const
+    std::unique_ptr<field_declaration> parser::parse_field_declaration()
     {
-        auto &tp = scp.get_type(name.id);
-        if (auto c_tp = dynamic_cast<complex_type *>(&tp))
-        { // we refine the enclosed predicates..
-            for (const auto &p : predicates)
-                p->refine(*c_tp);
-            // we refine the enclosed types..
-            for (const auto &t : types)
-                t->refine_predicates(*c_tp);
-        }
-        else
-            throw std::runtime_error("cannot refine non-class type");
-    }
+        std::vector<id_token> tp;
+        std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
 
-    RIDDLE_EXPORT void compilation_unit::declare(scope &scp) const
-    {
-        // we declare the types..
-        for (const auto &t : types)
-            t->declare(scp);
-        // we declare the predicates..
-        for (const auto &p : predicates)
-            p->declare(scp);
-    }
-
-    RIDDLE_EXPORT void compilation_unit::refine(scope &scp) const
-    {
-        // we refine the types..
-        for (const auto &t : types)
-            t->refine(scp);
-        // we refine the methods..
-        for (const auto &m : methods)
-            m->refine(scp);
-        // we refine the predicates..
-        for (const auto &p : predicates)
-            p->refine(scp);
-    }
-
-    RIDDLE_EXPORT void compilation_unit::refine_predicates(scope &scp) const
-    {
-        // we refine the types..
-        for (const auto &t : types)
-            t->refine_predicates(scp);
-    }
-
-    RIDDLE_EXPORT void compilation_unit::execute(scope &scp, env &ctx) const
-    {
-        // we execute the statements..
-        for (const auto &s : body)
-            s->execute(scp, ctx);
-    }
-
-    RIDDLE_EXPORT parser::parser(const std::string &str) : lex(str) {}
-    RIDDLE_EXPORT parser::parser(std::istream &is) : lex(is) {}
-    RIDDLE_EXPORT parser::~parser() {}
-
-    const token *parser::next()
-    {
-        while (pos >= tks.size())
+        switch (tokens.at(pos++)->sym)
         {
-            auto c_tk = lex.next();
-            tks.emplace_back(std::move(c_tk));
+        case BOOL:
+            tp.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case INT:
+            tp.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case REAL:
+            tp.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case TIME:
+            tp.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case STRING:
+            tp.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case ID:
+        {
+            tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            while (match(DOT))
+            {
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+                tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            }
+            break;
         }
-        return tks[pos++].operator->();
+        default:
+            error("Expected type");
+        }
+
+        do
+        {
+            if (!match(ID))
+                error("Expected identifier");
+
+            id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            if (match(EQ))
+                fields.emplace_back(std::move(id), parse_expression());
+            else if (match(LPAREN))
+            {
+                std::vector<std::unique_ptr<expression>> args;
+                if (!match(RPAREN))
+                {
+                    do
+                    {
+                        args.emplace_back(parse_expression());
+                    } while (match(COMMA));
+                    if (!match(RPAREN))
+                        error("Expected `)` after arguments");
+                }
+                std::vector<id_token> f_tp;
+                f_tp.reserve(tp.size());
+                for (const auto &t : tp)
+                    f_tp.emplace_back(std::string(t.id), t.line, t.start_pos, t.end_pos);
+                fields.emplace_back(std::move(id), std::make_unique<constructor_expression>(std::move(f_tp), std::move(args)));
+            }
+            else
+                fields.emplace_back(std::move(id), nullptr);
+        } while (match(COMMA));
+
+        if (!match(SEMICOLON))
+            error("Expected `;` after field declaration");
+
+        return std::make_unique<field_declaration>(std::move(tp), std::move(fields));
+    }
+
+    std::unique_ptr<method_declaration> parser::parse_method_declaration()
+    {
+        std::vector<id_token> rt;
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::unique_ptr<statement>> stmts;
+
+        switch (tokens.at(pos++)->sym)
+        {
+        case VOID:
+            break;
+        case BOOL:
+            rt.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case INT:
+            rt.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case REAL:
+            rt.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case TIME:
+            rt.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case STRING:
+            rt.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            break;
+        case ID:
+        {
+            rt.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            while (match(DOT))
+            {
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+                rt.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            }
+            break;
+        }
+        default:
+            error("Expected type");
+        }
+
+        if (!match(ID)) // method name..
+            error("Expected identifier");
+
+        id_token name(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+        if (!match(LPAREN))
+            error("Expected `(` after method name");
+
+        if (!match(RPAREN))
+        { // we parse the parameters..
+            do
+            {
+                std::vector<id_token> tp;
+                switch (tokens.at(pos++)->sym)
+                {
+                case BOOL:
+                    tp.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case INT:
+                    tp.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case REAL:
+                    tp.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case TIME:
+                    tp.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case STRING:
+                    tp.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case ID:
+                {
+                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    while (match(DOT))
+                    {
+                        if (!match(ID))
+                            error("Expected identifier after `.`");
+                        tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    }
+                    break;
+                }
+                default:
+                    error("Expected type");
+                }
+
+                if (!match(ID))
+                    error("Expected identifier");
+                params.emplace_back(std::move(tp), id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            } while (match(COMMA));
+
+            if (!match(RPAREN))
+                error("Expected `)` after parameters");
+        }
+
+        if (!match(LBRACE))
+            error("Expected `{` after method declaration");
+
+        while (!match(RBRACE))
+            stmts.emplace_back(parse_statement());
+
+        return std::make_unique<method_declaration>(std::move(rt), std::move(name), std::move(params), std::move(stmts));
+    }
+
+    std::unique_ptr<constructor_declaration> parser::parse_constructor_declaration()
+    {
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> inits;
+        std::vector<std::unique_ptr<statement>> stmts;
+
+        if (!match(ID)) // constructor name..
+            error("Expected identifier");
+
+        if (!match(LPAREN))
+            error("Expected `(` after constructor name");
+
+        if (!match(RPAREN))
+        { // we parse the parameters..
+            do
+            {
+                std::vector<id_token> tp;
+                switch (tokens.at(pos++)->sym)
+                {
+                case BOOL:
+                    tp.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case INT:
+                    tp.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case REAL:
+                    tp.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case TIME:
+                    tp.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case STRING:
+                    tp.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case ID:
+                {
+                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    while (match(DOT))
+                    {
+                        if (!match(ID))
+                            error("Expected identifier after `.`");
+                        tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    }
+                    break;
+                }
+                default:
+                    error("Expected type");
+                }
+
+                if (!match(ID))
+                    error("Expected identifier");
+                params.emplace_back(std::move(tp), id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            } while (match(COMMA));
+
+            if (!match(RPAREN))
+                error("Expected `)` after parameters");
+        }
+
+        if (match(COLON))
+            do // we parse the initializations..
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                if (!match(LPAREN))
+                    error("Expected `(` after identifier");
+
+                std::vector<std::unique_ptr<expression>> args;
+                if (!match(RPAREN))
+                {
+                    do
+                    {
+                        args.emplace_back(parse_expression());
+                    } while (match(COMMA));
+                    if (!match(RPAREN))
+                        error("Expected `)` after arguments");
+                }
+
+                inits.emplace_back(std::move(id), std::move(args));
+            } while (match(COMMA));
+
+        if (!match(LBRACE))
+            error("Expected `{` after constructor declaration");
+
+        while (!match(RBRACE))
+            stmts.emplace_back(parse_statement());
+
+        return std::make_unique<constructor_declaration>(std::move(params), std::move(inits), std::move(stmts));
+    }
+
+    std::unique_ptr<predicate_declaration> parser::parse_predicate_declaration()
+    {
+        if (!match(PREDICATE))
+            error("Expected `predicate` keyword");
+
+        if (!match(ID)) // predicate name..
+            error("Expected identifier after `predicate` keyword");
+
+        id_token name(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+        std::vector<std::pair<std::vector<id_token>, id_token>> params;
+        std::vector<std::vector<id_token>> base_predicates;
+        std::vector<std::unique_ptr<statement>> body;
+
+        if (!match(LPAREN))
+            error("Expected `(` after predicate name");
+
+        if (!match(RPAREN))
+        { // we parse the parameters..
+            do
+            {
+                std::vector<id_token> tp;
+                switch (tokens.at(pos++)->sym)
+                {
+                case BOOL:
+                    tp.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case INT:
+                    tp.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case REAL:
+                    tp.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case TIME:
+                    tp.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case STRING:
+                    tp.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    break;
+                case ID:
+                {
+                    tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    while (match(DOT))
+                    {
+                        if (!match(ID))
+                            error("Expected identifier after `.`");
+                        tp.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    }
+                    break;
+                }
+                default:
+                    error("Expected type");
+                }
+
+                if (!match(ID))
+                    error("Expected identifier");
+                params.emplace_back(std::move(tp), id_token(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            } while (match(COMMA));
+
+            if (!match(RPAREN))
+                error("Expected `)` after parameters");
+        }
+
+        if (match(COLON))
+            do // we parse the base predicates..
+            {
+                std::vector<id_token> base_predicate;
+                do
+                {
+                    if (!match(ID))
+                        error("Expected identifier");
+                    base_predicate.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                } while (match(DOT));
+                base_predicates.emplace_back(std::move(base_predicate));
+            } while (match(COMMA));
+
+        if (!match(LBRACE))
+            error("Expected `{` after predicate declaration");
+
+        while (!match(RBRACE))
+            body.emplace_back(parse_statement());
+
+        return std::make_unique<predicate_declaration>(std::move(name), std::move(params), std::move(base_predicates), std::move(body));
+    }
+
+    std::unique_ptr<statement> parser::parse_statement()
+    {
+        switch (tokens.at(pos++)->sym)
+        {
+        case BOOL:
+        { // a local field having a bool type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(bool_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        case INT:
+        { // a local field having a int type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(int_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        case REAL:
+        { // a local field having a real type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(real_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        case TIME:
+        { // a local field having a time type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(time_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        case STRING:
+        { // a local field having a string type..
+            std::vector<id_token> field_type;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+            field_type.emplace_back(std::string(string_kw), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            do
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+
+                id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                if (match(EQ))
+                    fields.emplace_back(std::move(id), parse_expression());
+                else
+                    fields.emplace_back(std::move(id), nullptr);
+            } while (match(COMMA));
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after local field declaration");
+
+            return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+        }
+        case ID:
+        { // either a local field, an assignment or an expression..
+            size_t c_pos = pos;
+            while (match(DOT))
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+
+            switch (tokens.at(pos)->sym)
+            {
+            case ID: // a local field..
+            {
+                pos = c_pos - 1;
+                std::vector<id_token> field_type;
+                std::vector<std::pair<id_token, std::unique_ptr<expression>>> fields;
+
+                if (!match(ID))
+                    error("Expected identifier");
+                field_type.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                while (match(DOT))
+                    if (match(ID))
+                        field_type.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                    else
+                        error("Expected identifier after `.`");
+
+                do
+                {
+                    if (!match(ID))
+                        error("Expected identifier");
+
+                    id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                    if (match(EQ))
+                        fields.emplace_back(std::move(id), parse_expression());
+                    else
+                        fields.emplace_back(std::move(id), nullptr);
+                } while (match(COMMA));
+
+                if (!match(SEMICOLON))
+                    error("Expected `;` after local field declaration");
+
+                return std::make_unique<local_field_statement>(std::move(field_type), std::move(fields));
+            }
+            case EQ: // an assignment..
+            {
+                pos = c_pos - 1;
+                std::vector<id_token> object_id;
+                object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(c_pos)).id), tokens.at(c_pos)->line, tokens.at(c_pos)->start_pos, tokens.at(c_pos)->end_pos);
+                while (match(DOT))
+                {
+                    if (!match(ID))
+                        error("Expected identifier after `.`");
+                    object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+                }
+
+                id_token field_id = std::move(object_id.back());
+                object_id.pop_back();
+
+                if (!match(EQ))
+                    error("Expected `=` after object identifier");
+
+                auto xpr = parse_expression();
+
+                if (!match(SEMICOLON))
+                    error("Expected `;` after assignment");
+
+                return std::make_unique<assignment_statement>(std::move(object_id), std::move(field_id), std::move(xpr));
+            }
+            default: // an expression..
+                pos = c_pos - 1;
+                auto xpr = parse_expression();
+
+                if (!match(SEMICOLON))
+                    error("Expected `;` after expression");
+
+                return std::make_unique<expression_statement>(std::move(xpr));
+            }
+        }
+        case LBRACE:
+        { // a conjunction or a disjunction..
+            std::vector<std::unique_ptr<conjunction_statement>> conjuncts;
+            pos--;
+            do // conjunction..
+            {
+                std::vector<std::unique_ptr<statement>> stmts;
+                if (!match(LBRACE))
+                    error("Expected `{` after `conjunction`");
+                while (!match(RBRACE))
+                    stmts.emplace_back(parse_statement());
+
+                if (match(LBRACKET))
+                { // a priced conjunction..
+                    conjuncts.emplace_back(std::make_unique<conjunction_statement>(std::move(stmts), parse_expression()));
+                    if (!match(RBRACKET))
+                        error("Expected `]` after priced conjunction");
+                }
+                else // a simple conjunction..
+                    conjuncts.emplace_back(std::make_unique<conjunction_statement>(std::move(stmts)));
+            } while (match(OR));
+
+            if (conjuncts.size() == 1) // a simple conjunction..
+                return std::move(conjuncts.front());
+            else // a disjunction..
+                return std::make_unique<disjunction_statement>(std::move(conjuncts));
+        }
+        case FOR:
+        { // a for loop..
+            if (!match(LPAREN))
+                error("Expected `(` after `for`");
+            std::vector<id_token> enum_type;
+            std::vector<std::unique_ptr<statement>> stmts;
+            do // the enum type..
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+                enum_type.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            } while (match(DOT));
+
+            if (!match(ID))
+                error("Expected identifier");
+
+            id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            if (!match(RPAREN))
+                error("Expected `)` after for loop");
+
+            if (!match(LBRACE))
+                error("Expected `{` after for loop");
+
+            while (!match(RBRACE))
+                stmts.emplace_back(parse_statement());
+
+            return std::make_unique<for_all_statement>(std::move(enum_type), std::move(id), std::move(stmts));
+        }
+        case RETURN:
+        { // a return statement..
+            auto xpr = parse_expression();
+            if (!match(SEMICOLON))
+                error("Expected `;` after return statement");
+            return std::make_unique<return_statement>(std::move(xpr));
+        }
+        case FACT:
+        case GOAL:
+        { // a fact or a goal..
+            bool is_fact = tokens.at(pos - 1)->sym == FACT;
+            std::vector<id_token> tau;
+            std::vector<std::pair<id_token, std::unique_ptr<expression>>> args;
+
+            if (!match(ID))
+                error("Expected identifier");
+
+            id_token name(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+            if (!match(EQ))
+                error("Expected `=` after atom name");
+
+            if (!match(NEW))
+                error("Expected `new` after `=`");
+
+            do // the formula scope..
+            {
+                if (!match(ID))
+                    error("Expected identifier");
+                tau.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            } while (match(DOT));
+
+            auto predicate_name = std::move(tau.back());
+            tau.pop_back();
+
+            if (!match(LPAREN))
+                error("Expected `(` after predicate name");
+
+            if (!match(RPAREN))
+            { // the arguments of the atom..
+                do
+                {
+                    if (!match(ID))
+                        error("Expected identifier");
+
+                    id_token id(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+
+                    if (match(COLON))
+                        args.emplace_back(std::move(id), parse_expression());
+                    else
+                        args.emplace_back(std::move(id), nullptr);
+                } while (match(COMMA));
+
+                if (!match(RPAREN))
+                    error("Expected `)` after arguments");
+            }
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after fact or goal");
+
+            return std::make_unique<formula_statement>(is_fact, std::move(name), std::move(tau), std::move(predicate_name), std::move(args));
+        }
+        default:
+            pos--;
+            auto xpr = parse_expression();
+
+            if (!match(SEMICOLON))
+                error("Expected `;` after expression");
+
+            return std::make_unique<expression_statement>(std::move(xpr));
+        }
+    }
+
+    std::unique_ptr<expression> parser::parse_expression(std::size_t precedence)
+    {
+        std::unique_ptr<expression> expr;
+        switch (tokens.at(pos++)->sym)
+        {
+        case Bool:
+            expr = std::make_unique<bool_expression>(bool_token(static_cast<const bool_token &>(*tokens.at(pos - 1)).value, tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            break;
+        case Int:
+            expr = std::make_unique<int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 1)).value, tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            break;
+        case Real:
+            expr = std::make_unique<real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 1)).value), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            break;
+        case String:
+            expr = std::make_unique<string_expression>(string_token(std::string(static_cast<const string_token &>(*tokens.at(pos - 1)).value), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos));
+            break;
+        case LBRACKET:
+            switch (tokens.at(pos++)->sym)
+            {
+            case Int:
+                if (!match(COMMA))
+                    error("Expected `,` after int literal");
+                if (!match(Int))
+                    error("Expected int literal after `,`");
+                if (!match(RBRACKET))
+                    error("Expected `]` after int literal");
+                expr = std::make_unique<bounded_int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 4)).value, tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), int_token(static_cast<const int_token &>(*tokens.at(pos - 2)).value, tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                break;
+            case Real:
+                if (!match(COMMA))
+                    error("Expected `,` after real literal");
+                if (!match(Real))
+                    error("Expected real literal after `,`");
+                if (!match(RBRACKET))
+                    error("Expected `]` after real literal");
+                expr = std::make_unique<bounded_real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 4)).value), tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 2)).value), tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                break;
+            default:
+                error("Expected int literal or real literal after `[`");
+            }
+            break;
+        case QUESTION:
+            if (!match(LBRACKET))
+                error("Expected `[` after `?`");
+            switch (tokens.at(pos++)->sym)
+            {
+            case Int:
+                if (!match(COMMA))
+                    error("Expected `,` after int literal");
+                if (!match(Int))
+                    error("Expected int literal after `,`");
+                if (!match(RBRACKET))
+                    error("Expected `]` after int literal");
+                expr = std::make_unique<uncertain_int_expression>(int_token(static_cast<const int_token &>(*tokens.at(pos - 4)).value, tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), int_token(static_cast<const int_token &>(*tokens.at(pos - 2)).value, tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                break;
+            case Real:
+                if (!match(COMMA))
+                    error("Expected `,` after real literal");
+                if (!match(Real))
+                    error("Expected real literal after `,`");
+                if (!match(RBRACKET))
+                    error("Expected `]` after real literal");
+                expr = std::make_unique<uncertain_real_expression>(real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 4)).value), tokens.at(pos - 4)->line, tokens.at(pos - 4)->start_pos, tokens.at(pos - 4)->end_pos), real_token(utils::rational(static_cast<const real_token &>(*tokens.at(pos - 2)).value), tokens.at(pos - 2)->line, tokens.at(pos - 2)->start_pos, tokens.at(pos - 2)->end_pos));
+                break;
+            default:
+                error("Expected int literal or real literal after `[`");
+            }
+            break;
+        case MINUS:
+            expr = std::make_unique<minus_expression>(parse_expression());
+            break;
+        case BANG:
+            expr = std::make_unique<not_expression>(parse_expression());
+            break;
+        case ID:
+        {
+            std::vector<id_token> object_id;
+            object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            while (match(DOT))
+            {
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+                object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            }
+            if (match(LPAREN))
+            { // call expression..
+                id_token fn_id = std::move(object_id.back());
+                object_id.pop_back();
+
+                std::vector<std::unique_ptr<expression>> args;
+                if (!match(RPAREN))
+                {
+                    do
+                    {
+                        args.emplace_back(parse_expression());
+                    } while (match(COMMA));
+                    if (!match(RPAREN))
+                        error("Expected `)` after arguments");
+                }
+                expr = std::make_unique<call_expression>(std::move(object_id), std::move(fn_id), std::move(args));
+            }
+            else // id expression..
+                expr = std::make_unique<id_expression>(std::move(object_id));
+            break;
+        }
+        case THIS:
+        {
+            std::vector<id_token> object_id;
+            object_id.emplace_back(this_kw, tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            while (match(DOT))
+            {
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+                object_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            }
+            if (match(LPAREN))
+            { // call expression..
+                id_token fn_id = std::move(object_id.back());
+                object_id.pop_back();
+
+                std::vector<std::unique_ptr<expression>> args;
+                if (!match(RPAREN))
+                {
+                    do
+                    {
+                        args.emplace_back(parse_expression());
+                    } while (match(COMMA));
+                    if (!match(RPAREN))
+                        error("Expected `)` after arguments");
+                }
+                expr = std::make_unique<call_expression>(std::move(object_id), std::move(fn_id), std::move(args));
+            }
+            else // id expression..
+                expr = std::make_unique<id_expression>(std::move(object_id));
+            break;
+        }
+        case NEW:
+        {
+            std::vector<id_token> type_id;
+            if (!match(ID))
+                error("Expected identifier after `new`");
+            type_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            while (match(DOT))
+            {
+                if (!match(ID))
+                    error("Expected identifier after `.`");
+                type_id.emplace_back(std::string(static_cast<const id_token &>(*tokens.at(pos - 1)).id), tokens.at(pos - 1)->line, tokens.at(pos - 1)->start_pos, tokens.at(pos - 1)->end_pos);
+            }
+            if (!match(LPAREN))
+                error("Expected `(` after type");
+            std::vector<std::unique_ptr<expression>> args;
+            if (!match(RPAREN))
+            {
+                do
+                {
+                    args.emplace_back(parse_expression());
+                } while (match(COMMA));
+                if (!match(RPAREN))
+                    error("Expected `)` after arguments");
+            }
+            expr = std::make_unique<constructor_expression>(std::move(type_id), std::move(args));
+            break;
+        }
+        case LPAREN:
+            expr = parse_expression();
+            if (!match(RPAREN))
+                error("Expected `)` after expression");
+            break;
+        default:
+            error("Unexpected token");
+        }
+
+        while (
+            ((tokens.at(pos)->sym == EQEQ || tokens.at(pos)->sym == BANGEQ) && 0 >= precedence) ||
+            ((tokens.at(pos)->sym == IMPLICATION || tokens.at(pos)->sym == BAR || tokens.at(pos)->sym == AMP || tokens.at(pos)->sym == CARET) && 1 >= precedence) ||
+            ((tokens.at(pos)->sym == LT || tokens.at(pos)->sym == LTEQ || tokens.at(pos)->sym == GTEQ || tokens.at(pos)->sym == GT) && 2 >= precedence) ||
+            ((tokens.at(pos)->sym == PLUS || tokens.at(pos)->sym == MINUS) && 3 >= precedence) ||
+            ((tokens.at(pos)->sym == STAR || tokens.at(pos)->sym == SLASH) && 4 >= precedence))
+            switch (tokens.at(pos)->sym)
+            {
+            case EQEQ:
+                assert(0 >= precedence);
+                pos++; // we parse the `==` operator..
+                expr = std::make_unique<eq_expression>(std::move(expr), parse_expression(1));
+                break;
+            case BANGEQ:
+                assert(0 >= precedence);
+                pos++; // we parse the `!=` operator..
+                expr = std::make_unique<not_expression>(std::make_unique<eq_expression>(std::move(expr), parse_expression(1)));
+                break;
+            case IMPLICATION:
+            {
+                assert(1 >= precedence);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::make_unique<not_expression>(std::move(expr)));
+                pos++; // we parse the `=>` operator..
+                xprs.emplace_back(parse_expression(2));
+                expr = std::make_unique<or_expression>(std::move(xprs));
+                break;
+            }
+            case BAR:
+            {
+                assert(1 >= precedence);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+                while (match(BAR))
+                    xprs.emplace_back(parse_expression(2));
+                expr = std::make_unique<or_expression>(std::move(xprs));
+                break;
+            }
+            case AMP:
+            {
+                assert(1 >= precedence);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+                while (match(AMP))
+                    xprs.emplace_back(parse_expression(2));
+                expr = std::make_unique<and_expression>(std::move(xprs));
+                break;
+            }
+            case CARET:
+            {
+                assert(1 >= precedence);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+                while (match(CARET))
+                    xprs.emplace_back(parse_expression(2));
+                expr = std::make_unique<xor_expression>(std::move(xprs));
+                break;
+            }
+            case LT:
+                assert(2 >= precedence);
+                pos++; // we parse the `<` operator..
+                expr = std::make_unique<lt_expression>(std::move(expr), parse_expression(3));
+                break;
+            case LTEQ:
+                assert(2 >= precedence);
+                pos++; // we parse the `<=` operator..
+                expr = std::make_unique<le_expression>(std::move(expr), parse_expression(3));
+                break;
+            case GTEQ:
+                assert(2 >= precedence);
+                pos++; // we parse the `>=` operator..
+                expr = std::make_unique<ge_expression>(std::move(expr), parse_expression(3));
+                break;
+            case GT:
+                assert(2 >= precedence);
+                pos++; // we parse the `>` operator..
+                expr = std::make_unique<gt_expression>(std::move(expr), parse_expression(3));
+                break;
+            case PLUS:
+            {
+                assert(3 >= precedence);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+                while (match(PLUS))
+                    xprs.emplace_back(parse_expression(4));
+                expr = std::make_unique<sum_expression>(std::move(xprs));
+                break;
+            }
+            case MINUS:
+            {
+                assert(3 >= precedence);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+                while (match(MINUS))
+                    xprs.emplace_back(parse_expression(4));
+                expr = std::make_unique<subtraction_expression>(std::move(xprs));
+                break;
+            }
+            case STAR:
+            {
+                assert(4 >= precedence);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+                while (match(STAR))
+                    xprs.emplace_back(parse_expression(5));
+                expr = std::make_unique<product_expression>(std::move(xprs));
+                break;
+            }
+            case SLASH:
+            {
+                assert(4 >= precedence);
+                std::vector<std::unique_ptr<expression>> xprs;
+                xprs.emplace_back(std::move(expr));
+                while (match(SLASH))
+                    xprs.emplace_back(parse_expression(5));
+                expr = std::make_unique<division_expression>(std::move(xprs));
+                break;
+            }
+            break;
+            default:
+                error("Unexpected token");
+            }
+
+        return expr;
     }
 
     bool parser::match(const symbol &sym)
     {
-        if (tk->sym == sym)
+        if (tokens.at(pos)->sym == sym)
         {
-            tk = next();
+            pos++;
             return true;
         }
-        else
-            return false;
+        return false;
     }
 
-    void parser::backtrack(const size_t &p) noexcept
-    {
-        pos = p;
-        tk = tks[pos - 1].operator->();
-    }
-
-    RIDDLE_EXPORT compilation_unit_ptr parser::parse()
-    {
-        tk = next();
-        return _compilation_unit();
-    }
-
-    compilation_unit_ptr parser::_compilation_unit()
-    {
-        std::vector<type_declaration_ptr> ts;
-        std::vector<method_declaration_ptr> ms;
-        std::vector<predicate_declaration_ptr> ps;
-        std::vector<statement_ptr> stmnts;
-
-        while (tk->sym != EOF_ID)
-        {
-            switch (tk->sym)
-            {
-            case TYPEDEF_ID:
-                ts.emplace_back(_typedef_declaration());
-                break;
-            case ENUM_ID:
-                ts.emplace_back(_enum_declaration());
-                break;
-            case CLASS_ID:
-                ts.emplace_back(_class_declaration());
-                break;
-            case PREDICATE_ID:
-                ps.emplace_back(_predicate_declaration());
-                break;
-            case VOID_ID:
-                ms.emplace_back(_method_declaration());
-                break;
-            case BOOL_ID:
-            case INT_ID:
-            case REAL_ID:
-            case TIME_ID:
-            case STRING_ID:
-            case LBRACE_ID:
-            case BANG_ID:
-            case FACT_ID:
-            case GOAL_ID:
-            case BoolLiteral_ID:
-            case IntLiteral_ID:
-            case RealLiteral_ID:
-                stmnts.emplace_back(_statement());
-                break;
-            case ID_ID:
-            {
-                size_t c_pos = pos;
-                tk = next();
-                while (match(DOT_ID))
-                {
-                    if (!match(ID_ID))
-                        error("expected identifier..");
-                }
-                if (match(ID_ID) && match(LPAREN_ID))
-                {
-                    backtrack(c_pos);
-                    ms.emplace_back(_method_declaration());
-                }
-                else
-                {
-                    backtrack(c_pos);
-                    stmnts.emplace_back(_statement());
-                }
-                break;
-            }
-            default:
-                error("expected either `typedef` or `enum` or `class` or `predicate` or `void` or identifier..");
-            }
-        }
-
-        return new compilation_unit(std::move(ms), std::move(ps), std::move(ts), std::move(stmnts));
-    }
-
-    const typedef_declaration *parser::_typedef_declaration()
-    {
-        id_token *pt = nullptr;
-        expression_ptr e;
-
-        if (!match(TYPEDEF_ID))
-            error("expected `typedef`..");
-
-        switch (tk->sym)
-        {
-        case BOOL_ID:
-            pt = new id_token(0, 0, 0, 0, BOOL_KW);
-            break;
-        case INT_ID:
-            pt = new id_token(0, 0, 0, 0, INT_KW);
-            break;
-        case REAL_ID:
-            pt = new id_token(0, 0, 0, 0, REAL_KW);
-            break;
-        case TIME_ID:
-            pt = new id_token(0, 0, 0, 0, TIME_POINT_KW);
-            break;
-        case STRING_ID:
-            pt = new id_token(0, 0, 0, 0, STRING_KW);
-            break;
-        default:
-            error("expected primitive type..");
-        }
-        tk = next();
-
-        e = _expression();
-
-        if (!match(ID_ID))
-            error("expected identifier..");
-        auto n = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-        if (!match(SEMICOLON_ID))
-            error("expected `;`..");
-
-        return new typedef_declaration(n, *pt, std::move(e));
-    }
-
-    const enum_declaration *parser::_enum_declaration()
-    {
-        std::vector<string_token> es;
-        std::vector<std::vector<id_token>> trs;
-
-        if (!match(ENUM_ID))
-            error("expected `enum`..");
-
-        if (!match(ID_ID))
-            error("expected identifier..");
-        auto n = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-        do
-        {
-            switch (tk->sym)
-            {
-            case LBRACE_ID:
-                tk = next();
-                if (!match(StringLiteral_ID))
-                    error("expected string literal..");
-                es.emplace_back(*static_cast<const string_token *>(tks[pos - 2].operator->()));
-
-                while (match(COMMA_ID))
-                {
-                    if (!match(StringLiteral_ID))
-                        error("expected string literal..");
-                    es.emplace_back(*static_cast<const string_token *>(tks[pos - 2].operator->()));
-                }
-
-                if (!match(RBRACE_ID))
-                    error("expected `}`..");
-                break;
-            case ID_ID:
-            {
-                std::vector<id_token> ids;
-                ids.emplace_back(*static_cast<const id_token *>(tk));
-                tk = next();
-                while (match(DOT_ID))
-                {
-                    if (!match(ID_ID))
-                        error("expected identifier..");
-                    ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-                }
-                trs.emplace_back(std::move(ids));
-                break;
-            }
-            default:
-                error("expected either `{` or identifier..");
-            }
-        } while (match(BAR_ID));
-
-        if (!match(SEMICOLON_ID))
-            error("expected `;`..");
-
-        return new enum_declaration(n, std::move(es), std::move(trs));
-    }
-
-    const class_declaration *parser::_class_declaration()
-    {
-        std::vector<std::vector<id_token>> bcs;      // the base classes..
-        std::vector<field_declaration_ptr> fs;       // the fields of the class..
-        std::vector<constructor_declaration_ptr> cs; // the constructors of the class..
-        std::vector<method_declaration_ptr> ms;      // the methods of the class..
-        std::vector<predicate_declaration_ptr> ps;   // the predicates of the class..
-        std::vector<type_declaration_ptr> ts;        // the types of the class..
-
-        if (!match(CLASS_ID))
-            error("expected `class`..");
-
-        if (!match(ID_ID))
-            error("expected identifier..");
-        // the name of the class..
-        auto n = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-        if (match(COLON_ID))
-        {
-            do
-            {
-                std::vector<id_token> ids;
-                do
-                {
-                    if (!match(ID_ID))
-                        error("expected identifier..");
-                    ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-                } while (match(DOT_ID));
-                bcs.emplace_back(std::move(ids));
-            } while (match(COMMA_ID));
-        }
-
-        if (!match(LBRACE_ID))
-            error("expected `{`..");
-
-        while (!match(RBRACE_ID))
-        {
-            switch (tk->sym)
-            {
-            case TYPEDEF_ID:
-                ts.emplace_back(_typedef_declaration());
-                break;
-            case ENUM_ID:
-                ts.emplace_back(_enum_declaration());
-                break;
-            case CLASS_ID:
-                ts.emplace_back(_class_declaration());
-                break;
-            case PREDICATE_ID:
-                ps.emplace_back(_predicate_declaration());
-                break;
-            case VOID_ID:
-                ms.emplace_back(_method_declaration());
-                break;
-            case BOOL_ID:
-            case INT_ID:
-            case REAL_ID:
-            case TIME_ID:
-            case STRING_ID: // either a primitive type method or a field declaration..
-            {
-                size_t c_pos = pos;
-                tk = next();
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                switch (tk->sym)
-                {
-                case LPAREN_ID:
-                    backtrack(c_pos);
-                    ms.emplace_back(_method_declaration());
-                    break;
-                case EQ_ID:
-                case COMMA_ID:
-                case SEMICOLON_ID:
-                    backtrack(c_pos);
-                    fs.emplace_back(_field_declaration());
-                    break;
-                default:
-                    error("expected either `(` or `=` or `;`..");
-                }
-                break;
-            }
-            case ID_ID: // either a constructor, a method or a field declaration..
-            {
-                size_t c_pos = pos;
-                tk = next();
-                switch (tk->sym)
-                {
-                case LPAREN_ID:
-                    backtrack(c_pos);
-                    cs.emplace_back(_constructor_declaration());
-                    break;
-                case DOT_ID:
-                    while (match(DOT_ID))
-                        if (!match(ID_ID))
-                            error("expected identifier..");
-                    if (!match(ID_ID))
-                        error("expected identifier..");
-                    switch (tk->sym)
-                    {
-                    case LPAREN_ID:
-                        backtrack(c_pos);
-                        ms.emplace_back(_method_declaration());
-                        break;
-                    case EQ_ID:
-                    case SEMICOLON_ID:
-                        backtrack(c_pos);
-                        fs.emplace_back(_field_declaration());
-                        break;
-                    default:
-                        error("expected either `(` or `=` or `;`..");
-                    }
-                    break;
-                case ID_ID:
-                    tk = next();
-                    switch (tk->sym)
-                    {
-                    case LPAREN_ID:
-                        backtrack(c_pos);
-                        ms.emplace_back(_method_declaration());
-                        break;
-                    case EQ_ID:
-                    case SEMICOLON_ID:
-                        backtrack(c_pos);
-                        fs.emplace_back(_field_declaration());
-                        break;
-                    default:
-                        error("expected either `(` or `=` or `;`..");
-                    }
-                    break;
-                default:
-                    error("expected either `(` or `.` or an identifier..");
-                }
-                break;
-            }
-            default:
-                error("expected either `typedef` or `enum` or `class` or `predicate` or `void` or identifier..");
-            }
-        }
-
-        if (cs.empty()) // we add a default constructor..
-            cs.emplace_back(new constructor_declaration({}, {}, {}, {}));
-
-        return new class_declaration(n, std::move(bcs), std::move(fs), std::move(cs), std::move(ms), std::move(ps), std::move(ts));
-    }
-
-    field_declaration_ptr parser::_field_declaration()
-    {
-        std::vector<id_token> tp;
-        std::vector<variable_declaration_ptr> ds;
-
-        switch (tk->sym)
-        {
-        case BOOL_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
-            tk = next();
-            break;
-        case INT_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, INT_KW));
-            tk = next();
-            break;
-        case REAL_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
-            tk = next();
-            break;
-        case TIME_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
-            tk = next();
-            break;
-        case STRING_ID:
-            tp.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
-            tk = next();
-            break;
-        case ID_ID:
-            tp.emplace_back(*static_cast<const id_token *>(tk));
-            tk = next();
-            while (match(DOT_ID))
-            {
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                tp.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-            }
-            break;
-        default:
-            error("expected either `bool` or `int` or `real` or `string` or an identifier..");
-        }
-
-        if (!match(ID_ID))
-            error("expected identifier..");
-        auto n = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-        if (match(EQ_ID))
-            ds.emplace_back(new variable_declaration(n, _expression()));
-        else
-            ds.emplace_back(new variable_declaration(n));
-
-        while (match(COMMA_ID))
-        {
-            if (!match(ID_ID))
-                error("expected identifier..");
-            auto c_n = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-            if (match(EQ_ID))
-                ds.emplace_back(new variable_declaration(c_n, _expression()));
-            else
-                ds.emplace_back(new variable_declaration(c_n));
-        }
-
-        if (!match(SEMICOLON_ID))
-            error("expected `;`..");
-
-        return new field_declaration(std::move(tp), std::move(ds));
-    }
-
-    method_declaration_ptr parser::_method_declaration()
-    {
-        std::vector<id_token> rt;
-        std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
-        std::vector<statement_ptr> stmnts;
-
-        if (!match(VOID_ID))
-        {
-            do
-            {
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                rt.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-            } while (match(DOT_ID));
-        }
-
-        if (!match(ID_ID))
-            error("expected identifier..");
-        auto n = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-        if (!match(LPAREN_ID))
-            error("expected `(`..");
-
-        if (!match(RPAREN_ID))
-        {
-            do
-            {
-                std::vector<id_token> p_ids;
-                switch (tk->sym)
-                {
-                case BOOL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
-                    tk = next();
-                    break;
-                case INT_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, INT_KW));
-                    tk = next();
-                    break;
-                case REAL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
-                    tk = next();
-                    break;
-                case TIME_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
-                    tk = next();
-                    break;
-                case STRING_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
-                    tk = next();
-                    break;
-                case ID_ID:
-                    p_ids.emplace_back(*static_cast<const id_token *>(tk));
-                    tk = next();
-                    while (match(DOT_ID))
-                    {
-                        if (!match(ID_ID))
-                            error("expected identifier..");
-                        p_ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-                    }
-                    break;
-                default:
-                    error("expected either `bool` or `int` or `real` or `string` or an identifier..");
-                }
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                auto pn = *static_cast<const id_token *>(tks[pos - 2].operator->());
-                pars.emplace_back(p_ids, pn);
-            } while (match(COMMA_ID));
-
-            if (!match(RPAREN_ID))
-                error("expected `)`..");
-        }
-
-        if (!match(LBRACE_ID))
-            error("expected `{`..");
-
-        while (!match(RBRACE_ID))
-            stmnts.emplace_back(_statement());
-
-        return new method_declaration(std::move(rt), n, std::move(pars), std::move(stmnts));
-    }
-
-    constructor_declaration_ptr parser::_constructor_declaration()
-    {
-        std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
-        std::vector<id_token> ins;
-        std::vector<std::vector<expression_ptr>> ivs;
-        std::vector<statement_ptr> stmnts;
-
-        if (!match(ID_ID))
-            error("expected identifier..");
-
-        if (!match(LPAREN_ID))
-            error("expected `(`..");
-
-        if (!match(RPAREN_ID))
-        {
-            do
-            {
-                std::vector<id_token> p_ids;
-                switch (tk->sym)
-                {
-                case ID_ID:
-                    p_ids.emplace_back(*static_cast<const id_token *>(tk));
-                    tk = next();
-                    while (match(DOT_ID))
-                    {
-                        if (!match(ID_ID))
-                            error("expected identifier..");
-                        p_ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-                    }
-                    break;
-                case BOOL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
-                    tk = next();
-                    break;
-                case INT_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, INT_KW));
-                    tk = next();
-                    break;
-                case REAL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
-                    tk = next();
-                    break;
-                case TIME_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
-                    tk = next();
-                    break;
-                case STRING_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
-                    tk = next();
-                    break;
-                default:
-                    error("expected either `bool` or `int` or `real` or `string` or an identifier..");
-                }
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                auto pn = *static_cast<const id_token *>(tks[pos - 2].operator->());
-                pars.emplace_back(p_ids, pn);
-            } while (match(COMMA_ID));
-
-            if (!match(RPAREN_ID))
-                error("expected `)`..");
-        }
-
-        if (match(COLON_ID))
-        {
-            do
-            {
-                std::vector<expression_ptr> xprs;
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                auto pn = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-                if (!match(LPAREN_ID))
-                    error("expected `(`..");
-
-                if (!match(RPAREN_ID))
-                {
-                    do
-                    {
-                        xprs.emplace_back(_expression());
-                    } while (match(COMMA_ID));
-
-                    if (!match(RPAREN_ID))
-                        error("expected `)`..");
-                }
-                ins.emplace_back(pn);
-                ivs.emplace_back(std::move(xprs));
-            } while (match(COMMA_ID));
-        }
-
-        if (!match(LBRACE_ID))
-            error("expected `{`..");
-
-        while (!match(RBRACE_ID))
-            stmnts.emplace_back(_statement());
-
-        return new constructor_declaration(pars, std::move(ins), std::move(ivs), std::move(stmnts));
-    }
-
-    predicate_declaration_ptr parser::_predicate_declaration()
-    {
-        std::vector<std::pair<const std::vector<id_token>, const id_token>> pars;
-        std::vector<std::vector<id_token>> pl;
-        std::vector<statement_ptr> stmnts;
-
-        if (!match(PREDICATE_ID))
-            error("expected `predicate`..");
-
-        if (!match(ID_ID))
-            error("expected identifier..");
-        auto n = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-        if (!match(LPAREN_ID))
-            error("expected `(`..");
-
-        if (!match(RPAREN_ID))
-        {
-            do
-            {
-                std::vector<id_token> p_ids;
-                switch (tk->sym)
-                {
-                case BOOL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
-                    tk = next();
-                    break;
-                case INT_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, INT_KW));
-                    tk = next();
-                    break;
-                case REAL_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
-                    tk = next();
-                    break;
-                case TIME_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
-                    tk = next();
-                    break;
-                case STRING_ID:
-                    p_ids.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
-                    tk = next();
-                    break;
-                case ID_ID:
-                    p_ids.emplace_back(*static_cast<const id_token *>(tk));
-                    tk = next();
-                    while (match(DOT_ID))
-                    {
-                        if (!match(ID_ID))
-                            error("expected identifier..");
-                        p_ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-                    }
-                    break;
-                default:
-                    error("expected either `bool` or `int` or `real` or `string` or an identifier..");
-                }
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                auto pn = *static_cast<const id_token *>(tks[pos - 2].operator->());
-                pars.emplace_back(p_ids, pn);
-            } while (match(COMMA_ID));
-
-            if (!match(RPAREN_ID))
-                error("expected `)`..");
-        }
-
-        if (match(COLON_ID))
-        {
-            do
-            {
-                std::vector<id_token> p_ids;
-                do
-                {
-                    if (!match(ID_ID))
-                        error("expected identifier..");
-                    p_ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-                } while (match(DOT_ID));
-                pl.emplace_back(std::move(p_ids));
-            } while (match(COMMA_ID));
-        }
-
-        if (!match(LBRACE_ID))
-            error("expected `{`..");
-
-        while (!match(RBRACE_ID))
-            stmnts.emplace_back(_statement());
-
-        return new predicate_declaration(n, std::move(pars), std::move(pl), std::move(stmnts));
-    }
-
-    statement_ptr parser::_statement()
-    {
-        switch (tk->sym)
-        {
-        case BOOL_ID:
-        case INT_ID:
-        case REAL_ID:
-        case TIME_ID:
-        case STRING_ID: // a local field having a primitive type..
-        {
-            std::vector<id_token> ft;
-            switch (tk->sym)
-            {
-            case BOOL_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, BOOL_KW));
-                break;
-            case INT_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, INT_KW));
-                break;
-            case REAL_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, REAL_KW));
-                break;
-            case TIME_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, TIME_POINT_KW));
-                break;
-            case STRING_ID:
-                ft.emplace_back(id_token(0, 0, 0, 0, STRING_KW));
-                break;
-            default:
-                error("expected either `bool` or `int` or `real` or `string`..");
-            }
-            tk = next();
-
-            std::vector<id_token> ns;
-            std::vector<expression_ptr> es;
-
-            do
-            {
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                ns.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-
-                if (tk->sym == EQ_ID)
-                {
-                    tk = next();
-                    es.emplace_back(_expression());
-                }
-                else
-                    es.emplace_back(nullptr);
-            } while (match(COMMA_ID));
-
-            if (!match(SEMICOLON_ID))
-                error("expected `;`..");
-
-            return new local_field_statement(std::move(ft), std::move(ns), std::move(es));
-        }
-        case ID_ID: // either a local field, an assignment or an expression..
-        {
-            size_t c_pos = pos;
-            std::vector<id_token> is;
-            is.emplace_back(*static_cast<const id_token *>(tk));
-            tk = next();
-            while (match(DOT_ID))
-            {
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                is.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-            }
-
-            switch (tk->sym)
-            {
-            case ID_ID: // a local field..
-            {
-                std::vector<id_token> ns;
-                std::vector<expression_ptr> es;
-
-                do
-                {
-                    ns.emplace_back(*static_cast<const id_token *>(tk));
-                    tk = next();
-                    if (tk->sym == EQ_ID)
-                    {
-                        tk = next();
-                        es.emplace_back(_expression());
-                    }
-                    else
-                        es.emplace_back(nullptr);
-                } while (match(COMMA_ID));
-
-                if (!match(SEMICOLON_ID))
-                    error("expected `;`..");
-
-                return new local_field_statement(std::move(is), std::move(ns), std::move(es));
-            }
-            case EQ_ID: // an assignment..
-            {
-                id_token i = is.back();
-                is.pop_back();
-                tk = next();
-                auto e = _expression();
-                if (!match(SEMICOLON_ID))
-                    error("expected `;`..");
-                return new assignment_statement(std::move(is), i, std::move(e));
-            }
-            case PLUS_ID: // an expression..
-            case MINUS_ID:
-            case STAR_ID:
-            case SLASH_ID:
-            case LT_ID:
-            case LTEQ_ID:
-            case EQEQ_ID:
-            case GTEQ_ID:
-            case GT_ID:
-            case BANGEQ_ID:
-            case IMPLICATION_ID:
-            case BAR_ID:
-            case AMP_ID:
-            case CARET_ID:
-            case SEMICOLON_ID:
-            {
-                backtrack(c_pos);
-                auto e = _expression();
-                if (!match(SEMICOLON_ID))
-                    error("expected `;`..");
-                return new expression_statement(std::move(e));
-            }
-            default:
-                error("expected either `=` or an identifier..");
-                return nullptr;
-            }
-        }
-        case LBRACE_ID: // either a block or a disjunction..
-        {
-            tk = next();
-            std::vector<statement_ptr> stmnts;
-            while (!match(RBRACE_ID))
-                stmnts.emplace_back(_statement());
-            switch (tk->sym)
-            {
-            case LBRACKET_ID:
-            case OR_ID: // a disjunctive statement..
-            {
-                std::vector<std::vector<statement_ptr>> conjs;
-                std::vector<expression_ptr> conj_costs;
-                expression_ptr e = nullptr;
-                if (match(LBRACKET_ID))
-                {
-                    e = _expression();
-                    if (!match(RBRACKET_ID))
-                        error("expected `]`..");
-                }
-                conjs.emplace_back(std::move(stmnts));
-                conj_costs.emplace_back(std::move(e));
-                while (match(OR_ID))
-                {
-                    if (!match(LBRACE_ID))
-                        error("expected `{`..");
-                    while (!match(RBRACE_ID))
-                        stmnts.emplace_back(_statement());
-                    if (match(LBRACKET_ID))
-                    {
-                        e = _expression();
-                        if (!match(RBRACKET_ID))
-                            error("expected `]`..");
-                    }
-                    conjs.emplace_back(std::move(stmnts));
-                    conj_costs.emplace_back(std::move(e));
-                }
-                return new disjunction_statement(std::move(conjs), std::move(conj_costs));
-            }
-            default: // a conjunction statement..
-                return new conjunction_statement(std::move(stmnts));
-            }
-        }
-        case FACT_ID:
-        case GOAL_ID:
-        {
-            bool isf = tk->sym == FACT_ID;
-            tk = next();
-            std::vector<id_token> scp;
-            std::vector<id_token> assn_ns;
-            std::vector<expression_ptr> assn_vs;
-
-            if (!match(ID_ID))
-                error("expected identifier..");
-            auto fn = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-            if (!match(EQ_ID))
-                error("expected `=`..");
-
-            if (!match(NEW_ID))
-                error("expected `new`..");
-
-            do
-            {
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                scp.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-            } while (match(DOT_ID));
-
-            auto pn = scp.back();
-            scp.pop_back();
-
-            if (!match(LPAREN_ID))
-                error("expected `(`..");
-
-            if (!match(RPAREN_ID))
-            {
-                do
-                {
-                    if (!match(ID_ID))
-                        error("expected identifier..");
-                    id_token assgn_name = *static_cast<const id_token *>(tks[pos - 2].operator->());
-
-                    if (!match(COLON_ID))
-                        error("expected `:`..");
-
-                    assn_ns.emplace_back(assgn_name);
-                    assn_vs.emplace_back(_expression());
-                } while (match(COMMA_ID));
-
-                if (!match(RPAREN_ID))
-                    error("expected `)`..");
-            }
-
-            if (!match(SEMICOLON_ID))
-                error("expected `;`..");
-            return new formula_statement(isf, fn, scp, pn, assn_ns, std::move(assn_vs));
-        }
-        case FOR_ID:
-        {
-            tk = next();
-            std::vector<id_token> ft;
-            id_token *id = nullptr;
-            std::vector<statement_ptr> stmnts;
-
-            if (!match(LPAREN_ID))
-                error("expected `(`..");
-            do
-            {
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                ft.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-            } while (match(DOT_ID));
-
-            if (!match(ID_ID))
-                error("expected identifier..");
-            id = new id_token(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-
-            if (!match(RPAREN_ID))
-                error("expected `)`..");
-
-            if (!match(LBRACE_ID))
-                error("expected `{`..");
-            while (!match(RBRACE_ID))
-                stmnts.emplace_back(_statement());
-            return new for_all_statement(ft, *id, std::move(stmnts));
-        }
-        case RETURN_ID:
-        {
-            auto e = _expression();
-            if (!match(SEMICOLON_ID))
-                error("expected `;`..");
-            return new return_statement(std::move(e));
-        }
-        default:
-        {
-            auto xpr = _expression();
-            if (!match(SEMICOLON_ID))
-                error("expected `;`..");
-            return new expression_statement(std::move(xpr));
-        }
-        }
-    }
-
-    expression_ptr parser::_expression(const size_t &pr)
-    {
-        expression_ptr e = nullptr;
-        switch (tk->sym)
-        {
-        case BoolLiteral_ID:
-            tk = next();
-            e = new bool_literal_expression(*static_cast<const bool_token *>(tks[pos - 2].operator->()));
-            break;
-        case IntLiteral_ID:
-            tk = next();
-            e = new int_literal_expression(*static_cast<const int_token *>(tks[pos - 2].operator->()));
-            break;
-        case RealLiteral_ID:
-            tk = next();
-            e = new real_literal_expression(*static_cast<const real_token *>(tks[pos - 2].operator->()));
-            break;
-        case StringLiteral_ID:
-            tk = next();
-            e = new string_literal_expression(*static_cast<const string_token *>(tks[pos - 2].operator->()));
-            break;
-        case LPAREN_ID: // either a parenthesys expression or a cast..
-        {
-            tk = next();
-
-            size_t c_pos = pos;
-            do
-            {
-                if (!match(ID_ID))
-                    error("expected identifier..");
-            } while (match(DOT_ID));
-
-            if (match(RPAREN_ID)) // a cast..
-            {
-                backtrack(c_pos);
-                std::vector<id_token> ids;
-                do
-                {
-                    if (!match(ID_ID))
-                        error("expected identifier..");
-                    ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-                } while (match(DOT_ID));
-
-                if (!match(RPAREN_ID))
-                    error("expected `)`..");
-                e = new cast_expression(std::move(ids), _expression());
-            }
-            else // a parenthesis..
-            {
-                backtrack(c_pos);
-                e = _expression();
-                if (!match(RPAREN_ID))
-                    error("expected `)`..");
-            }
-            break;
-        }
-        case PLUS_ID:
-            tk = next();
-            e = new plus_expression(_expression(4));
-            break;
-        case MINUS_ID:
-            tk = next();
-            e = new minus_expression(_expression(4));
-            break;
-        case BANG_ID:
-            tk = next();
-            e = new not_expression(_expression(4));
-            break;
-        case NEW_ID:
-        {
-            tk = next();
-            std::vector<id_token> ids;
-            do
-            {
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                ids.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-            } while (match(DOT_ID));
-
-            std::vector<expression_ptr> xprs;
-            if (!match(LPAREN_ID))
-                error("expected `(`..");
-
-            if (!match(RPAREN_ID))
-            {
-                do
-                {
-                    xprs.emplace_back(_expression());
-                } while (match(COMMA_ID));
-
-                if (!match(RPAREN_ID))
-                    error("expected `)`..");
-            }
-
-            e = new constructor_expression(std::move(ids), std::move(xprs));
-            break;
-        }
-        case ID_ID:
-        {
-            std::vector<id_token> is;
-            is.emplace_back(*static_cast<const id_token *>(tk));
-            tk = next();
-            while (match(DOT_ID))
-            {
-                if (!match(ID_ID))
-                    error("expected identifier..");
-                is.emplace_back(*static_cast<const id_token *>(tks[pos - 2].operator->()));
-            }
-            if (match(LPAREN_ID))
-            {
-                tk = next();
-                id_token fn = is.back();
-                is.pop_back();
-                std::vector<expression_ptr> xprs;
-                if (!match(LPAREN_ID))
-                    error("expected `(`..");
-
-                if (!match(RPAREN_ID))
-                {
-                    do
-                    {
-                        xprs.emplace_back(_expression());
-                    } while (match(COMMA_ID));
-
-                    if (!match(RPAREN_ID))
-                        error("expected `)`..");
-                }
-
-                e = new function_expression(std::move(is), fn, std::move(xprs));
-            }
-            else
-                e = new id_expression(std::move(is));
-            break;
-        }
-        default:
-            error("expected either `(` or `+` or `-` or `!` or `[` or `new` or a literal or an identifier..");
-        }
-
-        while (
-            ((tk->sym == EQEQ_ID || tk->sym == BANGEQ_ID) && 0 >= pr) ||
-            ((tk->sym == LT_ID || tk->sym == LTEQ_ID || tk->sym == GTEQ_ID || tk->sym == GT_ID || tk->sym == IMPLICATION_ID || tk->sym == BAR_ID || tk->sym == AMP_ID || tk->sym == CARET_ID) && 1 >= pr) ||
-            ((tk->sym == PLUS_ID || tk->sym == MINUS_ID) && 2 >= pr) ||
-            ((tk->sym == STAR_ID || tk->sym == SLASH_ID) && 3 >= pr))
-        {
-            switch (tk->sym)
-            {
-            case EQEQ_ID:
-                assert(0 >= pr);
-                tk = next();
-                e = new eq_expression(std::move(e), _expression(1));
-                break;
-            case BANGEQ_ID:
-                assert(0 >= pr);
-                tk = next();
-                e = new neq_expression(std::move(e), _expression(1));
-                break;
-            case LT_ID:
-            {
-                assert(1 >= pr);
-                tk = next();
-                e = new lt_expression(std::move(e), _expression(1));
-                break;
-            }
-            case LTEQ_ID:
-            {
-                assert(1 >= pr);
-                tk = next();
-                e = new leq_expression(std::move(e), _expression(1));
-                break;
-            }
-            case GTEQ_ID:
-            {
-                assert(1 >= pr);
-                tk = next();
-                e = new geq_expression(std::move(e), _expression(1));
-                break;
-            }
-            case GT_ID:
-            {
-                assert(1 >= pr);
-                tk = next();
-                e = new gt_expression(std::move(e), _expression(1));
-                break;
-            }
-            case IMPLICATION_ID:
-            {
-                assert(1 >= pr);
-                tk = next();
-                e = new implication_expression(std::move(e), _expression(1));
-                break;
-            }
-            case BAR_ID:
-            {
-                assert(1 >= pr);
-                std::vector<expression_ptr> xprs;
-                xprs.emplace_back(std::move(e));
-
-                while (match(BAR_ID))
-                    xprs.emplace_back(_expression(2));
-
-                e = new disjunction_expression(std::move(xprs));
-                break;
-            }
-            case AMP_ID:
-            {
-                assert(1 >= pr);
-                std::vector<expression_ptr> xprs;
-                xprs.emplace_back(std::move(e));
-
-                while (match(AMP_ID))
-                    xprs.emplace_back(_expression(2));
-
-                e = new conjunction_expression(std::move(xprs));
-                break;
-            }
-            case CARET_ID:
-            {
-                assert(1 >= pr);
-                std::vector<expression_ptr> xprs;
-                xprs.emplace_back(std::move(e));
-
-                while (match(CARET_ID))
-                    xprs.emplace_back(_expression(2));
-
-                e = new exct_one_expression(std::move(xprs));
-                break;
-            }
-            case PLUS_ID:
-            {
-                assert(2 >= pr);
-                std::vector<expression_ptr> xprs;
-                xprs.emplace_back(std::move(e));
-
-                while (match(PLUS_ID))
-                    xprs.emplace_back(_expression(3));
-
-                e = new addition_expression(std::move(xprs));
-                break;
-            }
-            case MINUS_ID:
-            {
-                assert(2 >= pr);
-                std::vector<expression_ptr> xprs;
-                xprs.emplace_back(std::move(e));
-
-                while (match(MINUS_ID))
-                    xprs.emplace_back(_expression(3));
-
-                e = new subtraction_expression(std::move(xprs));
-                break;
-            }
-            case STAR_ID:
-            {
-                assert(3 >= pr);
-                std::vector<expression_ptr> xprs;
-                xprs.emplace_back(std::move(e));
-
-                while (match(STAR_ID))
-                    xprs.emplace_back(_expression(4));
-
-                e = new multiplication_expression(std::move(xprs));
-                break;
-            }
-            case SLASH_ID:
-            {
-                assert(3 >= pr);
-                std::vector<expression_ptr> xprs;
-                xprs.emplace_back(std::move(e));
-
-                while (match(SLASH_ID))
-                    xprs.emplace_back(_expression(4));
-
-                e = new division_expression(std::move(xprs));
-                break;
-            }
-            default:
-                error("expected either `==` or `!=` or `<` or `<=` or `>` or `>=` or `->` or `|` or `&` or `^` or `+` or `-` or `*` or `/`..");
-            }
-        }
-
-        return e;
-    }
-
-    void parser::error(const std::string &err) { throw std::invalid_argument("[" + std::to_string(tk->start_line + 1) + ", " + std::to_string(tk->start_pos + 1) + "] " + err); }
+    void parser::error(std::string &&err) { throw std::invalid_argument("[" + std::to_string(tokens.at(pos)->line) + ":" + std::to_string(tokens.at(pos)->start_pos) + "] " + std::move(err)); }
 } // namespace riddle

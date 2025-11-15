@@ -1,44 +1,31 @@
-#include "method.h"
-#include "type.h"
-#include "item.h"
-#include "core.h"
+#include "method.hpp"
 
 namespace riddle
 {
-    RIDDLE_EXPORT method::method(scope &scp, std::string name, std::vector<field_ptr> &&as, const std::vector<ast::statement_ptr> &body, type *ret_type) : scope(scp), ret_type(ret_type), name(name), body(body)
+    method::method(scope &scp, std::optional<std::reference_wrapper<type>> return_type, std::string_view name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp), return_type(return_type), name(name), body(body)
     {
-        args.reserve(as.size());
-        for (auto &arg : as)
+        for (auto &arg : args)
         {
-            args.emplace_back(*arg);
+            this->args.emplace_back(arg->get_name());
             add_field(std::move(arg));
         }
     }
 
-    RIDDLE_EXPORT expr method::call(expr &self, std::vector<expr> exprs)
-    { // we create a new environment for the method..
-        env ctx;
-        if (auto c_env = dynamic_cast<env *>(self.operator->()))
-            ctx = env(c_env);
-        else
-            throw std::runtime_error("invalid method call");
+    expr method::invoke(std::shared_ptr<component> self, std::vector<expr> &&args) const
+    {
+        // the context in which the method is invoked..
+        env ctx(get_core(), *self);
+        if (self)
+            ctx.items.emplace(this_kw, self); // the current instance
+        for (size_t i = 0; i < this->args.size(); ++i)
+            ctx.items.emplace(this->args[i], args[i]); // the arguments
 
-        // ..and we add the arguments to it
-        for (size_t i = 0; i < args.size(); ++i)
-        {
-            if (!args[i].get().get_type().is_assignable_from(exprs[i]->get_type()))
-                throw std::runtime_error("invalid argument type");
-            ctx.items.emplace(args[i].get().get_name(), std::move(exprs[i]));
-        }
+        // we execute the body of the method
+        for (const auto &stmt : body)
+            stmt->execute(*this, ctx);
 
-        // we execute the method body..
-        for (const auto &stmnt : body)
-            stmnt->execute(*this, ctx);
-
-        // and we return the value of the return keyword if it exists..
-        if (ctx.items.find(RETURN_KW) != ctx.items.end())
-            return ctx.items.at(RETURN_KW);
-        else
-            return nullptr;
+        if (auto it = ctx.items.find("return"); it != ctx.items.end())
+            return it->second;
+        return nullptr;
     }
 } // namespace riddle

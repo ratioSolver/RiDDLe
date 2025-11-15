@@ -3,14 +3,14 @@
 */
 
 class Block {
-}
+};
 
 class HeavyBlock : Block {
 
   real weight;
 
   HeavyBlock(real weight) : weight(weight) {}
-}
+};
 
 Block b0 = new Block();
 Block b1 = new Block(), b2 = new Block();

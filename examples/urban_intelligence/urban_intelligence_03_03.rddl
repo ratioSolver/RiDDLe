@@ -14,9 +14,8 @@ Building b0 = new Building();
 
 GreenSpace gs0 = new GreenSpace();
 
-Maintenance agnt = new Maintenance();
-goal bm = new agnt.BuildingMaintenance();
-goal gm = new agnt.GreenSpacesMaintenance();
-goal rm = new agnt.RoadMaintenance();
+goal bm = new BuildingMaintenance();
+goal gm = new GreenSpacesMaintenance();
+goal rm = new RoadMaintenance();
 rm.start >= bm.end;
 rm.start >= gm.end;

@@ -1,184 +1,73 @@
-#include "type.h"
-#include "core.h"
-#include "item.h"
-#include "constructor.h"
+#include "core.hpp"
+#include "lexer.hpp"
+#include "exceptions.hpp"
 #include <queue>
 #include <cassert>
 
 namespace riddle
 {
-    type::type(scope &scp, const std::string &name, bool primitive) : scp(scp), name(name), primitive(primitive) {}
+    type::type(scope &scp, std::string &&name, bool primitive) noexcept : scp(scp), name(std::move(name)), primitive(primitive) {}
+    std::string type::get_full_name() const noexcept
+    {
+        std::string full_name = get_name();
+        const auto *t = this;
+        while (const auto *et = dynamic_cast<const type *>(&t->get_scope()))
+        {
+            full_name.insert(0, et->get_name() + ".");
+            t = et;
+        }
+        return full_name;
+    }
 
-    RIDDLE_EXPORT bool type::is_assignable_from(const type &other) const
+    bool_type::bool_type(core &cr) noexcept : type(cr, bool_kw, true) {}
+    expr bool_type::new_instance() { return get_scope().get_core().new_bool(); }
+
+    int_type::int_type(core &cr) noexcept : type(cr, int_kw, true) {}
+    bool int_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(real_kw) == &other || &get_scope().get_core().get_type(time_kw) == &other; }
+    expr int_type::new_instance() { return get_scope().get_core().new_int(); }
+
+    real_type::real_type(core &cr) noexcept : type(cr, real_kw, true) {}
+    bool real_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other || &get_scope().get_core().get_type(time_kw) == &other; }
+    expr real_type::new_instance() { return get_scope().get_core().new_real(); }
+
+    time_type::time_type(core &cr) noexcept : type(cr, time_kw, true) {}
+    bool time_type::is_assignable_from(const type &other) const { return this == &other || &get_scope().get_core().get_type(int_kw) == &other || &get_scope().get_core().get_type(real_kw) == &other; }
+    expr time_type::new_instance() { return get_scope().get_core().new_time(); }
+
+    string_type::string_type(core &cr) noexcept : type(cr, string_kw, true) {}
+    expr string_type::new_instance() { return get_scope().get_core().new_string(); }
+
+    component_type::component_type(scope &scp, std::string &&name) noexcept : scope(scp.get_core(), scp), type(scp, std::move(name), false) {}
+
+    bool component_type::is_assignable_from(const type &other) const
     {
         if (this == &other)
             return true;
-        else if (auto ct = dynamic_cast<const complex_type *>(&other))
-        { // we are comparing a complex type with another type..
-            std::queue<const complex_type *> q;
+        else if (auto ct = dynamic_cast<const component_type *>(&other))
+        {
+            std::queue<const component_type *> q;
             q.push(ct);
             while (!q.empty())
             {
-                if (q.front() == this)
-                    return true;
-                for (const auto &st : q.front()->get_parents())
-                    q.push(&st.get());
+                auto tp = q.front();
                 q.pop();
+                if (tp == this)
+                    return true;
+                for (const auto &p : tp->parents)
+                    q.push(&p.get());
             }
         }
-        else if (auto pred = dynamic_cast<const predicate *>(&other))
-        { // we are comparing a predicate with another type..
-            std::queue<const predicate *> q;
-            q.push(pred);
-            while (!q.empty())
-            {
-                if (q.front() == this)
-                    return true;
-                for (const auto &st : q.front()->get_parents())
-                    q.push(&st.get());
-                q.pop();
-            }
-        }
-
         return false;
     }
 
-    bool_type::bool_type(core &cr) : type(cr, BOOL_KW, true) {}
-    expr bool_type::new_instance() { return scp.get_core().new_bool(); }
-
-    int_type::int_type(core &cr) : type(cr, INT_KW, true) {}
-    expr int_type::new_instance() { return scp.get_core().new_int(); }
-
-    real_type::real_type(core &cr) : type(cr, REAL_KW, true) {}
-    expr real_type::new_instance() { return scp.get_core().new_real(); }
-
-    string_type::string_type(core &cr) : type(cr, STRING_KW, true) {}
-    expr string_type::new_instance() { return scp.get_core().new_string(); }
-
-    time_point_type::time_point_type(core &cr) : type(cr, TIME_POINT_KW, true) {}
-    expr time_point_type::new_instance() { return scp.get_core().new_time_point(); }
-
-    typedef_type::typedef_type(scope &scp, const std::string &name, type &tp, const ast::expression_ptr &xpr) : type(scp, name), tp(tp), xpr(xpr) {}
-    expr typedef_type::new_instance()
+    constructor &component_type::get_constructor(const std::vector<std::reference_wrapper<const type>> &argument_types) const
     {
-        // we create a new environment for the expression evaluation..
-        env ctx(scp.get_core());
-        return xpr->evaluate(scp, ctx);
-    }
-
-    enum_type::enum_type(scope &scp, const std::string &name) : type(scp, name) {}
-    RIDDLE_EXPORT std::vector<expr> enum_type::get_all_values() const
-    {
-        std::vector<expr> values;
-        values.reserve(instances.size());
-        for (const auto &inst : instances)
-            values.emplace_back(inst);
-        for (const auto &e : enums)
-        {
-            auto ev = e.get().instances;
-            values.reserve(values.size() + ev.size());
-            for (const auto &v : ev)
-                values.emplace_back(v);
-        }
-        return values;
-    }
-    expr enum_type::new_instance() { return scp.get_core().new_enum(*this, get_all_values()); }
-
-    RIDDLE_EXPORT predicate::predicate(scope &scp, const std::string &name, std::vector<field_ptr> as, const std::vector<ast::statement_ptr> &body) : scope(scp), type(scp, name), body(body)
-    {
-        if (!is_core(scp))
-            add_field(new field(static_cast<complex_type &>(scp), THIS_KW, nullptr, true));
-        args.reserve(as.size());
-        for (auto &arg : as)
-        {
-            args.emplace_back(*arg);
-            add_field(std::move(arg));
-        }
-    }
-
-    RIDDLE_EXPORT field &predicate::get_field(const std::string &f_name) const
-    {
-        try
-        { // first check in any enclosing scope
-            return scope::get_field(f_name);
-        }
-        catch (const std::exception &)
-        { // if not in any enclosing scope, check in the superclass
-            for (const auto &tp : parents)
-                try
-                {
-                    return tp.get().get_field(f_name);
-                }
-                catch (const std::exception &)
-                {
-                }
-        }
-        throw std::out_of_range("field `" + f_name + "` not found");
-    }
-
-    expr predicate::new_fact()
-    { // we create a new fact..
-        auto fact = type::get_core().new_fact(*this);
-        instances.emplace_back(fact);
-        return fact;
-    }
-    expr predicate::new_goal()
-    { // we create a new goal..
-        auto goal = type::get_core().new_goal(*this);
-        instances.emplace_back(goal);
-        return goal;
-    }
-
-    RIDDLE_EXPORT void predicate::call(expr &atm)
-    { // we create a new environment for the rule's body execution..
-        if (auto a = dynamic_cast<atom *>(atm.operator->()))
-        {
-            for (const auto &sp : parents)
-                sp.get().call(atm);
-
-            env ctx(a);
-            for (const auto &stmnt : body)
-                stmnt->execute(*this, ctx);
-        }
-        else
-            throw std::runtime_error("invalid atom type");
-    }
-
-    RIDDLE_EXPORT complex_type::complex_type(scope &scp, const std::string &name) : scope(scp), type(scp.get_core(), name)
-    { // we add the "this" field..
-        add_field(new field(*this, THIS_KW, nullptr, true));
-    }
-
-    RIDDLE_EXPORT field &complex_type::get_field(const std::string &f_name) const
-    {
-        try
-        { // first check in any enclosing scope
-            return scope::get_field(f_name);
-        }
-        catch (const std::exception &)
-        { // if not in any enclosing scope, check in the superclass
-            for (const auto &tp : parents)
-                try
-                {
-                    return tp.get().get_field(f_name);
-                }
-                catch (const std::exception &)
-                {
-                }
-        }
-        throw std::out_of_range("field `" + f_name + "` not found");
-    }
-
-    RIDDLE_EXPORT constructor &complex_type::get_constructor(const std::vector<std::reference_wrapper<type>> &args)
-    {
-        for (auto &c : constructors)
-        {
-            auto &c_args = c->get_args();
-            if (c_args.size() == args.size())
+        for (const auto &c : constructors)
+            if (c->get_args().size() == argument_types.size())
             {
                 bool match = true;
-                for (size_t i = 0; i < c_args.size(); ++i)
-                    if (!c_args[i].get().get_type().is_assignable_from(args[i].get()))
+                for (size_t i = 0; i < argument_types.size(); ++i)
+                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(argument_types[i].get()))
                     {
                         match = false;
                         break;
@@ -186,61 +75,38 @@ namespace riddle
                 if (match)
                     return *c;
             }
-        }
         throw std::out_of_range("constructor not found");
     }
 
-    RIDDLE_EXPORT std::vector<std::reference_wrapper<constructor>> complex_type::get_constructors() const
+    field &component_type::get_field(std::string_view name) const
     {
-        std::vector<std::reference_wrapper<constructor>> ctors;
-        for (const auto &c : constructors)
-            ctors.emplace_back(*c);
-        return ctors;
-    }
-
-    RIDDLE_EXPORT type &complex_type::get_type(const std::string &tp_name) const
-    {
-        auto it = types.find(tp_name);
-        if (it != types.end())
-            return *it->second;
         try
         { // first check in any enclosing scope
-            return scope::get_type(tp_name);
+            return scope::get_field(name);
         }
-        catch (const std::exception &)
+        catch (const std::out_of_range &)
         { // if not in any enclosing scope, check any superclass
-            for (const auto &st : parents)
+            for (const auto &p : parents)
                 try
                 {
-                    return st.get().get_type(tp_name);
+                    return p.get().get_field(name);
                 }
                 catch (const std::out_of_range &)
                 {
                 }
+            throw std::out_of_range("field `" + std::string(name) + "` not found");
         }
-        throw std::out_of_range("type `" + tp_name + "` not found");
     }
 
-    RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> complex_type::get_types() const
+    method &component_type::get_method(std::string_view name, const std::vector<std::reference_wrapper<const type>> &argument_types) const
     {
-        std::vector<std::reference_wrapper<type>> tps;
-        for (const auto &tp : types)
-            tps.emplace_back(*tp.second);
-        return tps;
-    }
-
-    RIDDLE_EXPORT method &complex_type::get_method(const std::string &m_name, const std::vector<std::reference_wrapper<type>> &args) const
-    {
-        auto it = methods.find(m_name);
-        if (it != methods.end())
-            for (auto &m : it->second)
-            {
-                auto &m_args = m->get_args();
-                if (m_args.size() == args.size())
+        if (auto it = methods.find(name); it != methods.end())
+            for (const auto &m : it->second)
+                if (m->get_args().size() == argument_types.size())
                 {
                     bool match = true;
-                    for (size_t i = 0; i < m_args.size(); ++i)
-                        if (!m_args[i].get().get_type().is_assignable_from(args[i].get()))
+                    for (size_t i = 0; i < argument_types.size(); ++i)
+                        if (!m->get_field(m->get_args()[i]).get_type().is_assignable_from(argument_types[i].get()))
                         {
                             match = false;
                             break;
@@ -248,102 +114,233 @@ namespace riddle
                     if (match)
                         return *m;
                 }
-            }
-
         try
         { // first check in any enclosing scope
-            return scope::get_method(m_name, args);
+            return scope::get_method(name, argument_types);
         }
-        catch (const std::exception &)
+        catch (const std::out_of_range &)
         { // if not in any enclosing scope, check any superclass
-            for (const auto &st : parents)
+            for (const auto &p : parents)
                 try
                 {
-                    return st.get().get_method(m_name, args);
+                    return p.get().get_method(name, argument_types);
                 }
                 catch (const std::out_of_range &)
                 {
                 }
+            throw std::out_of_range("method `" + std::string(name) + "` not found");
         }
-        throw std::out_of_range("method `" + m_name + "` not found");
     }
-
-    RIDDLE_EXPORT std::vector<std::reference_wrapper<method>> complex_type::get_methods() const
+    type &component_type::get_type(std::string_view name) const
     {
-        std::vector<std::reference_wrapper<method>> mths;
-        for (const auto &mth : methods)
-            for (const auto &m : mth.second)
-                mths.emplace_back(*m);
-        return mths;
-    }
-
-    RIDDLE_EXPORT predicate &complex_type::get_predicate(const std::string &p_name) const
-    {
-        auto it = predicates.find(p_name);
-        if (it != predicates.end())
+        if (auto it = types.find(name); it != types.end())
             return *it->second;
         try
         { // first check in any enclosing scope
-            return scope::get_predicate(p_name);
+            return scope::get_type(name);
         }
-        catch (const std::exception &)
+        catch (const std::out_of_range &)
         { // if not in any enclosing scope, check any superclass
-            for (const auto &st : parents)
+            for (const auto &p : parents)
                 try
                 {
-                    return st.get().get_predicate(p_name);
+                    return p.get().get_type(name);
                 }
                 catch (const std::out_of_range &)
                 {
                 }
+            throw std::out_of_range("type `" + std::string(name) + "` not found");
         }
-        throw std::out_of_range("predicate `" + p_name + "` not found");
+    }
+    predicate &component_type::get_predicate(std::string_view name) const
+    {
+        if (auto it = predicates.find(name); it != predicates.end())
+            return *it->second;
+        try
+        { // first check in any enclosing scope
+            return scope::get_predicate(name);
+        }
+        catch (const std::out_of_range &)
+        { // if not in any enclosing scope, check any superclass
+            for (const auto &p : parents)
+                try
+                {
+                    return p.get().get_predicate(name);
+                }
+                catch (const std::out_of_range &)
+                {
+                }
+            throw std::out_of_range("predicate `" + std::string(name) + "` not found");
+        }
     }
 
-    RIDDLE_EXPORT std::vector<std::reference_wrapper<predicate>> complex_type::get_predicates() const
+    void component_type::add_parent(component_type &parent) { parents.emplace_back(parent); }
+
+    void component_type::add_constructor(std::unique_ptr<constructor> ctr)
     {
-        std::vector<std::reference_wrapper<predicate>> preds;
-        for (const auto &pred : predicates)
-            preds.emplace_back(*pred.second);
-        return preds;
+        std::vector<std::reference_wrapper<const type>> args;
+        args.reserve(ctr->get_args().size());
+        for (const auto &arg : ctr->get_args())
+            args.push_back(get_field(arg).get_type());
+        for (const auto &c : constructors)
+            if (c->get_args().size() == args.size())
+            {
+                bool match = true;
+                for (size_t i = 0; i < args.size(); ++i)
+                    if (!c->get_field(c->get_args()[i]).get_type().is_assignable_from(args[i].get()))
+                    {
+                        match = false;
+                        break;
+                    }
+                if (match)
+                    throw std::invalid_argument("constructor already exists");
+            }
+        constructors.emplace_back(std::move(ctr));
     }
 
-    RIDDLE_EXPORT expr complex_type::new_instance()
+    void component_type::add_method(std::unique_ptr<method> mthd)
     {
-        auto inst = type::get_core().new_item(*this);
-        if (parents.empty())
-        { // if this is a root type, we store the instance in this type..
-            instances.push_back(inst);
-            return inst;
-        } // otherwise, we store the instance in this type and in all the supertypes..
-        std::queue<complex_type *> q;
+        std::vector<std::reference_wrapper<const type>> args;
+        for (const auto &arg : mthd->get_args())
+            args.push_back(mthd->get_field(arg).get_type());
+        try
+        { // check if the method already exists
+            [[maybe_unused]] auto &m = get_method(mthd->get_name(), args);
+            throw std::invalid_argument("method `" + mthd->get_name() + "` already exists");
+        }
+        catch (const std::out_of_range &)
+        {
+            methods[mthd->get_name()].push_back(std::move(mthd));
+        }
+    }
+
+    void component_type::add_predicate(std::unique_ptr<predicate> pred)
+    {
+        std::string name = pred->get_name();
+        if (!predicates.emplace(name, std::move(pred)).second)
+            throw std::invalid_argument("predicate `" + name + "` already exists");
+        std::queue<component_type *> q;
+        for (const auto &p : parents)
+            q.push(&p.get());
+        while (!q.empty())
+        {
+            auto tp = q.front();
+            q.pop();
+            tp->created_predicate(*predicates[name]);
+            for (const auto &p : tp->parents)
+                q.push(&p.get());
+        }
+    }
+
+    void component_type::add_type(std::unique_ptr<type> t)
+    {
+        std::string name = t->get_name();
+        if (!types.emplace(name, std::move(t)).second)
+            throw std::invalid_argument("type `" + name + "` already exists");
+    }
+
+    void component_type::add_parent(predicate &child, predicate &parent) { child.parents.emplace_back(parent); }
+
+#ifdef COMPUTE_NAMES
+    std::string component_type::guess_name(const term &itm) const noexcept { return get_core().guess_name(itm); }
+#endif
+
+    expr component_type::new_instance()
+    {
+        auto itm = std::make_shared<component>(static_cast<component_type &>(*this));
+        // we store the instance in type the hierarchy..
+        std::queue<component_type *> q;
         q.push(this);
         while (!q.empty())
         {
-            auto &tp = *q.front();
-            tp.instances.push_back(inst);
-            for (auto &parent : tp.parents)
-                q.push(&parent.get());
+            auto tp = q.front();
             q.pop();
+            tp->instances.push_back(itm);
+            for (const auto &p : tp->parents)
+                q.push(&p.get());
         }
-        return inst;
+        return itm;
     }
 
-    RIDDLE_EXPORT void complex_type::add_predicate(predicate_ptr &&pred)
+    enum_type::enum_type(scope &scp, std::string &&name, std::vector<expr> &&domain) noexcept : component_type(scp, std::move(name)), domain(std::move(domain)) {}
+    expr enum_type::new_instance()
     {
-        // we add the tau field to the predicate..
-        pred->add_field(new field(*this, TAU_KW));
-        // we notify all the supertypes that a new predicate has been created..
-        std::queue<complex_type *> q;
+        std::vector<riddle::expr> c_domain; // the enum domain..
+        std::queue<enum_type *> q;
         q.push(this);
         while (!q.empty())
         {
-            auto &tp = *q.front();
-            tp.new_predicate(*pred);
-            for (auto &parent : tp.parents)
-                q.push(&parent.get());
+            auto tp = q.front();
             q.pop();
+            for (const auto &e : tp->domain)
+                c_domain.emplace_back(e);
+            for (const auto &p : tp->get_parents())
+                q.push(static_cast<enum_type *>(&p.get()));
         }
-        predicates.emplace(pred->get_name(), std::move(pred));
+
+        switch (c_domain.size())
+        {
+        case 0:
+            throw inconsistency_exception();
+        case 1:
+            return c_domain[0];
+        default:
+        {
+            std::vector<std::reference_wrapper<utils::enum_val>> items;
+            for (const auto &i : c_domain)
+                items.push_back(*i);
+            return get_scope().get_core().new_enum(*this, std::move(items));
+        }
+        }
+    }
+
+    predicate::predicate(scope &scp, std::string &&name, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp, std::move(args)), type(scp, std::move(name), false), body(body) {}
+
+    bool predicate::is_assignable_from(const type &other) const
+    {
+        if (this == &other)
+            return true;
+        else if (auto ct = dynamic_cast<const predicate *>(&other))
+        {
+            std::queue<const predicate *> q;
+            q.push(ct);
+            while (!q.empty())
+            {
+                auto tp = q.front();
+                q.pop();
+                if (tp == this)
+                    return true;
+                for (const auto &p : tp->parents)
+                    q.push(&p.get());
+            }
+        }
+        return false;
+    }
+
+    void predicate::call(atom_expr atm)
+    {
+        assert(is_assignable_from(atm->get_type()));
+        for (auto &p : parents)
+            p.get().call(atm);
+        env ctx(get_core(), *atm);
+        for (const auto &stmt : body)
+            stmt->execute(*this, ctx);
+    }
+
+    expr predicate::new_instance()
+    {
+        auto atm = get_scope().get_core().new_atom(true, *this);
+        // we store the atom in the predicate hierarchy..
+        std::queue<predicate *> q;
+        q.push(this);
+        while (!q.empty())
+        {
+            auto p = q.front();
+            q.pop();
+            p->atoms.push_back(atm);
+            for (const auto &par : p->parents)
+                q.push(&par.get());
+        }
+        return atm;
     }
 } // namespace riddle

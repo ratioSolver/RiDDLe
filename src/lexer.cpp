@@ -1,605 +1,1007 @@
-#include "lexer.h"
+#include "lexer.hpp"
+#include <stdexcept>
+#include <cmath>
 
 namespace riddle
 {
-    RIDDLE_EXPORT lexer::lexer(const std::string &str) : sb(str) { ch = next_char(); }
-    RIDDLE_EXPORT lexer::lexer(std::istream &is)
+    std::vector<std::unique_ptr<const token>> lexer::parse(std::istream &is)
     {
-        char buffer[1024];
-        while (is.read(buffer, sizeof(buffer)))
-            sb.append(buffer, sizeof(buffer));
-        sb.append(buffer, is.gcount());
-        ch = next_char();
-    }
+        std::vector<std::unique_ptr<const token>> tokens;
 
-    RIDDLE_EXPORT token_ptr lexer::next()
-    {
-        switch (ch)
+        current_state = START;
+        line = 1;
+        start = 0;
+        text.clear();
+
+        while (is.good())
         {
-        case '"':
-        {
-            // string literal..
-            std::string str;
-            while (true)
-                switch (ch = next_char())
+            switch (auto c = is.get())
+            {
+            case '/':
+                switch (is.peek())
                 {
-                case '"':
-                    ch = next_char();
-                    return mk_string_token(str);
-                case '\\':
-                    // read escaped char..
-                    str += next_char();
+                case '/': // single line comment
+                    is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    ++line;
+                    start = 0;
+                    if (!is.good()) // end of file before `\n`
+                        tokens.push_back(std::make_unique<token>(EoF, line, start, start));
                     break;
-                case '\r':
-                case '\n':
-                    error("newline in string literal..");
-                    return nullptr;
-                default:
-                    str += ch;
-                }
-        }
-        case '/':
-            switch (ch = next_char())
-            {
-            case '/': // in single-line comment
-                while (true)
-                    switch (ch = next_char())
+                case '*': // multi-line comment
+                    is.ignore();
+                    while (is.good())
                     {
-                    case '\r':
-                    case '\n':
-                        return next();
-                    case -1:
-                        return mk_token(EOF_ID);
-                    }
-            case '*': // in multi-line comment
-                while (true)
-                    switch (ch = next_char())
-                    {
-                    case '*':
-                        if ((ch = next_char()) == '/')
+                        if (is.get() == '*' && is.peek() == '/')
                         {
-                            ch = next_char();
-                            return next();
-                        }
-                        break;
-                    }
-            }
-            return mk_token(SLASH_ID);
-        case '=':
-            if ((ch = next_char()) == '=')
-            {
-                ch = next_char();
-                return mk_token(EQEQ_ID);
-            }
-            return mk_token(EQ_ID);
-        case '>':
-            if ((ch = next_char()) == '=')
-            {
-                ch = next_char();
-                return mk_token(GTEQ_ID);
-            }
-            return mk_token(GT_ID);
-        case '<':
-            if ((ch = next_char()) == '=')
-            {
-                ch = next_char();
-                return mk_token(LTEQ_ID);
-            }
-            return mk_token(LT_ID);
-        case '+':
-            ch = next_char();
-            return mk_token(PLUS_ID);
-        case '-':
-            if ((ch = next_char()) == '>')
-            {
-                ch = next_char();
-                return mk_token(IMPLICATION_ID);
-            }
-            return mk_token(MINUS_ID);
-        case '*':
-            ch = next_char();
-            return mk_token(STAR_ID);
-        case '|':
-            ch = next_char();
-            return mk_token(BAR_ID);
-        case '&':
-            ch = next_char();
-            return mk_token(AMP_ID);
-        case '^':
-            ch = next_char();
-            return mk_token(CARET_ID);
-        case '!':
-            if ((ch = next_char()) == '=')
-            {
-                ch = next_char();
-                return mk_token(BANGEQ_ID);
-            }
-            return mk_token(BANG_ID);
-        case '.':
-            ch = next_char();
-            if ('0' <= ch && ch <= '9')
-            {
-                // in a number literal..
-                std::string dec;
-                dec += ch;
-                while (true)
-                {
-                    switch (ch = next_char())
-                    {
-                    case '0':
-                    case '1':
-                    case '2':
-                    case '3':
-                    case '4':
-                    case '5':
-                    case '6':
-                    case '7':
-                    case '8':
-                    case '9':
-                        dec += ch;
-                        break;
-                    case '.':
-                        error("invalid numeric literal..");
-                        return nullptr;
-                    default:
-                        return mk_rational_token("", dec);
-                    }
-                }
-            }
-            return mk_token(DOT_ID);
-        case ',':
-            ch = next_char();
-            return mk_token(COMMA_ID);
-        case ';':
-            ch = next_char();
-            return mk_token(SEMICOLON_ID);
-        case ':':
-            ch = next_char();
-            return mk_token(COLON_ID);
-        case '(':
-            ch = next_char();
-            return mk_token(LPAREN_ID);
-        case ')':
-            ch = next_char();
-            return mk_token(RPAREN_ID);
-        case '[':
-            ch = next_char();
-            return mk_token(LBRACKET_ID);
-        case ']':
-            ch = next_char();
-            return mk_token(RBRACKET_ID);
-        case '{':
-            ch = next_char();
-            return mk_token(LBRACE_ID);
-        case '}':
-            ch = next_char();
-            return mk_token(RBRACE_ID);
-        case '0': // in a number literal..
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-        {
-            std::string intgr; // the integer part..
-            intgr += ch;
-            while (true)
-                switch (ch = next_char())
-                {
-                case '0':
-                case '1':
-                case '2':
-                case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                    intgr += ch;
-                    break;
-                case '.':
-                {
-                    std::string dcml; // the decimal part..
-                    while (true)
-                        switch (ch = next_char())
-                        {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                        case '8':
-                        case '9':
-                            dcml += ch;
+                            is.ignore();
                             break;
-                        case '.':
-                            error("invalid numeric literal..");
-                            return nullptr;
-                        default:
-                            return mk_rational_token(intgr, dcml);
                         }
-                }
-                default:
-                    return mk_integer_token(intgr);
-                }
-        }
-        case 'b':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'o')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'o')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'l')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(BOOL_ID);
-        }
-        case 'c':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'l')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'a')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 's')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 's')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(CLASS_ID);
-        }
-        case 'e':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'n')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'u')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'm')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(ENUM_ID);
-        }
-        case 'f':
-        {
-            std::string str;
-            switch (str += ch; ch = next_char())
-            {
-            case 'a':
-                switch (str += ch; ch = next_char())
-                {
-                case 'c':
-                    if (str += ch; (ch = next_char()) != 't')
-                        return finish_id(str);
-                    if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                        return finish_id(str);
-                    else
-                        return mk_token(FACT_ID);
-                case 'l':
-                    if (str += ch; (ch = next_char()) != 's')
-                        return finish_id(str);
-                    if (str += ch; (ch = next_char()) != 'e')
-                        return finish_id(str);
-                    if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                        return finish_id(str);
-                    else
-                        return mk_bool_token(false);
-                default:
-                    return finish_id(str);
-                }
-            case 'o':
-                if (str += ch; (ch = next_char()) != 'r')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                    return finish_id(str);
-                else
-                    return mk_token(FOR_ID);
-            default:
-                return finish_id(str);
-            }
-        }
-        case 'g':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'o')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'a')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'l')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(GOAL_ID);
-        }
-        case 'i':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'n')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 't')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(INT_ID);
-        }
-        case 'n':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'e')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'w')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(NEW_ID);
-        }
-        case 'o':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'r')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(OR_ID);
-        }
-        case 'p':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'r')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'e')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'd')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'i')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'c')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'a')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 't')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'e')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(PREDICATE_ID);
-        }
-        case 'r':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'e')
-                return finish_id(str);
-            switch (str += ch; ch = next_char())
-            {
-            case 'a':
-                if (str += ch; (ch = next_char()) != 'l')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                    return finish_id(str);
-                else
-                    return mk_token(REAL_ID);
-            case 't':
-                if (str += ch; (ch = next_char()) != 'u')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'r')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'n')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                    return finish_id(str);
-                else
-                    return mk_token(RETURN_ID);
-            default:
-                return finish_id(str);
-            }
-        }
-        case 's':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 't')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'r')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'i')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'n')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'g')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(STRING_ID);
-        }
-        case 't':
-        {
-            std::string str;
-            switch (str += ch; ch = next_char())
-            {
-            case 'i':
-                if (str += ch; (ch = next_char()) != 'm')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'e')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                    return finish_id(str);
-                else
-                    return mk_token(TIME_ID);
-            case 'r':
-                if (str += ch; (ch = next_char()) != 'u')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'e')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                    return finish_id(str);
-                else
-                    return mk_bool_token(true);
-            case 'y':
-                if (str += ch; (ch = next_char()) != 'p')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'e')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'd')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'e')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != 'f')
-                    return finish_id(str);
-                if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                    return finish_id(str);
-                else
-                    return mk_token(TYPEDEF_ID);
-            default:
-                return finish_id(str);
-            }
-        }
-        case 'v':
-        {
-            std::string str;
-            if (str += ch; (ch = next_char()) != 'o')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'i')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != 'd')
-                return finish_id(str);
-            if (str += ch; (ch = next_char()) != -1 && is_id_part(ch))
-                return finish_id(str);
-            else
-                return mk_token(VOID_ID);
-        }
-        case 'a':
-        case 'd':
-        case 'h':
-        case 'j':
-        case 'k':
-        case 'l':
-        case 'm':
-        case 'q':
-        case 'u':
-        case 'w':
-        case 'x':
-        case 'y':
-        case 'z':
-        case 'A':
-        case 'B':
-        case 'C':
-        case 'D':
-        case 'E':
-        case 'F':
-        case 'G':
-        case 'H':
-        case 'I':
-        case 'J':
-        case 'K':
-        case 'L':
-        case 'M':
-        case 'N':
-        case 'O':
-        case 'P':
-        case 'Q':
-        case 'R':
-        case 'S':
-        case 'T':
-        case 'U':
-        case 'V':
-        case 'W':
-        case 'X':
-        case 'Y':
-        case 'Z':
-        case '_':
-        {
-            std::string str;
-            return finish_id(str);
-        }
-        case '\t':
-        case ' ':
-        case '\r':
-        case '\n':
-            while (true)
-                switch (ch = next_char())
-                {
-                case ' ':
-                case '\t':
-                case '\r':
-                case '\n':
+                        if (is.peek() == '\n')
+                            ++line;
+                    }
+                    start = 0;
                     break;
-                case -1:
-                    return mk_token(EOF_ID);
                 default:
-                    return next();
+                    text.push_back(c);
+                    current_state = SLASH;
+                    tokens.push_back(finish_token());
                 }
-        case -1:
-            return mk_token(EOF_ID);
-        default:
-            error("invalid token..");
-            return nullptr;
-        }
-    }
-
-    char lexer::next_char() noexcept
-    {
-        if (pos == sb.length())
-            return -1;
-        switch (sb[pos])
-        {
-        case ' ':
-            start_pos++;
-            end_pos++;
-            break;
-        case '\t':
-            start_pos += 4 - (start_pos % 4);
-            end_pos += 4 - (end_pos % 4);
-            break;
-        case '\r':
-            if (pos + 1 != sb.length() && sb[pos + 1] == '\n')
-            {
-                pos++;
-                end_line++;
-                end_pos = 0;
                 break;
+            case 'b':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'o'))
+                        text.push_back('o');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'o'))
+                        text.push_back('o');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'l'))
+                        text.push_back('l');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = BOOL;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'c':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'l'))
+                        text.push_back('l');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'a'))
+                        text.push_back('a');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 's'))
+                        text.push_back('s');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 's'))
+                        text.push_back('s');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = CLASS;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'e':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'n'))
+                        text.push_back('n');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'u'))
+                        text.push_back('u');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'm'))
+                        text.push_back('m');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = ENUM;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'f':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'a'))
+                    {
+                        text.push_back('a');
+                        if (match(is, 'c'))
+                        {
+                            text.push_back('c');
+                            if (match(is, 't'))
+                                text.push_back('t');
+                            else
+                            {
+                                current_state = ID;
+                                break;
+                            }
+                            if (is_id_part(is.peek()))
+                            {
+                                current_state = ID;
+                                break;
+                            }
+                            else
+                            {
+                                current_state = FACT;
+                                tokens.push_back(finish_token());
+                            }
+                        }
+                        else if (match(is, 'l'))
+                        {
+                            text.push_back('l');
+                            if (match(is, 's'))
+                                text.push_back('s');
+                            else
+                                break;
+                            if (match(is, 'e'))
+                                text.push_back('e');
+                            else
+                            {
+                                current_state = ID;
+                                break;
+                            }
+                            if (is_id_part(is.peek()))
+                            {
+                                current_state = ID;
+                                break;
+                            }
+                            else
+                            {
+                                current_state = Bool;
+                                tokens.push_back(finish_token());
+                            }
+                        }
+                        else
+                        {
+                            current_state = ID;
+                            text.push_back(c);
+                        }
+                    }
+                    else if (match(is, 'o'))
+                    {
+                        text.push_back('o');
+                        if (match(is, 'r'))
+                            text.push_back('r');
+                        else
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = FOR;
+                            tokens.push_back(finish_token());
+                        }
+                    }
+                    else
+                        current_state = ID;
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'g':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'o'))
+                        text.push_back('o');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'a'))
+                        text.push_back('a');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'l'))
+                        text.push_back('l');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = GOAL;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'i':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'n'))
+                        text.push_back('n');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 't'))
+                        text.push_back('t');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = INT;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'n':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'e'))
+                        text.push_back('e');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'w'))
+                        text.push_back('w');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = NEW;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'o':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'r'))
+                        text.push_back('r');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = OR;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'p':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'r'))
+                        text.push_back('r');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'e'))
+                        text.push_back('e');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'd'))
+                        text.push_back('d');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'i'))
+                        text.push_back('i');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'c'))
+                        text.push_back('c');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'a'))
+                        text.push_back('a');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 't'))
+                        text.push_back('t');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'e'))
+                        text.push_back('e');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = PREDICATE;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'r':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'e'))
+                        text.push_back('e');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'a'))
+                    {
+                        text.push_back('a');
+                        if (match(is, 'l'))
+                            text.push_back('l');
+                        else
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = REAL;
+                            tokens.push_back(finish_token());
+                        }
+                    }
+                    else if (match(is, 't'))
+                    {
+                        text.push_back('t');
+                        if (match(is, 'u'))
+                            text.push_back('u');
+                        else
+                            break;
+                        if (match(is, 'r'))
+                            text.push_back('r');
+                        else
+                            break;
+                        if (match(is, 'n'))
+                            text.push_back('n');
+                        else
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = RETURN;
+                            tokens.push_back(finish_token());
+                        }
+                    }
+                    else
+                        current_state = ID;
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 's':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 't'))
+                        text.push_back('t');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'r'))
+                        text.push_back('r');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'i'))
+                        text.push_back('i');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'n'))
+                        text.push_back('n');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'g'))
+                        text.push_back('g');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = STRING;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 't':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'h'))
+                    {
+                        text.push_back('h');
+                        if (match(is, 'i'))
+                            text.push_back('i');
+                        else
+                            break;
+                        if (match(is, 's'))
+                            text.push_back('s');
+                        else
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = THIS;
+                            tokens.push_back(finish_token());
+                        }
+                    }
+                    else if (match(is, 'i'))
+                    {
+                        text.push_back('i');
+                        if (match(is, 'm'))
+                            text.push_back('m');
+                        else
+                            break;
+                        if (match(is, 'e'))
+                            text.push_back('e');
+                        else
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = TIME;
+                            tokens.push_back(finish_token());
+                        }
+                    }
+                    else if (match(is, 'r'))
+                    {
+                        text.push_back('r');
+                        if (match(is, 'u'))
+                            text.push_back('u');
+                        else
+                            break;
+                        if (match(is, 'e'))
+                            text.push_back('e');
+                        else
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        if (is_id_part(is.peek()))
+                        {
+                            current_state = ID;
+                            break;
+                        }
+                        else
+                        {
+                            current_state = Bool;
+                            tokens.push_back(finish_token());
+                        }
+                    }
+                    else
+                        current_state = ID;
+                }
+                else
+                    text.push_back(c);
+                break;
+            case 'v':
+                if (current_state == START)
+                {
+                    text.push_back(c);
+                    if (match(is, 'o'))
+                        text.push_back('o');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'i'))
+                        text.push_back('i');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (match(is, 'd'))
+                        text.push_back('d');
+                    else
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    if (is_id_part(is.peek()))
+                    {
+                        current_state = ID;
+                        break;
+                    }
+                    else
+                    {
+                        current_state = VOID;
+                        tokens.push_back(finish_token());
+                    }
+                }
+                else
+                    text.push_back(c);
+                break;
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                if (current_state == START)
+                    current_state = Int;
+                else if (current_state != ID && current_state != Int && current_state != Real)
+                    tokens.push_back(finish_token());
+                text.push_back(c);
+                break;
+            case '.':
+                if ((current_state == START && std::isdigit(is.peek())) || current_state == Int)
+                {
+                    current_state = Real;
+                    text.push_back(c);
+                }
+                else
+                {
+                    if (!text.empty())
+                        tokens.push_back(finish_token());
+                    current_state = DOT;
+                    text.push_back(c);
+                    tokens.push_back(finish_token());
+                }
+                break;
+            case '"':
+                switch (current_state)
+                {
+                case START:
+                    current_state = String;
+                    text.push_back(c);
+                    break;
+                case String:
+                    text.push_back(c);
+                    tokens.push_back(finish_token());
+                    break;
+                default:
+                    throw std::runtime_error("Unexpected character: " + std::string(1, c));
+                }
+                break;
+            case '(':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = LPAREN;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case ')':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = RPAREN;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '{':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = LBRACE;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '}':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = RBRACE;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '[':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = LBRACKET;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case ']':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = RBRACKET;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case ',':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = COMMA;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case ':':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = COLON;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case ';':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = SEMICOLON;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '+':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = PLUS;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '-':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = MINUS;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '*':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = STAR;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '&':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = AMP;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '|':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = BAR;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '?':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = QUESTION;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '=':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = EQ;
+                text.push_back(c);
+                if (is.peek() == '=')
+                {
+                    is.ignore();
+                    current_state = EQEQ;
+                    text.push_back('=');
+                }
+                tokens.push_back(finish_token());
+                break;
+            case '>':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = GT;
+                text.push_back(c);
+                if (is.peek() == '=')
+                {
+                    is.ignore();
+                    current_state = GTEQ;
+                    text.push_back('=');
+                }
+                tokens.push_back(finish_token());
+                break;
+            case '<':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = LT;
+                text.push_back(c);
+                if (is.peek() == '=')
+                {
+                    is.ignore();
+                    current_state = LTEQ;
+                    text.push_back('=');
+                }
+                tokens.push_back(finish_token());
+                break;
+            case '!':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = BANG;
+                text.push_back(c);
+                if (is.peek() == '=')
+                {
+                    is.ignore();
+                    current_state = BANGEQ;
+                    text.push_back('=');
+                }
+                tokens.push_back(finish_token());
+                break;
+            case '^':
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                current_state = CARET;
+                text.push_back(c);
+                tokens.push_back(finish_token());
+                break;
+            case '\r':
+                if (current_state == String)
+                    text.push_back(c);
+                else
+                {
+                    if (!text.empty())
+                        tokens.push_back(finish_token());
+                    start = 0;
+                }
+                break;
+            case '\n':
+                if (current_state == String)
+                    text.push_back(c);
+                else
+                {
+                    if (!text.empty())
+                        tokens.push_back(finish_token());
+                    start = 0;
+                    ++line;
+                }
+                break;
+            case ' ':
+            case '\t':
+                if (current_state == String)
+                    text.push_back(c);
+                else
+                {
+                    if (!text.empty())
+                        tokens.push_back(finish_token());
+                    ++start;
+                }
+                break;
+            case EOF:
+                if (!text.empty())
+                    tokens.push_back(finish_token());
+                tokens.push_back(std::make_unique<token>(EoF, line, start, start));
+                break;
+            default:
+                if (current_state == START)
+                    current_state = ID;
+                text.push_back(c);
             }
-            [[fallthrough]];
-        case '\n':
-            end_line++;
-            end_pos = 0;
+        }
+
+        return tokens;
+    }
+
+    bool lexer::match(std::istream &is, char expected) noexcept
+    {
+        if (is.peek() == expected)
+        {
+            is.ignore();
+            return true;
+        }
+        return false;
+    }
+
+    std::unique_ptr<const token> lexer::finish_token() noexcept
+    {
+        std::unique_ptr<token> tok;
+        auto end = start + text.size() - 1;
+        switch (current_state)
+        {
+        case Bool:
+            tok = std::make_unique<bool_token>(text == "true", line, start, end);
             break;
-        default:
-            end_pos++;
+        case Int:
+            tok = std::make_unique<int_token>(std::stoll(text), line, start, end);
+            break;
+        case Real:
+        {
+            size_t dot_pos = text.find('.');
+            std::string intgr = text.substr(0, dot_pos);
+            std::string dec = text.substr(dot_pos + 1);
+            tok = std::make_unique<real_token>(utils::rational(static_cast<INT_TYPE>(std::stol(intgr + dec)), static_cast<INT_TYPE>(std::pow(10, dec.size()))), line, start, end);
             break;
         }
-        return sb[pos++];
+        case String:
+            tok = std::make_unique<string_token>(text.substr(1, text.size() - 2), line, start, end);
+            break;
+        case ID:
+            tok = std::make_unique<id_token>(std::move(text), line, start, end);
+            break;
+        default:
+            tok = std::make_unique<token>(current_state, line, start, end);
+        }
+        start = end + 1;
+        current_state = START;
+        text.clear();
+        return tok;
     }
-
-    token_ptr lexer::finish_id(std::string &str) noexcept
-    {
-        if (!is_id_part(ch))
-            return mk_id_token(str);
-        str += ch;
-        while ((ch = next_char()) != -1 && is_id_part(ch))
-            str += ch;
-        return mk_id_token(str);
-    }
-
-    void lexer::error(const std::string &err) { throw std::invalid_argument("[" + std::to_string(start_line) + ", " + std::to_string(start_pos) + "] " + err); }
 } // namespace riddle

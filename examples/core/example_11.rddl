@@ -2,14 +2,14 @@
 * This example aims to demonstrate the use of enum variables and how their parameters can be constrained.
 */
 
-class City {}
+class City {};
 
 class Location {
 
     City city;
 
     Location(City city) : city(city) {}
-}
+};
 
 City city0 = new City();
 Location l0 = new Location(city0);

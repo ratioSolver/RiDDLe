@@ -1,42 +1,27 @@
-#include "scope.h"
-#include "item.h"
-#include "type.h"
+#include "scope.hpp"
+#include <stdexcept>
 
 namespace riddle
 {
-    RIDDLE_EXPORT scope::scope(scope &scp) : scp(scp) {}
+    field::field(type &tp, std::string &&name, const std::unique_ptr<expression> &expr) noexcept : tp(tp), name(std::move(name)), expr(expr) {}
 
-    RIDDLE_EXPORT field &scope::get_field(const std::string &name) const
+    scope::scope(core &c, scope &parent, std::vector<std::unique_ptr<field>> &&args) : cr(c), parent(parent)
     {
-        auto it = fields.find(name);
-        if (it != fields.end())
+        for (auto &arg : args)
+            add_field(std::move(arg));
+    }
+
+    field &scope::get_field(std::string_view name) const
+    {
+        if (auto it = fields.find(name); it != fields.end())
             return *it->second;
-        else
-            return scp.get_field(name);
+        return parent.get_field(name);
     }
 
-    RIDDLE_EXPORT void scope::add_field(field_ptr f)
+    void scope::add_field(std::unique_ptr<field> field)
     {
-        if (!fields.emplace(f->get_name(), std::move(f)).second)
-            throw std::runtime_error("field already exists");
-    }
-
-    RIDDLE_EXPORT std::vector<std::reference_wrapper<type>> scope::get_types() const { return {}; }
-
-    RIDDLE_EXPORT std::vector<std::reference_wrapper<method>> scope::get_methods() const { return {}; }
-
-    RIDDLE_EXPORT std::vector<std::reference_wrapper<predicate>> scope::get_predicates() const { return {}; }
-
-    RIDDLE_EXPORT env::env(env_ptr parent) : parent(parent) {}
-
-    RIDDLE_EXPORT expr &env::get(const std::string &name)
-    {
-        auto it = items.find(name);
-        if (it != items.end())
-            return it->second;
-        else if (parent)
-            return parent->get(name);
-        else
-            throw std::out_of_range("item `" + name + "` not found");
+        std::string name = field->get_name();
+        if (!fields.emplace(name, std::move(field)).second)
+            throw std::invalid_argument("field `" + name + "` already exists");
     }
 } // namespace riddle

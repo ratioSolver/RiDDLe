@@ -1,102 +1,114 @@
-#include "constructor.h"
-#include "type.h"
-#include "item.h"
-#include "core.h"
-#include <cassert>
+#include "core.hpp"
+#include "exceptions.hpp"
+#include <algorithm>
 
 namespace riddle
 {
-    RIDDLE_EXPORT constructor::constructor(complex_type &tp, std::vector<field_ptr> as, const std::vector<riddle::id_token> &ins, const std::vector<std::vector<ast::expression_ptr>> &ivs, const std::vector<ast::statement_ptr> &body) : scope(tp), init_names(ins), init_vals(ivs), body(body)
-    { // we add the arguments..
-        args.reserve(as.size());
-        for (auto &arg : as)
+    constructor::constructor(scope &scp, std::vector<std::unique_ptr<field>> &&args, const std::vector<std::pair<id_token, std::vector<std::unique_ptr<expression>>>> &inits, const std::vector<std::unique_ptr<statement>> &body) noexcept : scope(scp.get_core(), scp), inits(inits), body(body)
+    {
+        for (auto &arg : args)
         {
-            args.emplace_back(*arg);
+            this->args.emplace_back(arg->get_name());
             add_field(std::move(arg));
         }
     }
 
-    RIDDLE_EXPORT void constructor::call(expr &self, std::vector<expr> exprs)
-    { // we create a new environment for the constructor..
-        env ctx(static_cast<complex_item *>(self.operator->()));
+    void constructor::invoke(std::shared_ptr<component> self, std::vector<expr> &&args) const
+    {
+        if (args.size() != this->args.size())
+            throw std::invalid_argument("invalid number of arguments");
         for (size_t i = 0; i < args.size(); ++i)
-        { // ..and we add the arguments to it
-            if (!args[i].get().get_type().is_assignable_from(exprs[i]->get_type()))
-                throw std::runtime_error("invalid argument type for `" + args[i].get().get_name() + "`");
-            ctx.items.emplace(args[i].get().get_name(), std::move(exprs[i]));
-        }
+            if (!args[i]->get_type().is_assignable_from(get_field(this->args[i]).get_type()))
+                throw std::invalid_argument("invalid argument type");
 
-        // we manage the initialization list..
-        for (size_t il_idx = 0; il_idx < init_names.size(); il_idx++)
-            try
-            { // we try to find the field in the current type..
-                auto &f = get_field(init_names.at(il_idx).id);
-                if (f.get_type().is_primitive())
-                { // we evaluate the expression..
-                    assert(init_vals[il_idx].size() == 1);
-                    dynamic_cast<env &>(*self).items.emplace(init_names[il_idx].id, init_vals[il_idx][0]->evaluate(*this, ctx));
-                }
+        auto &tp = static_cast<component_type &>(get_parent());
+        // the context in which the constructor is invoked..
+        env ctx(get_core(), *self);
+        ctx.items.emplace(this_kw, self); // the current instance
+        for (size_t i = 0; i < args.size(); ++i)
+            ctx.items.emplace(this->args[i], args[i]); // the arguments
+
+        // we initialize the instance
+        for (const auto &init : inits)
+            if (auto f = tp.fields.find(init.first.id); f != tp.fields.end())
+            {
+                if (init.second.empty()) // we initialize the field with a new instance
+                    self->items.emplace(f->first, f->second->get_type().new_instance());
                 else
-                { // we call the constructor..
-                    std::vector<expr> c_exprs;
-                    std::vector<std::reference_wrapper<type>> par_types;
-                    for (const auto &ex : init_vals.at(il_idx))
-                    {
-                        expr c_expr = ex->evaluate(*this, ctx);
-                        c_exprs.push_back(c_expr);
-                        par_types.push_back(c_expr->get_type());
-                    }
-
-                    if (par_types.size() == 1 && f.get_type().is_assignable_from(par_types.begin()->get())) // we have a direct assignment..
-                        dynamic_cast<env &>(*self).items.emplace(init_names[il_idx].id, std::move(*c_exprs.begin()));
-                    else
-                    { // we call the field's constructor..
-                        auto &tp = static_cast<complex_type &>(f.get_type());
-                        auto inst = tp.new_instance();
-                        tp.get_constructor(par_types).call(inst, std::move(c_exprs));
-                        dynamic_cast<env &>(*self).items.emplace(init_names[il_idx].id, std::move(inst));
-                    }
-                }
-            }
-            catch (const std::out_of_range &)
-            { // there is no field in the current type with the given name, so we call the supertype's constructor..
-                auto st = std::find_if(static_cast<complex_type &>(get_scope()).get_parents().begin(), static_cast<complex_type &>(get_scope()).get_parents().end(), [this, il_idx](auto &st)
-                                       { return init_names.at(il_idx).id == st.get().get_name(); });
-                if (st == static_cast<complex_type &>(get_scope()).get_parents().end())
-                    throw std::runtime_error("invalid call to `" + init_names[il_idx].id + "` supertype constructor");
-                std::vector<expr> c_exprs;
-                std::vector<std::reference_wrapper<type>> par_types;
-                for (const auto &ex : init_vals.at(il_idx))
                 {
-                    expr c_expr = ex->evaluate(*this, ctx);
-                    c_exprs.push_back(c_expr);
-                    par_types.push_back(c_expr->get_type());
-                }
+                    std::vector<expr> init_args;
+                    std::vector<std::reference_wrapper<const type>> argument_types;
 
-                // we assume that the constructor exists..
-                (*st).get().get_constructor(par_types).call(self, std::move(c_exprs));
+                    for (const auto &arg : init.second)
+                        init_args.emplace_back(arg->evaluate(*this, ctx));
+                    for (const auto &arg : init_args)
+                        argument_types.emplace_back(arg->get_type());
+
+                    if (init_args.size() == 1 && argument_types[0].get().is_assignable_from(f->second->get_type()))
+                        self->items.emplace(f->first, init_args[0]); // we assign the argument to the field
+                    else
+                    { // we invoke the constructor of the field
+                        auto &ctp = static_cast<component_type &>(f->second->get_type());
+                        auto instance = std::dynamic_pointer_cast<component>(ctp.new_instance());
+                        ctp.get_constructor(argument_types).invoke(instance, std::move(init_args));
+                        self->items.emplace(f->first, std::move(instance));
+                    }
+                }
+            }
+            else
+            {
+                if (auto st = std::find_if(tp.get_parents().begin(), tp.get_parents().end(), [&init](const auto &parent)
+                                           { return parent.get().get_name() == init.first.id; });
+                    st != tp.get_parents().end())
+                { // we invoke a supertype constructor
+                    std::vector<expr> init_args;
+                    std::vector<std::reference_wrapper<const type>> argument_types;
+
+                    for (const auto &arg : init.second)
+                        init_args.emplace_back(arg->evaluate(*this, ctx));
+                    for (const auto &arg : init_args)
+                        argument_types.emplace_back(arg->get_type());
+
+                    (*st).get().get_constructor(argument_types).invoke(self, std::move(init_args));
+                }
             }
 
-        // we instantiate the uninstantiated fields..
-        for (const auto &[f_name, f] : get_scope().get_fields())
-            if (!f->is_synthetic() && !dynamic_cast<env &>(*self).items.count(f_name))
-            { // the field is uninstantiated..
+        // we initialize the uninitialized fields
+        for (const auto &[name, f] : tp.fields)
+            if (self->items.find(name) == self->items.end()) // the field is not initialized
+            {
                 if (f->get_expression())
-                    dynamic_cast<env &>(*self).items.emplace(f_name, f->get_expression()->evaluate(*this, ctx));
-                else
-                {
-                    type &tp = f->get_type();
-                    if (tp.is_primitive())
-                        dynamic_cast<env &>(*self).items.emplace(f_name, tp.new_instance());
-                    else if (auto ctp = dynamic_cast<complex_type *>(&tp))
-                        dynamic_cast<env &>(*self).items.emplace(f_name, get_core().new_enum(*ctp, ctp->get_instances()));
+                { // initialize with an expression
+                    auto val = f->get_expression()->evaluate(*this, ctx);
+                    if (f->get_type().is_assignable_from(val->get_type()))
+                        self->items.emplace(name, val);
                     else
-                        throw std::runtime_error("invalid field type");
+                        throw std::runtime_error("Invalid assignment");
                 }
+                else if (f->get_type().is_primitive()) // initialize with a default value
+                    self->items.emplace(name, f->get_type().new_instance());
+                else if (auto ct = dynamic_cast<component_type *>(&f->get_type()))
+                    switch (ct->get_instances().size())
+                    {
+                    case 0: // no instances
+                        throw inconsistency_exception();
+                    case 1: // only one instance
+                        self->items.emplace(name, *ct->get_instances().begin());
+                        break;
+                    default:
+                    { // multiple instances
+                        std::vector<std::reference_wrapper<utils::enum_val>> values;
+                        for (auto &inst : ct->get_instances())
+                            values.emplace_back(*inst);
+                        self->items.emplace(name, get_core().new_enum(*ct, std::move(values)));
+                    }
+                    }
+                else
+                    throw std::runtime_error("Invalid type reference");
             }
 
-        // we execute the constructor body..
-        for (const auto &stmnt : body)
-            stmnt->execute(*this, ctx);
+        // we execute the body of the constructor
+        for (const auto &stmt : body)
+            stmt->execute(*this, ctx);
     }
 } // namespace riddle

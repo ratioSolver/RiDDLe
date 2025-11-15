@@ -2,7 +2,7 @@
 * This example aims to demonstrate the use of recursive predicates.
 */
 
-class Node {}
+class Node {};
 
 predicate Path(Node from, Node to, real dist) {
     goal src = new Path(from:from);
