@@ -286,7 +286,7 @@ namespace riddle
             return c_domain[0];
         default:
         {
-            std::vector<std::reference_wrapper<const utils::enum_val>> items;
+            std::vector<std::reference_wrapper<utils::enum_val>> items;
             for (const auto &i : c_domain)
                 items.push_back(*i);
             return get_scope().get_core().new_enum(*this, std::move(items));

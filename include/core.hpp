@@ -213,7 +213,7 @@ namespace riddle
      *
      * @return A shared pointer to the newly created enum item.
      */
-    [[nodiscard]] virtual enum_expr new_enum(component_type &tp, std::vector<std::reference_wrapper<const utils::enum_val>> &&values) = 0;
+    [[nodiscard]] virtual enum_expr new_enum(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
     /**
      * @brief Retrieves the domain for the given enum item.
      *
