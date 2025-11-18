@@ -25,7 +25,7 @@ namespace riddle
 
     string_item::string_item(string_type &tp, std::string &&expr) noexcept : string_term(tp), expr(expr) {}
 
-    enum_item::enum_item(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values, utils::var ev) noexcept : enum_term(tp, std::move(values)), var(ev) {}
+    enum_item::enum_item(component_type &tp, std::vector<expr> &&values, utils::var ev) noexcept : enum_term(tp, std::move(values)), var(ev) {}
 
     json::json enum_item::to_json() const noexcept
     {
@@ -34,10 +34,10 @@ namespace riddle
         return j_val;
     }
 
-    sat_enum_item::sat_enum_item(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values, std::vector<utils::lit> &&lits) noexcept : enum_term(tp, std::move(values))
+    sat_enum_item::sat_enum_item(component_type &tp, std::vector<expr> &&values, std::vector<utils::lit> &&lits) noexcept : enum_term(tp, std::move(values))
     {
         for (size_t i = 0; i < get_values().size(); i++)
-            domain.emplace(&get_values()[i].get(), lits[i]);
+            domain.emplace(get_values()[i].get(), lits[i]);
     }
 
     json::json sat_enum_item::to_json() const noexcept
@@ -45,7 +45,7 @@ namespace riddle
         auto j_val = enum_term::to_json();
         json::json j_vals(json::json_type::array);
         for (const auto &val : get_type().get_scope().get_core().enum_value(*this))
-            j_vals.push_back(static_cast<uint64_t>(static_cast<const term &>(val.get()).get_id()));
+            j_vals.push_back(val->get_id());
         j_val["vals"] = std::move(j_vals);
         return j_val;
     }

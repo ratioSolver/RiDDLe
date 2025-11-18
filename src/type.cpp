@@ -265,7 +265,7 @@ namespace riddle
     enum_type::enum_type(scope &scp, std::string &&name, std::vector<expr> &&domain) noexcept : component_type(scp, std::move(name)), domain(std::move(domain)) {}
     expr enum_type::new_instance()
     {
-        std::vector<riddle::expr> c_domain; // the enum domain..
+        std::vector<expr> c_domain; // the enum domain..
         std::queue<enum_type *> q;
         q.push(this);
         while (!q.empty())
@@ -286,9 +286,9 @@ namespace riddle
             return c_domain[0];
         default:
         {
-            std::vector<std::reference_wrapper<utils::enum_val>> items;
+            std::vector<expr> items;
             for (const auto &i : c_domain)
-                items.push_back(*i);
+                items.push_back(i);
             return get_scope().get_core().new_enum(*this, std::move(items));
         }
         }

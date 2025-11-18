@@ -209,14 +209,14 @@ namespace riddle
   class enum_term : public term, public env
   {
   public:
-    enum_term(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) noexcept;
+    enum_term(component_type &tp, std::vector<expr> &&values) noexcept;
 
-    [[nodiscard]] const std::vector<std::reference_wrapper<utils::enum_val>> &get_values() const noexcept { return values; }
+    [[nodiscard]] const std::vector<expr> &get_values() const noexcept { return values; }
 
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
-    std::vector<std::reference_wrapper<utils::enum_val>> values;
+    std::vector<expr> values;
   };
 
   using enum_expr = std::shared_ptr<enum_term>;

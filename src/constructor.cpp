@@ -97,9 +97,9 @@ namespace riddle
                         break;
                     default:
                     { // multiple instances
-                        std::vector<std::reference_wrapper<utils::enum_val>> values;
+                        std::vector<expr> values;
                         for (auto &inst : ct->get_instances())
-                            values.emplace_back(*inst);
+                            values.emplace_back(inst);
                         self->items.emplace(name, get_core().new_enum(*ct, std::move(values)));
                     }
                     }

@@ -208,22 +208,20 @@ namespace riddle
      * This function is responsible for creating a new enum item based on the provided type and values.
      *
      * @param tp A reference to the type for which the enum item is being created.
-     * @param values A vector of references to enum values that will be used to create the enum item.
-     *               The vector is passed as an rvalue reference to allow for efficient move semantics.
+     * @param values A vector of shared pointers to the values that make up the enum item.
      *
-     * @return A shared pointer to the newly created enum item.
+     * @return expr A shared pointer to the newly created enum item.
      */
-    [[nodiscard]] virtual enum_expr new_enum(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) = 0;
+    [[nodiscard]] virtual expr new_enum(component_type &tp, std::vector<expr> &&values) = 0;
     /**
      * @brief Retrieves the domain for the given enum item.
      *
-     * This function takes an enum item and returns a vector of references to the enum values that
-     * make up the domain of the enum item.
+     * This function takes an enum item and returns its associated domain as a vector of expressions.
      *
      * @param expr The enum item for which the domain is being retrieved.
-     * @return A vector of references to the enum values that make up the domain of the enum item.
+     * @return std::vector<expr> A vector of expressions representing the domain of the enum item.
      */
-    [[nodiscard]] virtual std::vector<std::reference_wrapper<utils::enum_val>> enum_value(const enum_term &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::vector<expr> enum_value(const enum_term &expr) const noexcept = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.

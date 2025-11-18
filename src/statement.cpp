@@ -16,11 +16,11 @@ namespace riddle
             else
                 throw std::runtime_error("Invalid type reference");
 
-        for (auto &[id, expr] : fields)
+        for (auto &[id, xpr] : fields)
         {
-            if (expr)
+            if (xpr)
             { // initialize with an expression
-                auto val = expr->evaluate(scp, ctx);
+                auto val = xpr->evaluate(scp, ctx);
                 if (tp->is_assignable_from(val->get_type()))
                     ctx.items.emplace(id.id, val);
                 else
@@ -40,9 +40,9 @@ namespace riddle
                     break;
                 default:
                 { // multiple instances
-                    std::vector<std::reference_wrapper<utils::enum_val>> values;
+                    std::vector<expr> values;
                     for (auto &inst : ct->get_instances())
-                        values.emplace_back(*inst);
+                        values.emplace_back(inst);
                     ctx.items.emplace(id.id, ctx.get_core().new_enum(*ct, std::move(values)));
                 }
                 }
@@ -208,9 +208,9 @@ namespace riddle
                             break;
                         default:
                         { // multiple instances
-                            std::vector<std::reference_wrapper<utils::enum_val>> values;
+                            std::vector<expr> values;
                             for (auto &inst : ct->get_instances())
-                                values.emplace_back(*inst);
+                                values.emplace_back(inst);
                             c_args.emplace(name, ctx.get_core().new_enum(*ct, std::move(values)));
                         }
                         }

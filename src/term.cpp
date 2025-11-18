@@ -45,7 +45,7 @@ namespace riddle
     string_term::string_term(string_type &tp) noexcept : term(tp) {}
     json::json string_term::to_json() const noexcept { return {{"type", get_type().get_name()}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
 
-    enum_term::enum_term(component_type &tp, std::vector<std::reference_wrapper<utils::enum_val>> &&values) noexcept : term(tp), env(tp.get_core(), tp.get_core()), values(std::move(values)) {}
+    enum_term::enum_term(component_type &tp, std::vector<expr> &&values) noexcept : term(tp), env(tp.get_core(), tp.get_core()), values(std::move(values)) {}
     json::json enum_term::to_json() const noexcept
     {
         json::json j_val{{"type", "enum"}}; // we add the type of the enum item..
@@ -64,7 +64,7 @@ namespace riddle
         auto vals = get_type().get_scope().get_core().enum_value(*this);
         json::json j_vals(json::json_type::array);
         for (const auto &val : vals)
-            j_vals.push_back(static_cast<uint64_t>(static_cast<const term &>(val.get()).get_id()));
+            j_vals.push_back(val->get_id());
         j_val["vals"] = std::move(j_vals);
 
         return j_val;
