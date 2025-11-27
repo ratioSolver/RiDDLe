@@ -45,7 +45,7 @@ namespace riddle
     string_term::string_term(string_type &tp) noexcept : term(tp) {}
     json::json string_term::to_json() const noexcept { return {{"type", get_type().get_name()}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
 
-    enum_term::enum_term(component_type &tp, std::vector<expr> &&values) noexcept : term(tp), env(tp.get_core(), tp.get_core()), values(std::move(values)) {}
+    enum_term::enum_term(component_type &tp, std::vector<expr> &&vals) noexcept : term(tp), env(tp.get_core(), tp.get_core()), values(std::move(vals)) { assert(!values.empty()); }
     json::json enum_term::to_json() const noexcept
     {
         json::json j_val{{"type", "enum"}}; // we add the type of the enum item..
