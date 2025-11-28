@@ -6,53 +6,29 @@
 
 namespace riddle
 {
-    state_variable::state_variable(core &cr) noexcept : component_type(cr, state_variable_kw) { add_constructor(std::make_unique<constructor>(*this)); }
+    state_variable::state_variable(core &cr) noexcept : flaw_aware_component_type(cr, state_variable_kw), timeline(cr) { add_constructor(std::make_unique<constructor>(*this)); }
 
     void state_variable::created_predicate(predicate &pred) noexcept { add_parent(pred, get_core().get_predicate(interval_kw)); }
+
+    std::vector<std::shared_ptr<flaw>> state_variable::get_flaws() noexcept
+    {
+        std::vector<std::shared_ptr<flaw>> flaws;
+        return flaws;
+    }
 
     json::json state_variable::extract() const
     {
         json::json tls(json::json_type::array);
         // we partition atoms for each state-variable they might insist on..
-        std::unordered_map<const component *, std::vector<atom_expr>> sv_instances;
-        for (const auto &sv : get_instances())
-            sv_instances.emplace(static_cast<component *>(&*sv), std::vector<atom_expr>());
-        for (const auto &atm : get_atoms())
-            if (get_core().get_atom_state(*atm) == atom_state::active)
-            { // the atom is active..
-                const auto tau = atm->get(tau_kw);
-                if (auto c_svs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..
-                    for (auto &c_sv : get_core().enum_value(*c_svs))
-                        sv_instances.at(static_cast<component *>(c_sv.get())).push_back(atm);
-                else // the `tau` parameter is a constant..
-                    sv_instances.at(static_cast<component *>(tau.get())).push_back(atm);
-            }
-
-        for (const auto &[sv, atms] : sv_instances)
+        auto partition = partition_atoms();
+        for (const auto &[sv, atms] : partition)
         {
             json::json tl{{"id", static_cast<uint64_t>(sv->get_id())}, {"type", state_variable_kw}};
 #ifdef COMPUTE_NAMES
             tl["name"] = guess_name(*sv);
 #endif
 
-            // for each pulse, the atoms starting at that pulse..
-            std::map<utils::inf_rational, std::set<atom_expr>> starting_atoms;
-            // for each pulse, the atoms ending at that pulse..
-            std::map<utils::inf_rational, std::set<atom_expr>> ending_atoms;
-            // all the pulses of the timeline..
-            std::set<utils::inf_rational> pulses;
-
-            for (const auto &atm : atms)
-            {
-                const auto start = get_core().arith_value(*atm->get<arith_term>(start_kw));
-                const auto end = get_core().arith_value(*atm->get<arith_term>(end_kw));
-                starting_atoms[start].insert(atm);
-                ending_atoms[end].insert(atm);
-                pulses.insert(start);
-                pulses.insert(end);
-            }
-            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(origin_kw)));
-            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(horizon_kw)));
+            auto [starting_atoms, ending_atoms, pulses] = get_pulses(atms);
 
             std::set<atom_expr> overlapping_atoms;
             std::set<utils::inf_rational>::iterator p = pulses.begin();
@@ -66,8 +42,8 @@ namespace riddle
             for (p = std::next(p); p != pulses.end(); ++p)
             {
                 json::json j_val;
-                j_val[start_kw] = {{"num", static_cast<int64_t>(std::prev(p)->get_rational().numerator())}, {"den", static_cast<int64_t>(std::prev(p)->get_rational().denominator())}};
-                j_val[end_kw] = {{"num", static_cast<int64_t>(p->get_rational().numerator())}, {"den", static_cast<int64_t>(p->get_rational().denominator())}};
+                j_val[start_kw] = riddle::to_json(*std::prev(p));
+                j_val[end_kw] = riddle::to_json(*p);
 
                 json::json j_atms(json::json_type::array);
                 for (const auto &atm : overlapping_atoms)
@@ -89,7 +65,7 @@ namespace riddle
         return tls;
     }
 
-    reusable_resource::reusable_resource(core &cr) noexcept : component_type(cr, reusable_resource_kw)
+    reusable_resource::reusable_resource(core &cr) noexcept : flaw_aware_component_type(cr, reusable_resource_kw), timeline(cr)
     {
         add_field(std::make_unique<field>(cr.get_type(real_kw), reusable_resource_capacity_kw, nullptr));
 
@@ -107,51 +83,27 @@ namespace riddle
 
     void reusable_resource::created_predicate(predicate &pred) noexcept { add_parent(pred, get_core().get_predicate(interval_kw)); }
 
+    std::vector<std::shared_ptr<flaw>> reusable_resource::get_flaws() noexcept
+    {
+        std::vector<std::shared_ptr<flaw>> flaws;
+        return flaws;
+    }
+
     json::json reusable_resource::extract() const
     {
         json::json tls(json::json_type::array);
         // we partition atoms for each state-variable they might insist on..
-        std::unordered_map<component *, std::vector<atom_expr>> rr_instances;
-        for (const auto &rr : get_instances())
-            rr_instances.emplace(static_cast<component *>(&*rr), std::vector<atom_expr>());
-        for (const auto &atm : get_atoms())
-            if (get_core().get_atom_state(*atm) == atom_state::active)
-            { // the atom is active..
-                const auto tau = atm->get(tau_kw);
-                if (auto c_rrs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..
-                    for (const auto &c_rr : get_core().enum_value(*c_rrs))
-                        rr_instances.at(static_cast<component *>(c_rr.get())).push_back(atm);
-                else // the `tau` parameter is a constant..
-                    rr_instances.at(static_cast<component *>(tau.get())).push_back(atm);
-            }
-
-        for (const auto &[rr, atms] : rr_instances)
+        auto partition = partition_atoms();
+        for (const auto &[rr, atms] : partition)
         {
             json::json tl{{"id", static_cast<uint64_t>(rr->get_id())}, {"type", reusable_resource_kw}};
 #ifdef COMPUTE_NAMES
             tl["name"] = guess_name(*rr);
 #endif
             const auto c_capacity = get_core().arith_value(*rr->get<arith_term>(reusable_resource_capacity_kw));
-            tl[reusable_resource_capacity_kw] = {{"num", static_cast<int64_t>(c_capacity.get_rational().numerator())}, {"den", static_cast<int64_t>(c_capacity.get_rational().denominator())}};
+            tl[reusable_resource_capacity_kw] = riddle::to_json(c_capacity);
 
-            // for each pulse, the atoms starting at that pulse..
-            std::map<utils::inf_rational, std::set<atom_expr>> starting_atoms;
-            // for each pulse, the atoms ending at that pulse..
-            std::map<utils::inf_rational, std::set<atom_expr>> ending_atoms;
-            // all the pulses of the timeline..
-            std::set<utils::inf_rational> pulses;
-
-            for (const auto &atm : atms)
-            {
-                const auto start = get_core().arith_value(*atm->get<arith_term>(start_kw));
-                const auto end = get_core().arith_value(*atm->get<arith_term>(end_kw));
-                starting_atoms[start].insert(atm);
-                ending_atoms[end].insert(atm);
-                pulses.insert(start);
-                pulses.insert(end);
-            }
-            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(origin_kw)));
-            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(horizon_kw)));
+            auto [starting_atoms, ending_atoms, pulses] = get_pulses(atms);
 
             std::set<atom_expr> overlapping_atoms;
             std::set<utils::inf_rational>::iterator p = pulses.begin();
@@ -165,8 +117,8 @@ namespace riddle
             for (p = std::next(p); p != pulses.end(); ++p)
             {
                 json::json j_val;
-                j_val[start_kw] = {{"num", static_cast<int64_t>(std::prev(p)->get_rational().numerator())}, {"den", static_cast<int64_t>(std::prev(p)->get_rational().denominator())}};
-                j_val[end_kw] = {{"num", static_cast<int64_t>(p->get_rational().numerator())}, {"den", static_cast<int64_t>(p->get_rational().denominator())}};
+                j_val[start_kw] = riddle::to_json(*std::prev(p));
+                j_val[end_kw] = riddle::to_json(*p);
 
                 json::json j_atms(json::json_type::array);
                 utils::inf_rational c_usage; // the concurrent resource usage..
@@ -175,7 +127,7 @@ namespace riddle
                     c_usage += get_core().arith_value(*atm->get<arith_term>(reusable_resource_amount_kw));
                     j_atms.push_back(static_cast<uint64_t>(atm->get_id()));
                 }
-                j_val[reusable_resource_amount_kw] = {{"num", static_cast<int64_t>(c_usage.get_rational().numerator())}, {"den", static_cast<int64_t>(c_usage.get_rational().denominator())}};
+                j_val[reusable_resource_amount_kw] = riddle::to_json(c_usage);
                 j_val["atoms"] = std::move(j_atms);
                 j_vals.push_back(std::move(j_val));
 
@@ -192,7 +144,7 @@ namespace riddle
         return tls;
     }
 
-    consumable_resource::consumable_resource(core &cr) noexcept : component_type(cr, consumable_resource_kw)
+    consumable_resource::consumable_resource(core &cr) noexcept : flaw_aware_component_type(cr, consumable_resource_kw), timeline(cr)
     {
         add_field(std::make_unique<field>(cr.get_type(real_kw), consumable_resource_capacity_kw, nullptr));
         add_field(std::make_unique<field>(cr.get_type(real_kw), consumable_resource_initial_amount_kw, nullptr));
@@ -217,53 +169,29 @@ namespace riddle
 
     void consumable_resource::created_predicate(predicate &pred) noexcept { add_parent(pred, get_core().get_predicate(interval_kw)); }
 
+    std::vector<std::shared_ptr<flaw>> consumable_resource::get_flaws() noexcept
+    {
+        std::vector<std::shared_ptr<flaw>> flaws;
+        return flaws;
+    }
+
     json::json consumable_resource::extract() const
     {
         json::json tls(json::json_type::array);
         // we partition atoms for each state-variable they might insist on..
-        std::unordered_map<component *, std::vector<atom_expr>> cr_instances;
-        for (const auto &cr : get_instances())
-            cr_instances.emplace(static_cast<component *>(&*cr), std::vector<atom_expr>());
-        for (const auto &atm : get_atoms())
-            if (get_core().get_atom_state(*atm) == atom_state::active)
-            { // the atom is active..
-                const auto tau = atm->get(tau_kw);
-                if (auto c_crs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..
-                    for (const auto &c_cr : get_core().enum_value(*c_crs))
-                        cr_instances.at(static_cast<component *>(c_cr.get())).push_back(atm);
-                else // the `tau` parameter is a constant..
-                    cr_instances.at(static_cast<component *>(tau.get())).push_back(atm);
-            }
-
-        for (const auto &[cr, atms] : cr_instances)
+        auto partition = partition_atoms();
+        for (const auto &[cr, atms] : partition)
         {
             json::json tl{{"id", static_cast<uint64_t>(cr->get_id())}, {"type", consumable_resource_kw}};
 #ifdef COMPUTE_NAMES
             tl["name"] = guess_name(*cr);
 #endif
             const auto c_capacity = get_core().arith_value(*cr->get<arith_term>(consumable_resource_capacity_kw));
-            tl[consumable_resource_capacity_kw] = {{"num", static_cast<int64_t>(c_capacity.get_rational().numerator())}, {"den", static_cast<int64_t>(c_capacity.get_rational().denominator())}};
+            tl[consumable_resource_capacity_kw] = riddle::to_json(c_capacity);
             const auto c_initial_amount = get_core().arith_value(*cr->get<arith_term>(consumable_resource_initial_amount_kw));
-            tl[consumable_resource_initial_amount_kw] = {{"num", static_cast<int64_t>(c_initial_amount.get_rational().numerator())}, {"den", static_cast<int64_t>(c_initial_amount.get_rational().denominator())}};
+            tl[consumable_resource_initial_amount_kw] = riddle::to_json(c_initial_amount);
 
-            // for each pulse, the atoms starting at that pulse..
-            std::map<utils::inf_rational, std::set<atom_expr>> starting_atoms;
-            // for each pulse, the atoms ending at that pulse..
-            std::map<utils::inf_rational, std::set<atom_expr>> ending_atoms;
-            // all the pulses of the timeline..
-            std::set<utils::inf_rational> pulses;
-
-            for (const auto &atm : atms)
-            {
-                const auto start = get_core().arith_value(*atm->get<arith_term>(start_kw));
-                const auto end = get_core().arith_value(*atm->get<arith_term>(end_kw));
-                starting_atoms[start].insert(atm);
-                ending_atoms[end].insert(atm);
-                pulses.insert(start);
-                pulses.insert(end);
-            }
-            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(origin_kw)));
-            pulses.insert(get_core().arith_value(*get_core().env::get<arith_term>(horizon_kw)));
+            auto [starting_atoms, ending_atoms, pulses] = get_pulses(atms);
 
             std::set<atom_expr> overlapping_atoms;
             std::set<utils::inf_rational>::iterator p = pulses.begin();
@@ -278,8 +206,8 @@ namespace riddle
             for (p = std::next(p); p != pulses.end(); ++p)
             {
                 json::json j_val;
-                j_val[start_kw] = {{"num", static_cast<int64_t>(std::prev(p)->get_rational().numerator())}, {"den", static_cast<int64_t>(std::prev(p)->get_rational().denominator())}};
-                j_val[end_kw] = {{"num", static_cast<int64_t>(p->get_rational().numerator())}, {"den", static_cast<int64_t>(p->get_rational().denominator())}};
+                j_val[start_kw] = riddle::to_json(*std::prev(p));
+                j_val[end_kw] = riddle::to_json(*p);
 
                 json::json j_atms(json::json_type::array);
                 utils::inf_rational c_angular_coefficient; // the concurrent resource update..
@@ -291,9 +219,9 @@ namespace riddle
                     c_angular_coefficient += c_coeff;
                     j_atms.push_back(static_cast<uint64_t>(atm->get_id()));
                 }
-                j_val["from"] = {{"num", static_cast<int64_t>(c_val.get_rational().numerator())}, {"den", static_cast<int64_t>(c_val.get_rational().denominator())}};
+                j_val["from"] = riddle::to_json(c_val);
                 c_val += (c_angular_coefficient * (*p - *std::prev(p)).get_rational());
-                j_val["to"] = {{"num", static_cast<int64_t>(c_val.get_rational().numerator())}, {"den", static_cast<int64_t>(c_val.get_rational().denominator())}};
+                j_val["to"] = riddle::to_json(c_val);
                 j_val["atoms"] = std::move(j_atms);
                 j_vals.push_back(std::move(j_val));
 

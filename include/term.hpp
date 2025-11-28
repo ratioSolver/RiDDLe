@@ -18,6 +18,7 @@ namespace riddle
   class bool_term;
   using bool_expr = std::shared_ptr<bool_term>;
   class expression_statement;
+  class flaw;
 
   /**
    * @class term term.hpp "include/term.hpp"
@@ -235,7 +236,9 @@ namespace riddle
   class atom_term : public term, public env
   {
   public:
-    atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {}) noexcept;
+    atom_term(flaw &flw, predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {}) noexcept;
+
+    [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
 
     [[nodiscard]] bool is_fact() const { return fact; }
 
@@ -247,6 +250,7 @@ namespace riddle
     static env &atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args);
 
   private:
+    flaw &flw; // the flaw this atom belongs to
     bool fact; // whether the atom is a fact
   };
 

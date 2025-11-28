@@ -1,6 +1,18 @@
 #include "core.hpp"
+#include "flaw.hpp"
 #include "items.hpp"
 #include <cassert>
+
+class test_atom_flaw : public riddle::flaw
+{
+public:
+    test_atom_flaw(riddle::core &cr, bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) noexcept : riddle::flaw(cr, {}), atm(std::make_shared<riddle::atom>(*this, pred, is_fact, std::move(args), utils::TRUE_lit)) {}
+
+    [[nodiscard]] riddle::atom_expr get_atom() const noexcept { return atm; }
+
+private:
+    riddle::atom_expr atm;
+};
 
 class test_core : public riddle::core
 {
@@ -40,10 +52,14 @@ public:
 
     riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) override
     {
-        auto f = utils::FALSE_lit;
-        return std::make_shared<riddle::atom>(pred, is_fact, std::move(args), std::move(f));
+        auto flw = std::make_shared<test_atom_flaw>(*this, is_fact, pred, std::move(args));
+        flaws.emplace_back(flw);
+        return flw->get_atom();
     }
     riddle::atom_state get_atom_state(const riddle::atom_term &) const noexcept override { return riddle::atom_state::active; }
+
+private:
+    std::vector<std::shared_ptr<riddle::flaw>> flaws;
 };
 
 void test_class_declaration()

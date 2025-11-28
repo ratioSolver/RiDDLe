@@ -1,4 +1,5 @@
 #include "core.hpp"
+#include "timeline.hpp"
 #include <sstream>
 #include <fstream>
 #include <queue>

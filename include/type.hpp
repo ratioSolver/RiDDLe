@@ -2,6 +2,7 @@
 
 #include "constructor.hpp"
 #include "method.hpp"
+#include <unordered_map>
 
 namespace riddle
 {
@@ -12,6 +13,8 @@ namespace riddle
   class class_declaration;
   class predicate_declaration;
 
+  constexpr const char *origin_kw = "origin";
+  constexpr const char *horizon_kw = "horizon";
   constexpr const char *impulse_kw = "Impulse";
   constexpr const char *interval_kw = "Interval";
 
@@ -194,7 +197,6 @@ namespace riddle
 
   public:
     component_type(scope &scp, std::string &&name) noexcept;
-    virtual ~component_type() = default;
 
     [[nodiscard]] bool is_assignable_from(const type &other) const override;
 
@@ -302,6 +304,16 @@ namespace riddle
     std::string guess_name(const term &itm) const noexcept;
 #endif
 
+    /**
+     * @brief Partitions atoms into groups based on their associated components.
+     *
+     * This function returns an unordered map where each key is a shared pointer to a component,
+     * and the corresponding value is a vector of atom expressions associated with that component.
+     *
+     * @return An unordered map mapping each component to its vector of atom expressions.
+     */
+    [[nodiscard]] std::unordered_map<std::shared_ptr<component>, std::vector<atom_expr>> partition_atoms() const noexcept;
+
   private:
     [[nodiscard]] expr new_instance() override;
 
@@ -406,15 +418,6 @@ namespace riddle
     std::vector<std::reference_wrapper<field>> args;        // the arguments of the predicate..
     const std::vector<std::unique_ptr<statement>> &body;    // the body of the predicate..
     std::vector<atom_expr> atoms;                           // the atoms of the predicate..
-  };
-
-  class timeline
-  {
-  public:
-    timeline() = default;
-    virtual ~timeline() = default;
-
-    [[nodiscard]] virtual json::json extract() const = 0;
   };
 
   [[nodiscard]] inline bool is_bool(const type &tp) noexcept { return tp.get_name() == bool_kw; }

@@ -109,7 +109,7 @@ namespace riddle
         return j_itm;
     }
 
-    atom_term::atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) noexcept : term(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
+    atom_term::atom_term(flaw &flw, predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) noexcept : term(t), env(t.get_core(), atom_parent(t, args), std::move(args)), flw(flw), fact(fact) {}
     atom_state atom_term::get_state() const noexcept { return get_type().get_scope().get_core().get_atom_state(*this); }
     json::json atom_term::to_json() const noexcept
     {

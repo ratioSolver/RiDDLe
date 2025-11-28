@@ -1,6 +1,8 @@
 #pragma once
 
 #include "type.hpp"
+#include "timeline.hpp"
+#include "flaw.hpp"
 
 namespace riddle
 {
@@ -19,10 +21,25 @@ namespace riddle
   class core;
   class constructor_declaration;
 
-  class state_variable : public component_type, public timeline
+  class flaw_aware_component_type : public component_type
+  {
+  public:
+    flaw_aware_component_type(scope &scp, std::string &&name) noexcept : component_type(scp, std::move(name)) {}
+    virtual ~flaw_aware_component_type() = default;
+
+    [[nodiscard]] virtual std::vector<std::shared_ptr<flaw>> get_flaws() noexcept = 0;
+  };
+
+  class peak : public flaw
+  {
+  };
+
+  class state_variable : public flaw_aware_component_type, public timeline
   {
   public:
     state_variable(core &cr) noexcept;
+
+    [[nodiscard]] virtual std::vector<std::shared_ptr<flaw>> get_flaws() noexcept override;
 
     [[nodiscard]] virtual json::json extract() const override;
 
@@ -30,10 +47,12 @@ namespace riddle
     void created_predicate(predicate &pred) noexcept override;
   };
 
-  class reusable_resource : public component_type, public timeline
+  class reusable_resource : public flaw_aware_component_type, public timeline
   {
   public:
     reusable_resource(core &cr) noexcept;
+
+    [[nodiscard]] virtual std::vector<std::shared_ptr<flaw>> get_flaws() noexcept override;
 
     [[nodiscard]] virtual json::json extract() const override;
 
@@ -45,10 +64,12 @@ namespace riddle
     std::unique_ptr<predicate_declaration> use_pred;
   };
 
-  class consumable_resource : public component_type, public timeline
+  class consumable_resource : public flaw_aware_component_type, public timeline
   {
   public:
     consumable_resource(core &cr) noexcept;
+
+    [[nodiscard]] virtual std::vector<std::shared_ptr<flaw>> get_flaws() noexcept override;
 
     [[nodiscard]] virtual json::json extract() const override;
 
