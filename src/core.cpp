@@ -350,4 +350,14 @@ namespace riddle
         }
     }
 #endif
+
+    json::json to_json(const utils::rational &r) noexcept { return json::json{{"num", r.numerator()}, {"den", r.denominator()}}; }
+
+    json::json to_json(const utils::inf_rational &r) noexcept
+    {
+        json::json j = to_json(r.get_rational());
+        if (!is_zero(r.get_infinitesimal()))
+            j["inf"] = to_json(r.get_infinitesimal());
+        return j;
+    }
 } // namespace riddle

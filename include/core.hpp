@@ -516,5 +516,8 @@ namespace riddle
 #endif
   };
 
-  inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }
+  [[nodiscard]] inline bool is_core(const scope &scp) noexcept { return &scp == &scp.get_core(); }
+
+  [[nodiscard]] json::json to_json(const utils::rational &r) noexcept;
+  [[nodiscard]] json::json to_json(const utils::inf_rational &r) noexcept;
 } // namespace riddle
