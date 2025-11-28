@@ -17,6 +17,8 @@ namespace riddle
 
     [[nodiscard]] const utils::lit &get_lit() const noexcept { return expr; }
 
+    [[nodiscard]] virtual std::string to_string() const noexcept override;
+
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
@@ -43,6 +45,8 @@ namespace riddle
   public:
     string_item(string_type &tp, std::string &&expr) noexcept;
 
+    [[nodiscard]] virtual std::string to_string() const noexcept override { return expr; }
+
     [[nodiscard]] const std::string &get_string() const noexcept { return expr; }
 
   private:
@@ -55,6 +59,8 @@ namespace riddle
     enum_item(component_type &tp, std::vector<expr> &&values, utils::var ev) noexcept;
 
     [[nodiscard]] const utils::var &get_var() const noexcept { return var; }
+
+    [[nodiscard]] std::string to_string() const noexcept override;
 
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 

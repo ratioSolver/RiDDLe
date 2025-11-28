@@ -4,7 +4,18 @@
 namespace riddle
 {
     bool_item::bool_item(bool_type &tp, utils::lit &&expr) noexcept : bool_term(tp), expr(expr) {}
-
+    std::string bool_item::to_string() const noexcept
+    {
+        switch (get_type().get_scope().get_core().bool_value(*this))
+        {
+        case utils::True:
+            return utils::to_string(expr) + " (true)";
+        case utils::False:
+            return utils::to_string(expr) + " (false)";
+        default:
+            return utils::to_string(expr);
+        }
+    }
     json::json bool_item::to_json() const noexcept
     {
         auto j_val = bool_term::to_json();
@@ -26,7 +37,7 @@ namespace riddle
     string_item::string_item(string_type &tp, std::string &&expr) noexcept : string_term(tp), expr(expr) {}
 
     enum_item::enum_item(component_type &tp, std::vector<expr> &&values, utils::var ev) noexcept : enum_term(tp, std::move(values)), var(ev) {}
-
+    std::string enum_item::to_string() const noexcept { return "e" + std::to_string(var) + " ∈ " + enum_term::to_string(); }
     json::json enum_item::to_json() const noexcept
     {
         auto j_val = enum_term::to_json();

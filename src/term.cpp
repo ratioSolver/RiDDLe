@@ -4,6 +4,18 @@
 namespace riddle
 {
     bool_term::bool_term(bool_type &tp) noexcept : term(tp) {}
+    std::string bool_term::to_string() const noexcept
+    {
+        switch (get_type().get_scope().get_core().bool_value(*this))
+        {
+        case utils::True:
+            return "true";
+        case utils::False:
+            return "false";
+        default:
+            return "unknown";
+        }
+    }
     json::json bool_term::to_json() const noexcept
     {
         json::json j_val{{"type", get_type().get_name()}}; // we add the type of the item..
@@ -46,6 +58,19 @@ namespace riddle
     json::json string_term::to_json() const noexcept { return {{"type", get_type().get_name()}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
 
     enum_term::enum_term(component_type &tp, std::vector<expr> &&vals) noexcept : term(tp), env(tp.get_core(), tp.get_core()), values(std::move(vals)) { assert(!values.empty()); }
+    std::string enum_term::to_string() const noexcept
+    {
+        std::string repr = "{";
+        auto vals = get_type().get_scope().get_core().enum_value(*this);
+        for (size_t i = 0; i < vals.size(); ++i)
+        {
+            repr += vals[i]->to_string();
+            if (i + 1 < vals.size())
+                repr += ", ";
+        }
+        repr += "}";
+        return repr;
+    }
     json::json enum_term::to_json() const noexcept
     {
         json::json j_val{{"type", "enum"}}; // we add the type of the enum item..

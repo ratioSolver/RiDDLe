@@ -62,6 +62,8 @@ namespace riddle
   public:
     bool_term(bool_type &tp) noexcept;
 
+    [[nodiscard]] virtual std::string to_string() const noexcept override;
+
     [[nodiscard]] virtual json::json to_json() const noexcept override;
   };
 
@@ -212,6 +214,8 @@ namespace riddle
     enum_term(component_type &tp, std::vector<expr> &&values) noexcept;
 
     [[nodiscard]] const std::vector<expr> &get_values() const noexcept { return values; }
+
+    [[nodiscard]] std::string to_string() const noexcept override;
 
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
