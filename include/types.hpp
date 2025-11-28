@@ -32,6 +32,8 @@ namespace riddle
 
   class peak : public flaw
   {
+  public:
+    peak(core &cr, std::vector<atom_expr> &&atms);
   };
 
   class state_variable : public flaw_aware_component_type, public timeline
@@ -64,6 +66,18 @@ namespace riddle
     std::unique_ptr<predicate_declaration> use_pred;
   };
 
+  class overproduction : public flaw
+  {
+  public:
+    overproduction(core &cr, std::vector<atom_expr> &&atms);
+  };
+
+  class overconsumption : public flaw
+  {
+  public:
+    overconsumption(core &cr, std::vector<atom_expr> &&atms);
+  };
+
   class consumable_resource : public flaw_aware_component_type, public timeline
   {
   public:
@@ -81,4 +95,6 @@ namespace riddle
     std::unique_ptr<predicate_declaration> prod_pred;
     std::unique_ptr<predicate_declaration> cons_pred;
   };
+
+  [[nodiscard]] std::vector<std::shared_ptr<resolver>> causes_from_atoms(const std::vector<atom_expr> &atms) noexcept;
 } // namespace riddle
