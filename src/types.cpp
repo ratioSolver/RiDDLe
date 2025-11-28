@@ -249,13 +249,20 @@ namespace riddle
             const auto c_initial_amount = get_core().arith_value(*cr->get<arith_term>(consumable_resource_initial_amount_kw));
             auto [starting_atoms, ending_atoms, pulses] = get_pulses(atms);
 
+            std::vector<atom_expr> prods, consums;
             std::set<atom_expr> overlapping_atoms;
             std::set<utils::inf_rational>::iterator p = pulses.begin();
             if (const auto at_start_p = starting_atoms.find(*p); at_start_p != starting_atoms.cend())
                 overlapping_atoms.insert(at_start_p->second.cbegin(), at_start_p->second.cend());
             if (const auto at_end_p = ending_atoms.find(*p); at_end_p != ending_atoms.cend())
                 for (const auto &a : at_end_p->second)
+                {
                     overlapping_atoms.erase(a);
+                    if (get_predicate(consumable_resource_produce_predicate_kw).is_assignable_from(a->get_type()))
+                        prods.push_back(a);
+                    else
+                        consums.push_back(a);
+                }
 
             utils::inf_rational c_val = c_initial_amount;
             for (p = std::next(p); p != pulses.end(); ++p)
@@ -269,20 +276,34 @@ namespace riddle
                     c_angular_coefficient += c_coeff;
                 }
                 c_val += (c_angular_coefficient * (*p - *std::prev(p)).get_rational());
-                if (c_val < utils::inf_rational::zero || c_val > c_capacity)
-                { // we have a peak..
+                if (c_val < utils::inf_rational::zero)
+                { // we have a over-consumption..
                     std::vector<atom_expr> flaw_atms;
-                    for (const auto &atm : overlapping_atoms)
+                    for (const auto &atm : consums)
                         flaw_atms.push_back(atm);
                     if (!flaw_atms.empty())
-                        flaws.push_back(std::make_shared<peak>(get_core(), std::move(flaw_atms)));
+                        flaws.push_back(std::make_shared<overconsumption>(get_core(), std::move(flaw_atms)));
+                }
+                else if (c_val > c_capacity)
+                { // we have a over-production..
+                    std::vector<atom_expr> flaw_atms;
+                    for (const auto &atm : prods)
+                        flaw_atms.push_back(atm);
+                    if (!flaw_atms.empty())
+                        flaws.push_back(std::make_shared<overproduction>(get_core(), std::move(flaw_atms)));
                 }
 
                 if (const auto at_start_p = starting_atoms.find(*p); at_start_p != starting_atoms.cend())
                     overlapping_atoms.insert(at_start_p->second.cbegin(), at_start_p->second.cend());
                 if (const auto at_end_p = ending_atoms.find(*p); at_end_p != ending_atoms.cend())
                     for (const auto &a : at_end_p->second)
+                    {
                         overlapping_atoms.erase(a);
+                        if (get_predicate(consumable_resource_produce_predicate_kw).is_assignable_from(a->get_type()))
+                            prods.push_back(a);
+                        else
+                            consums.push_back(a);
+                    }
             }
         }
         return flaws;
