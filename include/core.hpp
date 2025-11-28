@@ -16,6 +16,7 @@
 namespace riddle
 {
   class conjunction;
+  class resolver;
 
   /**
    * @class core core.hpp "include/core.hpp"
@@ -178,6 +179,17 @@ namespace riddle
      * @return utils::inf_rational The computed arithmetic value of the expression.
      */
     [[nodiscard]] virtual utils::inf_rational arith_value(const arith_term &expr) const noexcept = 0;
+
+    /**
+     * @brief Checks if the given arithmetic expression is constant.
+     *
+     * This function determines whether the provided arithmetic expression
+     * represents a constant value.
+     *
+     * @param expr The arithmetic expression to be checked.
+     * @return true if the expression is constant, false otherwise.
+     */
+    [[nodiscard]] virtual bool is_constant(const arith_term &expr) const noexcept = 0;
 
     /**
      * @brief Create a new string expression.
@@ -401,6 +413,18 @@ namespace riddle
      * @param disjuncts A vector of unique pointers to conjunction objects, representing the disjunction.
      */
     virtual void new_disjunction(std::vector<std::unique_ptr<conjunction>> &&disjuncts) = 0;
+
+    /**
+     * @brief Executes the given boolean expression.
+     *
+     * This pure virtual function must be implemented by derived classes to handle
+     * the execution of a boolean expression, optionally using a resolver.
+     *
+     * @param xpr The boolean expression (bool_expr) to be executed.
+     * @param res An optional shared pointer to a resolver. Defaults to nullptr.
+     * @return true if the execution was successful, false otherwise.
+     */
+    [[nodiscard]] virtual bool execute(bool_expr xpr, std::shared_ptr<resolver> res = nullptr) = 0;
 
     /**
      * @brief Creates a new atom.

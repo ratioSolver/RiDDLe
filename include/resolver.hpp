@@ -33,6 +33,8 @@ namespace riddle
     [[nodiscard]] const utils::rational &get_intrinsic_cost() const noexcept { return intrinsic_cost; }
     [[nodiscard]] const std::vector<std::shared_ptr<flaw>> &get_preconditions() const noexcept { return preconditions; }
 
+    [[nodiscard]] utils::rational get_estimated_cost() const noexcept;
+
     [[nodiscard]] virtual json::json to_json() const;
 
   protected:

@@ -4,6 +4,14 @@ project(RiDDLe VERSION 0.2.0 LANGUAGES CXX)
 include(CTest)
 enable_testing()
 
+set(HEURISTIC_TYPES h_max h_add)
+set(HEURISTIC_TYPE h_max CACHE STRING "Heuristic type")
+set_property(CACHE HEURISTIC_TYPE PROPERTY STRINGS ${HEURISTIC_TYPES})
+list(FIND HEURISTIC_TYPES ${HEURISTIC_TYPE} HEURISTIC_TYPE_INDEX)
+if(${HEURISTIC_TYPE_INDEX} EQUAL -1)
+    message(FATAL_ERROR "Invalid heuristic type ${HEURISTIC_TYPE}")
+endif()
+
 option(COMPUTE_NAMES "Compute RiDDLe names" OFF)
 
 add_library(RiDDLe src/core.cpp src/scope.cpp src/env.cpp src/type.cpp src/timeline.cpp src/constructor.cpp src/method.cpp src/term.cpp src/conjunction.cpp src/declaration.cpp src/statement.cpp src/expression.cpp src/compilation_unit.cpp src/lexer.cpp src/parser.cpp src/items.cpp src/types.cpp src/flaw.cpp src/resolver.cpp)
@@ -15,6 +23,13 @@ endif()
 add_dependencies(RiDDLe json)
 target_link_libraries(RiDDLe PUBLIC json)
 setup_sanitizers(RiDDLe)
+
+message(STATUS "Heuristic type: ${HEURISTIC_TYPE}")
+if(${HEURISTIC_TYPE} STREQUAL "h_max")
+    target_compile_definitions(RiDDLe PUBLIC H_MAX)
+elseif(${HEURISTIC_TYPE} STREQUAL "h_add")
+    target_compile_definitions(RiDDLe PUBLIC H_ADD)
+endif()
 
 message(STATUS "Compute RiDDLe names: ${COMPUTE_NAMES}")
 if(COMPUTE_NAMES)

@@ -1,5 +1,6 @@
 #include "flaw.hpp"
 #include "resolver.hpp"
+#include "core.hpp"
 #include <stack>
 #include <unordered_set>
 
@@ -13,7 +14,7 @@ namespace riddle
 
     json::json flaw::to_json() const
     {
-        json::json j_flaw;
+        json::json j_flaw{{"cost", riddle::to_json(get_estimated_cost())}};
         if (!causes.empty())
         {
             json::json j_causes(json::json_type::array);

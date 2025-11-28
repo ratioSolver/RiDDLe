@@ -34,6 +34,8 @@ namespace riddle
   {
   public:
     peak(core &cr, std::vector<atom_expr> &&atms);
+
+    utils::rational get_estimated_cost() const noexcept override;
   };
 
   class state_variable : public flaw_aware_component_type, public timeline
@@ -70,12 +72,16 @@ namespace riddle
   {
   public:
     overproduction(core &cr, std::vector<atom_expr> &&atms);
+
+    utils::rational get_estimated_cost() const noexcept override;
   };
 
   class overconsumption : public flaw
   {
   public:
     overconsumption(core &cr, std::vector<atom_expr> &&atms);
+
+    utils::rational get_estimated_cost() const noexcept override;
   };
 
   class consumable_resource : public flaw_aware_component_type, public timeline

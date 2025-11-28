@@ -10,6 +10,8 @@ public:
 
     [[nodiscard]] riddle::enum_expr get_enum() const noexcept { return itm; }
 
+    utils::rational get_estimated_cost() const noexcept override { return utils::rational(1); }
+
 private:
     riddle::enum_expr itm;
 };
@@ -20,6 +22,8 @@ public:
     test_atom_flaw(riddle::core &cr, bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) noexcept : riddle::flaw(cr, {}), atm(std::make_shared<riddle::atom>(*this, pred, is_fact, std::move(args), utils::TRUE_lit)) {}
 
     [[nodiscard]] riddle::atom_expr get_atom() const noexcept { return atm; }
+
+    utils::rational get_estimated_cost() const noexcept override { return utils::rational(1); }
 
 private:
     riddle::atom_expr atm;
@@ -45,6 +49,7 @@ public:
     riddle::arith_expr new_time(utils::rational &&) override { return std::make_shared<riddle::arith_item>(static_cast<riddle::time_type &>(get_type(riddle::time_kw)), utils::lin()); }
     riddle::arith_expr new_time() override { return new_time(utils::rational(0)); }
     utils::inf_rational arith_value(const riddle::arith_term &) const noexcept override { return utils::inf_rational(); }
+    bool is_constant(const riddle::arith_term &) const noexcept override { return true; }
     riddle::string_expr new_string(std::string &&) override { return std::make_shared<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
     riddle::string_expr new_string() override { return new_string(""); }
     std::string string_value(const riddle::string_term &) const noexcept override { return ""; }
@@ -65,6 +70,7 @@ public:
 
     void new_disjunction(std::vector<std::unique_ptr<riddle::conjunction>> &&) override {}
     void new_clause(std::vector<riddle::bool_expr> &&) override {}
+    bool execute(riddle::bool_expr, std::shared_ptr<riddle::resolver>) override { return true; }
 
     riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) override
     {

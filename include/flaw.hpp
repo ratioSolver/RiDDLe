@@ -27,6 +27,10 @@ namespace riddle
 
     [[nodiscard]] uintptr_t get_id() const noexcept { return reinterpret_cast<uintptr_t>(this); }
 
+    [[nodiscard]] virtual utils::rational get_estimated_cost() const noexcept = 0;
+
+    [[nodiscard]] core &get_core() const noexcept { return cr; }
+
     [[nodiscard]] const std::vector<std::shared_ptr<resolver>> &get_causes() const noexcept { return causes; }
     [[nodiscard]] const std::vector<std::shared_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
 

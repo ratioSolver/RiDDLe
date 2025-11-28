@@ -2,6 +2,7 @@
 
 #include "env.hpp"
 #include "enum.hpp"
+#include "resolver.hpp"
 #include <vector>
 
 namespace riddle
@@ -18,7 +19,6 @@ namespace riddle
   class bool_term;
   using bool_expr = std::shared_ptr<bool_term>;
   class expression_statement;
-  class flaw;
 
   /**
    * @class term term.hpp "include/term.hpp"
@@ -209,10 +209,23 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const noexcept override;
   };
 
+  class select_value : public resolver
+  {
+  public:
+    select_value(flaw &flw, expr val) noexcept;
+
+    [[nodiscard]] expr get_value() const noexcept { return val; }
+
+  private:
+    expr val;
+  };
+
   class enum_term : public term, public env
   {
   public:
     enum_term(flaw &flw, component_type &tp, std::vector<expr> &&values) noexcept;
+
+    [[nodiscard]] riddle::expr get(std::string_view name) override;
 
     [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
 

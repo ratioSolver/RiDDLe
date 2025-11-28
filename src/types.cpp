@@ -3,10 +3,12 @@
 #include "core.hpp"
 #include <sstream>
 #include <set>
+#include <cmath>
 
 namespace riddle
 {
     peak::peak(core &cr, std::vector<atom_expr> &&atms) : flaw(cr, causes_from_atoms(atms)) {}
+    utils::rational peak::get_estimated_cost() const noexcept { return std::pow(2.0, static_cast<double>(get_causes().size() - 1)); }
 
     state_variable::state_variable(core &cr) noexcept : flaw_aware_component_type(cr, state_variable_kw), timeline(cr) { add_constructor(std::make_unique<constructor>(*this)); }
 
@@ -212,6 +214,12 @@ namespace riddle
         }
         return tls;
     }
+
+    overproduction::overproduction(core &cr, std::vector<atom_expr> &&atms) : flaw(cr, causes_from_atoms(atms)) {}
+    utils::rational overproduction::get_estimated_cost() const noexcept { return std::pow(2.0, static_cast<double>(get_causes().size() - 1)); }
+
+    overconsumption::overconsumption(core &cr, std::vector<atom_expr> &&atms) : flaw(cr, causes_from_atoms(atms)) {}
+    utils::rational overconsumption::get_estimated_cost() const noexcept { return std::pow(2.0, static_cast<double>(get_causes().size() - 1)); }
 
     consumable_resource::consumable_resource(core &cr) noexcept : flaw_aware_component_type(cr, consumable_resource_kw), timeline(cr)
     {

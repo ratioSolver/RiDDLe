@@ -1,4 +1,7 @@
 #include "core.hpp"
+#include "flaw.hpp"
+#include <unordered_set>
+#include <algorithm>
 #include <cassert>
 
 namespace riddle
@@ -57,7 +60,75 @@ namespace riddle
     string_term::string_term(string_type &tp) noexcept : term(tp) {}
     json::json string_term::to_json() const noexcept { return {{"type", get_type().get_name()}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
 
+    select_value::select_value(flaw &flw, expr v) noexcept : resolver(flw, utils::rational(1)), val(std::move(v)) {}
+
     enum_term::enum_term(flaw &flw, component_type &tp, std::vector<expr> &&vals) noexcept : term(tp), env(tp.get_core(), tp.get_core()), flw(flw), values(std::move(vals)) { assert(!values.empty()); }
+    expr enum_term::get(std::string_view name)
+    {
+        assert(get_values().size() > 1); // should not be a singleton..
+
+        if (auto it = items.find(name.data()); it != items.end())
+            return it->second; // we found the value in the current enum term..
+
+        // different referenced values can represent the same item, so we group them by the item they represent..
+        std::unordered_set<expr> matching_values;
+        for (const auto &v : get_values())
+            matching_values.emplace(std::dynamic_pointer_cast<env>(v)->get(name));
+        assert(!matching_values.empty());
+
+        if (matching_values.size() == 1)
+        { // we are lucky!
+            items.emplace(name, *matching_values.begin());
+            return *matching_values.begin();
+        }
+        // we have to create a new variable :(
+
+        auto &tp = static_cast<component_type &>(get_type()).get_field(name).get_type(); // the target type..
+
+        if (is_bool(tp))
+        { // we create a new boolean item..
+            auto b = get_core().new_bool();
+            // we force the variable to assume the same value of the referenced bools according to the value of the enum..
+            for (auto &res : get_flaw().get_resolvers())
+                get_core().execute(get_core().new_eq(b, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)), res);
+            items.emplace(name, b);
+            return b;
+        }
+        else if (is_int(tp) || is_real(tp))
+        {
+            auto first_val = get_core().arith_value(static_cast<arith_term &>(**matching_values.begin()));
+            if (std::all_of(matching_values.begin(), matching_values.end(), [this, &first_val](const expr &e)
+                            { return get_core().is_constant(static_cast<arith_term &>(*e)) && get_core().arith_value(static_cast<arith_term &>(*e)) == first_val; }))
+            { // we are lucky! all the referenced arithmetics are constant and assume the same value..
+                items.emplace(name, *matching_values.begin());
+                return *matching_values.begin();
+            }
+            else
+            { // we create a new arithmetic item..
+                arith_expr a;
+                if (is_int(tp))
+                    a = get_core().new_int();
+                else
+                    a = get_core().new_real();
+                // we force the variable to assume the same value of the referenced arithmetics according to the value of the enum..
+                for (auto &res : get_flaw().get_resolvers())
+                    get_core().execute(get_core().new_eq(a, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)), res);
+                items.emplace(name, a);
+                return a;
+            }
+        }
+        else
+        {
+            std::vector<expr> vals;
+            for (const auto &val : matching_values)
+                vals.push_back(val);
+            auto e = get_core().new_enum(static_cast<component_type &>(tp), std::move(vals));
+            for (auto &res : get_flaw().get_resolvers())
+                get_core().execute(get_core().new_eq(e, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)), res);
+            items.emplace(name, e);
+            return e;
+        }
+    }
     std::string enum_term::to_string() const noexcept
     {
         std::string repr = "{";
