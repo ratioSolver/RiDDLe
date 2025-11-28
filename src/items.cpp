@@ -36,7 +36,7 @@ namespace riddle
 
     string_item::string_item(string_type &tp, std::string &&expr) noexcept : string_term(tp), expr(expr) {}
 
-    enum_item::enum_item(component_type &tp, std::vector<expr> &&values, utils::var ev) noexcept : enum_term(tp, std::move(values)), var(ev) {}
+    enum_item::enum_item(flaw &flw, component_type &tp, std::vector<expr> &&values, utils::var ev) noexcept : enum_term(flw, tp, std::move(values)), var(ev) {}
     std::string enum_item::to_string() const noexcept { return "e" + std::to_string(var) + " ∈ " + enum_term::to_string(); }
     json::json enum_item::to_json() const noexcept
     {
@@ -45,7 +45,7 @@ namespace riddle
         return j_val;
     }
 
-    sat_enum_item::sat_enum_item(component_type &tp, std::vector<expr> &&values, std::vector<utils::lit> &&lits) noexcept : enum_term(tp, std::move(values))
+    sat_enum_item::sat_enum_item(flaw &flw, component_type &tp, std::vector<expr> &&values, std::vector<utils::lit> &&lits) noexcept : enum_term(flw, tp, std::move(values))
     {
         for (size_t i = 0; i < get_values().size(); i++)
             domain.emplace(get_values()[i].get(), lits[i]);

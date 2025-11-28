@@ -3,6 +3,17 @@
 #include "items.hpp"
 #include <cassert>
 
+class test_enum_flaw : public riddle::flaw
+{
+public:
+    test_enum_flaw(riddle::core &cr, riddle::component_type &tp, std::vector<riddle::expr> &&vals) noexcept : riddle::flaw(cr, {}), itm(std::make_shared<riddle::enum_item>(*this, tp, std::move(vals), 0)) {}
+
+    [[nodiscard]] riddle::enum_expr get_enum() const noexcept { return itm; }
+
+private:
+    riddle::enum_expr itm;
+};
+
 class test_atom_flaw : public riddle::flaw
 {
 public:
@@ -37,7 +48,12 @@ public:
     riddle::string_expr new_string(std::string &&) override { return std::make_shared<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
     riddle::string_expr new_string() override { return new_string(""); }
     std::string string_value(const riddle::string_term &) const noexcept override { return ""; }
-    riddle::expr new_enum(riddle::component_type &tp, std::vector<riddle::expr> &&values) override { return std::make_shared<riddle::enum_item>(tp, std::move(values), 0); }
+    riddle::expr new_enum(riddle::component_type &tp, std::vector<riddle::expr> &&values) override
+    {
+        auto flw = std::make_shared<test_enum_flaw>(*this, tp, std::move(values));
+        flaws.emplace_back(flw);
+        return flw->get_enum();
+    }
     std::vector<riddle::expr> enum_value(const riddle::enum_term &itm) const noexcept override { return {itm.get_values()[0]}; }
 
     riddle::arith_expr new_negation(riddle::arith_expr) override { return new_int(0); }

@@ -53,7 +53,7 @@ namespace riddle
   class enum_item : public enum_term
   {
   public:
-    enum_item(component_type &tp, std::vector<expr> &&values, utils::var ev) noexcept;
+    enum_item(flaw &flw, component_type &tp, std::vector<expr> &&values, utils::var ev) noexcept;
 
     [[nodiscard]] const utils::var &get_var() const noexcept { return var; }
 
@@ -68,7 +68,7 @@ namespace riddle
   class sat_enum_item : public enum_term
   {
   public:
-    sat_enum_item(component_type &tp, std::vector<expr> &&values, std::vector<utils::lit> &&lits) noexcept;
+    sat_enum_item(flaw &flw, component_type &tp, std::vector<expr> &&values, std::vector<utils::lit> &&lits) noexcept;
 
     [[nodiscard]] bool has_lit(const utils::enum_val &val) const noexcept { return domain.find(&val) != domain.end(); }
 

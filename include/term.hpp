@@ -212,7 +212,9 @@ namespace riddle
   class enum_term : public term, public env
   {
   public:
-    enum_term(component_type &tp, std::vector<expr> &&values) noexcept;
+    enum_term(flaw &flw, component_type &tp, std::vector<expr> &&values) noexcept;
+
+    [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
 
     [[nodiscard]] const std::vector<expr> &get_values() const noexcept { return values; }
 
@@ -221,6 +223,7 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
+    flaw &flw;
     std::vector<expr> values;
   };
 
