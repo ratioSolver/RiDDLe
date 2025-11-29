@@ -70,7 +70,6 @@ public:
 
     void new_disjunction(std::vector<std::unique_ptr<riddle::conjunction>> &&) override {}
     void new_clause(std::vector<riddle::bool_expr> &&) override {}
-    bool execute(riddle::bool_expr, std::shared_ptr<riddle::resolver>) override { return true; }
 
     riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) override
     {

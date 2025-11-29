@@ -8,6 +8,8 @@
 namespace riddle
 {
   class flaw;
+  class bool_term;
+  using bool_expr = std::shared_ptr<bool_term>;
 
   /**
    * @class resolver
@@ -36,6 +38,8 @@ namespace riddle
     [[nodiscard]] utils::rational get_estimated_cost() const noexcept;
 
     [[nodiscard]] virtual json::json to_json() const;
+
+    [[nodiscard]] virtual bool execute(bool_expr xpr) = 0;
 
   protected:
     flaw &flw; // the flaw solved by this resolver..

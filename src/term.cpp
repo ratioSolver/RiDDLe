@@ -90,7 +90,7 @@ namespace riddle
             auto b = get_core().new_bool();
             // we force the variable to assume the same value of the referenced bools according to the value of the enum..
             for (auto &res : get_flaw().get_resolvers())
-                get_core().execute(get_core().new_eq(b, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)), res);
+                res->execute(get_core().new_eq(b, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)));
             items.emplace(name, b);
             return b;
         }
@@ -112,7 +112,7 @@ namespace riddle
                     a = get_core().new_real();
                 // we force the variable to assume the same value of the referenced arithmetics according to the value of the enum..
                 for (auto &res : get_flaw().get_resolvers())
-                    get_core().execute(get_core().new_eq(a, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)), res);
+                    res->execute(get_core().new_eq(a, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)));
                 items.emplace(name, a);
                 return a;
             }
@@ -124,7 +124,7 @@ namespace riddle
                 vals.push_back(val);
             auto e = get_core().new_enum(static_cast<component_type &>(tp), std::move(vals));
             for (auto &res : get_flaw().get_resolvers())
-                get_core().execute(get_core().new_eq(e, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)), res);
+                res->execute(get_core().new_eq(e, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)));
             items.emplace(name, e);
             return e;
         }

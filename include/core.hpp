@@ -415,18 +415,6 @@ namespace riddle
     virtual void new_disjunction(std::vector<std::unique_ptr<conjunction>> &&disjuncts) = 0;
 
     /**
-     * @brief Executes the given boolean expression.
-     *
-     * This pure virtual function must be implemented by derived classes to handle
-     * the execution of a boolean expression, optionally using a resolver.
-     *
-     * @param xpr The boolean expression (bool_expr) to be executed.
-     * @param res An optional shared pointer to a resolver. Defaults to nullptr.
-     * @return true if the execution was successful, false otherwise.
-     */
-    [[nodiscard]] virtual bool execute(bool_expr xpr, std::shared_ptr<resolver> res = nullptr) = 0;
-
-    /**
      * @brief Creates a new atom.
      *
      * @param is_fact A boolean indicating whether the atom is a fact or a goal.
