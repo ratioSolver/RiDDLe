@@ -7,6 +7,14 @@
 #include <algorithm>
 #include <cassert>
 
+#ifdef COMPUTE_NAMES
+#include <unordered_map>
+
+#define RECOMPUTE_NAMES() recompute_names()
+#else
+#define RECOMPUTE_NAMES()
+#endif
+
 namespace riddle
 {
     core::core(std::string_view name) noexcept : scope(*this, *this), env(*this, *this), name(name)

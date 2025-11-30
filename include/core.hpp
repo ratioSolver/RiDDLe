@@ -5,18 +5,9 @@
 #include "type.hpp"
 #include "parser.hpp"
 
-#ifdef COMPUTE_NAMES
-#include <unordered_map>
-
-#define RECOMPUTE_NAMES() recompute_names()
-#else
-#define RECOMPUTE_NAMES()
-#endif
-
 namespace riddle
 {
   class conjunction;
-  class resolver;
 
   /**
    * @class core core.hpp "include/core.hpp"
