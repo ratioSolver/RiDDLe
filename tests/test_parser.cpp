@@ -80,6 +80,21 @@ public:
     riddle::atom_state get_atom_state(const riddle::atom_term &) const noexcept override { return riddle::atom_state::active; }
 
 private:
+    bool mk_assign(const riddle::bool_term &, utils::lbool) noexcept { return true; }
+    bool mk_eq(const riddle::bool_term &, const riddle::bool_term &) noexcept { return true; }
+    bool mk_neq(const riddle::bool_term &, const riddle::bool_term &) noexcept { return true; }
+
+    bool mk_lt(const riddle::arith_term &, const riddle::arith_term &) noexcept { return true; }
+    bool mk_le(const riddle::arith_term &, const riddle::arith_term &) noexcept { return true; }
+    bool mk_eq(const riddle::arith_term &, const riddle::arith_term &) noexcept { return true; }
+    bool mk_neq(const riddle::arith_term &, const riddle::arith_term &) noexcept { return true; }
+
+    bool mk_assign(const riddle::enum_term &, const utils::enum_val &) noexcept { return true; }
+    bool mk_forbid(const riddle::enum_term &, const utils::enum_val &) noexcept { return true; }
+    bool mk_eq(const riddle::enum_term &, const riddle::enum_term &) noexcept { return true; }
+    bool mk_neq(const riddle::enum_term &, const riddle::enum_term &) noexcept { return true; }
+
+private:
     std::vector<std::shared_ptr<riddle::flaw>> flaws;
 };
 

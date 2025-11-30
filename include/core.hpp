@@ -406,6 +406,16 @@ namespace riddle
     virtual void new_disjunction(std::vector<std::unique_ptr<conjunction>> &&disjuncts) = 0;
 
     /**
+     * @brief Asserts the given boolean expression.
+     *
+     * This function takes a boolean expression and asserts it within the core environment.
+     *
+     * @param xpr The boolean expression to be asserted.
+     * @return true if the assertion was successful, false otherwise.
+     */
+    bool assert_expr(bool_expr xpr) noexcept;
+
+    /**
      * @brief Creates a new atom.
      *
      * @param is_fact A boolean indicating whether the atom is a fact or a goal.
@@ -506,6 +516,23 @@ namespace riddle
 
   private:
     [[nodiscard]] virtual atom_expr create_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {}) = 0;
+
+    virtual bool mk_assign(const bool_term &xpr, utils::lbool val) noexcept = 0;
+    virtual bool mk_eq(const bool_term &lhs, const bool_term &rhs) noexcept = 0;
+    virtual bool mk_neq(const bool_term &lhs, const bool_term &rhs) noexcept = 0;
+
+    virtual bool mk_lt(const arith_term &lhs, const arith_term &rhs) noexcept = 0;
+    virtual bool mk_le(const arith_term &lhs, const arith_term &rhs) noexcept = 0;
+    virtual bool mk_eq(const arith_term &lhs, const arith_term &rhs) noexcept = 0;
+    virtual bool mk_neq(const arith_term &lhs, const arith_term &rhs) noexcept = 0;
+
+    virtual bool mk_eq(const string_term &lhs, const string_term &rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(lhs) == string_value(rhs); }
+    virtual bool mk_neq(const string_term &lhs, const string_term &rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(lhs) != string_value(rhs); }
+
+    virtual bool mk_assign(const enum_term &xpr, const utils::enum_val &val) noexcept = 0;
+    virtual bool mk_forbid(const enum_term &xpr, const utils::enum_val &val) noexcept = 0;
+    virtual bool mk_eq(const enum_term &lhs, const enum_term &rhs) noexcept = 0;
+    virtual bool mk_neq(const enum_term &lhs, const enum_term &rhs) noexcept = 0;
 
   private:
     const std::string name;                                                           // the name of the core..
