@@ -486,6 +486,8 @@ namespace riddle
      */
     void add_type(std::unique_ptr<type> tp);
 
+    std::shared_ptr<resolver> &get_current_resolver() noexcept { return c_res; }
+
 #ifdef COMPUTE_NAMES
   protected:
     /**
@@ -527,6 +529,8 @@ namespace riddle
     virtual bool mk_le(arith_expr lhs, arith_expr rhs) noexcept = 0;
     virtual bool mk_eq(arith_expr lhs, arith_expr rhs) noexcept = 0;
     virtual bool mk_neq(arith_expr lhs, arith_expr rhs) noexcept = 0;
+    virtual bool mk_ge(arith_expr lhs, arith_expr rhs) noexcept = 0;
+    virtual bool mk_gt(arith_expr lhs, arith_expr rhs) noexcept = 0;
 
     virtual bool mk_eq(string_expr lhs, string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(*lhs) == string_value(*rhs); }
     virtual bool mk_neq(string_expr lhs, string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(*lhs) != string_value(*rhs); }

@@ -95,9 +95,7 @@ namespace riddle
     {
         if (auto n_xpr = std::dynamic_pointer_cast<bool_not>(xpr))
         { // we are dealing with a negation..
-            if (auto b_xpr = std::dynamic_pointer_cast<bool_term>(n_xpr->get_arg()))
-                return mk_assign(b_xpr, utils::False);
-            else if (auto lt_xpr = std::dynamic_pointer_cast<lt_term>(n_xpr->get_arg()))
+            if (auto lt_xpr = std::dynamic_pointer_cast<lt_term>(n_xpr->get_arg()))
                 return mk_le(lt_xpr->get_rhs(), lt_xpr->get_lhs());
             else if (auto le_xpr = std::dynamic_pointer_cast<le_term>(n_xpr->get_arg()))
                 return mk_lt(le_xpr->get_rhs(), le_xpr->get_lhs());
@@ -143,17 +141,17 @@ namespace riddle
                     return true;
             }
             else if (auto ge_xpr = std::dynamic_pointer_cast<ge_term>(n_xpr->get_arg()))
-                return mk_lt(ge_xpr->get_rhs(), ge_xpr->get_lhs());
+                return mk_gt(ge_xpr->get_lhs(), ge_xpr->get_rhs());
             else if (auto gt_xpr = std::dynamic_pointer_cast<gt_term>(n_xpr->get_arg()))
-                return mk_le(gt_xpr->get_rhs(), gt_xpr->get_lhs());
+                return mk_ge(gt_xpr->get_lhs(), gt_xpr->get_rhs());
+            else if (auto b_xpr = std::dynamic_pointer_cast<bool_term>(n_xpr->get_arg()))
+                return mk_assign(b_xpr, utils::False);
             else
                 return false; // unsupported expression, just return false..
         }
         else
         {
-            if (auto b_xpr = std::dynamic_pointer_cast<bool_term>(xpr))
-                return mk_assign(b_xpr, utils::True);
-            else if (auto lt_xpr = std::dynamic_pointer_cast<lt_term>(xpr))
+            if (auto lt_xpr = std::dynamic_pointer_cast<lt_term>(xpr))
                 return mk_lt(lt_xpr->get_lhs(), lt_xpr->get_rhs());
             else if (auto le_xpr = std::dynamic_pointer_cast<le_term>(xpr))
                 return mk_le(le_xpr->get_lhs(), le_xpr->get_rhs());
@@ -198,9 +196,11 @@ namespace riddle
                     return false;
             }
             else if (auto ge_xpr = std::dynamic_pointer_cast<ge_term>(xpr))
-                return mk_le(ge_xpr->get_lhs(), ge_xpr->get_rhs());
+                return mk_ge(ge_xpr->get_lhs(), ge_xpr->get_rhs());
             else if (auto gt_xpr = std::dynamic_pointer_cast<gt_term>(xpr))
-                return mk_lt(gt_xpr->get_lhs(), gt_xpr->get_rhs());
+                return mk_gt(gt_xpr->get_lhs(), gt_xpr->get_rhs());
+            else if (auto b_xpr = std::dynamic_pointer_cast<bool_term>(xpr))
+                return mk_assign(b_xpr, utils::True);
             else
                 return false; // unsupported expression, just return false..
         }

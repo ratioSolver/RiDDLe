@@ -88,6 +88,8 @@ private:
     bool mk_le(riddle::arith_expr, riddle::arith_expr) noexcept { return true; }
     bool mk_eq(riddle::arith_expr, riddle::arith_expr) noexcept { return true; }
     bool mk_neq(riddle::arith_expr, riddle::arith_expr) noexcept { return true; }
+    bool mk_ge(riddle::arith_expr, riddle::arith_expr) noexcept { return true; }
+    bool mk_gt(riddle::arith_expr, riddle::arith_expr) noexcept { return true; }
 
     bool mk_assign(riddle::enum_expr, const utils::enum_val &) noexcept { return true; }
     bool mk_forbid(riddle::enum_expr, const utils::enum_val &) noexcept { return true; }
