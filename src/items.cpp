@@ -6,7 +6,7 @@ namespace riddle
     bool_item::bool_item(bool_type &tp, utils::lit &&expr) noexcept : bool_term(tp), expr(expr) {}
     std::string bool_item::to_string() const noexcept
     {
-        switch (get_type().get_scope().get_core().bool_value(std::static_pointer_cast<const bool_term>(shared_from_this())))
+        switch (get_type().get_scope().get_core().bool_value(*this))
         {
         case utils::True:
             return utils::to_string(expr) + " (true)";
@@ -55,18 +55,18 @@ namespace riddle
     {
         auto j_val = enum_term::to_json();
         json::json j_vals(json::json_type::array);
-        for (const auto &val : get_type().get_scope().get_core().enum_value(std::static_pointer_cast<const sat_enum_item>(shared_from_this())))
+        for (const auto &val : get_type().get_scope().get_core().enum_value(*this))
             j_vals.push_back(val->get_id());
         j_val["vals"] = std::move(j_vals);
         return j_val;
     }
 
-    atom::atom(flaw &flw, riddle::predicate &pred, bool is_fact, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args, const utils::lit &sigma) noexcept : riddle::atom_term(flw, pred, is_fact, std::move(args)), sigma(sigma) {}
+    atom::atom(flaw &flw, riddle::predicate &pred, bool is_fact, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args, const bool_expr &sigma) noexcept : riddle::atom_term(flw, pred, is_fact, std::move(args)), sigma(sigma) {}
 
     json::json atom::to_json() const noexcept
     {
         auto j_atm = riddle::atom_term::to_json();
-        j_atm["sigma"] = utils::to_string(sigma);
+        j_atm["sigma"] = sigma->to_json();
         return j_atm;
     }
 

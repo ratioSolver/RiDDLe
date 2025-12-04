@@ -87,7 +87,7 @@ namespace riddle
             { // we assert each clause
                 if (auto or_val = std::dynamic_pointer_cast<const or_term>(arg))
                 {
-                    std::vector<const_bool_expr> args;
+                    std::vector<bool_expr> args;
                     for (auto &val : or_val->args)
                         args.emplace_back(val);
                     scp.get_core().new_clause(std::move(args));
@@ -95,7 +95,7 @@ namespace riddle
             }
         else if (auto or_val = std::dynamic_pointer_cast<const or_term>(val))
         { // we assert the single clause
-            std::vector<const_bool_expr> args;
+            std::vector<bool_expr> args;
             for (auto &val : or_val->args)
                 args.emplace_back(val);
             scp.get_core().new_clause(std::move(args));
@@ -124,7 +124,7 @@ namespace riddle
         {
             env cctx(scp.get_core(), *tmp_ctx);            // we create a new context
             cctx.items.insert(items.begin(), items.end()); // copy the items
-            auto cst = conj->cst ? scp.get_core().arith_value(std::static_pointer_cast<arith_term>(conj->cst->evaluate(scp, ctx))).get_rational() : utils::rational::one;
+            auto cst = conj->cst ? scp.get_core().arith_value(static_cast<arith_term &>(*conj->cst->evaluate(scp, ctx))).get_rational() : utils::rational::one;
             conjs.emplace_back(std::make_unique<conjunction>(scp, std::move(cctx), cst, conj->stmts));
         }
         scp.get_core().new_disjunction(std::move(conjs));

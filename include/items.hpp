@@ -83,14 +83,14 @@ namespace riddle
   class atom : public riddle::atom_term
   {
   public:
-    atom(flaw &flw, riddle::predicate &pred, bool is_fact, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args, const utils::lit &sigma) noexcept;
+    atom(flaw &flw, riddle::predicate &pred, bool is_fact, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args, const bool_expr &sigma) noexcept;
 
-    [[nodiscard]] const utils::lit &get_sigma() const noexcept { return sigma; }
+    [[nodiscard]] const bool_expr &get_sigma() const noexcept { return sigma; }
 
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
-    const utils::lit sigma;
+    bool_expr sigma;
   };
 
   [[nodiscard]] bool is_arith(const type &tp) noexcept;

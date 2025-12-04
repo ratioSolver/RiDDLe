@@ -86,7 +86,7 @@ namespace riddle
      * @param expr The boolean expression to evaluate.
      * @return utils::lbool The logical value of the expression.
      */
-    [[nodiscard]] virtual utils::lbool bool_value(const_bool_expr expr) const noexcept = 0;
+    [[nodiscard]] virtual utils::lbool bool_value(const bool_term &expr) const noexcept = 0;
 
     /**
      * @brief Create a new int expression.
@@ -168,10 +168,10 @@ namespace riddle
      * This function takes an arithmetic item expression and computes its
      * corresponding arithmetic value.
      *
-     * @param expr The arithmetic item expression to be evaluated.
+     * @param xpr The arithmetic item expression to be evaluated.
      * @return utils::inf_rational The computed arithmetic value of the expression.
      */
-    [[nodiscard]] virtual utils::inf_rational arith_value(const_arith_expr expr) const noexcept = 0;
+    [[nodiscard]] virtual utils::inf_rational arith_value(const arith_term &xpr) const noexcept = 0;
 
     /**
      * @brief Checks if the given arithmetic expression is constant.
@@ -179,10 +179,10 @@ namespace riddle
      * This function determines whether the provided arithmetic expression
      * represents a constant value.
      *
-     * @param expr The arithmetic expression to be checked.
+     * @param xpr The arithmetic expression to be checked.
      * @return true if the expression is constant, false otherwise.
      */
-    [[nodiscard]] virtual bool is_constant(const_arith_expr expr) const noexcept = 0;
+    [[nodiscard]] virtual bool is_constant(const riddle::arith_term &xpr) const noexcept = 0;
 
     /**
      * @brief Create a new string expression.
@@ -202,10 +202,10 @@ namespace riddle
      *
      * This function takes a string expression and returns its string value.
      *
-     * @param expr The string expression.
+     * @param xpr The string expression.
      * @return std::string The string value of the expression.
      */
-    [[nodiscard]] virtual std::string string_value(const_string_expr expr) const noexcept = 0;
+    [[nodiscard]] virtual std::string string_value(const riddle::string_term &xpr) const noexcept = 0;
 
     /**
      * @brief Creates a new enum item.
@@ -223,10 +223,10 @@ namespace riddle
      *
      * This function takes an enum item and returns its associated domain as a vector of expressions.
      *
-     * @param expr The enum item for which the domain is being retrieved.
+     * @param xpr The enum item for which the domain is being retrieved.
      * @return std::unordered_set<expr> A set of expressions representing the domain of the enum item.
      */
-    [[nodiscard]] virtual std::unordered_set<expr> enum_value(const_enum_expr expr) const noexcept = 0;
+    [[nodiscard]] virtual std::unordered_set<expr> enum_value(const enum_term &xpr) const noexcept = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.
@@ -237,7 +237,7 @@ namespace riddle
      * @param exprs A vector of shared pointers to boolean items to be combined.
      * @return A shared pointer to the newly created boolean item representing the AND operation.
      */
-    [[nodiscard]] bool_expr new_and(std::vector<const_bool_expr> &&exprs);
+    [[nodiscard]] bool_expr new_and(std::vector<bool_expr> &&exprs);
     /**
      * @brief Creates a new boolean OR item from a list of boolean expressions.
      *
@@ -248,7 +248,7 @@ namespace riddle
      * the boolean expressions to be OR-ed together.
      * @return A shared pointer to the newly created boolean OR item.
      */
-    [[nodiscard]] bool_expr new_or(std::vector<const_bool_expr> &&exprs);
+    [[nodiscard]] bool_expr new_or(std::vector<bool_expr> &&exprs);
     /**
      * @brief Creates a new XOR (exclusive OR) boolean item.
      *
@@ -258,7 +258,7 @@ namespace riddle
      * @param exprs A vector of shared pointers to boolean items, which will be used as the operands for the XOR operation.
      * @return A shared pointer to the newly created XOR boolean item.
      */
-    [[nodiscard]] bool_expr new_xor(std::vector<const_bool_expr> &&exprs);
+    [[nodiscard]] bool_expr new_xor(std::vector<bool_expr> &&exprs);
 
     /**
      * @brief Creates a new boolean item representing the logical NOT of the given expression.
@@ -269,7 +269,7 @@ namespace riddle
      * @param expr A shared pointer to the boolean item to be negated.
      * @return A shared pointer to a new boolean item representing the logical NOT of the input expression.
      */
-    [[nodiscard]] bool_expr new_not(const_bool_expr expr);
+    [[nodiscard]] bool_expr new_not(bool_expr expr);
 
     /**
      * @brief Creates a new arithmetic item representing the negation of the given expression.
@@ -280,7 +280,7 @@ namespace riddle
      * @param xpr A shared pointer to the arithmetic item to be negated.
      * @return A shared pointer to the new arithmetic item representing the negation of the input expression.
      */
-    [[nodiscard]] virtual arith_expr new_negation(const_arith_expr xpr) = 0;
+    [[nodiscard]] virtual arith_expr new_negation(arith_expr xpr) = 0;
 
     /**
      * @brief Creates a new arithmetic sum item.
@@ -292,7 +292,7 @@ namespace riddle
      * @param xprs A vector of shared pointers to arithmetic items that will be summed.
      * @return arith_expr A shared pointer to the newly created arithmetic sum item.
      */
-    [[nodiscard]] virtual arith_expr new_sum(std::vector<const_arith_expr> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_sum(std::vector<arith_expr> &&xprs) = 0;
     /**
      * @brief Creates a new arithmetic subtraction item.
      *
@@ -303,7 +303,7 @@ namespace riddle
      * @param xprs A vector of shared pointers to arithmetic items that will be subtracted.
      * @return arith_expr A shared pointer to the newly created arithmetic subtraction item.
      */
-    [[nodiscard]] virtual arith_expr new_subtraction(std::vector<const_arith_expr> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_subtraction(std::vector<arith_expr> &&xprs) = 0;
     /**
      * @brief Creates a new product from a vector of arithmetic items.
      *
@@ -315,7 +315,7 @@ namespace riddle
      *
      * @return arith_expr A shared pointer to the newly created product.
      */
-    [[nodiscard]] virtual arith_expr new_product(std::vector<const_arith_expr> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_product(std::vector<arith_expr> &&xprs) = 0;
     /**
      * @brief Creates a new division arithmetic item.
      *
@@ -327,7 +327,7 @@ namespace riddle
      *
      * @return arith_expr A shared pointer to the newly created division arithmetic item.
      */
-    [[nodiscard]] virtual arith_expr new_division(std::vector<const_arith_expr> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_division(std::vector<arith_expr> &&xprs) = 0;
 
     /**
      * @brief Creates a new less-than comparison item.
@@ -340,7 +340,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to the newly created less-than comparison item.
      */
-    [[nodiscard]] bool_expr new_lt(const_arith_expr lhs, const_arith_expr rhs);
+    [[nodiscard]] bool_expr new_lt(arith_expr lhs, arith_expr rhs);
     /**
      * @brief Creates a new less-than-or-equal-to (<=) boolean item.
      *
@@ -352,7 +352,7 @@ namespace riddle
      * @return A shared pointer to the newly created boolean item representing
      *         the result of the <= comparison.
      */
-    [[nodiscard]] bool_expr new_le(const_arith_expr lhs, const_arith_expr rhs);
+    [[nodiscard]] bool_expr new_le(arith_expr lhs, arith_expr rhs);
     /**
      * @brief Creates a new greater-than comparison item.
      *
@@ -364,7 +364,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to a boolean item representing the result of the comparison.
      */
-    [[nodiscard]] bool_expr new_gt(const_arith_expr lhs, const_arith_expr rhs);
+    [[nodiscard]] bool_expr new_gt(arith_expr lhs, arith_expr rhs);
     /**
      * @brief Creates a new greater-than-or-equal-to boolean item.
      *
@@ -375,7 +375,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to the newly created boolean item representing the comparison.
      */
-    [[nodiscard]] bool_expr new_ge(const_arith_expr lhs, const_arith_expr rhs);
+    [[nodiscard]] bool_expr new_ge(arith_expr lhs, arith_expr rhs);
     /**
      * @brief Creates a new equality comparison item.
      *
@@ -396,7 +396,7 @@ namespace riddle
      *
      * @param exprs A vector of boolean expressions (bool_expr) to be asserted.
      */
-    virtual void new_clause(std::vector<const_bool_expr> &&exprs) = 0;
+    virtual void new_clause(std::vector<bool_expr> &&exprs) = 0;
 
     /**
      * @brief Pure virtual function to add a new disjunction.
@@ -415,7 +415,7 @@ namespace riddle
      * @param xpr The boolean expression to be asserted.
      * @return true if the assertion was successful, false otherwise.
      */
-    bool assert_expr(const_bool_expr xpr) noexcept;
+    bool assert_expr(bool_expr xpr) noexcept;
 
     /**
      * @brief Creates a new atom.
@@ -426,7 +426,7 @@ namespace riddle
      * @return A shared pointer to the newly created atom.
      */
     [[nodiscard]] atom_expr new_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {});
-    [[nodiscard]] virtual atom_state get_atom_state(const_atom_expr atom) const noexcept = 0;
+    [[nodiscard]] virtual atom_state get_atom_state(const atom_term &atm) const noexcept = 0;
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
@@ -449,7 +449,7 @@ namespace riddle
      * @param exprs A vector of arithmetic expressions to be promoted.
      * @return A reference to the promoted type.
      */
-    [[nodiscard]] type &type_promotion(const std::vector<const_arith_expr> &exprs) const;
+    [[nodiscard]] type &type_promotion(const std::vector<arith_expr> &exprs) const;
 
     [[nodiscard]] expr get(std::string_view name) override;
 
@@ -519,22 +519,22 @@ namespace riddle
   private:
     [[nodiscard]] virtual atom_expr create_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {}) = 0;
 
-    virtual bool mk_assign(const_bool_expr xpr, utils::lbool val) noexcept = 0;
-    virtual bool mk_eq(const_bool_expr lhs, const_bool_expr rhs) noexcept = 0;
-    virtual bool mk_neq(const_bool_expr lhs, const_bool_expr rhs) noexcept = 0;
+    virtual bool mk_assign(bool_expr xpr, utils::lbool val) noexcept = 0;
+    virtual bool mk_eq(bool_expr lhs, bool_expr rhs) noexcept = 0;
+    virtual bool mk_neq(bool_expr lhs, bool_expr rhs) noexcept = 0;
 
-    virtual bool mk_lt(const_arith_expr lhs, const_arith_expr rhs) noexcept = 0;
-    virtual bool mk_le(const_arith_expr lhs, const_arith_expr rhs) noexcept = 0;
-    virtual bool mk_eq(const_arith_expr lhs, const_arith_expr rhs) noexcept = 0;
-    virtual bool mk_neq(const_arith_expr lhs, const_arith_expr rhs) noexcept = 0;
+    virtual bool mk_lt(arith_expr lhs, arith_expr rhs) noexcept = 0;
+    virtual bool mk_le(arith_expr lhs, arith_expr rhs) noexcept = 0;
+    virtual bool mk_eq(arith_expr lhs, arith_expr rhs) noexcept = 0;
+    virtual bool mk_neq(arith_expr lhs, arith_expr rhs) noexcept = 0;
 
-    virtual bool mk_eq(const_string_expr lhs, const_string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(lhs) == string_value(rhs); }
-    virtual bool mk_neq(const_string_expr lhs, const_string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(lhs) != string_value(rhs); }
+    virtual bool mk_eq(string_expr lhs, string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(*lhs) == string_value(*rhs); }
+    virtual bool mk_neq(string_expr lhs, string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(*lhs) != string_value(*rhs); }
 
-    virtual bool mk_assign(const_enum_expr xpr, const utils::enum_val &val) noexcept = 0;
-    virtual bool mk_forbid(const_enum_expr xpr, const utils::enum_val &val) noexcept = 0;
-    virtual bool mk_eq(const_enum_expr lhs, const_enum_expr rhs) noexcept = 0;
-    virtual bool mk_neq(const_enum_expr lhs, const_enum_expr rhs) noexcept = 0;
+    virtual bool mk_assign(enum_expr xpr, const utils::enum_val &val) noexcept = 0;
+    virtual bool mk_forbid(enum_expr xpr, const utils::enum_val &val) noexcept = 0;
+    virtual bool mk_eq(enum_expr lhs, enum_expr rhs) noexcept = 0;
+    virtual bool mk_neq(enum_expr lhs, enum_expr rhs) noexcept = 0;
 
   private:
     const std::string name;                                                           // the name of the core..

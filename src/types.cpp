@@ -126,7 +126,7 @@ namespace riddle
         auto partition = partition_atoms();
         for (const auto &[rr, atms] : partition)
         {
-            const auto c_capacity = get_core().arith_value(rr->get<arith_term>(reusable_resource_capacity_kw));
+            const auto c_capacity = get_core().arith_value(*rr->get<arith_term>(reusable_resource_capacity_kw));
             auto [starting_atoms, ending_atoms, pulses] = get_pulses(atms);
 
             std::set<atom_expr> overlapping_atoms;
@@ -141,7 +141,7 @@ namespace riddle
             {
                 utils::inf_rational c_usage; // the concurrent resource usage..
                 for (const auto &atm : overlapping_atoms)
-                    c_usage += get_core().arith_value(atm->get<arith_term>(reusable_resource_amount_kw));
+                    c_usage += get_core().arith_value(*atm->get<arith_term>(reusable_resource_amount_kw));
                 if (c_usage > c_capacity)
                 { // we have a peak..
                     std::vector<atom_expr> flaw_atms;
@@ -172,7 +172,7 @@ namespace riddle
 #ifdef COMPUTE_NAMES
             tl["name"] = guess_name(*rr);
 #endif
-            const auto c_capacity = get_core().arith_value(rr->get<arith_term>(reusable_resource_capacity_kw));
+            const auto c_capacity = get_core().arith_value(*rr->get<arith_term>(reusable_resource_capacity_kw));
             tl[reusable_resource_capacity_kw] = riddle::to_json(c_capacity);
 
             auto [starting_atoms, ending_atoms, pulses] = get_pulses(atms);
@@ -195,7 +195,7 @@ namespace riddle
                 utils::inf_rational c_usage; // the concurrent resource usage..
                 for (const auto &atm : overlapping_atoms)
                 {
-                    c_usage += get_core().arith_value(atm->get<arith_term>(reusable_resource_amount_kw));
+                    c_usage += get_core().arith_value(*atm->get<arith_term>(reusable_resource_amount_kw));
                     j_atms.push_back(static_cast<uint64_t>(atm->get_id()));
                 }
                 j_val[reusable_resource_amount_kw] = riddle::to_json(c_usage);
@@ -253,8 +253,8 @@ namespace riddle
         auto partition = partition_atoms();
         for (const auto &[cr, atms] : partition)
         {
-            const auto c_capacity = get_core().arith_value(cr->get<arith_term>(consumable_resource_capacity_kw));
-            const auto c_initial_amount = get_core().arith_value(cr->get<arith_term>(consumable_resource_initial_amount_kw));
+            const auto c_capacity = get_core().arith_value(*cr->get<arith_term>(consumable_resource_capacity_kw));
+            const auto c_initial_amount = get_core().arith_value(*cr->get<arith_term>(consumable_resource_initial_amount_kw));
             auto [starting_atoms, ending_atoms, pulses] = get_pulses(atms);
 
             std::vector<atom_expr> prods, consums;
@@ -278,9 +278,9 @@ namespace riddle
                 utils::inf_rational c_angular_coefficient; // the concurrent resource update..
                 for (const auto &atm : overlapping_atoms)
                 {
-                    const auto c_amount = get_core().arith_value(atm->get<arith_term>(consumable_resource_amount_kw));
+                    const auto c_amount = get_core().arith_value(*atm->get<arith_term>(consumable_resource_amount_kw));
                     auto c_coeff = get_predicate(consumable_resource_produce_predicate_kw).is_assignable_from(atm->get_type()) ? c_amount : -c_amount;
-                    c_coeff /= (get_core().arith_value(atm->get<arith_term>(start_kw)) - get_core().arith_value(atm->get<arith_term>(end_kw))).get_rational();
+                    c_coeff /= (get_core().arith_value(*atm->get<arith_term>(start_kw)) - get_core().arith_value(*atm->get<arith_term>(end_kw))).get_rational();
                     c_angular_coefficient += c_coeff;
                 }
                 c_val += (c_angular_coefficient * (*p - *std::prev(p)).get_rational());
@@ -328,9 +328,9 @@ namespace riddle
 #ifdef COMPUTE_NAMES
             tl["name"] = guess_name(*cr);
 #endif
-            const auto c_capacity = get_core().arith_value(cr->get<arith_term>(consumable_resource_capacity_kw));
+            const auto c_capacity = get_core().arith_value(*cr->get<arith_term>(consumable_resource_capacity_kw));
             tl[consumable_resource_capacity_kw] = riddle::to_json(c_capacity);
-            const auto c_initial_amount = get_core().arith_value(cr->get<arith_term>(consumable_resource_initial_amount_kw));
+            const auto c_initial_amount = get_core().arith_value(*cr->get<arith_term>(consumable_resource_initial_amount_kw));
             tl[consumable_resource_initial_amount_kw] = riddle::to_json(c_initial_amount);
 
             auto [starting_atoms, ending_atoms, pulses] = get_pulses(atms);
@@ -355,9 +355,9 @@ namespace riddle
                 utils::inf_rational c_angular_coefficient; // the concurrent resource update..
                 for (const auto &atm : overlapping_atoms)
                 {
-                    const auto c_amount = get_core().arith_value(atm->get<arith_term>(consumable_resource_amount_kw));
+                    const auto c_amount = get_core().arith_value(*atm->get<arith_term>(consumable_resource_amount_kw));
                     auto c_coeff = get_predicate(consumable_resource_produce_predicate_kw).is_assignable_from(atm->get_type()) ? c_amount : -c_amount;
-                    c_coeff /= (get_core().arith_value(atm->get<arith_term>(start_kw)) - get_core().arith_value(atm->get<arith_term>(end_kw))).get_rational();
+                    c_coeff /= (get_core().arith_value(*atm->get<arith_term>(start_kw)) - get_core().arith_value(*atm->get<arith_term>(end_kw))).get_rational();
                     c_angular_coefficient += c_coeff;
                     j_atms.push_back(static_cast<uint64_t>(atm->get_id()));
                 }
