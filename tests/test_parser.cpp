@@ -61,15 +61,15 @@ public:
     }
     std::vector<riddle::expr> enum_value(riddle::const_enum_expr itm) const noexcept override { return {itm->get_values()[0]}; }
 
-    riddle::arith_expr new_negation(riddle::arith_expr) override { return new_int(0); }
+    riddle::arith_expr new_negation(riddle::const_arith_expr) override { return new_int(0); }
 
-    riddle::arith_expr new_sum(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
-    riddle::arith_expr new_subtraction(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
-    riddle::arith_expr new_product(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
-    riddle::arith_expr new_division(std::vector<riddle::arith_expr> &&) override { return new_int(0); }
+    riddle::arith_expr new_sum(std::vector<riddle::const_arith_expr> &&) override { return new_int(0); }
+    riddle::arith_expr new_subtraction(std::vector<riddle::const_arith_expr> &&) override { return new_int(0); }
+    riddle::arith_expr new_product(std::vector<riddle::const_arith_expr> &&) override { return new_int(0); }
+    riddle::arith_expr new_division(std::vector<riddle::const_arith_expr> &&) override { return new_int(0); }
 
     void new_disjunction(std::vector<std::unique_ptr<riddle::conjunction>> &&) override {}
-    void new_clause(std::vector<riddle::bool_expr> &&) override {}
+    void new_clause(std::vector<riddle::const_bool_expr> &&) override {}
 
     riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) override
     {

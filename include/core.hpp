@@ -235,7 +235,7 @@ namespace riddle
      * @param exprs A vector of shared pointers to boolean items to be combined.
      * @return A shared pointer to the newly created boolean item representing the AND operation.
      */
-    [[nodiscard]] bool_expr new_and(std::vector<bool_expr> &&exprs);
+    [[nodiscard]] bool_expr new_and(std::vector<const_bool_expr> &&exprs);
     /**
      * @brief Creates a new boolean OR item from a list of boolean expressions.
      *
@@ -246,7 +246,7 @@ namespace riddle
      * the boolean expressions to be OR-ed together.
      * @return A shared pointer to the newly created boolean OR item.
      */
-    [[nodiscard]] bool_expr new_or(std::vector<bool_expr> &&exprs);
+    [[nodiscard]] bool_expr new_or(std::vector<const_bool_expr> &&exprs);
     /**
      * @brief Creates a new XOR (exclusive OR) boolean item.
      *
@@ -256,7 +256,7 @@ namespace riddle
      * @param exprs A vector of shared pointers to boolean items, which will be used as the operands for the XOR operation.
      * @return A shared pointer to the newly created XOR boolean item.
      */
-    [[nodiscard]] bool_expr new_xor(std::vector<bool_expr> &&exprs);
+    [[nodiscard]] bool_expr new_xor(std::vector<const_bool_expr> &&exprs);
 
     /**
      * @brief Creates a new boolean item representing the logical NOT of the given expression.
@@ -267,7 +267,7 @@ namespace riddle
      * @param expr A shared pointer to the boolean item to be negated.
      * @return A shared pointer to a new boolean item representing the logical NOT of the input expression.
      */
-    [[nodiscard]] bool_expr new_not(bool_expr expr);
+    [[nodiscard]] bool_expr new_not(const_bool_expr expr);
 
     /**
      * @brief Creates a new arithmetic item representing the negation of the given expression.
@@ -278,7 +278,7 @@ namespace riddle
      * @param xpr A shared pointer to the arithmetic item to be negated.
      * @return A shared pointer to the new arithmetic item representing the negation of the input expression.
      */
-    [[nodiscard]] virtual arith_expr new_negation(arith_expr xpr) = 0;
+    [[nodiscard]] virtual arith_expr new_negation(const_arith_expr xpr) = 0;
 
     /**
      * @brief Creates a new arithmetic sum item.
@@ -290,7 +290,7 @@ namespace riddle
      * @param xprs A vector of shared pointers to arithmetic items that will be summed.
      * @return arith_expr A shared pointer to the newly created arithmetic sum item.
      */
-    [[nodiscard]] virtual arith_expr new_sum(std::vector<arith_expr> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_sum(std::vector<const_arith_expr> &&xprs) = 0;
     /**
      * @brief Creates a new arithmetic subtraction item.
      *
@@ -301,7 +301,7 @@ namespace riddle
      * @param xprs A vector of shared pointers to arithmetic items that will be subtracted.
      * @return arith_expr A shared pointer to the newly created arithmetic subtraction item.
      */
-    [[nodiscard]] virtual arith_expr new_subtraction(std::vector<arith_expr> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_subtraction(std::vector<const_arith_expr> &&xprs) = 0;
     /**
      * @brief Creates a new product from a vector of arithmetic items.
      *
@@ -313,7 +313,7 @@ namespace riddle
      *
      * @return arith_expr A shared pointer to the newly created product.
      */
-    [[nodiscard]] virtual arith_expr new_product(std::vector<arith_expr> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_product(std::vector<const_arith_expr> &&xprs) = 0;
     /**
      * @brief Creates a new division arithmetic item.
      *
@@ -325,7 +325,7 @@ namespace riddle
      *
      * @return arith_expr A shared pointer to the newly created division arithmetic item.
      */
-    [[nodiscard]] virtual arith_expr new_division(std::vector<arith_expr> &&xprs) = 0;
+    [[nodiscard]] virtual arith_expr new_division(std::vector<const_arith_expr> &&xprs) = 0;
 
     /**
      * @brief Creates a new less-than comparison item.
@@ -394,7 +394,7 @@ namespace riddle
      *
      * @param exprs A vector of boolean expressions (bool_expr) to be asserted.
      */
-    virtual void new_clause(std::vector<bool_expr> &&exprs) = 0;
+    virtual void new_clause(std::vector<const_bool_expr> &&exprs) = 0;
 
     /**
      * @brief Pure virtual function to add a new disjunction.
@@ -413,7 +413,7 @@ namespace riddle
      * @param xpr The boolean expression to be asserted.
      * @return true if the assertion was successful, false otherwise.
      */
-    bool assert_expr(bool_expr xpr) noexcept;
+    bool assert_expr(const_bool_expr xpr) noexcept;
 
     /**
      * @brief Creates a new atom.
@@ -447,7 +447,7 @@ namespace riddle
      * @param exprs A vector of arithmetic expressions to be promoted.
      * @return A reference to the promoted type.
      */
-    [[nodiscard]] type &type_promotion(const std::vector<arith_expr> &exprs) const;
+    [[nodiscard]] type &type_promotion(const std::vector<const_arith_expr> &exprs) const;
 
     [[nodiscard]] expr get(std::string_view name) override;
 

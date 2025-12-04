@@ -74,13 +74,13 @@ namespace riddle
     friend expression_statement;
 
   public:
-    and_term(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
+    and_term(bool_type &tp, std::vector<const_bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
 
-    friend bool_expr push_negations(bool_expr expr) noexcept;
-    friend bool_expr distribute(bool_expr expr) noexcept;
+    friend const_bool_expr push_negations(const_bool_expr expr) noexcept;
+    friend const_bool_expr distribute(const_bool_expr expr) noexcept;
 
   private:
-    std::vector<bool_expr> args;
+    std::vector<const_bool_expr> args;
   };
 
   class or_term : public bool_term
@@ -88,35 +88,35 @@ namespace riddle
     friend expression_statement;
 
   public:
-    or_term(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
+    or_term(bool_type &tp, std::vector<const_bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
 
-    friend bool_expr push_negations(bool_expr expr) noexcept;
-    friend bool_expr distribute(bool_expr expr) noexcept;
+    friend const_bool_expr push_negations(const_bool_expr expr) noexcept;
+    friend const_bool_expr distribute(const_bool_expr expr) noexcept;
 
   private:
-    std::vector<bool_expr> args;
+    std::vector<const_bool_expr> args;
   };
 
   class xor_term : public bool_term
   {
   public:
-    xor_term(bool_type &tp, std::vector<bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
+    xor_term(bool_type &tp, std::vector<const_bool_expr> &&args) noexcept : bool_term(tp), args(std::move(args)) {}
 
   private:
-    std::vector<bool_expr> args;
+    std::vector<const_bool_expr> args;
   };
 
   class bool_not : public bool_term
   {
   public:
-    bool_not(bool_type &tp, bool_expr arg) noexcept : bool_term(tp), arg(std::move(arg)) {}
+    bool_not(bool_type &tp, const_bool_expr arg) noexcept : bool_term(tp), arg(std::move(arg)) {}
 
-    bool_expr get_arg() const noexcept { return arg; }
+    const_bool_expr get_arg() const noexcept { return arg; }
 
-    friend bool_expr push_negations(bool_expr expr) noexcept;
+    friend const_bool_expr push_negations(const_bool_expr expr) noexcept;
 
   private:
-    bool_expr arg;
+    const_bool_expr arg;
   };
 
   class arith_term : public term
@@ -277,9 +277,9 @@ namespace riddle
   using atom_expr = std::shared_ptr<atom_term>;
   using const_atom_expr = std::shared_ptr<const atom_term>;
 
-  [[nodiscard]] bool_expr push_negations(bool_expr expr) noexcept;
-  [[nodiscard]] bool_expr distribute(bool_expr expr) noexcept;
-  [[nodiscard]] inline bool_expr to_cnf(bool_expr expr) noexcept { return distribute(push_negations(expr)); }
+  [[nodiscard]] const_bool_expr push_negations(const_bool_expr expr) noexcept;
+  [[nodiscard]] const_bool_expr distribute(const_bool_expr expr) noexcept;
+  [[nodiscard]] inline const_bool_expr to_cnf(const_bool_expr expr) noexcept { return distribute(push_negations(expr)); }
 
   [[nodiscard]] bool is_bool(expr xpr) noexcept;
   [[nodiscard]] bool is_int(expr xpr) noexcept;

@@ -82,22 +82,22 @@ namespace riddle
     void expression_statement::execute(const scope &scp, env &ctx) const
     {
         auto val = to_cnf(std::dynamic_pointer_cast<bool_term>(xpr->evaluate(scp, ctx))); // convert the expression to conjunctive normal form..
-        if (auto and_val = std::dynamic_pointer_cast<and_term>(val))
+        if (auto and_val = std::dynamic_pointer_cast<const and_term>(val))
             for (auto &arg : and_val->args)
             { // we assert each clause
-                if (auto or_val = std::dynamic_pointer_cast<or_term>(arg))
+                if (auto or_val = std::dynamic_pointer_cast<const or_term>(arg))
                 {
-                    std::vector<bool_expr> args;
+                    std::vector<const_bool_expr> args;
                     for (auto &val : or_val->args)
-                        args.emplace_back(std::dynamic_pointer_cast<bool_term>(val));
+                        args.emplace_back(val);
                     scp.get_core().new_clause(std::move(args));
                 }
             }
-        else if (auto or_val = std::dynamic_pointer_cast<or_term>(val))
+        else if (auto or_val = std::dynamic_pointer_cast<const or_term>(val))
         { // we assert the single clause
-            std::vector<bool_expr> args;
+            std::vector<const_bool_expr> args;
             for (auto &val : or_val->args)
-                args.emplace_back(std::dynamic_pointer_cast<bool_term>(val));
+                args.emplace_back(val);
             scp.get_core().new_clause(std::move(args));
         }
         else

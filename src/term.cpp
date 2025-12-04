@@ -222,22 +222,22 @@ namespace riddle
             return t.get_core();
     }
 
-    bool_expr push_negations(bool_expr expr) noexcept
+    const_bool_expr push_negations(const_bool_expr expr) noexcept
     {
-        if (auto not_xpr = std::dynamic_pointer_cast<bool_not>(expr))
+        if (auto not_xpr = std::dynamic_pointer_cast<const bool_not>(expr))
         {
-            if (auto not_not_xpr = std::dynamic_pointer_cast<bool_not>(not_xpr->arg))
+            if (auto not_not_xpr = std::dynamic_pointer_cast<const bool_not>(not_xpr->arg))
                 return push_negations(not_not_xpr->arg);
-            else if (auto and_xpr = std::dynamic_pointer_cast<and_term>(not_xpr->arg))
+            else if (auto and_xpr = std::dynamic_pointer_cast<const and_term>(not_xpr->arg))
             {
-                std::vector<bool_expr> args;
+                std::vector<const_bool_expr> args;
                 for (const auto &arg : and_xpr->args)
                     args.push_back(push_negations(expr->get_type().get_scope().get_core().new_not(arg)));
                 return expr->get_type().get_scope().get_core().new_or(std::move(args));
             }
-            else if (auto or_xpr = std::dynamic_pointer_cast<or_term>(not_xpr->arg))
+            else if (auto or_xpr = std::dynamic_pointer_cast<const or_term>(not_xpr->arg))
             {
-                std::vector<bool_expr> args;
+                std::vector<const_bool_expr> args;
                 for (const auto &arg : or_xpr->args)
                     args.push_back(push_negations(expr->get_type().get_scope().get_core().new_not(arg)));
                 return expr->get_type().get_scope().get_core().new_and(std::move(args));
@@ -245,16 +245,16 @@ namespace riddle
             else
                 return not_xpr;
         }
-        else if (auto and_xpr = std::dynamic_pointer_cast<and_term>(expr))
+        else if (auto and_xpr = std::dynamic_pointer_cast<const and_term>(expr))
         {
-            std::vector<bool_expr> args;
+            std::vector<const_bool_expr> args;
             for (const auto &arg : and_xpr->args)
                 args.push_back(push_negations(arg));
             return expr->get_type().get_scope().get_core().new_and(std::move(args));
         }
-        else if (auto or_xpr = std::dynamic_pointer_cast<or_term>(expr))
+        else if (auto or_xpr = std::dynamic_pointer_cast<const or_term>(expr))
         {
-            std::vector<bool_expr> args;
+            std::vector<const_bool_expr> args;
             for (const auto &arg : or_xpr->args)
                 args.push_back(push_negations(arg));
             return expr->get_type().get_scope().get_core().new_or(std::move(args));
@@ -263,25 +263,25 @@ namespace riddle
             return expr;
     }
 
-    bool_expr distribute(bool_expr expr) noexcept
+    const_bool_expr distribute(const_bool_expr expr) noexcept
     {
-        if (auto or_xpr = std::dynamic_pointer_cast<or_term>(expr))
+        if (auto or_xpr = std::dynamic_pointer_cast<const or_term>(expr))
         {
-            std::vector<bool_expr> args;
+            std::vector<const_bool_expr> args;
             for (const auto &arg : or_xpr->args)
                 args.push_back(distribute(arg));
-            std::vector<bool_expr> new_args;
+            std::vector<const_bool_expr> new_args;
             for (const auto &arg : args)
-                if (auto and_xpr = std::dynamic_pointer_cast<and_term>(arg))
+                if (auto and_xpr = std::dynamic_pointer_cast<const and_term>(arg))
                     for (const auto &a : and_xpr->args)
                         new_args.push_back(a);
                 else
                     new_args.push_back(arg);
             return expr->get_type().get_scope().get_core().new_or(std::move(new_args));
         }
-        else if (auto and_xpr = std::dynamic_pointer_cast<and_term>(expr))
+        else if (auto and_xpr = std::dynamic_pointer_cast<const and_term>(expr))
         {
-            std::vector<bool_expr> args;
+            std::vector<const_bool_expr> args;
             for (const auto &arg : and_xpr->args)
                 args.push_back(distribute(arg));
             return expr->get_type().get_scope().get_core().new_and(std::move(args));
