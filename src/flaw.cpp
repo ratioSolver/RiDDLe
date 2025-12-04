@@ -2,7 +2,6 @@
 #include "resolver.hpp"
 #include "core.hpp"
 #include <stack>
-#include <unordered_set>
 
 namespace riddle
 {

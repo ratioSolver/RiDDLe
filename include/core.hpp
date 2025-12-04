@@ -4,6 +4,7 @@
 #include "inf_rational.hpp"
 #include "type.hpp"
 #include "parser.hpp"
+#include <unordered_set>
 
 namespace riddle
 {
@@ -23,6 +24,7 @@ namespace riddle
     friend class component;
     friend class component_type;
 #endif
+    friend class enum_term;
 
   public:
     core(std::string_view name = "RiDDLe") noexcept;
@@ -222,9 +224,9 @@ namespace riddle
      * This function takes an enum item and returns its associated domain as a vector of expressions.
      *
      * @param expr The enum item for which the domain is being retrieved.
-     * @return std::vector<expr> A vector of expressions representing the domain of the enum item.
+     * @return std::unordered_set<expr> A set of expressions representing the domain of the enum item.
      */
-    [[nodiscard]] virtual std::vector<expr> enum_value(const_enum_expr expr) const noexcept = 0;
+    [[nodiscard]] virtual std::unordered_set<expr> enum_value(const_enum_expr expr) const noexcept = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.
@@ -539,6 +541,7 @@ namespace riddle
     std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the core..
     std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the core..
     std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the core..
+    std::shared_ptr<resolver> c_res;                                                  // the current resolver..
     std::vector<std::unique_ptr<compilation_unit>> cus;                               // the compilation units read by the core..
 
 #ifdef COMPUTE_NAMES

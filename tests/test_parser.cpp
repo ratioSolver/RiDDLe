@@ -59,7 +59,7 @@ public:
         flaws.emplace_back(flw);
         return flw->get_enum();
     }
-    std::vector<riddle::expr> enum_value(riddle::const_enum_expr itm) const noexcept override { return {itm->get_values()[0]}; }
+    std::unordered_set<riddle::expr> enum_value(riddle::const_enum_expr itm) const noexcept override { return {itm->get_values()[0]}; }
 
     riddle::arith_expr new_negation(riddle::const_arith_expr) override { return new_int(0); }
 

@@ -1,6 +1,5 @@
 #include "core.hpp"
 #include "flaw.hpp"
-#include <unordered_set>
 #include <algorithm>
 #include <cassert>
 
@@ -90,7 +89,12 @@ namespace riddle
             auto b = get_core().new_bool();
             // we force the variable to assume the same value of the referenced bools according to the value of the enum..
             for (auto &res : get_flaw().get_resolvers())
-                res->execute(get_core().new_eq(b, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)));
+            {
+                auto tmp_res = get_core().c_res;
+                get_core().c_res = res;
+                get_core().assert_expr(get_core().new_eq(b, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)));
+                get_core().c_res = tmp_res;
+            }
             items.emplace(name, b);
             return b;
         }
@@ -112,7 +116,12 @@ namespace riddle
                     a = get_core().new_real();
                 // we force the variable to assume the same value of the referenced arithmetics according to the value of the enum..
                 for (auto &res : get_flaw().get_resolvers())
-                    res->execute(get_core().new_eq(a, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)));
+                {
+                    auto tmp_res = get_core().c_res;
+                    get_core().c_res = res;
+                    get_core().assert_expr(get_core().new_eq(a, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)));
+                    get_core().c_res = tmp_res;
+                }
                 items.emplace(name, a);
                 return a;
             }
@@ -124,7 +133,12 @@ namespace riddle
                 vals.push_back(val);
             auto e = get_core().new_enum(static_cast<component_type &>(tp), std::move(vals));
             for (auto &res : get_flaw().get_resolvers())
-                res->execute(get_core().new_eq(e, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)));
+            {
+                auto tmp_res = get_core().c_res;
+                get_core().c_res = res;
+                get_core().assert_expr(get_core().new_eq(e, std::dynamic_pointer_cast<env>(static_cast<select_value &>(*res).get_value())->get(name)));
+                get_core().c_res = tmp_res;
+            }
             items.emplace(name, e);
             return e;
         }
@@ -133,10 +147,10 @@ namespace riddle
     {
         std::string repr = "{";
         auto vals = get_type().get_scope().get_core().enum_value(std::static_pointer_cast<const enum_term>(shared_from_this()));
-        for (size_t i = 0; i < vals.size(); ++i)
+        for (auto it = vals.begin(); it != vals.end(); ++it)
         {
-            repr += vals[i]->to_string();
-            if (i + 1 < vals.size())
+            repr += (*it)->to_string();
+            if (std::next(it) != vals.end())
                 repr += ", ";
         }
         repr += "}";
