@@ -6,7 +6,7 @@ namespace riddle
     bool_item::bool_item(bool_type &tp, utils::lit &&expr) noexcept : bool_term(tp), expr(expr) {}
     std::string bool_item::to_string() const noexcept
     {
-        switch (get_type().get_scope().get_core().bool_value(*this))
+        switch (get_type().get_scope().get_core().bool_value(std::static_pointer_cast<const bool_term>(shared_from_this())))
         {
         case utils::True:
             return utils::to_string(expr) + " (true)";
@@ -55,7 +55,7 @@ namespace riddle
     {
         auto j_val = enum_term::to_json();
         json::json j_vals(json::json_type::array);
-        for (const auto &val : get_type().get_scope().get_core().enum_value(*this))
+        for (const auto &val : get_type().get_scope().get_core().enum_value(std::static_pointer_cast<const sat_enum_item>(shared_from_this())))
             j_vals.push_back(val->get_id());
         j_val["vals"] = std::move(j_vals);
         return j_val;

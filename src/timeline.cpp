@@ -14,15 +14,15 @@ namespace riddle
 
         for (const auto &atm : atms)
         {
-            const auto start = cr.arith_value(*atm->get<arith_term>(start_kw));
-            const auto end = cr.arith_value(*atm->get<arith_term>(end_kw));
+            const auto start = cr.arith_value(atm->get<arith_term>(start_kw));
+            const auto end = cr.arith_value(atm->get<arith_term>(end_kw));
             starting_atoms[start].insert(atm);
             ending_atoms[end].insert(atm);
             pulses.insert(start);
             pulses.insert(end);
         }
-        pulses.insert(cr.arith_value(*cr.env::get<arith_term>(origin_kw)));
-        pulses.insert(cr.arith_value(*cr.env::get<arith_term>(horizon_kw)));
+        pulses.insert(cr.arith_value(cr.env::get<arith_term>(origin_kw)));
+        pulses.insert(cr.arith_value(cr.env::get<arith_term>(horizon_kw)));
 
         return {starting_atoms, ending_atoms, pulses};
     }

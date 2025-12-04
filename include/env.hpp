@@ -11,6 +11,7 @@ namespace riddle
   class core;
   class term;
   using expr = std::shared_ptr<term>;
+  using const_expr = std::shared_ptr<const term>;
   class constructor;
   class method;
   class component_type;

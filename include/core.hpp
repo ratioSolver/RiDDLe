@@ -84,7 +84,7 @@ namespace riddle
      * @param expr The boolean expression to evaluate.
      * @return utils::lbool The logical value of the expression.
      */
-    [[nodiscard]] virtual utils::lbool bool_value(const bool_term &expr) const noexcept = 0;
+    [[nodiscard]] virtual utils::lbool bool_value(const_bool_expr expr) const noexcept = 0;
 
     /**
      * @brief Create a new int expression.
@@ -169,7 +169,7 @@ namespace riddle
      * @param expr The arithmetic item expression to be evaluated.
      * @return utils::inf_rational The computed arithmetic value of the expression.
      */
-    [[nodiscard]] virtual utils::inf_rational arith_value(const arith_term &expr) const noexcept = 0;
+    [[nodiscard]] virtual utils::inf_rational arith_value(const_arith_expr expr) const noexcept = 0;
 
     /**
      * @brief Checks if the given arithmetic expression is constant.
@@ -180,7 +180,7 @@ namespace riddle
      * @param expr The arithmetic expression to be checked.
      * @return true if the expression is constant, false otherwise.
      */
-    [[nodiscard]] virtual bool is_constant(const arith_term &expr) const noexcept = 0;
+    [[nodiscard]] virtual bool is_constant(const_arith_expr expr) const noexcept = 0;
 
     /**
      * @brief Create a new string expression.
@@ -203,7 +203,7 @@ namespace riddle
      * @param expr The string expression.
      * @return std::string The string value of the expression.
      */
-    [[nodiscard]] virtual std::string string_value(const string_term &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::string string_value(const_string_expr expr) const noexcept = 0;
 
     /**
      * @brief Creates a new enum item.
@@ -224,7 +224,7 @@ namespace riddle
      * @param expr The enum item for which the domain is being retrieved.
      * @return std::vector<expr> A vector of expressions representing the domain of the enum item.
      */
-    [[nodiscard]] virtual std::vector<expr> enum_value(const enum_term &expr) const noexcept = 0;
+    [[nodiscard]] virtual std::vector<expr> enum_value(const_enum_expr expr) const noexcept = 0;
 
     /**
      * @brief Creates a new boolean item representing a logical AND operation.
@@ -338,7 +338,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to the newly created less-than comparison item.
      */
-    [[nodiscard]] bool_expr new_lt(arith_expr lhs, arith_expr rhs);
+    [[nodiscard]] bool_expr new_lt(const_arith_expr lhs, const_arith_expr rhs);
     /**
      * @brief Creates a new less-than-or-equal-to (<=) boolean item.
      *
@@ -350,7 +350,7 @@ namespace riddle
      * @return A shared pointer to the newly created boolean item representing
      *         the result of the <= comparison.
      */
-    [[nodiscard]] bool_expr new_le(arith_expr lhs, arith_expr rhs);
+    [[nodiscard]] bool_expr new_le(const_arith_expr lhs, const_arith_expr rhs);
     /**
      * @brief Creates a new greater-than comparison item.
      *
@@ -362,7 +362,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to a boolean item representing the result of the comparison.
      */
-    [[nodiscard]] bool_expr new_gt(arith_expr lhs, arith_expr rhs);
+    [[nodiscard]] bool_expr new_gt(const_arith_expr lhs, const_arith_expr rhs);
     /**
      * @brief Creates a new greater-than-or-equal-to boolean item.
      *
@@ -373,7 +373,7 @@ namespace riddle
      * @param rhs A shared pointer to the right-hand side arithmetic item.
      * @return A shared pointer to the newly created boolean item representing the comparison.
      */
-    [[nodiscard]] bool_expr new_ge(arith_expr lhs, arith_expr rhs);
+    [[nodiscard]] bool_expr new_ge(const_arith_expr lhs, const_arith_expr rhs);
     /**
      * @brief Creates a new equality comparison item.
      *
@@ -424,7 +424,7 @@ namespace riddle
      * @return A shared pointer to the newly created atom.
      */
     [[nodiscard]] atom_expr new_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {});
-    [[nodiscard]] virtual atom_state get_atom_state(const atom_term &atom) const noexcept = 0;
+    [[nodiscard]] virtual atom_state get_atom_state(const_atom_expr atom) const noexcept = 0;
 
     [[nodiscard]] field &get_field(std::string_view name) const override;
 
@@ -517,22 +517,22 @@ namespace riddle
   private:
     [[nodiscard]] virtual atom_expr create_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {}) = 0;
 
-    virtual bool mk_assign(const bool_term &xpr, utils::lbool val) noexcept = 0;
-    virtual bool mk_eq(const bool_term &lhs, const bool_term &rhs) noexcept = 0;
-    virtual bool mk_neq(const bool_term &lhs, const bool_term &rhs) noexcept = 0;
+    virtual bool mk_assign(const_bool_expr xpr, utils::lbool val) noexcept = 0;
+    virtual bool mk_eq(const_bool_expr lhs, const_bool_expr rhs) noexcept = 0;
+    virtual bool mk_neq(const_bool_expr lhs, const_bool_expr rhs) noexcept = 0;
 
-    virtual bool mk_lt(const arith_term &lhs, const arith_term &rhs) noexcept = 0;
-    virtual bool mk_le(const arith_term &lhs, const arith_term &rhs) noexcept = 0;
-    virtual bool mk_eq(const arith_term &lhs, const arith_term &rhs) noexcept = 0;
-    virtual bool mk_neq(const arith_term &lhs, const arith_term &rhs) noexcept = 0;
+    virtual bool mk_lt(const_arith_expr lhs, const_arith_expr rhs) noexcept = 0;
+    virtual bool mk_le(const_arith_expr lhs, const_arith_expr rhs) noexcept = 0;
+    virtual bool mk_eq(const_arith_expr lhs, const_arith_expr rhs) noexcept = 0;
+    virtual bool mk_neq(const_arith_expr lhs, const_arith_expr rhs) noexcept = 0;
 
-    virtual bool mk_eq(const string_term &lhs, const string_term &rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(lhs) == string_value(rhs); }
-    virtual bool mk_neq(const string_term &lhs, const string_term &rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(lhs) != string_value(rhs); }
+    virtual bool mk_eq(const_string_expr lhs, const_string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(lhs) == string_value(rhs); }
+    virtual bool mk_neq(const_string_expr lhs, const_string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(lhs) != string_value(rhs); }
 
-    virtual bool mk_assign(const enum_term &xpr, const utils::enum_val &val) noexcept = 0;
-    virtual bool mk_forbid(const enum_term &xpr, const utils::enum_val &val) noexcept = 0;
-    virtual bool mk_eq(const enum_term &lhs, const enum_term &rhs) noexcept = 0;
-    virtual bool mk_neq(const enum_term &lhs, const enum_term &rhs) noexcept = 0;
+    virtual bool mk_assign(const_enum_expr xpr, const utils::enum_val &val) noexcept = 0;
+    virtual bool mk_forbid(const_enum_expr xpr, const utils::enum_val &val) noexcept = 0;
+    virtual bool mk_eq(const_enum_expr lhs, const_enum_expr rhs) noexcept = 0;
+    virtual bool mk_neq(const_enum_expr lhs, const_enum_expr rhs) noexcept = 0;
 
   private:
     const std::string name;                                                           // the name of the core..

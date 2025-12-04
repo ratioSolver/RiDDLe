@@ -18,6 +18,7 @@ namespace riddle
   class predicate;
   class bool_term;
   using bool_expr = std::shared_ptr<bool_term>;
+  using const_bool_expr = std::shared_ptr<const bool_term>;
   class expression_statement;
 
   /**
@@ -28,7 +29,7 @@ namespace riddle
    * is a named entity that has a type. Terms are stored in environments and can be
    * retrieved by their name.
    */
-  class term : public utils::enum_val
+  class term : public utils::enum_val, public std::enable_shared_from_this<term>
   {
   public:
     term(type &tp) noexcept : tp(tp) {}
@@ -129,29 +130,30 @@ namespace riddle
   };
 
   using arith_expr = std::shared_ptr<arith_term>;
+  using const_arith_expr = std::shared_ptr<const arith_term>;
 
   class lt_term : public bool_term
   {
   public:
-    lt_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    lt_term(bool_type &tp, const_arith_expr lhs, const_arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
-    arith_expr get_lhs() const noexcept { return lhs; }
-    arith_expr get_rhs() const noexcept { return rhs; }
+    const_arith_expr get_lhs() const noexcept { return lhs; }
+    const_arith_expr get_rhs() const noexcept { return rhs; }
 
   private:
-    arith_expr lhs, rhs;
+    const_arith_expr lhs, rhs;
   };
 
   class le_term : public bool_term
   {
   public:
-    le_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    le_term(bool_type &tp, const_arith_expr lhs, const_arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
-    arith_expr get_lhs() const noexcept { return lhs; }
-    arith_expr get_rhs() const noexcept { return rhs; }
+    const_arith_expr get_lhs() const noexcept { return lhs; }
+    const_arith_expr get_rhs() const noexcept { return rhs; }
 
   private:
-    arith_expr lhs, rhs;
+    const_arith_expr lhs, rhs;
   };
 
   class eq_term : public bool_term
@@ -169,25 +171,25 @@ namespace riddle
   class ge_term : public bool_term
   {
   public:
-    ge_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    ge_term(bool_type &tp, const_arith_expr lhs, const_arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
-    arith_expr get_lhs() const noexcept { return lhs; }
-    arith_expr get_rhs() const noexcept { return rhs; }
+    const_arith_expr get_lhs() const noexcept { return lhs; }
+    const_arith_expr get_rhs() const noexcept { return rhs; }
 
   private:
-    arith_expr lhs, rhs;
+    const_arith_expr lhs, rhs;
   };
 
   class gt_term : public bool_term
   {
   public:
-    gt_term(bool_type &tp, arith_expr lhs, arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
+    gt_term(bool_type &tp, const_arith_expr lhs, const_arith_expr rhs) noexcept : bool_term(tp), lhs(std::move(lhs)), rhs(std::move(rhs)) {}
 
-    arith_expr get_lhs() const noexcept { return lhs; }
-    arith_expr get_rhs() const noexcept { return rhs; }
+    const_arith_expr get_lhs() const noexcept { return lhs; }
+    const_arith_expr get_rhs() const noexcept { return rhs; }
 
   private:
-    arith_expr lhs, rhs;
+    const_arith_expr lhs, rhs;
   };
 
   class string_term : public term
@@ -200,6 +202,7 @@ namespace riddle
   };
 
   using string_expr = std::shared_ptr<string_term>;
+  using const_string_expr = std::shared_ptr<const string_term>;
 
   class component : public term, public env
   {
@@ -241,6 +244,7 @@ namespace riddle
   };
 
   using enum_expr = std::shared_ptr<enum_term>;
+  using const_enum_expr = std::shared_ptr<const enum_term>;
 
   enum atom_state
   {
@@ -271,6 +275,7 @@ namespace riddle
   };
 
   using atom_expr = std::shared_ptr<atom_term>;
+  using const_atom_expr = std::shared_ptr<const atom_term>;
 
   [[nodiscard]] bool_expr push_negations(bool_expr expr) noexcept;
   [[nodiscard]] bool_expr distribute(bool_expr expr) noexcept;

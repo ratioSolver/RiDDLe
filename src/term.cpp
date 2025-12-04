@@ -9,7 +9,7 @@ namespace riddle
     bool_term::bool_term(bool_type &tp) noexcept : term(tp) {}
     std::string bool_term::to_string() const noexcept
     {
-        switch (get_type().get_scope().get_core().bool_value(*this))
+        switch (get_type().get_scope().get_core().bool_value(std::static_pointer_cast<const bool_term>(shared_from_this())))
         {
         case utils::True:
             return "true";
@@ -22,7 +22,7 @@ namespace riddle
     json::json bool_term::to_json() const noexcept
     {
         json::json j_val{{"type", get_type().get_name()}}; // we add the type of the item..
-        switch (get_type().get_scope().get_core().bool_value(*this))
+        switch (get_type().get_scope().get_core().bool_value(std::static_pointer_cast<const bool_term>(shared_from_this())))
         {
         case utils::True:
             j_val["val"] = true;
@@ -40,7 +40,7 @@ namespace riddle
     json::json arith_term::to_json() const noexcept
     {
         json::json j_val{{"type", get_type().get_name()}}; // we add the type of the item..
-        const auto val = get_type().get_scope().get_core().arith_value(*this);
+        const auto val = get_type().get_scope().get_core().arith_value(std::static_pointer_cast<const arith_term>(shared_from_this()));
         if (get_type().get_name() == "int")
         {
             assert(is_integer(val));
@@ -58,7 +58,7 @@ namespace riddle
     }
 
     string_term::string_term(string_type &tp) noexcept : term(tp) {}
-    json::json string_term::to_json() const noexcept { return {{"type", get_type().get_name()}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
+    json::json string_term::to_json() const noexcept { return {{"type", get_type().get_name()}, {"val", get_type().get_scope().get_core().string_value(std::static_pointer_cast<const string_term>(shared_from_this()))}}; }
 
     select_value::select_value(flaw &flw, expr v) noexcept : resolver(flw, utils::rational(1)), val(std::move(v)) {}
 
@@ -96,9 +96,9 @@ namespace riddle
         }
         else if (is_int(tp) || is_real(tp))
         {
-            auto first_val = get_core().arith_value(static_cast<arith_term &>(**matching_values.begin()));
+            auto first_val = get_core().arith_value(std::static_pointer_cast<arith_term>(*matching_values.begin()));
             if (std::all_of(matching_values.begin(), matching_values.end(), [this, &first_val](const expr &e)
-                            { return get_core().is_constant(static_cast<arith_term &>(*e)) && get_core().arith_value(static_cast<arith_term &>(*e)) == first_val; }))
+                            { return get_core().is_constant(std::static_pointer_cast<arith_term>(e)) && get_core().arith_value(std::static_pointer_cast<arith_term>(e)) == first_val; }))
             { // we are lucky! all the referenced arithmetics are constant and assume the same value..
                 items.emplace(name, *matching_values.begin());
                 return *matching_values.begin();
@@ -132,7 +132,7 @@ namespace riddle
     std::string enum_term::to_string() const noexcept
     {
         std::string repr = "{";
-        auto vals = get_type().get_scope().get_core().enum_value(*this);
+        auto vals = get_type().get_scope().get_core().enum_value(std::static_pointer_cast<const enum_term>(shared_from_this()));
         for (size_t i = 0; i < vals.size(); ++i)
         {
             repr += vals[i]->to_string();
@@ -157,7 +157,7 @@ namespace riddle
         j_val["enums_type"] = tp_name;
 
         // we add the domain of the enum item..
-        auto vals = get_type().get_scope().get_core().enum_value(*this);
+        auto vals = get_type().get_scope().get_core().enum_value(std::static_pointer_cast<const enum_term>(shared_from_this()));
         json::json j_vals(json::json_type::array);
         for (const auto &val : vals)
             j_vals.push_back(val->get_id());
@@ -181,13 +181,13 @@ namespace riddle
     }
 
     atom_term::atom_term(flaw &flw, predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) noexcept : term(t), env(t.get_core(), atom_parent(t, args), std::move(args)), flw(flw), fact(fact) {}
-    atom_state atom_term::get_state() const noexcept { return get_type().get_scope().get_core().get_atom_state(*this); }
+    atom_state atom_term::get_state() const noexcept { return get_type().get_scope().get_core().get_atom_state(std::static_pointer_cast<const atom_term>(shared_from_this())); }
     json::json atom_term::to_json() const noexcept
     {
         json::json j_atm{{"is_fact", fact}, {"type", get_type().get_full_name()}};
 
         // we add the state of the atom..
-        switch (get_type().get_scope().get_core().get_atom_state(*this))
+        switch (get_type().get_scope().get_core().get_atom_state(std::static_pointer_cast<const atom_term>(shared_from_this())))
         {
         case atom_state::active:
             j_atm["state"] = "active";

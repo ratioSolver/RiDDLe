@@ -37,7 +37,7 @@ public:
 
     riddle::bool_expr new_bool(const bool) override { return std::make_shared<riddle::bool_item>(static_cast<riddle::bool_type &>(get_type(riddle::bool_kw)), utils::lit()); }
     riddle::bool_expr new_bool() override { return new_bool(false); }
-    utils::lbool bool_value(const riddle::bool_term &) const noexcept override { return utils::Undefined; }
+    utils::lbool bool_value(riddle::const_bool_expr) const noexcept override { return utils::Undefined; }
     riddle::arith_expr new_int(const INT_TYPE) override { return std::make_shared<riddle::arith_item>(static_cast<riddle::int_type &>(get_type(riddle::int_kw)), utils::lin()); }
     riddle::arith_expr new_int() override { return new_int(0); }
     riddle::arith_expr new_int(const INT_TYPE lb, const INT_TYPE) override { return new_int(lb); }
@@ -48,18 +48,18 @@ public:
     riddle::arith_expr new_uncertain_real(utils::rational &&lb, utils::rational &&) override { return new_real(utils::rational(lb)); }
     riddle::arith_expr new_time(utils::rational &&) override { return std::make_shared<riddle::arith_item>(static_cast<riddle::time_type &>(get_type(riddle::time_kw)), utils::lin()); }
     riddle::arith_expr new_time() override { return new_time(utils::rational(0)); }
-    utils::inf_rational arith_value(const riddle::arith_term &) const noexcept override { return utils::inf_rational(); }
-    bool is_constant(const riddle::arith_term &) const noexcept override { return true; }
+    utils::inf_rational arith_value(riddle::const_arith_expr) const noexcept override { return utils::inf_rational(); }
+    bool is_constant(riddle::const_arith_expr) const noexcept override { return true; }
     riddle::string_expr new_string(std::string &&) override { return std::make_shared<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
     riddle::string_expr new_string() override { return new_string(""); }
-    std::string string_value(const riddle::string_term &) const noexcept override { return ""; }
+    std::string string_value(riddle::const_string_expr) const noexcept override { return ""; }
     riddle::expr new_enum(riddle::component_type &tp, std::vector<riddle::expr> &&values) override
     {
         auto flw = std::make_shared<test_enum_flaw>(*this, tp, std::move(values));
         flaws.emplace_back(flw);
         return flw->get_enum();
     }
-    std::vector<riddle::expr> enum_value(const riddle::enum_term &itm) const noexcept override { return {itm.get_values()[0]}; }
+    std::vector<riddle::expr> enum_value(riddle::const_enum_expr itm) const noexcept override { return {itm->get_values()[0]}; }
 
     riddle::arith_expr new_negation(riddle::arith_expr) override { return new_int(0); }
 
@@ -77,22 +77,22 @@ public:
         flaws.emplace_back(flw);
         return flw->get_atom();
     }
-    riddle::atom_state get_atom_state(const riddle::atom_term &) const noexcept override { return riddle::atom_state::active; }
+    riddle::atom_state get_atom_state(riddle::const_atom_expr) const noexcept override { return riddle::atom_state::active; }
 
 private:
-    bool mk_assign(const riddle::bool_term &, utils::lbool) noexcept { return true; }
-    bool mk_eq(const riddle::bool_term &, const riddle::bool_term &) noexcept { return true; }
-    bool mk_neq(const riddle::bool_term &, const riddle::bool_term &) noexcept { return true; }
+    bool mk_assign(riddle::const_bool_expr, utils::lbool) noexcept { return true; }
+    bool mk_eq(riddle::const_bool_expr, riddle::const_bool_expr) noexcept { return true; }
+    bool mk_neq(riddle::const_bool_expr, riddle::const_bool_expr) noexcept { return true; }
 
-    bool mk_lt(const riddle::arith_term &, const riddle::arith_term &) noexcept { return true; }
-    bool mk_le(const riddle::arith_term &, const riddle::arith_term &) noexcept { return true; }
-    bool mk_eq(const riddle::arith_term &, const riddle::arith_term &) noexcept { return true; }
-    bool mk_neq(const riddle::arith_term &, const riddle::arith_term &) noexcept { return true; }
+    bool mk_lt(riddle::const_arith_expr, riddle::const_arith_expr) noexcept { return true; }
+    bool mk_le(riddle::const_arith_expr, riddle::const_arith_expr) noexcept { return true; }
+    bool mk_eq(riddle::const_arith_expr, riddle::const_arith_expr) noexcept { return true; }
+    bool mk_neq(riddle::const_arith_expr, riddle::const_arith_expr) noexcept { return true; }
 
-    bool mk_assign(const riddle::enum_term &, const utils::enum_val &) noexcept { return true; }
-    bool mk_forbid(const riddle::enum_term &, const utils::enum_val &) noexcept { return true; }
-    bool mk_eq(const riddle::enum_term &, const riddle::enum_term &) noexcept { return true; }
-    bool mk_neq(const riddle::enum_term &, const riddle::enum_term &) noexcept { return true; }
+    bool mk_assign(riddle::const_enum_expr, const utils::enum_val &) noexcept { return true; }
+    bool mk_forbid(riddle::const_enum_expr, const utils::enum_val &) noexcept { return true; }
+    bool mk_eq(riddle::const_enum_expr, riddle::const_enum_expr) noexcept { return true; }
+    bool mk_neq(riddle::const_enum_expr, riddle::const_enum_expr) noexcept { return true; }
 
 private:
     std::vector<std::shared_ptr<riddle::flaw>> flaws;

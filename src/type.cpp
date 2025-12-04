@@ -251,11 +251,11 @@ namespace riddle
         for (const auto &xpr : get_instances())
             partition.emplace(std::static_pointer_cast<component>(xpr), std::vector<atom_expr>{});
         for (const auto &atm : get_atoms())
-            if (get_core().get_atom_state(*atm) == atom_state::active)
+            if (get_core().get_atom_state(atm) == atom_state::active)
             { // the atom is active..
                 const auto tau = atm->get(tau_kw);
-                if (auto c_rrs = dynamic_cast<enum_term *>(&*tau)) // the `tau` parameter is a variable..
-                    for (const auto &c_rr : get_core().enum_value(*c_rrs))
+                if (auto c_rrs = std::dynamic_pointer_cast<enum_term>(tau)) // the `tau` parameter is a variable..
+                    for (const auto &c_rr : get_core().enum_value(c_rrs))
                         partition.at(std::static_pointer_cast<component>(c_rr)).push_back(atm);
                 else // the `tau` parameter is a constant..
                     partition.at(std::static_pointer_cast<component>(tau)).push_back(atm);

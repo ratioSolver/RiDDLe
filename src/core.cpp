@@ -85,46 +85,46 @@ namespace riddle
 
     bool_expr core::new_not(bool_expr expr) { return std::make_shared<bool_not>(static_cast<bool_type &>(get_type(bool_kw)), std::move(expr)); }
 
-    bool_expr core::new_lt(arith_expr lhs, arith_expr rhs) { return std::make_shared<lt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
-    bool_expr core::new_le(arith_expr lhs, arith_expr rhs) { return std::make_shared<le_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_lt(const_arith_expr lhs, const_arith_expr rhs) { return std::make_shared<lt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_le(const_arith_expr lhs, const_arith_expr rhs) { return std::make_shared<le_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
     bool_expr core::new_eq(expr lhs, expr rhs) { return std::make_shared<eq_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
-    bool_expr core::new_gt(arith_expr lhs, arith_expr rhs) { return std::make_shared<gt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
-    bool_expr core::new_ge(arith_expr lhs, arith_expr rhs) { return std::make_shared<ge_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_gt(const_arith_expr lhs, const_arith_expr rhs) { return std::make_shared<gt_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
+    bool_expr core::new_ge(const_arith_expr lhs, const_arith_expr rhs) { return std::make_shared<ge_term>(static_cast<bool_type &>(get_type(bool_kw)), std::move(lhs), std::move(rhs)); }
 
     bool core::assert_expr(bool_expr xpr) noexcept
     {
         if (auto n_xpr = dynamic_cast<bool_not *>(xpr.get()))
         { // we are dealing with a negation..
-            if (auto b_xpr = dynamic_cast<bool_term *>(n_xpr->get_arg().get()))
-                return mk_assign(*b_xpr, utils::False);
-            else if (auto lt_xpr = dynamic_cast<lt_term *>(n_xpr->get_arg().get()))
-                return mk_le(*lt_xpr->get_rhs(), *lt_xpr->get_lhs());
-            else if (auto le_xpr = dynamic_cast<le_term *>(n_xpr->get_arg().get()))
-                return mk_lt(*le_xpr->get_rhs(), *le_xpr->get_lhs());
-            else if (auto eq_xpr = dynamic_cast<eq_term *>(n_xpr->get_arg().get()))
+            if (auto b_xpr = std::dynamic_pointer_cast<bool_term>(n_xpr->get_arg()))
+                return mk_assign(b_xpr, utils::False);
+            else if (auto lt_xpr = std::dynamic_pointer_cast<lt_term>(n_xpr->get_arg()))
+                return mk_le(lt_xpr->get_rhs(), lt_xpr->get_lhs());
+            else if (auto le_xpr = std::dynamic_pointer_cast<le_term>(n_xpr->get_arg()))
+                return mk_lt(le_xpr->get_rhs(), le_xpr->get_lhs());
+            else if (auto eq_xpr = std::dynamic_pointer_cast<eq_term>(n_xpr->get_arg()))
             {
                 if (eq_xpr->get_lhs() == eq_xpr->get_rhs()) // the terms are the same, so they are equal..
                     return false;
                 else if (&eq_xpr->get_lhs()->get_type() != &eq_xpr->get_lhs()->get_type()) // the types are different, so the constraint is always false..
                     return true;
-                else if (auto lhs_xpr = dynamic_cast<arith_term *>(eq_xpr->get_lhs().get())) // we are dealing with an arithmetic constraint..
-                    return mk_neq(*lhs_xpr, *dynamic_cast<arith_term *>(eq_xpr->get_rhs().get()));
-                else if (auto lhs_sxpr = dynamic_cast<string_term *>(eq_xpr->get_lhs().get())) // we are dealing with a string constraint..
-                    return mk_neq(*lhs_sxpr, *dynamic_cast<string_term *>(eq_xpr->get_rhs().get()));
-                else if (auto lhs_bxpr = dynamic_cast<bool_term *>(eq_xpr->get_lhs().get())) // we are dealing with a boolean constraint..
-                    return mk_neq(*lhs_bxpr, *dynamic_cast<bool_term *>(eq_xpr->get_rhs().get()));
-                else if (auto lhs_enum_xpr = dynamic_cast<enum_term *>(eq_xpr->get_lhs().get())) // we are dealing with an enum constraint..
+                else if (auto lhs_xpr = std::dynamic_pointer_cast<arith_term>(eq_xpr->get_lhs())) // we are dealing with an arithmetic constraint..
+                    return mk_neq(lhs_xpr, std::static_pointer_cast<arith_term>(eq_xpr->get_rhs()));
+                else if (auto lhs_sxpr = std::dynamic_pointer_cast<string_term>(eq_xpr->get_lhs())) // we are dealing with a string constraint..
+                    return mk_neq(lhs_sxpr, std::static_pointer_cast<string_term>(eq_xpr->get_rhs()));
+                else if (auto lhs_bxpr = std::dynamic_pointer_cast<bool_term>(eq_xpr->get_lhs())) // we are dealing with a boolean constraint..
+                    return mk_neq(lhs_bxpr, std::static_pointer_cast<bool_term>(eq_xpr->get_rhs()));
+                else if (auto lhs_enum_xpr = std::dynamic_pointer_cast<enum_term>(eq_xpr->get_lhs())) // we are dealing with an enum constraint..
                 {
-                    if (auto rhs_enum_xpr = dynamic_cast<enum_term *>(eq_xpr->get_rhs().get())) // both sides are enum items..
-                        return mk_neq(*lhs_enum_xpr, *rhs_enum_xpr);
+                    if (auto rhs_enum_xpr = std::dynamic_pointer_cast<enum_term>(eq_xpr->get_rhs())) // both sides are enum items..
+                        return mk_neq(lhs_enum_xpr, rhs_enum_xpr);
                     else // right side is an enum value..
-                        return mk_forbid(*lhs_enum_xpr, static_cast<const utils::enum_val &>(*(eq_xpr->get_rhs())));
+                        return mk_forbid(lhs_enum_xpr, static_cast<const utils::enum_val &>(*(eq_xpr->get_rhs())));
                 }
-                else if (auto rhs_enum_xpr = dynamic_cast<enum_term *>(eq_xpr->get_rhs().get())) // left side is an enum value..
-                    return mk_forbid(*rhs_enum_xpr, static_cast<const utils::enum_val &>(*(eq_xpr->get_lhs())));
-                else if (auto lhs_atm = dynamic_cast<atom_term *>(eq_xpr->get_lhs().get()))
+                else if (auto rhs_enum_xpr = std::dynamic_pointer_cast<enum_term>(eq_xpr->get_rhs())) // left side is an enum value..
+                    return mk_forbid(rhs_enum_xpr, static_cast<const utils::enum_val &>(*(eq_xpr->get_lhs())));
+                else if (auto lhs_atm = std::dynamic_pointer_cast<atom_term>(eq_xpr->get_lhs()))
                 {
-                    auto rhs_atm = static_cast<atom_term *>(eq_xpr->get_rhs().get());
+                    auto rhs_atm = std::static_pointer_cast<atom_term>(eq_xpr->get_rhs());
                     std::vector<bool_expr> clause_exprs;
                     std::queue<predicate *> q;
                     q.push(static_cast<predicate *>(&lhs_xpr->get_type()));
@@ -142,45 +142,45 @@ namespace riddle
                 else
                     return true;
             }
-            else if (auto ge_xpr = dynamic_cast<ge_term *>(n_xpr->get_arg().get()))
-                return mk_lt(*ge_xpr->get_rhs(), *ge_xpr->get_lhs());
-            else if (auto gt_xpr = dynamic_cast<gt_term *>(n_xpr->get_arg().get()))
-                return mk_le(*gt_xpr->get_rhs(), *gt_xpr->get_lhs());
+            else if (auto ge_xpr = std::dynamic_pointer_cast<ge_term>(n_xpr->get_arg()))
+                return mk_lt(ge_xpr->get_rhs(), ge_xpr->get_lhs());
+            else if (auto gt_xpr = std::dynamic_pointer_cast<gt_term>(n_xpr->get_arg()))
+                return mk_le(gt_xpr->get_rhs(), gt_xpr->get_lhs());
             else
                 return false; // unsupported expression, just return false..
         }
         else
         {
-            if (auto b_xpr = dynamic_cast<bool_term *>(xpr.get()))
-                return mk_assign(*b_xpr, utils::True);
-            else if (auto lt_xpr = dynamic_cast<lt_term *>(xpr.get()))
-                return mk_lt(*lt_xpr->get_lhs(), *lt_xpr->get_rhs());
-            else if (auto le_xpr = dynamic_cast<le_term *>(xpr.get()))
-                return mk_le(*le_xpr->get_lhs(), *le_xpr->get_rhs());
-            else if (auto eq_xpr = dynamic_cast<eq_term *>(xpr.get()))
+            if (auto b_xpr = std::dynamic_pointer_cast<bool_term>(xpr))
+                return mk_assign(b_xpr, utils::True);
+            else if (auto lt_xpr = std::dynamic_pointer_cast<lt_term>(xpr))
+                return mk_lt(lt_xpr->get_lhs(), lt_xpr->get_rhs());
+            else if (auto le_xpr = std::dynamic_pointer_cast<le_term>(xpr))
+                return mk_le(le_xpr->get_lhs(), le_xpr->get_rhs());
+            else if (auto eq_xpr = std::dynamic_pointer_cast<eq_term>(xpr))
             {
                 if (eq_xpr->get_lhs() == eq_xpr->get_rhs()) // the terms are the same, so they are equal..
                     return true;
                 else if (&eq_xpr->get_lhs()->get_type() != &eq_xpr->get_lhs()->get_type()) // the types are different, so the constraint is always false..
                     return false;
-                else if (auto lhs_xpr = dynamic_cast<arith_term *>(eq_xpr->get_lhs().get())) // we are dealing with an arithmetic constraint..
-                    return mk_eq(*lhs_xpr, *dynamic_cast<arith_term *>(eq_xpr->get_rhs().get()));
-                else if (auto lhs_sxpr = dynamic_cast<string_term *>(eq_xpr->get_lhs().get())) // we are dealing with a string constraint..
-                    return mk_eq(*lhs_sxpr, *dynamic_cast<string_term *>(eq_xpr->get_rhs().get()));
-                else if (auto lhs_bxpr = dynamic_cast<bool_term *>(eq_xpr->get_lhs().get())) // we are dealing with a boolean constraint..
-                    return mk_eq(*lhs_bxpr, *dynamic_cast<bool_term *>(eq_xpr->get_rhs().get()));
-                else if (auto lhs_enum_xpr = dynamic_cast<enum_term *>(eq_xpr->get_lhs().get())) // we are dealing with an enum constraint..
+                else if (auto lhs_xpr = std::dynamic_pointer_cast<arith_term>(eq_xpr->get_lhs())) // we are dealing with an arithmetic constraint..
+                    return mk_eq(lhs_xpr, std::static_pointer_cast<arith_term>(eq_xpr->get_rhs()));
+                else if (auto lhs_sxpr = std::dynamic_pointer_cast<string_term>(eq_xpr->get_lhs())) // we are dealing with a string constraint..
+                    return mk_eq(lhs_sxpr, std::static_pointer_cast<string_term>(eq_xpr->get_rhs()));
+                else if (auto lhs_bxpr = std::dynamic_pointer_cast<bool_term>(eq_xpr->get_lhs())) // we are dealing with a boolean constraint..
+                    return mk_eq(lhs_bxpr, std::static_pointer_cast<bool_term>(eq_xpr->get_rhs()));
+                else if (auto lhs_enum_xpr = std::dynamic_pointer_cast<enum_term>(eq_xpr->get_lhs())) // we are dealing with an enum constraint..
                 {
-                    if (auto rhs_enum_xpr = dynamic_cast<enum_term *>(eq_xpr->get_rhs().get())) // both sides are enum items..
-                        return mk_eq(*lhs_enum_xpr, *rhs_enum_xpr);
+                    if (auto rhs_enum_xpr = std::dynamic_pointer_cast<enum_term>(eq_xpr->get_rhs())) // both sides are enum items..
+                        return mk_eq(lhs_enum_xpr, rhs_enum_xpr);
                     else // right side is an enum value..
-                        return mk_assign(*lhs_enum_xpr, static_cast<const utils::enum_val &>(*(eq_xpr->get_rhs())));
+                        return mk_assign(lhs_enum_xpr, static_cast<const utils::enum_val &>(*(eq_xpr->get_rhs())));
                 }
-                else if (auto rhs_enum_xpr = dynamic_cast<enum_term *>(eq_xpr->get_rhs().get())) // left side is an enum value..
-                    return mk_assign(*rhs_enum_xpr, static_cast<const utils::enum_val &>(*(eq_xpr->get_lhs())));
-                else if (auto lhs_atm = dynamic_cast<atom_term *>(eq_xpr->get_lhs().get()))
+                else if (auto rhs_enum_xpr = std::dynamic_pointer_cast<enum_term>(eq_xpr->get_rhs())) // left side is an enum value..
+                    return mk_assign(rhs_enum_xpr, static_cast<const utils::enum_val &>(*(eq_xpr->get_lhs())));
+                else if (auto lhs_atm = std::dynamic_pointer_cast<atom_term>(eq_xpr->get_lhs()))
                 {
-                    auto rhs_atm = static_cast<atom_term *>(eq_xpr->get_rhs().get());
+                    auto rhs_atm = std::static_pointer_cast<atom_term>(eq_xpr->get_rhs());
                     std::queue<predicate *> q;
                     q.push(static_cast<predicate *>(&lhs_xpr->get_type()));
                     while (!q.empty())
@@ -197,10 +197,10 @@ namespace riddle
                 else
                     return false;
             }
-            else if (auto ge_xpr = dynamic_cast<ge_term *>(xpr.get()))
-                return mk_le(*ge_xpr->get_lhs(), *ge_xpr->get_rhs());
-            else if (auto gt_xpr = dynamic_cast<gt_term *>(xpr.get()))
-                return mk_lt(*gt_xpr->get_lhs(), *gt_xpr->get_rhs());
+            else if (auto ge_xpr = std::dynamic_pointer_cast<ge_term>(xpr))
+                return mk_le(ge_xpr->get_lhs(), ge_xpr->get_rhs());
+            else if (auto gt_xpr = std::dynamic_pointer_cast<gt_term>(xpr))
+                return mk_lt(gt_xpr->get_lhs(), gt_xpr->get_rhs());
             else
                 return false; // unsupported expression, just return false..
         }
@@ -377,17 +377,17 @@ namespace riddle
         for (const auto &[_, pred] : get_predicates())
             if (pred->get_name() != impulse_kw && pred->get_name() != interval_kw)
                 for (const auto &atm : pred->get_atoms())
-                    if (get_atom_state(*atm) == atom_state::active)
+                    if (get_atom_state(atm) == atom_state::active)
                     { // we get only the active atoms..
                         if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
                         { // we have an impulse atom..
-                            const auto start = arith_value(*atm->get<arith_term>(at_kw));
+                            const auto start = arith_value(atm->get<arith_term>(at_kw));
                             starting_atoms[start].insert(static_cast<atom_term *>(&*atm));
                             pulses.insert(start);
                         }
                         else if (get_predicate(interval_kw).is_assignable_from(atm->get_type()))
                         { // we have an interval atom..
-                            const auto start = arith_value(*atm->get<arith_term>(start_kw));
+                            const auto start = arith_value(atm->get<arith_term>(start_kw));
                             starting_atoms[start].insert(static_cast<atom_term *>(&*atm));
                             pulses.insert(start);
                         }
@@ -400,13 +400,13 @@ namespace riddle
                 for (const auto &atm : starting_atoms.at(p))
                     if (get_predicate(impulse_kw).is_assignable_from(atm->get_type()))
                     {
-                        const auto at = arith_value(*atm->get<arith_term>(at_kw));
+                        const auto at = arith_value(atm->get<arith_term>(at_kw));
                         j_atms.push_back({{"atom", atm->get_id()}, {"at", {{"num", at.get_rational().numerator()}, {"den", at.get_rational().denominator()}}}});
                     }
                     else if (get_predicate(interval_kw).is_assignable_from(atm->get_type()))
                     {
-                        const auto start = arith_value(*atm->get<arith_term>(start_kw));
-                        const auto end = arith_value(*atm->get<arith_term>(end_kw));
+                        const auto start = arith_value(atm->get<arith_term>(start_kw));
+                        const auto end = arith_value(atm->get<arith_term>(end_kw));
                         j_atms.push_back({{"atom", atm->get_id()}, {"start", {{"num", start.get_rational().numerator()}, {"den", start.get_rational().denominator()}}}, {"end", {{"num", end.get_rational().numerator()}, {"den", end.get_rational().denominator()}}}});
                     }
             slv_tl["values"] = std::move(j_atms);
