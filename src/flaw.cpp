@@ -5,11 +5,7 @@
 
 namespace riddle
 {
-    flaw::flaw(core &cr, std::vector<std::shared_ptr<resolver>> &&cs) : cr(cr), causes(std::move(cs))
-    {
-        for (auto &c : causes)
-            c->preconditions.push_back(shared_from_this()); // this flaw is a precondition of its `cause` cause..
-    }
+    flaw::flaw(core &cr, std::vector<std::shared_ptr<resolver>> &&cs) : cr(cr), causes(std::move(cs)) {}
 
     json::json flaw::to_json() const
     {

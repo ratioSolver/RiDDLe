@@ -8,8 +8,6 @@
 namespace riddle
 {
   class flaw;
-  class bool_term;
-  using bool_expr = std::shared_ptr<bool_term>;
 
   /**
    * @class resolver
@@ -21,7 +19,7 @@ namespace riddle
    */
   class resolver
   {
-    friend class flaw;
+    friend class core;
 
   public:
     resolver(flaw &flw, utils::rational &&intrinsic_cost);

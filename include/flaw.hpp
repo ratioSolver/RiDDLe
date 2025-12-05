@@ -18,7 +18,7 @@ namespace riddle
    * The flaw class models a flaw within the core system, maintaining its causes and possible resolvers.
    * It is designed to be used with shared pointers and supports polymorphic behavior.
    */
-  class flaw : public std::enable_shared_from_this<flaw>
+  class flaw
   {
   public:
     flaw(core &cr, std::vector<std::shared_ptr<resolver>> &&causes);

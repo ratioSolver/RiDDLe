@@ -182,7 +182,7 @@ namespace riddle
      * @param xpr The arithmetic expression to be checked.
      * @return true if the expression is constant, false otherwise.
      */
-    [[nodiscard]] virtual bool is_constant(const riddle::arith_term &xpr) const noexcept = 0;
+    [[nodiscard]] virtual bool is_constant(const arith_term &xpr) const noexcept = 0;
 
     /**
      * @brief Create a new string expression.
@@ -205,7 +205,7 @@ namespace riddle
      * @param xpr The string expression.
      * @return std::string The string value of the expression.
      */
-    [[nodiscard]] virtual std::string string_value(const riddle::string_term &xpr) const noexcept = 0;
+    [[nodiscard]] virtual std::string string_value(const string_term &xpr) const noexcept = 0;
 
     /**
      * @brief Creates a new enum item.
@@ -485,6 +485,24 @@ namespace riddle
      * @param tp A unique pointer to the type to be added.
      */
     void add_type(std::unique_ptr<type> tp);
+
+    /**
+     * @brief Creates a new flaw of the given type.
+     *
+     * @tparam Tp The type of the flaw to create.
+     * @tparam Args The types of the arguments to pass to the flaw
+     * @param args The arguments to pass to the flaw
+     * @return Tp& The created flaw
+     */
+    template <typename Tp, typename... Args>
+    std::shared_ptr<Tp> new_flaw(Args &&...args) noexcept
+    {
+      static_assert(std::is_base_of_v<flaw, Tp>, "Tp must be a subclass of flaw");
+      auto f = std::make_shared<Tp>(std::forward<Args>(args)...);
+      for (auto &c : f->get_causes())
+        c->preconditions.push_back(f); // this flaw is a precondition of its `c` cause..
+      return f;
+    }
 
     std::shared_ptr<resolver> &get_current_resolver() noexcept { return c_res; }
 
