@@ -505,6 +505,7 @@ namespace riddle
     }
 
     std::shared_ptr<resolver> &get_current_resolver() noexcept { return c_res; }
+    void set_current_resolver(std::shared_ptr<resolver> &res) noexcept { c_res = res; }
 
 #ifdef COMPUTE_NAMES
   protected:

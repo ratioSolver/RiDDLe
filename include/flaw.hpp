@@ -32,6 +32,7 @@ namespace riddle
     [[nodiscard]] core &get_core() const noexcept { return cr; }
 
     [[nodiscard]] const std::vector<std::shared_ptr<resolver>> &get_causes() const noexcept { return causes; }
+    [[nodiscard]] std::vector<std::shared_ptr<resolver>> &get_resolvers() noexcept { return resolvers; }
     [[nodiscard]] const std::vector<std::shared_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
 
     [[nodiscard]] virtual json::json to_json() const;
@@ -46,6 +47,8 @@ namespace riddle
       resolvers.emplace_back(std::move(r));
       return r_ref;
     }
+
+    void clear_resolvers() noexcept { resolvers.clear(); }
 
   protected:
     core &cr; // the core this flaw belongs to..

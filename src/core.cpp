@@ -180,7 +180,7 @@ namespace riddle
                 {
                     auto rhs_atm = std::static_pointer_cast<atom_term>(eq_xpr->get_rhs());
                     std::queue<predicate *> q;
-                    q.push(static_cast<predicate *>(&lhs_xpr->get_type()));
+                    q.push(static_cast<predicate *>(&lhs_atm->get_type()));
                     while (!q.empty())
                     {
                         for (const auto &[f_name, f] : q.front()->get_fields())
