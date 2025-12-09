@@ -13,6 +13,9 @@ public:
     utils::rational get_estimated_cost() const noexcept override { return utils::rational(1); }
 
 private:
+    void compute_resolvers() override {}
+
+private:
     riddle::enum_expr itm;
 };
 
@@ -24,6 +27,9 @@ public:
     [[nodiscard]] riddle::atom_expr get_atom() const noexcept { return atm; }
 
     utils::rational get_estimated_cost() const noexcept override { return utils::rational(1); }
+
+private:
+    void compute_resolvers() override {}
 
 private:
     riddle::atom_expr atm;

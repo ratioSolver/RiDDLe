@@ -30,14 +30,6 @@ namespace riddle
     [[nodiscard]] virtual std::vector<std::shared_ptr<flaw>> get_flaws() noexcept = 0;
   };
 
-  class peak : public flaw
-  {
-  public:
-    peak(core &cr, std::vector<atom_expr> &&atms);
-
-    utils::rational get_estimated_cost() const noexcept override;
-  };
-
   class state_variable : public flaw_aware_component_type, public timeline
   {
   public:
@@ -49,6 +41,10 @@ namespace riddle
 
   private:
     void created_predicate(predicate &pred) noexcept override;
+
+    virtual void created_atom(atom_expr atm) override;
+
+    virtual std::shared_ptr<flaw> new_peak(std::vector<atom_expr> &&atms) noexcept = 0;
   };
 
   class reusable_resource : public flaw_aware_component_type, public timeline
@@ -63,25 +59,13 @@ namespace riddle
   private:
     void created_predicate(predicate &pred) noexcept override;
 
+    virtual void created_atom(atom_expr atm) override;
+
+    virtual std::shared_ptr<flaw> new_peak(std::vector<atom_expr> &&atms) noexcept = 0;
+
   private:
     std::unique_ptr<constructor_declaration> ctr;
     std::unique_ptr<predicate_declaration> use_pred;
-  };
-
-  class overproduction : public flaw
-  {
-  public:
-    overproduction(core &cr, std::vector<atom_expr> &&atms);
-
-    utils::rational get_estimated_cost() const noexcept override;
-  };
-
-  class overconsumption : public flaw
-  {
-  public:
-    overconsumption(core &cr, std::vector<atom_expr> &&atms);
-
-    utils::rational get_estimated_cost() const noexcept override;
   };
 
   class consumable_resource : public flaw_aware_component_type, public timeline
@@ -95,6 +79,11 @@ namespace riddle
 
   private:
     void created_predicate(predicate &pred) noexcept override;
+
+    virtual void created_atom(atom_expr atm) override;
+
+    virtual std::shared_ptr<flaw> new_overproduction(std::vector<atom_expr> &&prod_atms, std::vector<atom_expr> &&cons_atms) noexcept = 0;
+    virtual std::shared_ptr<flaw> new_overconsumption(std::vector<atom_expr> &&cons_atms, std::vector<atom_expr> &&prod_atms) noexcept = 0;
 
   private:
     std::unique_ptr<constructor_declaration> ctr;

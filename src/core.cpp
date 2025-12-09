@@ -1,4 +1,5 @@
 #include "core.hpp"
+#include "flaw.hpp"
 #include "timeline.hpp"
 #include <sstream>
 #include <fstream>
@@ -440,6 +441,21 @@ namespace riddle
         std::string name = t->get_name();
         if (!types.emplace(name, std::move(t)).second)
             throw std::invalid_argument("type `" + name + "` already exists");
+    }
+
+    void core::compute_resolvers(flaw &flw) { flw.compute_resolvers(); }
+    bool core::apply_resolver(std::shared_ptr<resolver> res, bool temp_res) noexcept
+    {
+        if (temp_res)
+        {
+            auto c = c_res;
+            c_res = res;
+            bool applied = res->apply();
+            c_res = c;
+            return applied;
+        }
+        else
+            return res->apply();
     }
 
 #ifdef COMPUTE_NAMES

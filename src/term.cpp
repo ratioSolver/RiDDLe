@@ -88,6 +88,7 @@ namespace riddle
         { // we create a new boolean item..
             auto b = get_core().new_bool();
             // we force the variable to assume the same value of the referenced bools according to the value of the enum..
+            get_core().compute_resolvers(get_flaw());
             for (auto &res : get_flaw().get_resolvers())
             {
                 auto tmp_res = get_core().c_res;
@@ -115,6 +116,7 @@ namespace riddle
                 else
                     a = get_core().new_real();
                 // we force the variable to assume the same value of the referenced arithmetics according to the value of the enum..
+                get_core().compute_resolvers(get_flaw());
                 for (auto &res : get_flaw().get_resolvers())
                 {
                     auto tmp_res = get_core().c_res;
@@ -132,6 +134,7 @@ namespace riddle
             for (const auto &val : matching_values)
                 vals.push_back(val);
             auto e = get_core().new_enum(static_cast<component_type &>(tp), std::move(vals));
+            get_core().compute_resolvers(get_flaw());
             for (auto &res : get_flaw().get_resolvers())
             {
                 auto tmp_res = get_core().c_res;

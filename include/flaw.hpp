@@ -20,6 +20,8 @@ namespace riddle
    */
   class flaw
   {
+    friend class core;
+
   public:
     flaw(core &cr, std::vector<std::shared_ptr<resolver>> &&causes);
     flaw(const flaw &) = delete;
@@ -49,6 +51,9 @@ namespace riddle
     }
 
     void clear_resolvers() noexcept { resolvers.clear(); }
+
+  private:
+    virtual void compute_resolvers() = 0;
 
   protected:
     core &cr; // the core this flaw belongs to..

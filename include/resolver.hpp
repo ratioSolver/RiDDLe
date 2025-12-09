@@ -37,6 +37,9 @@ namespace riddle
 
     [[nodiscard]] virtual json::json to_json() const;
 
+  private:
+    [[nodiscard]] virtual bool apply() noexcept = 0;
+
   protected:
     flaw &flw; // the flaw solved by this resolver..
 
