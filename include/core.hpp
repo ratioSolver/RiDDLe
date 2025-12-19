@@ -5,6 +5,7 @@
 #include "type.hpp"
 #include "parser.hpp"
 #include <unordered_set>
+#include <filesystem>
 
 namespace riddle
 {
@@ -56,13 +57,13 @@ namespace riddle
      */
     virtual void read(std::string_view script);
     /**
-     * @brief Reads and processes the given list of RiDDLe files.
+     * @brief Reads and processes the given RiDDLe files.
      *
-     * This function reads and processes the given list of RiDDLe files.
+     * This function reads and processes the given RiDDLe files.
      *
-     * @param files The list of RiDDLe files.
+     * @param files The RiDDLe files.
      */
-    virtual void read(const std::vector<std::string> &files);
+    virtual void read(const std::vector<std::filesystem::path> &files);
 
     /**
      * @brief Create a new bool expression.

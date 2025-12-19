@@ -40,7 +40,7 @@ namespace riddle
         RECOMPUTE_NAMES();
     }
 
-    void core::read(const std::vector<std::string> &files)
+    void core::read(const std::vector<std::filesystem::path> &files)
     {
         std::vector<std::unique_ptr<compilation_unit>> c_cus;
         c_cus.reserve(files.size());
@@ -51,7 +51,7 @@ namespace riddle
                 c_cus.push_back(p.parse_compilation_unit());
             }
             else
-                throw std::runtime_error("file `" + file + "` not found");
+                throw std::runtime_error("file `" + file.string() + "` not found");
 
         for (auto &cu : c_cus)
             cu->declare(*this);
