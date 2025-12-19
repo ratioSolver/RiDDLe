@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
 project(RiDDLe VERSION 0.2.0 LANGUAGES CXX)
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers) 
+
 include(CTest)
 enable_testing()
 
@@ -16,7 +19,7 @@ option(COMPUTE_NAMES "Compute RiDDLe names" OFF)
 
 add_library(RiDDLe src/core.cpp src/scope.cpp src/env.cpp src/type.cpp src/timeline.cpp src/constructor.cpp src/method.cpp src/term.cpp src/conjunction.cpp src/declaration.cpp src/statement.cpp src/expression.cpp src/compilation_unit.cpp src/lexer.cpp src/parser.cpp src/items.cpp src/types.cpp src/flaw.cpp src/resolver.cpp)
 target_compile_features(RiDDLe PUBLIC cxx_std_17)
-target_include_directories(RiDDLe PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+target_include_directories(RiDDLe PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 if(NOT TARGET json)
     add_subdirectory(extern/json)
 endif()
@@ -39,6 +42,13 @@ endif()
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
+
+install(TARGETS RiDDLe EXPORT RiDDLe-targets LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/include/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT RiDDLe-targets FILE RiDDLe-targets.cmake NAMESPACE RiDDLe:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/RiDDLe)
+configure_package_config_file(cmake/RiDDLe-config.cmake.in RiDDLe-config.cmake INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/RiDDLe)
+write_basic_package_version_file(RiDDLe-version.cmake COMPATIBILITY SameMajorVersion)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/RiDDLe-config.cmake" "${CMAKE_CURRENT_BINARY_DIR}/RiDDLe-version.cmake" DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/RiDDLe)
 
 set(CPACK_PROJECT_NAME RiDDLe)
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
