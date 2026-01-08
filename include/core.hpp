@@ -26,6 +26,7 @@ namespace riddle
     friend class component_type;
 #endif
     friend class enum_term;
+    friend class flaw;
 
   public:
     core(std::string_view name = "RiDDLe") noexcept;
@@ -502,10 +503,31 @@ namespace riddle
       auto f = std::make_shared<Tp>(std::forward<Args>(args)...);
       for (auto &c : f->get_causes())
         c->preconditions.push_back(f); // this flaw is a precondition of its `c` cause..
+      flaws.emplace_back(f);
       return f;
     }
 
-    std::shared_ptr<resolver> &get_current_resolver() noexcept { return c_res; }
+    /**
+     * @brief Creates a new resolver of the given type.
+     *
+     * @tparam Tp The type of the resolver to create.
+     * @tparam Args The types of the arguments to pass to the resolver
+     * @param args The arguments to pass to the resolver
+     * @return Tp& The created resolver
+     */
+    template <typename Tp, typename... Args>
+    Tp &new_resolver(Args &&...args) noexcept
+    {
+      static_assert(std::is_base_of_v<resolver, Tp>, "Tp must be a subclass of resolver");
+      auto r = std::make_shared<Tp>(std::forward<Args>(args)...);
+      r->flw.resolvers.emplace_back(r); // register the resolver in its flaw..
+      auto &r_ref = *r;
+      resolvers.emplace_back(std::move(r));
+      return r_ref;
+    }
+
+    [[nodiscard]] std::shared_ptr<flaw> &get_current_flaw() noexcept { return c_flaw; }
+    [[nodiscard]] std::shared_ptr<resolver> &get_current_resolver() noexcept { return c_res; }
 
     void compute_resolvers(flaw &flw);
     bool apply_resolver(std::shared_ptr<resolver> res, bool temp_res = false) noexcept;
@@ -563,12 +585,15 @@ namespace riddle
     virtual bool mk_neq(enum_expr lhs, enum_expr rhs) noexcept = 0;
 
   private:
-    const std::string name;                                                           // the name of the core..
-    std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // the methods declared in the core..
-    std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // the types declared in the core..
-    std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // the predicates declared in the core..
-    std::shared_ptr<resolver> c_res;                                                  // the current resolver..
-    std::vector<std::unique_ptr<compilation_unit>> cus;                               // the compilation units read by the core..
+    const std::string name;                                                           // The name of the core..
+    std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // The methods declared in the core..
+    std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // The types declared in the core..
+    std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // The predicates declared in the core..
+    std::vector<std::unique_ptr<compilation_unit>> cus;                               // The compilation units read by the core..
+    std::vector<std::shared_ptr<flaw>> flaws;                                         // The set of flaws
+    std::vector<std::shared_ptr<resolver>> resolvers;                                 // The set of resolvers
+    std::shared_ptr<flaw> c_flaw;                                                     // The current flaw..
+    std::shared_ptr<resolver> c_res;                                                  // The current resolver..
 
 #ifdef COMPUTE_NAMES
     std::unordered_map<const term *, const std::string> expr_names; // the names of the expressions..

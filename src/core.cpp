@@ -371,6 +371,25 @@ namespace riddle
         if (!items.empty()) // we add the fields of the core..
             j_core["exprs"] = env::to_json();
 
+        if (!flaws.empty())
+        {
+            json::json j_flaws;
+            for (const auto &f : flaws)
+                j_flaws[std::to_string(f->get_id())] = f->to_json();
+            j_core["flaws"] = std::move(j_flaws);
+        }
+        if (!resolvers.empty())
+        {
+            json::json j_resolvers;
+            for (const auto &r : resolvers)
+                j_resolvers[std::to_string(r->get_id())] = r->to_json();
+            j_core["resolvers"] = std::move(j_resolvers);
+        }
+        if (c_flaw)
+            j_core["current_flaw"] = c_flaw->get_id();
+        if (c_res)
+            j_core["current_resolver"] = c_res->get_id();
+
         // for each pulse, the root atoms starting at that pulse..
         std::map<utils::inf_rational, std::set<atom_term *>> starting_atoms;
         // all the pulses of the solver timeline..

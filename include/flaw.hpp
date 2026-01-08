@@ -2,6 +2,7 @@
 
 #include "rational.hpp"
 #include "json.hpp"
+#include "core.hpp"
 #include <vector>
 #include <cstdint>
 #include <memory>
@@ -41,16 +42,7 @@ namespace riddle
 
   protected:
     template <typename Tp, typename... Args>
-    Tp &new_resolver(Args &&...args) noexcept
-    {
-      static_assert(std::is_base_of_v<resolver, Tp>, "Tp must be a subclass of resolver");
-      auto r = std::make_shared<Tp>(std::forward<Args>(args)...);
-      auto &r_ref = *r;
-      resolvers.emplace_back(std::move(r));
-      return r_ref;
-    }
-
-    void clear_resolvers() noexcept { resolvers.clear(); }
+    Tp &new_resolver(Args &&...args) noexcept { return cr.new_resolver<Tp>(std::forward<Args>(args)...); }
 
   private:
     virtual void compute_resolvers() = 0;
