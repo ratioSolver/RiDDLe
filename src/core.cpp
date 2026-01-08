@@ -486,6 +486,29 @@ namespace riddle
             return res.apply();
     }
 
+    void core::set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw) noexcept
+    {
+        c_flaw = flw;
+#ifdef RIDDLE_ENABLE_LISTENERS
+        current_flaw(c_flaw);
+#endif
+    }
+    void core::set_current_resolver(std::optional<std::reference_wrapper<resolver>> res) noexcept
+    {
+        c_res = res;
+#ifdef RIDDLE_ENABLE_LISTENERS
+        current_resolver(c_res);
+#endif
+    }
+
+    void core::set_flaw_cost(flaw &flw, utils::rational &cost) noexcept
+    {
+        flw.est_cost = cost;
+#ifdef RIDDLE_ENABLE_LISTENERS
+        flaw_cost_changed(flw);
+#endif
+    }
+
 #ifdef COMPUTE_NAMES
     void core::recompute_names() noexcept
     {

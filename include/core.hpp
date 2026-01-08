@@ -468,8 +468,6 @@ namespace riddle
     {
       static_assert(std::is_base_of_v<flaw, Tp>, "Tp must be a subclass of flaw");
       auto f = std::make_unique<Tp>(std::forward<Args>(args)...);
-      for (auto &c : f->get_causes())
-        c.get().preconditions.emplace_back(*f); // this flaw is a precondition of its `c` cause..
       Tp &ref = *f;
       flaws.emplace_back(std::move(f));
 #ifdef RIDDLE_ENABLE_LISTENERS
@@ -500,8 +498,17 @@ namespace riddle
       return ref;
     }
 
+    /**
+     * @brief Adds a causal link between a flaw and a resolver.
+     *
+     * This function establishes a causal relationship between the specified flaw and resolver.
+     *
+     * @param f The flaw to which the causal link is to be added.
+     * @param r The resolver that is the cause of the flaw.
+     */
     void add_causal_link(flaw &f, resolver &r) noexcept;
 
+    // [[nodiscard]] std::vector<std::unique_ptr<flaw>> &get_flaws() noexcept { return flaws; }
     [[nodiscard]] const std::vector<std::unique_ptr<flaw>> &get_flaws() const noexcept { return flaws; }
     [[nodiscard]] const std::optional<std::reference_wrapper<flaw>> &get_current_flaw() const noexcept { return c_flaw; }
     [[nodiscard]] const std::vector<std::unique_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
@@ -543,21 +550,10 @@ namespace riddle
     void compute_resolvers(flaw &flw);
     bool apply_resolver(resolver &res, bool temp_res = false) noexcept;
 
-  protected:
-    void set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw) noexcept
-    {
-      c_flaw = flw;
-#ifdef RIDDLE_ENABLE_LISTENERS
-      current_flaw(c_flaw);
-#endif
-    }
-    void set_current_resolver(std::optional<std::reference_wrapper<resolver>> res) noexcept
-    {
-      c_res = res;
-#ifdef RIDDLE_ENABLE_LISTENERS
-      current_resolver(c_res);
-#endif
-    }
+    void set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw) noexcept;
+    void set_current_resolver(std::optional<std::reference_wrapper<resolver>> res) noexcept;
+
+    void set_flaw_cost(flaw &flw, utils::rational &cost) noexcept;
 
 #ifdef COMPUTE_NAMES
   protected:

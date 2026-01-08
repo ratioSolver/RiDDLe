@@ -25,18 +25,18 @@ namespace riddle
 
   public:
     flaw(core &cr, std::vector<std::reference_wrapper<resolver>> &&causes);
+    flaw(core &cr, std::optional<std::reference_wrapper<resolver>> cause);
     flaw(const flaw &) = delete;
     virtual ~flaw() = default;
 
     [[nodiscard]] uintptr_t get_id() const noexcept { return reinterpret_cast<uintptr_t>(this); }
 
     [[nodiscard]] core &get_core() const noexcept { return cr; }
+    [[nodiscard]] const utils::rational &get_estimated_cost() const noexcept { return est_cost; }
 
     [[nodiscard]] const std::vector<std::reference_wrapper<resolver>> &get_causes() const noexcept { return causes; }
     [[nodiscard]] const std::vector<std::reference_wrapper<resolver>> &get_supports() const noexcept { return supports; }
     [[nodiscard]] const std::vector<std::reference_wrapper<resolver>> &get_resolvers() const noexcept { return resolvers; }
-
-    [[nodiscard]] virtual utils::rational get_estimated_cost() const noexcept = 0;
 
     [[nodiscard]] virtual json::json to_json() const;
 
@@ -54,9 +54,10 @@ namespace riddle
     core &cr; // the core this flaw belongs to..
 
   private:
-    std::vector<std::reference_wrapper<resolver>> causes;    // the causes that led to this flaw..
-    std::vector<std::reference_wrapper<resolver>> supports;  // the resolvers supported by this flaw..
-    std::vector<std::reference_wrapper<resolver>> resolvers; // the resolvers for this flaw..
+    utils::rational est_cost = utils::rational::positive_infinite; // the estimated cost of this flaw..
+    std::vector<std::reference_wrapper<resolver>> causes;          // the causes that led to this flaw..
+    std::vector<std::reference_wrapper<resolver>> supports;        // the resolvers supported by this flaw..
+    std::vector<std::reference_wrapper<resolver>> resolvers;       // the resolvers for this flaw..
   };
 
   /**

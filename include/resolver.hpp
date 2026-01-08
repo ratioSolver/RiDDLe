@@ -20,6 +20,7 @@ namespace riddle
   class resolver
   {
     friend class core;
+    friend class flaw;
 
   public:
     resolver(flaw &flw, utils::rational &&intrinsic_cost);

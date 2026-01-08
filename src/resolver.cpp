@@ -10,6 +10,8 @@ namespace riddle
 
     utils::rational resolver::get_estimated_cost() const noexcept
     {
+        if (preconditions.empty())
+            return intrinsic_cost;
 #ifdef H_ADD
         return std::accumulate(preconditions.begin(), preconditions.end(), intrinsic_cost, [](const auto &lhs, const auto &prec)
                                { return lhs + prec.get().get_estimated_cost(); });

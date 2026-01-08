@@ -6,11 +6,9 @@
 class test_enum_flaw : public riddle::flaw
 {
 public:
-    test_enum_flaw(riddle::core &cr, riddle::component_type &tp, std::vector<riddle::expr> &&vals) noexcept : riddle::flaw(cr, {}), itm(std::make_shared<riddle::enum_item>(*this, tp, std::move(vals), 0)) {}
+    test_enum_flaw(riddle::core &cr, riddle::component_type &tp, std::vector<riddle::expr> &&vals) noexcept : riddle::flaw(cr, std::nullopt), itm(std::make_shared<riddle::enum_item>(*this, tp, std::move(vals), 0)) {}
 
     [[nodiscard]] riddle::enum_expr get_enum() const noexcept { return itm; }
-
-    utils::rational get_estimated_cost() const noexcept override { return utils::rational(1); }
 
 private:
     void compute_resolvers() override {}
@@ -22,11 +20,9 @@ private:
 class test_atom_flaw : public riddle::flaw
 {
 public:
-    test_atom_flaw(riddle::core &cr, bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) noexcept : riddle::flaw(cr, {}), atm(std::make_shared<riddle::atom>(*this, pred, is_fact, std::move(args), cr.new_bool())) {}
+    test_atom_flaw(riddle::core &cr, bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) noexcept : riddle::flaw(cr, std::nullopt), atm(std::make_shared<riddle::atom>(*this, pred, is_fact, std::move(args), cr.new_bool())) {}
 
     [[nodiscard]] riddle::atom_expr get_atom() const noexcept { return atm; }
-
-    utils::rational get_estimated_cost() const noexcept override { return utils::rational(1); }
 
 private:
     void compute_resolvers() override {}
