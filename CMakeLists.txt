@@ -15,7 +15,11 @@ if(${HEURISTIC_TYPE_INDEX} EQUAL -1)
     message(FATAL_ERROR "Invalid heuristic type ${HEURISTIC_TYPE}")
 endif()
 
+option(RIDDLE_ENABLE_LISTENERS "Enable listener functionality in RiDDLe" OFF)
 option(COMPUTE_NAMES "Compute RiDDLe names" OFF)
+
+message(STATUS "Compute RiDDLe names: ${COMPUTE_NAMES}")
+message(STATUS "Enable listener functionality in RiDDLe: ${RIDDLE_ENABLE_LISTENERS}")
 
 add_library(RiDDLe src/core.cpp src/scope.cpp src/env.cpp src/type.cpp src/timeline.cpp src/constructor.cpp src/method.cpp src/term.cpp src/conjunction.cpp src/declaration.cpp src/statement.cpp src/expression.cpp src/compilation_unit.cpp src/lexer.cpp src/parser.cpp src/items.cpp src/types.cpp src/flaw.cpp src/resolver.cpp)
 add_library(ratio::RiDDLe ALIAS RiDDLe)
@@ -35,9 +39,12 @@ elseif(${HEURISTIC_TYPE} STREQUAL "h_add")
     target_compile_definitions(RiDDLe PUBLIC H_ADD)
 endif()
 
-message(STATUS "Compute RiDDLe names: ${COMPUTE_NAMES}")
 if(COMPUTE_NAMES)
     target_compile_definitions(RiDDLe PUBLIC COMPUTE_NAMES)
+endif()
+
+if(RIDDLE_ENABLE_LISTENERS)
+    target_compile_definitions(RiDDLe PUBLIC RIDDLE_ENABLE_LISTENERS)
 endif()
 
 if(BUILD_TESTING)

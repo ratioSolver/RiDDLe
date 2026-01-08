@@ -526,8 +526,10 @@ namespace riddle
       return r_ref;
     }
 
-    [[nodiscard]] std::shared_ptr<flaw> &get_current_flaw() noexcept { return c_flaw; }
-    [[nodiscard]] std::shared_ptr<resolver> &get_current_resolver() noexcept { return c_res; }
+    [[nodiscard]] const std::vector<std::shared_ptr<flaw>> &get_flaws() const noexcept { return flaws; }
+    [[nodiscard]] const std::shared_ptr<flaw> &get_current_flaw() const noexcept { return c_flaw; }
+    [[nodiscard]] const std::vector<std::shared_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
+    [[nodiscard]] const std::shared_ptr<resolver> &get_current_resolver() const noexcept { return c_res; }
 
     void compute_resolvers(flaw &flw);
     bool apply_resolver(std::shared_ptr<resolver> res, bool temp_res = false) noexcept;
@@ -583,6 +585,43 @@ namespace riddle
     virtual bool mk_forbid(enum_expr xpr, const utils::enum_val &val) noexcept = 0;
     virtual bool mk_eq(enum_expr lhs, enum_expr rhs) noexcept = 0;
     virtual bool mk_neq(enum_expr lhs, enum_expr rhs) noexcept = 0;
+
+#ifdef RIDDLE_ENABLE_LISTENERS
+  private:
+    /**
+     * @brief Notifies when a flaw has been created.
+     *
+     * This function is called when a flaw has been created. It is a virtual function that can be overridden by derived classes to perform specific actions when a flaw is created.
+     *
+     * @param flaw The flaw that has been created.
+     */
+    virtual void flaw_created(const riddle::flaw &) {}
+    /**
+     * @brief Notifies when the current flaw has changed.
+     *
+     * This function is called when the current flaw has changed. It is a virtual function that can be overridden by derived classes to perform specific actions when the current flaw changes.
+     *
+     * @param flaw The current flaw.
+     */
+    virtual void current_flaw(std::shared_ptr<riddle::flaw>) {}
+
+    /**
+     * @brief Notifies when a resolver has been created.
+     *
+     * This function is called when a resolver has been created. It is a virtual function that can be overridden by derived classes to perform specific actions when a resolver is created.
+     *
+     * @param resolver The resolver that has been created.
+     */
+    virtual void resolver_created(const riddle::resolver &) {}
+    /**
+     * @brief Notifies when the current resolver has changed.
+     *
+     * This function is called when the current resolver has changed. It is a virtual function that can be overridden by derived classes to perform specific actions when the current resolver changes.
+     *
+     * @param resolver The current resolver.
+     */
+    virtual void current_resolver(std::shared_ptr<riddle::resolver>) {}
+#endif
 
   private:
     const std::string name;                                                           // The name of the core..
