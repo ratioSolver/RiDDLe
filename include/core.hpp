@@ -504,6 +504,9 @@ namespace riddle
       for (auto &c : f->get_causes())
         c->preconditions.push_back(f); // this flaw is a precondition of its `c` cause..
       flaws.emplace_back(f);
+#ifdef RIDDLE_ENABLE_LISTENERS
+      flaw_created(*f);
+#endif
       return f;
     }
 
@@ -523,8 +526,13 @@ namespace riddle
       r->flw.resolvers.emplace_back(r); // register the resolver in its flaw..
       auto &r_ref = *r;
       resolvers.emplace_back(std::move(r));
+#ifdef RIDDLE_ENABLE_LISTENERS
+      resolver_created(r_ref);
+#endif
       return r_ref;
     }
+
+    void add_causal_link(std::shared_ptr<flaw> f, std::shared_ptr<resolver> r) noexcept;
 
     [[nodiscard]] const std::vector<std::shared_ptr<flaw>> &get_flaws() const noexcept { return flaws; }
     [[nodiscard]] const std::shared_ptr<flaw> &get_current_flaw() const noexcept { return c_flaw; }
@@ -533,6 +541,22 @@ namespace riddle
 
     void compute_resolvers(flaw &flw);
     bool apply_resolver(std::shared_ptr<resolver> res, bool temp_res = false) noexcept;
+
+  protected:
+    void set_current_flaw(std::shared_ptr<flaw> flw) noexcept
+    {
+      c_flaw = std::move(flw);
+#ifdef RIDDLE_ENABLE_LISTENERS
+      current_flaw(c_flaw);
+#endif
+    }
+    void set_current_resolver(std::shared_ptr<resolver> res) noexcept
+    {
+      c_res = std::move(res);
+#ifdef RIDDLE_ENABLE_LISTENERS
+      current_resolver(c_res);
+#endif
+    }
 
 #ifdef COMPUTE_NAMES
   protected:
@@ -595,7 +619,15 @@ namespace riddle
      *
      * @param flaw The flaw that has been created.
      */
-    virtual void flaw_created(const riddle::flaw &) {}
+    virtual void flaw_created(const flaw &) {}
+    /**
+     * @brief Notifies when the cost of a flaw has changed.
+     *
+     * This function is called when the cost of a flaw has changed. It is a virtual function that can be overridden by derived classes to perform specific actions when a flaw's cost changes.
+     *
+     * @param flaw The flaw whose cost has changed.
+     */
+    virtual void flaw_cost_changed(const flaw &) {}
     /**
      * @brief Notifies when the current flaw has changed.
      *
@@ -603,7 +635,7 @@ namespace riddle
      *
      * @param flaw The current flaw.
      */
-    virtual void current_flaw(std::shared_ptr<riddle::flaw>) {}
+    virtual void current_flaw(std::shared_ptr<flaw>) {}
 
     /**
      * @brief Notifies when a resolver has been created.
@@ -612,7 +644,7 @@ namespace riddle
      *
      * @param resolver The resolver that has been created.
      */
-    virtual void resolver_created(const riddle::resolver &) {}
+    virtual void resolver_created(const resolver &) {}
     /**
      * @brief Notifies when the current resolver has changed.
      *
@@ -620,7 +652,17 @@ namespace riddle
      *
      * @param resolver The current resolver.
      */
-    virtual void current_resolver(std::shared_ptr<riddle::resolver>) {}
+    virtual void current_resolver(std::shared_ptr<resolver>) {}
+
+    /**
+     * @brief Notifies when a causal link has been added.
+     *
+     * This function is called when a causal link has been added. It is a virtual function that can be overridden by derived classes to perform specific actions when a causal link is added.
+     *
+     * @param flaw The flaw that is the source of the causal link.
+     * @param resolver The resolver that is the destination of the causal link.
+     */
+    virtual void causal_link_added(const flaw &, const resolver &) {}
 #endif
 
   private:

@@ -462,6 +462,15 @@ namespace riddle
             throw std::invalid_argument("type `" + name + "` already exists");
     }
 
+    void core::add_causal_link(std::shared_ptr<flaw> f, std::shared_ptr<resolver> r) noexcept
+    {
+        f->supports.push_back(r);
+        r->preconditions.push_back(f);
+#ifdef RIDDLE_ENABLE_LISTENERS
+        causal_link_added(*f, *r);
+#endif
+    }
+
     void core::compute_resolvers(flaw &flw) { flw.compute_resolvers(); }
     bool core::apply_resolver(std::shared_ptr<resolver> res, bool temp_res) noexcept
     {
