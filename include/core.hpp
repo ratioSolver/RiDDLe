@@ -455,39 +455,6 @@ namespace riddle
 
     [[nodiscard]] expr get(std::string_view name) override;
 
-    [[nodiscard]] virtual json::json to_json() const override;
-
-  protected:
-    /**
-     * @brief Adds a method to this RiDDLe core.
-     *
-     * This function takes ownership of the provided unique pointer to a method
-     * and adds it to the internal collection of methods.
-     *
-     * @param mthd A unique pointer to the method to be added.
-     */
-    void add_method(std::unique_ptr<method> mthd);
-
-    /**
-     * @brief Adds a predicate to this RiDDLe core.
-     *
-     * This function takes ownership of the provided predicate and adds it to the
-     * internal collection of predicates.
-     *
-     * @param pred A unique pointer to the predicate to be added.
-     */
-    void add_predicate(std::unique_ptr<predicate> pred);
-
-    /**
-     * @brief Adds a type to this RiDDLe core.
-     *
-     * This function takes ownership of the provided type and adds it to the
-     * internal collection of types.
-     *
-     * @param tp A unique pointer to the type to be added.
-     */
-    void add_type(std::unique_ptr<type> tp);
-
     /**
      * @brief Creates a new flaw of the given type.
      *
@@ -539,6 +506,39 @@ namespace riddle
     [[nodiscard]] const std::optional<std::reference_wrapper<flaw>> &get_current_flaw() const noexcept { return c_flaw; }
     [[nodiscard]] const std::vector<std::unique_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
     [[nodiscard]] const std::optional<std::reference_wrapper<resolver>> &get_current_resolver() const noexcept { return c_res; }
+
+    [[nodiscard]] virtual json::json to_json() const override;
+
+  protected:
+    /**
+     * @brief Adds a method to this RiDDLe core.
+     *
+     * This function takes ownership of the provided unique pointer to a method
+     * and adds it to the internal collection of methods.
+     *
+     * @param mthd A unique pointer to the method to be added.
+     */
+    void add_method(std::unique_ptr<method> mthd);
+
+    /**
+     * @brief Adds a predicate to this RiDDLe core.
+     *
+     * This function takes ownership of the provided predicate and adds it to the
+     * internal collection of predicates.
+     *
+     * @param pred A unique pointer to the predicate to be added.
+     */
+    void add_predicate(std::unique_ptr<predicate> pred);
+
+    /**
+     * @brief Adds a type to this RiDDLe core.
+     *
+     * This function takes ownership of the provided type and adds it to the
+     * internal collection of types.
+     *
+     * @param tp A unique pointer to the type to be added.
+     */
+    void add_type(std::unique_ptr<type> tp);
 
     void compute_resolvers(flaw &flw);
     bool apply_resolver(resolver &res, bool temp_res = false) noexcept;
