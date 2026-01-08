@@ -406,12 +406,12 @@ namespace riddle
         return tls;
     }
 
-    [[nodiscard]] std::vector<std::shared_ptr<resolver>> causes_from_atoms(const std::vector<atom_expr> &atms) noexcept
+    [[nodiscard]] std::vector<std::reference_wrapper<resolver>> causes_from_atoms(const std::vector<atom_expr> &atms) noexcept
     {
-        std::vector<std::shared_ptr<resolver>> causes;
+        std::vector<std::reference_wrapper<resolver>> causes;
         for (const auto &atm : atms)
             for (const auto &c : atm->get_flaw().get_causes())
-                causes.push_back(c);
+                causes.push_back(c.get());
         return causes;
     }
 } // namespace riddle

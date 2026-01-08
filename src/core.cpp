@@ -386,9 +386,9 @@ namespace riddle
             j_core["resolvers"] = std::move(j_resolvers);
         }
         if (c_flaw)
-            j_core["current_flaw"] = c_flaw->get_id();
+            j_core["current_flaw"] = c_flaw->get().get_id();
         if (c_res)
-            j_core["current_resolver"] = c_res->get_id();
+            j_core["current_resolver"] = c_res->get().get_id();
 
         // for each pulse, the root atoms starting at that pulse..
         std::map<utils::inf_rational, std::set<atom_term *>> starting_atoms;
@@ -462,28 +462,28 @@ namespace riddle
             throw std::invalid_argument("type `" + name + "` already exists");
     }
 
-    void core::add_causal_link(std::shared_ptr<flaw> f, std::shared_ptr<resolver> r) noexcept
+    void core::add_causal_link(flaw &f, resolver &r) noexcept
     {
-        f->supports.push_back(r);
-        r->preconditions.push_back(f);
+        f.supports.emplace_back(r);
+        r.preconditions.emplace_back(f);
 #ifdef RIDDLE_ENABLE_LISTENERS
-        causal_link_added(*f, *r);
+        causal_link_added(f, r);
 #endif
     }
 
     void core::compute_resolvers(flaw &flw) { flw.compute_resolvers(); }
-    bool core::apply_resolver(std::shared_ptr<resolver> res, bool temp_res) noexcept
+    bool core::apply_resolver(resolver &res, bool temp_res) noexcept
     {
         if (temp_res)
         {
             auto c = c_res;
             c_res = res;
-            bool applied = res->apply();
+            bool applied = res.apply();
             c_res = c;
             return applied;
         }
         else
-            return res->apply();
+            return res.apply();
     }
 
 #ifdef COMPUTE_NAMES

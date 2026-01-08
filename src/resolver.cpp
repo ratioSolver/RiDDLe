@@ -12,12 +12,12 @@ namespace riddle
     {
 #ifdef H_ADD
         return std::accumulate(preconditions.begin(), preconditions.end(), intrinsic_cost, [](const auto &lhs, const auto &prec)
-                               { return lhs + prec->get_estimated_cost(); });
+                               { return lhs + prec.get().get_estimated_cost(); });
 #elif defined(H_MAX)
         return std::max_element(preconditions.begin(), preconditions.end(), [](const auto &lhs, const auto &rhs)
-                                { return lhs->get_estimated_cost() < rhs->get_estimated_cost(); })
+                                { return lhs.get().get_estimated_cost() < rhs.get().get_estimated_cost(); })
             ->get()
-            ->get_estimated_cost();
+            .get_estimated_cost();
 #else
         static_assert(false, "No heuristic defined for resolver cost estimation");
 #endif
@@ -30,7 +30,7 @@ namespace riddle
         {
             json::json j_preconditions(json::json_type::array);
             for (const auto &p : preconditions)
-                j_preconditions.push_back(p->get_id());
+                j_preconditions.push_back(p.get().get_id());
             j_resolver["preconditions"] = std::move(j_preconditions);
         }
         return j_resolver;

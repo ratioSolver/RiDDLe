@@ -31,7 +31,7 @@ namespace riddle
     [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
 
     [[nodiscard]] const utils::rational &get_intrinsic_cost() const noexcept { return intrinsic_cost; }
-    [[nodiscard]] const std::vector<std::shared_ptr<flaw>> &get_preconditions() const noexcept { return preconditions; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<flaw>> &get_preconditions() const noexcept { return preconditions; }
 
     [[nodiscard]] utils::rational get_estimated_cost() const noexcept;
 
@@ -44,7 +44,7 @@ namespace riddle
     flaw &flw; // the flaw solved by this resolver..
 
   private:
-    const utils::rational intrinsic_cost;             // the intrinsic cost of this resolver..
-    std::vector<std::shared_ptr<flaw>> preconditions; // the preconditions of this resolver..
+    const utils::rational intrinsic_cost;                    // The intrinsic cost of this resolver..
+    std::vector<std::reference_wrapper<flaw>> preconditions; // The preconditions of this resolver..
   };
 } // namespace riddle

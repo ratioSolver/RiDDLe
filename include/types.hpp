@@ -91,5 +91,5 @@ namespace riddle
     std::unique_ptr<predicate_declaration> cons_pred;
   };
 
-  [[nodiscard]] std::vector<std::shared_ptr<resolver>> causes_from_atoms(const std::vector<atom_expr> &atms) noexcept;
+  [[nodiscard]] std::vector<std::reference_wrapper<resolver>> causes_from_atoms(const std::vector<atom_expr> &atms) noexcept;
 } // namespace riddle

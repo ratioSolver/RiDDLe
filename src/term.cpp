@@ -94,7 +94,7 @@ namespace riddle
             {
                 auto tmp_res = get_core().c_res;
                 get_core().c_res = res;
-                get_core().assert_expr(get_core().new_eq(b, std::dynamic_pointer_cast<env>(dynamic_cast<select_value &>(*res).get_value())->get(name)));
+                get_core().assert_expr(get_core().new_eq(b, std::dynamic_pointer_cast<env>(dynamic_cast<select_value &>(res.get()).get_value())->get(name)));
                 get_core().c_res = tmp_res;
             }
             items.emplace(name, b);
@@ -123,7 +123,7 @@ namespace riddle
                 {
                     auto tmp_res = get_core().c_res;
                     get_core().c_res = res;
-                    get_core().assert_expr(get_core().new_eq(a, std::dynamic_pointer_cast<env>(dynamic_cast<select_value &>(*res).get_value())->get(name)));
+                    get_core().assert_expr(get_core().new_eq(a, std::dynamic_pointer_cast<env>(dynamic_cast<select_value &>(res.get()).get_value())->get(name)));
                     get_core().c_res = tmp_res;
                 }
                 items.emplace(name, a);
@@ -142,7 +142,7 @@ namespace riddle
             {
                 auto tmp_res = get_core().c_res;
                 get_core().c_res = res;
-                get_core().assert_expr(get_core().new_eq(e, std::dynamic_pointer_cast<env>(dynamic_cast<select_value &>(*res).get_value())->get(name)));
+                get_core().assert_expr(get_core().new_eq(e, std::dynamic_pointer_cast<env>(dynamic_cast<select_value &>(res.get()).get_value())->get(name)));
                 get_core().c_res = tmp_res;
             }
             items.emplace(name, e);

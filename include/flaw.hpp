@@ -24,20 +24,19 @@ namespace riddle
     friend class core;
 
   public:
-    flaw(core &cr, std::vector<std::shared_ptr<resolver>> &&causes);
+    flaw(core &cr, std::vector<std::reference_wrapper<resolver>> &&causes);
     flaw(const flaw &) = delete;
     virtual ~flaw() = default;
 
     [[nodiscard]] uintptr_t get_id() const noexcept { return reinterpret_cast<uintptr_t>(this); }
 
-    [[nodiscard]] virtual utils::rational get_estimated_cost() const noexcept = 0;
-
     [[nodiscard]] core &get_core() const noexcept { return cr; }
 
-    [[nodiscard]] const std::vector<std::shared_ptr<resolver>> &get_causes() const noexcept { return causes; }
-    [[nodiscard]] const std::vector<std::shared_ptr<resolver>> &get_supports() const noexcept { return supports; }
-    [[nodiscard]] std::vector<std::shared_ptr<resolver>> &get_resolvers() noexcept { return resolvers; }
-    [[nodiscard]] const std::vector<std::shared_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<resolver>> &get_causes() const noexcept { return causes; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<resolver>> &get_supports() const noexcept { return supports; }
+    [[nodiscard]] const std::vector<std::reference_wrapper<resolver>> &get_resolvers() const noexcept { return resolvers; }
+
+    [[nodiscard]] virtual utils::rational get_estimated_cost() const noexcept = 0;
 
     [[nodiscard]] virtual json::json to_json() const;
 
@@ -45,16 +44,19 @@ namespace riddle
     template <typename Tp, typename... Args>
     Tp &new_resolver(Args &&...args) noexcept { return cr.new_resolver<Tp>(std::forward<Args>(args)...); }
 
+    void add_support(resolver &res) noexcept;
+
   private:
     virtual void compute_resolvers() = 0;
+    friend bool have_common_ancestors(const flaw &a, const flaw &b);
 
   protected:
     core &cr; // the core this flaw belongs to..
 
   private:
-    std::vector<std::shared_ptr<resolver>> causes;    // the causes that led to this flaw..
-    std::vector<std::shared_ptr<resolver>> supports;  // the resolvers supported by this flaw..
-    std::vector<std::shared_ptr<resolver>> resolvers; // the resolvers for this flaw..
+    std::vector<std::reference_wrapper<resolver>> causes;    // the causes that led to this flaw..
+    std::vector<std::reference_wrapper<resolver>> supports;  // the resolvers supported by this flaw..
+    std::vector<std::reference_wrapper<resolver>> resolvers; // the resolvers for this flaw..
   };
 
   /**

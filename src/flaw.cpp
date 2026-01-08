@@ -5,7 +5,9 @@
 
 namespace riddle
 {
-    flaw::flaw(core &cr, std::vector<std::shared_ptr<resolver>> &&cs) : cr(cr), causes(std::move(cs)) {}
+    flaw::flaw(core &cr, std::vector<std::reference_wrapper<resolver>> &&cs) : cr(cr), causes(std::move(cs)) {}
+
+    void flaw::add_support(resolver &res) noexcept { cr.add_causal_link(*this, res); }
 
     json::json flaw::to_json() const
     {
@@ -14,7 +16,7 @@ namespace riddle
         {
             json::json j_causes(json::json_type::array);
             for (const auto &c : causes)
-                j_causes.push_back(c->get_id());
+                j_causes.push_back(c.get().get_id());
             j_flaw["causes"] = std::move(j_causes);
         }
         return j_flaw;
@@ -33,8 +35,8 @@ namespace riddle
             const flaw *anc_f = stk.top();
             stk.pop();
             ancestors_a.insert(anc_f);
-            for (const auto &r : anc_f->get_causes())
-                stk.push(&r->get_flaw());
+            for (const auto &r : anc_f->causes)
+                stk.push(&r.get().get_flaw());
         }
 
         stk.push(&b);
@@ -44,8 +46,8 @@ namespace riddle
             stk.pop();
             if (ancestors_a.count(anc_f))
                 return true;
-            for (const auto &r : anc_f->get_causes())
-                stk.push(&r->get_flaw());
+            for (const auto &r : anc_f->causes)
+                stk.push(&r.get().get_flaw());
         }
         return false;
     }

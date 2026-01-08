@@ -497,17 +497,18 @@ namespace riddle
      * @return Tp& The created flaw
      */
     template <typename Tp, typename... Args>
-    std::shared_ptr<Tp> new_flaw(Args &&...args) noexcept
+    Tp &new_flaw(Args &&...args) noexcept
     {
       static_assert(std::is_base_of_v<flaw, Tp>, "Tp must be a subclass of flaw");
-      auto f = std::make_shared<Tp>(std::forward<Args>(args)...);
+      auto f = std::make_unique<Tp>(std::forward<Args>(args)...);
       for (auto &c : f->get_causes())
-        c->preconditions.push_back(f); // this flaw is a precondition of its `c` cause..
-      flaws.emplace_back(f);
+        c.get().preconditions.emplace_back(*f); // this flaw is a precondition of its `c` cause..
+      Tp &ref = *f;
+      flaws.emplace_back(std::move(f));
 #ifdef RIDDLE_ENABLE_LISTENERS
-      flaw_created(*f);
+      flaw_created(ref);
 #endif
-      return f;
+      return ref;
     }
 
     /**
@@ -522,37 +523,37 @@ namespace riddle
     Tp &new_resolver(Args &&...args) noexcept
     {
       static_assert(std::is_base_of_v<resolver, Tp>, "Tp must be a subclass of resolver");
-      auto r = std::make_shared<Tp>(std::forward<Args>(args)...);
-      r->flw.resolvers.emplace_back(r); // register the resolver in its flaw..
-      auto &r_ref = *r;
+      auto r = std::make_unique<Tp>(std::forward<Args>(args)...);
+      r->flw.resolvers.emplace_back(*r); // register the resolver in its flaw..
+      Tp &ref = *r;
       resolvers.emplace_back(std::move(r));
 #ifdef RIDDLE_ENABLE_LISTENERS
-      resolver_created(r_ref);
+      resolver_created(ref);
 #endif
-      return r_ref;
+      return ref;
     }
 
-    void add_causal_link(std::shared_ptr<flaw> f, std::shared_ptr<resolver> r) noexcept;
+    void add_causal_link(flaw &f, resolver &r) noexcept;
 
-    [[nodiscard]] const std::vector<std::shared_ptr<flaw>> &get_flaws() const noexcept { return flaws; }
-    [[nodiscard]] const std::shared_ptr<flaw> &get_current_flaw() const noexcept { return c_flaw; }
-    [[nodiscard]] const std::vector<std::shared_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
-    [[nodiscard]] const std::shared_ptr<resolver> &get_current_resolver() const noexcept { return c_res; }
+    [[nodiscard]] const std::vector<std::unique_ptr<flaw>> &get_flaws() const noexcept { return flaws; }
+    [[nodiscard]] const std::optional<std::reference_wrapper<flaw>> &get_current_flaw() const noexcept { return c_flaw; }
+    [[nodiscard]] const std::vector<std::unique_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
+    [[nodiscard]] const std::optional<std::reference_wrapper<resolver>> &get_current_resolver() const noexcept { return c_res; }
 
     void compute_resolvers(flaw &flw);
-    bool apply_resolver(std::shared_ptr<resolver> res, bool temp_res = false) noexcept;
+    bool apply_resolver(resolver &res, bool temp_res = false) noexcept;
 
   protected:
-    void set_current_flaw(std::shared_ptr<flaw> flw) noexcept
+    void set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw) noexcept
     {
-      c_flaw = std::move(flw);
+      c_flaw = flw;
 #ifdef RIDDLE_ENABLE_LISTENERS
       current_flaw(c_flaw);
 #endif
     }
-    void set_current_resolver(std::shared_ptr<resolver> res) noexcept
+    void set_current_resolver(std::optional<std::reference_wrapper<resolver>> res) noexcept
     {
-      c_res = std::move(res);
+      c_res = res;
 #ifdef RIDDLE_ENABLE_LISTENERS
       current_resolver(c_res);
 #endif
@@ -602,8 +603,8 @@ namespace riddle
     virtual bool mk_ge(arith_expr lhs, arith_expr rhs) noexcept = 0;
     virtual bool mk_gt(arith_expr lhs, arith_expr rhs) noexcept = 0;
 
-    virtual bool mk_eq(string_expr lhs, string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(*lhs) == string_value(*rhs); }
-    virtual bool mk_neq(string_expr lhs, string_expr rhs, [[maybe_unused]] std::shared_ptr<resolver> resolver = nullptr) noexcept { return string_value(*lhs) != string_value(*rhs); }
+    virtual bool mk_eq(string_expr lhs, string_expr rhs) noexcept { return string_value(*lhs) == string_value(*rhs); }
+    virtual bool mk_neq(string_expr lhs, string_expr rhs) noexcept { return string_value(*lhs) != string_value(*rhs); }
 
     virtual bool mk_assign(enum_expr xpr, const utils::enum_val &val) noexcept = 0;
     virtual bool mk_forbid(enum_expr xpr, const utils::enum_val &val) noexcept = 0;
@@ -635,7 +636,7 @@ namespace riddle
      *
      * @param flaw The current flaw.
      */
-    virtual void current_flaw(std::shared_ptr<flaw>) {}
+    virtual void current_flaw(std::optional<std::reference_wrapper<flaw>>) {}
 
     /**
      * @brief Notifies when a resolver has been created.
@@ -652,7 +653,7 @@ namespace riddle
      *
      * @param resolver The current resolver.
      */
-    virtual void current_resolver(std::shared_ptr<resolver>) {}
+    virtual void current_resolver(std::optional<std::reference_wrapper<resolver>>) {}
 
     /**
      * @brief Notifies when a causal link has been added.
@@ -671,10 +672,10 @@ namespace riddle
     std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // The types declared in the core..
     std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // The predicates declared in the core..
     std::vector<std::unique_ptr<compilation_unit>> cus;                               // The compilation units read by the core..
-    std::vector<std::shared_ptr<flaw>> flaws;                                         // The set of flaws
-    std::vector<std::shared_ptr<resolver>> resolvers;                                 // The set of resolvers
-    std::shared_ptr<flaw> c_flaw;                                                     // The current flaw..
-    std::shared_ptr<resolver> c_res;                                                  // The current resolver..
+    std::vector<std::unique_ptr<flaw>> flaws;                                         // The set of flaws
+    std::vector<std::unique_ptr<resolver>> resolvers;                                 // The set of resolvers
+    std::optional<std::reference_wrapper<flaw>> c_flaw;                               // The current flaw..
+    std::optional<std::reference_wrapper<resolver>> c_res;                            // The current resolver..
 
 #ifdef COMPUTE_NAMES
     std::unordered_map<const term *, const std::string> expr_names; // the names of the expressions..
