@@ -61,12 +61,12 @@ namespace riddle
         return j_val;
     }
 
-    atom::atom(flaw &flw, riddle::predicate &pred, bool is_fact, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args, const bool_expr &sigma) noexcept : riddle::atom_term(pred, is_fact, std::move(args)), flw(flw), sigma(sigma) {}
+    atom::atom(flaw &flw, riddle::predicate &pred, bool is_fact, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args, const utils::lit &sigma) noexcept : riddle::atom_term(pred, is_fact, std::move(args)), flw(flw), sigma(sigma) {}
 
     json::json atom::to_json() const noexcept
     {
         auto j_atm = riddle::atom_term::to_json();
-        j_atm["sigma"] = sigma->to_json();
+        j_atm["sigma"] = utils::to_string(sigma);
         return j_atm;
     }
 

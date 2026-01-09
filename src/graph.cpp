@@ -1,9 +1,12 @@
 #include "graph.hpp"
 #include <algorithm>
+#include <numeric>
 #include <stack>
 
 namespace riddle
 {
+    graph::graph(std::string_view name) noexcept : core(name) {}
+
     json::json graph::to_json() const
     {
         json::json j_graph = core::to_json();
@@ -34,24 +37,10 @@ namespace riddle
     {
         f.supports.emplace_back(r);
         r.preconditions.emplace_back(f);
+        new_clause({!r.get_rho(), f.get_phi()});
 #ifdef RIDDLE_ENABLE_LISTENERS
         causal_link_added(f, r);
 #endif
-    }
-
-    void graph::compute_resolvers(flaw &flw) { flw.compute_resolvers(); }
-    bool graph::apply_resolver(resolver &res, bool temp_res) noexcept
-    {
-        if (temp_res)
-        {
-            auto c = c_res;
-            c_res = res;
-            bool applied = res.apply();
-            c_res = c;
-            return applied;
-        }
-        else
-            return res.apply();
     }
 
     void graph::set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw) noexcept
@@ -75,6 +64,32 @@ namespace riddle
 #ifdef RIDDLE_ENABLE_LISTENERS
         flaw_cost_changed(flw);
 #endif
+        std::stack<std::pair<riddle::flaw *, std::unordered_set<riddle::flaw *>>> stk;
+        stk.push({&flw, {}}); // we push the flaw in the stack..
+
+        while (!stk.empty())
+        {
+            auto c_f = stk.top();
+            stk.pop();
+
+            utils::rational c_cost = utils::rational::positive_infinite;
+            if (prop_val(c_f.first->get_phi()) != utils::False && c_f.second.insert(c_f.first).second) // we compute the cost of the flaw as the minimum of the costs of its resolvers..
+                for (const auto &res : c_f.first->get_resolvers())
+                    if (prop_val(res.get().get_rho()) != utils::False)
+                        c_cost = std::min(c_cost, res.get().get_estimated_cost());
+
+            if (c_f.first->get_estimated_cost() != c_cost) // we update the cost of the flaw..
+            {
+                c_f.first->est_cost = c_cost;
+#ifdef RIDDLE_ENABLE_LISTENERS
+                flaw_cost_changed(*c_f.first);
+#endif
+
+                // we propagate the cost to the supported resolvers..
+                for (auto &support : c_f.first->get_supports())
+                    stk.push({&support.get().get_flaw(), c_f.second}); // we push the supported flaw in the stack..
+            }
+        }
     }
 
     flaw::flaw(graph &gr, std::vector<std::reference_wrapper<resolver>> &&cs) : gr(gr), causes(std::move(cs))
@@ -83,11 +98,28 @@ namespace riddle
             supports.emplace_back(c.get());
     }
 
-    void flaw::add_support(resolver &res) noexcept { gr.add_causal_link(*this, res); }
+    utils::lit flaw::get_phi(const std::vector<std::reference_wrapper<riddle::resolver>> &causes) const noexcept
+    {
+        switch (causes.size())
+        {
+        case 0: // No causes, phi is always true..
+            return utils::TRUE_lit;
+        case 1: // Single cause, phi is the rho of the cause..
+            return dynamic_cast<resolver &>(causes.front().get()).get_rho();
+        default: // Combine the causes' rhos into a single phi..
+            auto phi = gr.new_prop();
+            std::vector<utils::lit> rhos;
+            for (auto &r : causes)
+                rhos.push_back(!dynamic_cast<resolver &>(r.get()).get_rho());
+            rhos.push_back(phi);
+            gr.new_clause(std::move(rhos));
+            return phi;
+        }
+    }
 
     json::json flaw::to_json() const
     {
-        json::json j_flaw{{"cost", riddle::to_json(get_estimated_cost())}};
+        json::json j_flaw{{"phi", utils::to_string(get_phi())}, {"cost", riddle::to_json(get_estimated_cost())}};
         if (!causes.empty())
         {
             json::json j_causes(json::json_type::array);
@@ -98,7 +130,11 @@ namespace riddle
         return j_flaw;
     }
 
-    resolver::resolver(flaw &flw, utils::rational &&intrinsic_cost) : flw(flw), intrinsic_cost(intrinsic_cost) {}
+    resolver::resolver(flaw &flw, const utils::lit &rho, utils::rational &&intrinsic_cost) : flw(flw), rho(rho), intrinsic_cost(intrinsic_cost)
+    {
+        if (rho != flw.get_phi())
+            flw.gr.new_clause({!rho, flw.get_phi()});
+    }
 
     utils::rational resolver::get_estimated_cost() const noexcept
     {
@@ -119,7 +155,7 @@ namespace riddle
 
     json::json resolver::to_json() const
     {
-        json::json j_resolver{{"flaw", flw.get_id()}, {"intrinsic_cost", riddle::to_json(intrinsic_cost)}};
+        json::json j_resolver{{"flaw", flw.get_id()}, {"rho", utils::to_string(rho)}, {"intrinsic_cost", riddle::to_json(intrinsic_cost)}};
         if (!preconditions.empty())
         {
             json::json j_preconditions(json::json_type::array);

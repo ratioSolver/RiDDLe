@@ -1,8 +1,7 @@
 #pragma once
 
-#include "rational.hpp"
-#include "json.hpp"
 #include "core.hpp"
+#include "lit.hpp"
 #include <vector>
 #include <cstdint>
 #include <memory>
@@ -14,6 +13,9 @@ namespace riddle
 
   class graph : public core
   {
+    friend class flaw;
+    friend class resolver;
+
   public:
     graph(std::string_view name = "RiDDLe") noexcept;
 
@@ -70,7 +72,6 @@ namespace riddle
      */
     virtual void add_causal_link(flaw &f, resolver &r) noexcept;
 
-    // [[nodiscard]] std::vector<std::unique_ptr<flaw>> &get_flaws() noexcept { return flaws; }
     [[nodiscard]] const std::vector<std::unique_ptr<flaw>> &get_flaws() const noexcept { return flaws; }
     [[nodiscard]] const std::optional<std::reference_wrapper<flaw>> &get_current_flaw() const noexcept { return c_flaw; }
     [[nodiscard]] const std::vector<std::unique_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
@@ -79,16 +80,26 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const override;
 
   protected:
-    void compute_resolvers(flaw &flw);
-    bool apply_resolver(resolver &res, bool temp_res = false) noexcept;
-
-    void set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw) noexcept;
-    void set_current_resolver(std::optional<std::reference_wrapper<resolver>> res) noexcept;
+    void set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw = std::nullopt) noexcept;
+    void set_current_resolver(std::optional<std::reference_wrapper<resolver>> res = std::nullopt) noexcept;
 
     void set_flaw_cost(flaw &flw, utils::rational &cost) noexcept;
 
+    [[nodiscard]] virtual utils::var new_prop() noexcept = 0;
+    [[nodiscard]] virtual utils::lbool prop_val(const utils::lit &l) const noexcept = 0;
+    virtual void new_clause(std::vector<utils::lit> &&lits) noexcept = 0;
+
 #ifdef RIDDLE_ENABLE_LISTENERS
   private:
+    /**
+     * @brief This function is called when the state changes.
+     *
+     * This function should be overridden by derived classes to handle the state change event.
+     *
+     * @note This is a virtual function and can be overridden by derived classes.
+     */
+    virtual void state_changed() {}
+
     /**
      * @brief Notifies when a flaw has been created.
      *
@@ -97,6 +108,14 @@ namespace riddle
      * @param flaw The flaw that has been created.
      */
     virtual void flaw_created(const flaw &) {}
+    /**
+     * @brief Notifies when the state of a flaw has changed.
+     *
+     * This function is called when the state of a flaw has changed. It is a virtual function that can be overridden by derived classes to perform specific actions when a flaw's state changes.
+     *
+     * @param flaw The flaw whose state has changed.
+     */
+    virtual void flaw_state_changed(const flaw &) {}
     /**
      * @brief Notifies when the cost of a flaw has changed.
      *
@@ -122,6 +141,14 @@ namespace riddle
      * @param resolver The resolver that has been created.
      */
     virtual void resolver_created(const resolver &) {}
+    /**
+     * @brief Notifies when the state of a resolver has changed.
+     *
+     * This function is called when the state of a resolver has changed. It is a virtual function that can be overridden by derived classes to perform specific actions when a resolver's state changes.
+     *
+     * @param resolver The resolver whose state has changed.
+     */
+    virtual void resolver_state_changed(const resolver &) {}
     /**
      * @brief Notifies when the current resolver has changed.
      *
@@ -152,6 +179,7 @@ namespace riddle
   class flaw
   {
     friend class graph;
+    friend class resolver;
 
   public:
     flaw(graph &gr, std::optional<std::reference_wrapper<resolver>> cause) : flaw(gr, cause.has_value() ? std::vector<std::reference_wrapper<resolver>>{cause.value()} : std::vector<std::reference_wrapper<resolver>>{}) {}
@@ -162,6 +190,10 @@ namespace riddle
     [[nodiscard]] uintptr_t get_id() const noexcept { return reinterpret_cast<uintptr_t>(this); }
 
     [[nodiscard]] graph &get_graph() const noexcept { return gr; }
+
+    [[nodiscard]] const utils::lit &get_phi() const noexcept { return phi; }
+    [[nodiscard]] utils::lbool get_state() const noexcept { return gr.prop_val(phi); }
+
     [[nodiscard]] const utils::rational &get_estimated_cost() const noexcept { return est_cost; }
 
     [[nodiscard]] const std::vector<std::reference_wrapper<resolver>> &get_causes() const noexcept { return causes; }
@@ -171,10 +203,12 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const;
 
   protected:
+    utils::lit get_phi(const std::vector<std::reference_wrapper<riddle::resolver>> &causes) const noexcept;
+
     template <typename Tp, typename... Args>
     Tp &new_resolver(Args &&...args) noexcept { return gr.new_resolver<Tp>(std::forward<Args>(args)...); }
 
-    void add_support(resolver &res) noexcept;
+    void add_support(resolver &res) noexcept { gr.add_causal_link(*this, res); }
 
   private:
     virtual void compute_resolvers() = 0;
@@ -184,6 +218,7 @@ namespace riddle
     graph &gr; // the graph this flaw belongs to..
 
   private:
+    const utils::lit phi;
     utils::rational est_cost = utils::rational::positive_infinite; // the estimated cost of this flaw..
     std::vector<std::reference_wrapper<resolver>> causes;          // the causes that led to this flaw..
     std::vector<std::reference_wrapper<resolver>> supports;        // the resolvers supported by this flaw..
@@ -196,13 +231,17 @@ namespace riddle
     friend class flaw;
 
   public:
-    resolver(flaw &flw, utils::rational &&intrinsic_cost);
+    resolver(flaw &flw, utils::rational &&intrinsic_cost) : resolver(flw, flw.get_graph().new_prop(), std::move(intrinsic_cost)) {}
+    resolver(flaw &flw, const utils::lit &rho, utils::rational &&intrinsic_cost);
     resolver(const resolver &) = delete;
     virtual ~resolver() = default;
 
     [[nodiscard]] uintptr_t get_id() const noexcept { return reinterpret_cast<uintptr_t>(this); }
 
     [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
+
+    [[nodiscard]] const utils::lit &get_rho() const noexcept { return rho; }
+    [[nodiscard]] utils::lbool get_state() const noexcept { return flw.get_graph().prop_val(rho); }
 
     [[nodiscard]] const utils::rational &get_intrinsic_cost() const noexcept { return intrinsic_cost; }
     [[nodiscard]] const std::vector<std::reference_wrapper<flaw>> &get_preconditions() const noexcept { return preconditions; }
@@ -218,6 +257,7 @@ namespace riddle
     flaw &flw; // the flaw solved by this resolver..
 
   private:
+    const utils::lit rho;
     const utils::rational intrinsic_cost;                    // The intrinsic cost of this resolver..
     std::vector<std::reference_wrapper<flaw>> preconditions; // The preconditions of this resolver..
   };
