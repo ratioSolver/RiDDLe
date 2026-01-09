@@ -2,7 +2,6 @@
 
 #include "env.hpp"
 #include "enum.hpp"
-#include "resolver.hpp"
 #include <vector>
 
 namespace riddle
@@ -209,25 +208,12 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const noexcept override;
   };
 
-  class select_value : virtual public resolver
-  {
-  public:
-    select_value(flaw &flw, expr val) noexcept;
-
-    [[nodiscard]] expr get_value() const noexcept { return val; }
-
-  private:
-    expr val;
-  };
-
   class enum_term : public term, public env
   {
   public:
-    enum_term(flaw &flw, component_type &tp, std::vector<expr> &&values) noexcept;
+    enum_term(component_type &tp, std::vector<expr> &&values) noexcept;
 
     [[nodiscard]] riddle::expr get(std::string_view name) override;
-
-    [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
 
     [[nodiscard]] const std::vector<expr> &get_values() const noexcept { return values; }
 
@@ -236,7 +222,6 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
-    flaw &flw;
     std::vector<expr> values;
   };
 
@@ -252,9 +237,7 @@ namespace riddle
   class atom_term : public term, public env
   {
   public:
-    atom_term(flaw &flw, predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {}) noexcept;
-
-    [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
+    atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args = {}) noexcept;
 
     [[nodiscard]] bool is_fact() const { return fact; }
 
@@ -266,7 +249,6 @@ namespace riddle
     static env &atom_parent(const predicate &t, const std::map<std::string, expr, std::less<>> &args);
 
   private:
-    flaw &flw; // the flaw this atom belongs to
     bool fact; // whether the atom is a fact
   };
 

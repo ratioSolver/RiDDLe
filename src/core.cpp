@@ -1,5 +1,4 @@
 #include "core.hpp"
-#include "flaw.hpp"
 #include "timeline.hpp"
 #include <sstream>
 #include <fstream>
@@ -367,25 +366,6 @@ namespace riddle
         if (!items.empty()) // we add the fields of the core..
             j_core["exprs"] = env::to_json();
 
-        if (!flaws.empty())
-        {
-            json::json j_flaws;
-            for (const auto &f : flaws)
-                j_flaws[std::to_string(f->get_id())] = f->to_json();
-            j_core["flaws"] = std::move(j_flaws);
-        }
-        if (!resolvers.empty())
-        {
-            json::json j_resolvers;
-            for (const auto &r : resolvers)
-                j_resolvers[std::to_string(r->get_id())] = r->to_json();
-            j_core["resolvers"] = std::move(j_resolvers);
-        }
-        if (c_flaw)
-            j_core["current_flaw"] = c_flaw->get().get_id();
-        if (c_res)
-            j_core["current_resolver"] = c_res->get().get_id();
-
         // for each pulse, the root atoms starting at that pulse..
         std::map<utils::inf_rational, std::set<atom_term *>> starting_atoms;
         // all the pulses of the solver timeline..
@@ -456,53 +436,6 @@ namespace riddle
         std::string name = t->get_name();
         if (!types.emplace(name, std::move(t)).second)
             throw std::invalid_argument("type `" + name + "` already exists");
-    }
-
-    void core::add_causal_link(flaw &f, resolver &r) noexcept
-    {
-        f.supports.emplace_back(r);
-        r.preconditions.emplace_back(f);
-#ifdef RIDDLE_ENABLE_LISTENERS
-        causal_link_added(f, r);
-#endif
-    }
-
-    void core::compute_resolvers(flaw &flw) { flw.compute_resolvers(); }
-    bool core::apply_resolver(resolver &res, bool temp_res) noexcept
-    {
-        if (temp_res)
-        {
-            auto c = c_res;
-            c_res = res;
-            bool applied = res.apply();
-            c_res = c;
-            return applied;
-        }
-        else
-            return res.apply();
-    }
-
-    void core::set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw) noexcept
-    {
-        c_flaw = flw;
-#ifdef RIDDLE_ENABLE_LISTENERS
-        current_flaw(c_flaw);
-#endif
-    }
-    void core::set_current_resolver(std::optional<std::reference_wrapper<resolver>> res) noexcept
-    {
-        c_res = res;
-#ifdef RIDDLE_ENABLE_LISTENERS
-        current_resolver(c_res);
-#endif
-    }
-
-    void core::set_flaw_cost(flaw &flw, utils::rational &cost) noexcept
-    {
-        flw.est_cost = cost;
-#ifdef RIDDLE_ENABLE_LISTENERS
-        flaw_cost_changed(flw);
-#endif
     }
 
 #ifdef COMPUTE_NAMES

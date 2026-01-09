@@ -410,7 +410,7 @@ namespace riddle
     {
         std::vector<std::reference_wrapper<resolver>> causes;
         for (const auto &atm : atms)
-            for (const auto &c : atm->get_flaw().get_causes())
+            for (const auto &c : static_cast<atom &>(*atm).get_flaw().get_causes())
                 causes.push_back(c.get());
         return causes;
     }

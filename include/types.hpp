@@ -2,7 +2,7 @@
 
 #include "type.hpp"
 #include "timeline.hpp"
-#include "flaw.hpp"
+#include "graph.hpp"
 
 namespace riddle
 {

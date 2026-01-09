@@ -1,5 +1,4 @@
 #include "core.hpp"
-#include "flaw.hpp"
 #include <algorithm>
 #include <cassert>
 
@@ -59,9 +58,7 @@ namespace riddle
     string_term::string_term(string_type &tp) noexcept : term(tp) {}
     json::json string_term::to_json() const noexcept { return {{"type", get_type().get_name()}, {"val", get_type().get_scope().get_core().string_value(*this)}}; }
 
-    select_value::select_value(flaw &flw, expr v) noexcept : resolver(flw, utils::rational(1)), val(std::move(v)) {}
-
-    enum_term::enum_term(flaw &flw, component_type &tp, std::vector<expr> &&vals) noexcept : term(tp), env(tp.get_core(), tp.get_core()), flw(flw), values(std::move(vals)) { assert(!values.empty()); }
+    enum_term::enum_term(component_type &tp, std::vector<expr> &&vals) noexcept : term(tp), env(tp.get_core(), tp.get_core()), values(std::move(vals)) { assert(!values.empty()); }
     expr enum_term::get(std::string_view name)
     {
         assert(get_values().size() > 1); // should not be a singleton..
@@ -88,15 +85,8 @@ namespace riddle
         { // we create a new boolean item..
             auto b = get_core().new_bool();
             // we force the variable to assume the same value of the referenced bools according to the value of the enum..
-            if (get_flaw().get_resolvers().empty())
-                get_core().compute_resolvers(get_flaw());
-            for (auto &res : get_flaw().get_resolvers())
-            {
-                auto tmp_res = get_core().c_res;
-                get_core().c_res = res;
-                get_core().assert_expr(get_core().new_eq(b, std::dynamic_pointer_cast<env>(dynamic_cast<select_value &>(res.get()).get_value())->get(name)));
-                get_core().c_res = tmp_res;
-            }
+            for (auto &val : values)
+                get_core().new_eq(*this, *val, std::dynamic_pointer_cast<env>(val)->get(name), b);
             items.emplace(name, b);
             return b;
         }
@@ -117,15 +107,8 @@ namespace riddle
                 else
                     a = get_core().new_real();
                 // we force the variable to assume the same value of the referenced arithmetics according to the value of the enum..
-                if (get_flaw().get_resolvers().empty())
-                    get_core().compute_resolvers(get_flaw());
-                for (auto &res : get_flaw().get_resolvers())
-                {
-                    auto tmp_res = get_core().c_res;
-                    get_core().c_res = res;
-                    get_core().assert_expr(get_core().new_eq(a, std::dynamic_pointer_cast<env>(dynamic_cast<select_value &>(res.get()).get_value())->get(name)));
-                    get_core().c_res = tmp_res;
-                }
+                for (auto &val : values)
+                    get_core().new_eq(*this, *val, std::dynamic_pointer_cast<env>(val)->get(name), a);
                 items.emplace(name, a);
                 return a;
             }
@@ -136,15 +119,8 @@ namespace riddle
             for (const auto &val : matching_values)
                 vals.push_back(val);
             auto e = get_core().new_enum(static_cast<component_type &>(tp), std::move(vals));
-            if (get_flaw().get_resolvers().empty())
-                get_core().compute_resolvers(get_flaw());
-            for (auto &res : get_flaw().get_resolvers())
-            {
-                auto tmp_res = get_core().c_res;
-                get_core().c_res = res;
-                get_core().assert_expr(get_core().new_eq(e, std::dynamic_pointer_cast<env>(dynamic_cast<select_value &>(res.get()).get_value())->get(name)));
-                get_core().c_res = tmp_res;
-            }
+            for (auto &val : values)
+                get_core().new_eq(*this, *val, std::dynamic_pointer_cast<env>(val)->get(name), e);
             items.emplace(name, e);
             return e;
         }
@@ -200,7 +176,7 @@ namespace riddle
         return j_itm;
     }
 
-    atom_term::atom_term(flaw &flw, predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) noexcept : term(t), env(t.get_core(), atom_parent(t, args), std::move(args)), flw(flw), fact(fact) {}
+    atom_term::atom_term(predicate &t, bool fact, std::map<std::string, expr, std::less<>> &&args) noexcept : term(t), env(t.get_core(), atom_parent(t, args), std::move(args)), fact(fact) {}
     atom_state atom_term::get_state() const noexcept { return get_type().get_scope().get_core().get_atom_state(*this); }
     json::json atom_term::to_json() const noexcept
     {

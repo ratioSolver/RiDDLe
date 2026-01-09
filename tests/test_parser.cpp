@@ -1,35 +1,6 @@
 #include "core.hpp"
-#include "flaw.hpp"
 #include "items.hpp"
 #include <cassert>
-
-class test_enum_flaw : public riddle::flaw
-{
-public:
-    test_enum_flaw(riddle::core &cr, riddle::component_type &tp, std::vector<riddle::expr> &&vals) noexcept : riddle::flaw(cr, std::nullopt), itm(std::make_shared<riddle::enum_item>(*this, tp, std::move(vals), 0)) {}
-
-    [[nodiscard]] riddle::enum_expr get_enum() const noexcept { return itm; }
-
-private:
-    void compute_resolvers() override {}
-
-private:
-    riddle::enum_expr itm;
-};
-
-class test_atom_flaw : public riddle::flaw
-{
-public:
-    test_atom_flaw(riddle::core &cr, bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) noexcept : riddle::flaw(cr, std::nullopt), atm(std::make_shared<riddle::atom>(*this, pred, is_fact, std::move(args), cr.new_bool())) {}
-
-    [[nodiscard]] riddle::atom_expr get_atom() const noexcept { return atm; }
-
-private:
-    void compute_resolvers() override {}
-
-private:
-    riddle::atom_expr atm;
-};
 
 class test_core : public riddle::core
 {
@@ -55,12 +26,7 @@ public:
     riddle::string_expr new_string(std::string &&) override { return std::make_shared<riddle::string_item>(static_cast<riddle::string_type &>(get_type(riddle::string_kw)), ""); }
     riddle::string_expr new_string() override { return new_string(""); }
     std::string string_value(const riddle::string_term &) const noexcept override { return ""; }
-    riddle::expr new_enum(riddle::component_type &tp, std::vector<riddle::expr> &&values) override
-    {
-        auto flw = std::make_shared<test_enum_flaw>(*this, tp, std::move(values));
-        flaws.emplace_back(flw);
-        return flw->get_enum();
-    }
+    riddle::expr new_enum(riddle::component_type &tp, std::vector<riddle::expr> &&values) override { return std::make_shared<riddle::enum_term>(tp, std::move(values)); }
     std::unordered_set<riddle::expr> enum_value(const riddle::enum_term &xpr) const noexcept override { return {xpr.get_values()[0]}; }
 
     riddle::arith_expr new_negation(riddle::arith_expr) override { return new_int(0); }
@@ -73,12 +39,8 @@ public:
     void new_disjunction(std::vector<std::unique_ptr<riddle::conjunction>> &&) override {}
     void new_clause(std::vector<riddle::bool_expr> &&) override {}
 
-    riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) override
-    {
-        auto flw = std::make_shared<test_atom_flaw>(*this, is_fact, pred, std::move(args));
-        flaws.emplace_back(flw);
-        return flw->get_atom();
-    }
+    riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) override { return std::make_shared<riddle::atom_term>(pred, is_fact, std::move(args)); }
+    void new_eq(const riddle::enum_term &, const utils::enum_val &, riddle::expr, riddle::expr) noexcept override {}
     riddle::atom_state get_atom_state(const riddle::atom_term &) const noexcept override { return riddle::atom_state::active; }
 
 private:

@@ -21,7 +21,7 @@ option(COMPUTE_NAMES "Compute RiDDLe names" OFF)
 message(STATUS "Compute RiDDLe names: ${COMPUTE_NAMES}")
 message(STATUS "Enable listener functionality in RiDDLe: ${RIDDLE_ENABLE_LISTENERS}")
 
-add_library(RiDDLe src/core.cpp src/scope.cpp src/env.cpp src/type.cpp src/timeline.cpp src/constructor.cpp src/method.cpp src/term.cpp src/conjunction.cpp src/declaration.cpp src/statement.cpp src/expression.cpp src/compilation_unit.cpp src/lexer.cpp src/parser.cpp src/items.cpp src/types.cpp src/flaw.cpp src/resolver.cpp)
+add_library(RiDDLe src/core.cpp src/scope.cpp src/env.cpp src/type.cpp src/timeline.cpp src/constructor.cpp src/method.cpp src/term.cpp src/conjunction.cpp src/declaration.cpp src/statement.cpp src/expression.cpp src/compilation_unit.cpp src/lexer.cpp src/parser.cpp src/items.cpp src/types.cpp src/graph.cpp)
 add_library(ratio::RiDDLe ALIAS RiDDLe)
 target_compile_features(RiDDLe PUBLIC cxx_std_17)
 target_include_directories(RiDDLe PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)

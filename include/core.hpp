@@ -26,7 +26,6 @@ namespace riddle
     friend class component_type;
 #endif
     friend class enum_term;
-    friend class flaw;
 
   public:
     core(std::string_view name = "RiDDLe") noexcept;
@@ -455,65 +454,6 @@ namespace riddle
 
     [[nodiscard]] expr get(std::string_view name) override;
 
-    /**
-     * @brief Creates a new flaw of the given type.
-     *
-     * @tparam Tp The type of the flaw to create.
-     * @tparam Args The types of the arguments to pass to the flaw
-     * @param args The arguments to pass to the flaw
-     * @return Tp& The created flaw
-     */
-    template <typename Tp, typename... Args>
-    Tp &new_flaw(Args &&...args) noexcept
-    {
-      static_assert(std::is_base_of_v<flaw, Tp>, "Tp must be a subclass of flaw");
-      auto f = std::make_unique<Tp>(std::forward<Args>(args)...);
-      Tp &ref = *f;
-      flaws.emplace_back(std::move(f));
-#ifdef RIDDLE_ENABLE_LISTENERS
-      flaw_created(ref);
-#endif
-      return ref;
-    }
-
-    /**
-     * @brief Creates a new resolver of the given type.
-     *
-     * @tparam Tp The type of the resolver to create.
-     * @tparam Args The types of the arguments to pass to the resolver
-     * @param args The arguments to pass to the resolver
-     * @return Tp& The created resolver
-     */
-    template <typename Tp, typename... Args>
-    Tp &new_resolver(Args &&...args) noexcept
-    {
-      static_assert(std::is_base_of_v<resolver, Tp>, "Tp must be a subclass of resolver");
-      auto r = std::make_unique<Tp>(std::forward<Args>(args)...);
-      r->flw.resolvers.emplace_back(*r); // register the resolver in its flaw..
-      Tp &ref = *r;
-      resolvers.emplace_back(std::move(r));
-#ifdef RIDDLE_ENABLE_LISTENERS
-      resolver_created(ref);
-#endif
-      return ref;
-    }
-
-    /**
-     * @brief Adds a causal link between a flaw and a resolver.
-     *
-     * This function establishes a causal relationship between the specified flaw and resolver.
-     *
-     * @param f The flaw to which the causal link is to be added.
-     * @param r The resolver that is the cause of the flaw.
-     */
-    virtual void add_causal_link(flaw &f, resolver &r) noexcept;
-
-    // [[nodiscard]] std::vector<std::unique_ptr<flaw>> &get_flaws() noexcept { return flaws; }
-    [[nodiscard]] const std::vector<std::unique_ptr<flaw>> &get_flaws() const noexcept { return flaws; }
-    [[nodiscard]] const std::optional<std::reference_wrapper<flaw>> &get_current_flaw() const noexcept { return c_flaw; }
-    [[nodiscard]] const std::vector<std::unique_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
-    [[nodiscard]] const std::optional<std::reference_wrapper<resolver>> &get_current_resolver() const noexcept { return c_res; }
-
     [[nodiscard]] virtual json::json to_json() const override;
 
   protected:
@@ -547,14 +487,6 @@ namespace riddle
      */
     void add_type(std::unique_ptr<type> tp);
 
-    void compute_resolvers(flaw &flw);
-    bool apply_resolver(resolver &res, bool temp_res = false) noexcept;
-
-    void set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw) noexcept;
-    void set_current_resolver(std::optional<std::reference_wrapper<resolver>> res) noexcept;
-
-    void set_flaw_cost(flaw &flw, utils::rational &cost) noexcept;
-
 #ifdef COMPUTE_NAMES
   protected:
     /**
@@ -586,6 +518,8 @@ namespace riddle
 #endif
 
   private:
+    virtual void new_eq(const enum_term &xpr, const utils::enum_val &val, expr lhs, expr rhs) noexcept = 0;
+
     [[nodiscard]] virtual atom_expr create_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {}) = 0;
 
     virtual bool mk_assign(bool_expr xpr, utils::lbool val) noexcept = 0;
@@ -607,71 +541,12 @@ namespace riddle
     virtual bool mk_eq(enum_expr lhs, enum_expr rhs) noexcept = 0;
     virtual bool mk_neq(enum_expr lhs, enum_expr rhs) noexcept = 0;
 
-#ifdef RIDDLE_ENABLE_LISTENERS
-  private:
-    /**
-     * @brief Notifies when a flaw has been created.
-     *
-     * This function is called when a flaw has been created. It is a virtual function that can be overridden by derived classes to perform specific actions when a flaw is created.
-     *
-     * @param flaw The flaw that has been created.
-     */
-    virtual void flaw_created(const flaw &) {}
-    /**
-     * @brief Notifies when the cost of a flaw has changed.
-     *
-     * This function is called when the cost of a flaw has changed. It is a virtual function that can be overridden by derived classes to perform specific actions when a flaw's cost changes.
-     *
-     * @param flaw The flaw whose cost has changed.
-     */
-    virtual void flaw_cost_changed(const flaw &) {}
-    /**
-     * @brief Notifies when the current flaw has changed.
-     *
-     * This function is called when the current flaw has changed. It is a virtual function that can be overridden by derived classes to perform specific actions when the current flaw changes.
-     *
-     * @param flaw The current flaw.
-     */
-    virtual void current_flaw(std::optional<std::reference_wrapper<flaw>>) {}
-
-    /**
-     * @brief Notifies when a resolver has been created.
-     *
-     * This function is called when a resolver has been created. It is a virtual function that can be overridden by derived classes to perform specific actions when a resolver is created.
-     *
-     * @param resolver The resolver that has been created.
-     */
-    virtual void resolver_created(const resolver &) {}
-    /**
-     * @brief Notifies when the current resolver has changed.
-     *
-     * This function is called when the current resolver has changed. It is a virtual function that can be overridden by derived classes to perform specific actions when the current resolver changes.
-     *
-     * @param resolver The current resolver.
-     */
-    virtual void current_resolver(std::optional<std::reference_wrapper<resolver>>) {}
-
-    /**
-     * @brief Notifies when a causal link has been added.
-     *
-     * This function is called when a causal link has been added. It is a virtual function that can be overridden by derived classes to perform specific actions when a causal link is added.
-     *
-     * @param flaw The flaw that is the source of the causal link.
-     * @param resolver The resolver that is the destination of the causal link.
-     */
-    virtual void causal_link_added(const flaw &, const resolver &) {}
-#endif
-
   private:
     const std::string name;                                                           // The name of the core..
     std::map<std::string, std::vector<std::unique_ptr<method>>, std::less<>> methods; // The methods declared in the core..
     std::map<std::string, std::unique_ptr<type>, std::less<>> types;                  // The types declared in the core..
     std::map<std::string, std::unique_ptr<predicate>, std::less<>> predicates;        // The predicates declared in the core..
     std::vector<std::unique_ptr<compilation_unit>> cus;                               // The compilation units read by the core..
-    std::vector<std::unique_ptr<flaw>> flaws;                                         // The set of flaws
-    std::vector<std::unique_ptr<resolver>> resolvers;                                 // The set of resolvers
-    std::optional<std::reference_wrapper<flaw>> c_flaw;                               // The current flaw..
-    std::optional<std::reference_wrapper<resolver>> c_res;                            // The current resolver..
 
 #ifdef COMPUTE_NAMES
     std::unordered_map<const term *, const std::string> expr_names; // the names of the expressions..

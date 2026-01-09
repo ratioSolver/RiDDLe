@@ -3,6 +3,7 @@
 #include "term.hpp"
 #include "lit.hpp"
 #include "lin.hpp"
+#include "graph.hpp"
 #include <unordered_map>
 
 namespace riddle
@@ -55,6 +56,8 @@ namespace riddle
   public:
     enum_item(flaw &flw, component_type &tp, std::vector<expr> &&values, utils::var ev) noexcept;
 
+    [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
+
     [[nodiscard]] const utils::var &get_var() const noexcept { return var; }
 
     [[nodiscard]] std::string to_string() const noexcept override;
@@ -62,6 +65,7 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
+    flaw &flw;
     const utils::var var;
   };
 
@@ -70,6 +74,8 @@ namespace riddle
   public:
     sat_enum_item(flaw &flw, component_type &tp, std::vector<expr> &&values, std::vector<utils::lit> &&lits) noexcept;
 
+    [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
+
     [[nodiscard]] bool has_lit(const utils::enum_val &val) const noexcept { return domain.find(&val) != domain.end(); }
 
     [[nodiscard]] const utils::lit &get_lit(const utils::enum_val &val) const noexcept { return domain.at(&val); }
@@ -77,6 +83,7 @@ namespace riddle
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
+    flaw &flw;
     std::unordered_map<const utils::enum_val *, const utils::lit> domain;
   };
 
@@ -85,11 +92,14 @@ namespace riddle
   public:
     atom(flaw &flw, riddle::predicate &pred, bool is_fact, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args, const bool_expr &sigma) noexcept;
 
+    [[nodiscard]] flaw &get_flaw() const noexcept { return flw; }
+
     [[nodiscard]] const bool_expr &get_sigma() const noexcept { return sigma; }
 
     [[nodiscard]] virtual json::json to_json() const noexcept override;
 
   private:
+    flaw &flw;
     bool_expr sigma;
   };
 
