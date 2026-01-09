@@ -40,7 +40,7 @@ public:
     void new_clause(std::vector<riddle::bool_expr> &&) override {}
 
     riddle::atom_expr create_atom(bool is_fact, riddle::predicate &pred, std::map<std::string, std::shared_ptr<riddle::term>, std::less<>> &&args) override { return std::make_shared<riddle::atom_term>(pred, is_fact, std::move(args)); }
-    void new_eq(const riddle::enum_term &, const utils::enum_val &, riddle::expr, riddle::expr) noexcept override {}
+    void new_enum_eq(const riddle::enum_term &, const utils::enum_val &, riddle::expr, riddle::expr) noexcept override {}
     riddle::atom_state get_atom_state(const riddle::atom_term &) const noexcept override { return riddle::atom_state::active; }
 
 private:

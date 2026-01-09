@@ -86,7 +86,7 @@ namespace riddle
             auto b = get_core().new_bool();
             // we force the variable to assume the same value of the referenced bools according to the value of the enum..
             for (auto &val : values)
-                get_core().new_eq(*this, *val, std::dynamic_pointer_cast<env>(val)->get(name), b);
+                get_core().new_enum_eq(*this, *val, std::dynamic_pointer_cast<env>(val)->get(name), b);
             items.emplace(name, b);
             return b;
         }
@@ -108,7 +108,7 @@ namespace riddle
                     a = get_core().new_real();
                 // we force the variable to assume the same value of the referenced arithmetics according to the value of the enum..
                 for (auto &val : values)
-                    get_core().new_eq(*this, *val, std::dynamic_pointer_cast<env>(val)->get(name), a);
+                    get_core().new_enum_eq(*this, *val, std::dynamic_pointer_cast<env>(val)->get(name), a);
                 items.emplace(name, a);
                 return a;
             }
@@ -120,7 +120,7 @@ namespace riddle
                 vals.push_back(val);
             auto e = get_core().new_enum(static_cast<component_type &>(tp), std::move(vals));
             for (auto &val : values)
-                get_core().new_eq(*this, *val, std::dynamic_pointer_cast<env>(val)->get(name), e);
+                get_core().new_enum_eq(*this, *val, std::dynamic_pointer_cast<env>(val)->get(name), e);
             items.emplace(name, e);
             return e;
         }

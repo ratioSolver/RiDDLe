@@ -518,7 +518,7 @@ namespace riddle
 #endif
 
   private:
-    virtual void new_eq(const enum_term &xpr, const utils::enum_val &val, expr lhs, expr rhs) noexcept = 0;
+    virtual void new_enum_eq(const enum_term &xpr, const utils::enum_val &val, expr lhs, expr rhs) noexcept = 0;
 
     [[nodiscard]] virtual atom_expr create_atom(bool is_fact, predicate &pred, std::map<std::string, expr, std::less<>> &&args = {}) = 0;
 
