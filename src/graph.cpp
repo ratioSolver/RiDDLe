@@ -1,4 +1,5 @@
 #include "graph.hpp"
+#include "items.hpp"
 #include <algorithm>
 #include <numeric>
 #include <stack>
@@ -6,6 +7,19 @@
 namespace riddle
 {
     graph::graph(std::string_view name) noexcept : core(name) {}
+
+    atom_state graph::get_atom_state(const atom_term &atm) const noexcept
+    {
+        switch (prop_val(static_cast<const atom &>(atm).get_sigma()))
+        {
+        case utils::True:
+            return atom_state::active;
+        case utils::False:
+            return atom_state::unified;
+        default:
+            return atom_state::inactive;
+        }
+    }
 
     json::json graph::to_json() const
     {
@@ -58,7 +72,7 @@ namespace riddle
 #endif
     }
 
-    void graph::set_flaw_cost(flaw &flw, utils::rational &cost) noexcept
+    void graph::set_flaw_cost(flaw &flw, const utils::rational &cost) noexcept
     {
         flw.est_cost = cost;
 #ifdef RIDDLE_ENABLE_LISTENERS
@@ -105,12 +119,12 @@ namespace riddle
         case 0: // No causes, phi is always true..
             return utils::TRUE_lit;
         case 1: // Single cause, phi is the rho of the cause..
-            return dynamic_cast<resolver &>(causes.front().get()).get_rho();
+            return causes.front().get().get_rho();
         default: // Combine the causes' rhos into a single phi..
             auto phi = gr.new_prop();
             std::vector<utils::lit> rhos;
             for (auto &r : causes)
-                rhos.push_back(!dynamic_cast<resolver &>(r.get()).get_rho());
+                rhos.push_back(!r.get().get_rho());
             rhos.push_back(phi);
             gr.new_clause(std::move(rhos));
             return phi;

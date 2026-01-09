@@ -70,12 +70,14 @@ namespace riddle
      * @param f The flaw to which the causal link is to be added.
      * @param r The resolver that is the cause of the flaw.
      */
-    virtual void add_causal_link(flaw &f, resolver &r) noexcept;
+    void add_causal_link(flaw &f, resolver &r) noexcept;
 
     [[nodiscard]] const std::vector<std::unique_ptr<flaw>> &get_flaws() const noexcept { return flaws; }
     [[nodiscard]] const std::optional<std::reference_wrapper<flaw>> &get_current_flaw() const noexcept { return c_flaw; }
     [[nodiscard]] const std::vector<std::unique_ptr<resolver>> &get_resolvers() const noexcept { return resolvers; }
     [[nodiscard]] const std::optional<std::reference_wrapper<resolver>> &get_current_resolver() const noexcept { return c_res; }
+
+    [[nodiscard]] atom_state get_atom_state(const atom_term &atm) const noexcept override;
 
     [[nodiscard]] virtual json::json to_json() const override;
 
@@ -83,7 +85,7 @@ namespace riddle
     void set_current_flaw(std::optional<std::reference_wrapper<flaw>> flw = std::nullopt) noexcept;
     void set_current_resolver(std::optional<std::reference_wrapper<resolver>> res = std::nullopt) noexcept;
 
-    void set_flaw_cost(flaw &flw, utils::rational &cost) noexcept;
+    void set_flaw_cost(flaw &flw, const utils::rational &cost) noexcept;
 
     [[nodiscard]] virtual utils::var new_prop() noexcept = 0;
     [[nodiscard]] virtual utils::lbool prop_val(const utils::lit &l) const noexcept = 0;
