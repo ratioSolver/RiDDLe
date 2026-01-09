@@ -506,7 +506,7 @@ namespace riddle
      * @param f The flaw to which the causal link is to be added.
      * @param r The resolver that is the cause of the flaw.
      */
-    void add_causal_link(flaw &f, resolver &r) noexcept;
+    virtual void add_causal_link(flaw &f, resolver &r) noexcept;
 
     // [[nodiscard]] std::vector<std::unique_ptr<flaw>> &get_flaws() noexcept { return flaws; }
     [[nodiscard]] const std::vector<std::unique_ptr<flaw>> &get_flaws() const noexcept { return flaws; }

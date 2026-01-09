@@ -10,15 +10,6 @@ namespace riddle
         for (auto &c : causes)
             supports.emplace_back(c.get());
     }
-    flaw::flaw(core &cr, std::optional<std::reference_wrapper<resolver>> cause) : cr(cr)
-    {
-        if (cause.has_value())
-        {
-            causes.emplace_back(cause.value());
-            supports.emplace_back(cause.value());
-            cause.value().get().preconditions.emplace_back(*this);
-        }
-    }
 
     void flaw::add_support(resolver &res) noexcept { cr.add_causal_link(*this, res); }
 

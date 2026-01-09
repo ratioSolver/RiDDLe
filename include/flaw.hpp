@@ -24,8 +24,8 @@ namespace riddle
     friend class core;
 
   public:
+    flaw(core &cr, std::optional<std::reference_wrapper<resolver>> cause) : flaw(cr, cause.has_value() ? std::vector<std::reference_wrapper<resolver>>{cause.value()} : std::vector<std::reference_wrapper<resolver>>{}) {}
     flaw(core &cr, std::vector<std::reference_wrapper<resolver>> &&causes);
-    flaw(core &cr, std::optional<std::reference_wrapper<resolver>> cause);
     flaw(const flaw &) = delete;
     virtual ~flaw() = default;
 
