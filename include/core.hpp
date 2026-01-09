@@ -582,7 +582,7 @@ namespace riddle
      * This function recalculates or updates the names based on the current state.
      * It is guaranteed not to throw any exceptions.
      */
-    void recompute_names() noexcept;
+    void compute_names() noexcept;
 #endif
 
   private:

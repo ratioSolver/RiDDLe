@@ -8,14 +8,6 @@
 #include <algorithm>
 #include <cassert>
 
-#ifdef COMPUTE_NAMES
-#include <unordered_map>
-
-#define RECOMPUTE_NAMES() recompute_names()
-#else
-#define RECOMPUTE_NAMES()
-#endif
-
 namespace riddle
 {
     core::core(std::string_view name) noexcept : scope(*this, *this), env(*this, *this), name(name)
@@ -37,7 +29,9 @@ namespace riddle
         cu->refine_predicates(*this);
         cu->execute(*this, *this);
         cus.push_back(std::move(cu)); // add the compilation unit to the list of compilation units
-        RECOMPUTE_NAMES();
+#ifdef COMPUTE_NAMES
+        compute_names();
+#endif
     }
 
     void core::read(const std::vector<std::filesystem::path> &files)
@@ -63,7 +57,9 @@ namespace riddle
             cu->execute(*this, *this);
 
         cus.insert(cus.end(), std::make_move_iterator(c_cus.begin()), std::make_move_iterator(c_cus.end())); // add the compilation units to the list of compilation units
-        RECOMPUTE_NAMES();
+#ifdef COMPUTE_NAMES
+        compute_names();
+#endif
     }
 
     bool_expr core::new_and(std::vector<bool_expr> &&exprs)
@@ -510,7 +506,7 @@ namespace riddle
     }
 
 #ifdef COMPUTE_NAMES
-    void core::recompute_names() noexcept
+    void core::compute_names() noexcept
     {
         expr_names.clear();
 
