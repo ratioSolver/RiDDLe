@@ -1,2 +1,2 @@
-mod language;
+pub mod language;
 mod lexer;
