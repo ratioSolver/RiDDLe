@@ -1,7 +1,7 @@
 use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, PartialEq)]
-pub struct CompilationUnit {
+pub struct Problem {
     methods: Vec<Method>,
     predicates: Vec<Predicate>,
     classes: Vec<Class>,
@@ -72,7 +72,7 @@ pub enum Expr {
     And { terms: Vec<Expr> },
 }
 
-impl Display for CompilationUnit {
+impl Display for Problem {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         for method in &self.methods {
             write!(f, "{}\n", method)?;

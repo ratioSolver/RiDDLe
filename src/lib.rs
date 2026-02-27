@@ -1,6 +1,9 @@
 use std::{collections::VecDeque, iter::Peekable};
 
-use crate::lexer::{Lexer, Token};
+use crate::{
+    language::{Class, Expr, Method, Predicate, Problem, Statement},
+    lexer::{Lexer, Token},
+};
 
 pub mod language;
 mod lexer;
@@ -39,6 +42,72 @@ impl<'a> Parser<'a> {
             Some(token) if token == expected => Ok(token),
             Some(token) => Err(format!("Expected {:?}, found {:?}", expected, token)),
             None => Err(format!("Expected {:?}, found end of input", expected)),
+        }
+    }
+
+    pub fn parse_problem(&mut self) -> Result<Problem, String> {
+        unimplemented!()
+    }
+
+    pub fn parse_class(&mut self) -> Result<Class, String> {
+        unimplemented!()
+    }
+
+    pub fn parse_method(&mut self) -> Result<Method, String> {
+        unimplemented!()
+    }
+
+    pub fn parse_predicate(&mut self) -> Result<Predicate, String> {
+        unimplemented!()
+    }
+
+    pub fn parse_statement(&mut self) -> Result<Statement, String> {
+        unimplemented!()
+    }
+
+    pub fn parse_expression(&mut self) -> Result<Expr, String> {
+        unimplemented!()
+    }
+
+    fn parse_primary_expression(&mut self) -> Result<Expr, String> {
+        match self.next() {
+            Some(Token::BoolLiteral(value)) => Ok(Expr::Bool(value)),
+            Some(Token::IntLiteral(value)) => Ok(Expr::Int(value)),
+            Some(Token::RealLiteral(int_part, frac_part)) => Ok(Expr::Real(int_part, frac_part)),
+            Some(Token::Identifier(name)) => {
+                let mut ids = vec![name];
+                while let Some(Token::Dot) = self.peek() {
+                    self.next(); // consume '.'
+                    if let Some(Token::Identifier(next_name)) = self.next() {
+                        ids.push(next_name);
+                    } else {
+                        return Err("Expected identifier after '.'".to_string());
+                    }
+                }
+                if let Some(Token::LParen) = self.peek() {
+                    self.expect(Token::LParen)?;
+                    let mut exprs = Vec::new();
+                    while !matches!(self.peek(), Some(Token::RParen)) {
+                        exprs.push(self.parse_expression()?);
+                        if let Some(Token::Comma) = self.peek() {
+                            self.next(); // consume ','
+                        } else {
+                            break;
+                        }
+                    }
+                    self.expect(Token::RParen)?;
+                    Ok(Expr::Function { name: ids, args: exprs })
+                } else {
+                    Ok(Expr::QualifiedId { ids })
+                }
+            }
+            Some(Token::LParen) => {
+                let expr = self.parse_expression()?;
+                self.expect(Token::RParen)?;
+                Ok(expr)
+            }
+            Some(token) => Err(format!("Unexpected token: {:?}", token)),
+            None => Err("Unexpected end of input".to_string()),
         }
     }
 }
