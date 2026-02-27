@@ -2,7 +2,7 @@ use std::iter::Peekable;
 use std::str::Chars;
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum Token {
+pub(crate) enum Token {
     Identifier(String),
     BoolLiteral(bool),
     IntLiteral(i64),
@@ -48,16 +48,16 @@ pub enum Token {
     EOF,
 }
 
-pub(super) struct Lexer<'a> {
+pub(crate) struct Lexer<'a> {
     input: Peekable<Chars<'a>>,
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(input: &'a str) -> Self {
+    pub(crate) fn new(input: &'a str) -> Self {
         Lexer { input: input.chars().peekable() }
     }
 
-    pub fn next_token(&mut self) -> Token {
+    pub(crate) fn next_token(&mut self) -> Token {
         self.skip_whitespace();
         match self.input.peek() {
             Some(&ch) => match ch {
