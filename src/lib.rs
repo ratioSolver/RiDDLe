@@ -66,7 +66,69 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_expression(&mut self) -> Result<Expr, String> {
-        unimplemented!()
+        self.parse_or_expression()
+    }
+
+    fn parse_or_expression(&mut self) -> Result<Expr, String> {
+        let mut terms = vec![self.parse_and_expression()?];
+        while let Some(Token::Bar) = self.peek() {
+            self.expect(Token::Bar)?; // consume '|'
+            terms.push(self.parse_and_expression()?);
+        }
+        if terms.len() == 1 { Ok(terms.remove(0)) } else { Ok(Expr::Or { terms }) }
+    }
+
+    fn parse_and_expression(&mut self) -> Result<Expr, String> {
+        let mut terms = vec![self.parse_equality_expression()?];
+        while let Some(Token::Amp) = self.peek() {
+            self.expect(Token::Amp)?; // consume '&'
+            terms.push(self.parse_equality_expression()?);
+        }
+        if terms.len() == 1 { Ok(terms.remove(0)) } else { Ok(Expr::And { terms }) }
+    }
+
+    fn parse_equality_expression(&mut self) -> Result<Expr, String> {
+        let left = self.parse_relational_expression()?;
+        match self.peek() {
+            Some(Token::EqualEqual) => {
+                self.expect(Token::EqualEqual)?; // consume '=='
+                let right = self.parse_relational_expression()?;
+                Ok(Expr::Eq { left: Box::new(left), right: Box::new(right) })
+            }
+            Some(Token::NotEqual) => {
+                self.expect(Token::NotEqual)?; // consume '!='
+                let right = self.parse_relational_expression()?;
+                Ok(Expr::Neq { left: Box::new(left), right: Box::new(right) })
+            }
+            _ => Ok(left),
+        }
+    }
+
+    fn parse_relational_expression(&mut self) -> Result<Expr, String> {
+        let left = self.parse_additive_expression()?;
+        match self.peek() {
+            Some(Token::LessThan) => {
+                self.expect(Token::LessThan)?; // consume '<'
+                let right = self.parse_additive_expression()?;
+                Ok(Expr::Lt { left: Box::new(left), right: Box::new(right) })
+            }
+            Some(Token::LessEqual) => {
+                self.expect(Token::LessEqual)?; // consume '<='
+                let right = self.parse_additive_expression()?;
+                Ok(Expr::Leq { left: Box::new(left), right: Box::new(right) })
+            }
+            Some(Token::GreaterThan) => {
+                self.expect(Token::GreaterThan)?; // consume '>'
+                let right = self.parse_additive_expression()?;
+                Ok(Expr::Gt { left: Box::new(left), right: Box::new(right) })
+            }
+            Some(Token::GreaterEqual) => {
+                self.expect(Token::GreaterEqual)?; // consume '>='
+                let right = self.parse_additive_expression()?;
+                Ok(Expr::Geq { left: Box::new(left), right: Box::new(right) })
+            }
+            _ => Ok(left),
+        }
     }
 
     fn parse_additive_expression(&mut self) -> Result<Expr, String> {
@@ -151,6 +213,12 @@ impl<'a> Parser<'a> {
     }
 }
 
+pub fn parse_expression(input: &str) -> Expr {
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    parser.parse_expression().expect("Failed to parse expression")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -167,6 +235,12 @@ mod tests {
         parser.parse_additive_expression().expect("Failed to parse arithmetic expression")
     }
 
+    fn parse_equality_expression(input: &str) -> Expr {
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        parser.parse_equality_expression().expect("Failed to parse equality expression")
+    }
+
     #[test]
     fn test_primary_expressions() {
         assert_eq!(parse_primary_expression("true"), Expr::Bool(true));
@@ -175,10 +249,10 @@ mod tests {
         assert_eq!(parse_primary_expression("12.34"), Expr::Real(1234, 100));
         assert_eq!(parse_primary_expression("foo"), Expr::QualifiedId { ids: vec!["foo".to_string()] });
         assert_eq!(parse_primary_expression("foo.bar"), Expr::QualifiedId { ids: vec!["foo".to_string(), "bar".to_string()] });
-        // assert_eq!(parse_primary_expression("(123)"), Expr::Int(123));
+        assert_eq!(parse_primary_expression("(123)"), Expr::Int(123));
         assert_eq!(parse_primary_expression("f()"), Expr::Function { name: vec!["f".to_string()], args: vec![] });
-        // assert_eq!(parse_primary_expression("g(1, true)"), Expr::Function { name: vec!["g".to_string()], args: vec![Expr::Int(1), Expr::Bool(true)] });
-        // assert_eq!(parse_primary_expression("Math.max(1, 2)"), Expr::Function { name: vec!["Math".to_string(), "max".to_string()], args: vec![Expr::Int(1), Expr::Int(2)] });
+        assert_eq!(parse_primary_expression("g(1, true)"), Expr::Function { name: vec!["g".to_string()], args: vec![Expr::Int(1), Expr::Bool(true)] });
+        assert_eq!(parse_primary_expression("Math.max(1, 2)"), Expr::Function { name: vec!["Math".to_string(), "max".to_string()], args: vec![Expr::Int(1), Expr::Int(2)] });
     }
 
     #[test]
@@ -193,6 +267,74 @@ mod tests {
         assert_eq!(parse_arithmetic_expression("1 + 2 * 3"), Expr::Sum { terms: vec![Expr::Int(1), Expr::Mul { factors: vec![Expr::Int(2), Expr::Int(3)] },] });
 
         // (1 + 2) * 3
-        // assert_eq!(parse_arithmetic_expression("(1 + 2) * 3"), Expr::Mul { factors: vec![Expr::Sum { terms: vec![Expr::Int(1), Expr::Int(2)] }, Expr::Int(3),] });
+        assert_eq!(parse_arithmetic_expression("(1 + 2) * 3"), Expr::Mul { factors: vec![Expr::Sum { terms: vec![Expr::Int(1), Expr::Int(2)] }, Expr::Int(3),] });
+    }
+
+    #[test]
+    fn test_relational() {
+        assert_eq!(parse_equality_expression("1 < 2"), Expr::Lt { left: Box::new(Expr::Int(1)), right: Box::new(Expr::Int(2)) });
+        assert_eq!(parse_equality_expression("1 <= 2"), Expr::Leq { left: Box::new(Expr::Int(1)), right: Box::new(Expr::Int(2)) });
+        assert_eq!(parse_equality_expression("1 > 2"), Expr::Gt { left: Box::new(Expr::Int(1)), right: Box::new(Expr::Int(2)) });
+        assert_eq!(parse_equality_expression("1 >= 2"), Expr::Geq { left: Box::new(Expr::Int(1)), right: Box::new(Expr::Int(2)) });
+        assert_eq!(parse_equality_expression("1 == 1"), Expr::Eq { left: Box::new(Expr::Int(1)), right: Box::new(Expr::Int(1)) });
+        assert_eq!(parse_equality_expression("1 != 2"), Expr::Neq { left: Box::new(Expr::Int(1)), right: Box::new(Expr::Int(2)) });
+    }
+
+    #[test]
+    fn test_logical() {
+        assert_eq!(parse_expression("true & false"), Expr::And { terms: vec![Expr::Bool(true), Expr::Bool(false)] });
+        assert_eq!(parse_expression("true | false"), Expr::Or { terms: vec![Expr::Bool(true), Expr::Bool(false)] });
+
+        // n-ary logical ops
+        assert_eq!(
+            parse_expression("a & b & c"),
+            Expr::And {
+                terms: vec![Expr::QualifiedId { ids: vec!["a".to_string()] }, Expr::QualifiedId { ids: vec!["b".to_string()] }, Expr::QualifiedId { ids: vec!["c".to_string()] },]
+            }
+        );
+
+        // Mixed precedence: & binds tighter than |
+        assert_eq!(
+            parse_expression("a | b & c"),
+            Expr::Or {
+                terms: vec![
+                    Expr::QualifiedId { ids: vec!["a".to_string()] },
+                    Expr::And {
+                        terms: vec![Expr::QualifiedId { ids: vec!["b".to_string()] }, Expr::QualifiedId { ids: vec!["c".to_string()] },]
+                    }
+                ]
+            }
+        );
+    }
+
+    #[test]
+    fn test_complex_expression() {
+        assert_eq!(
+            parse_expression("f(x) + 3 * (y - 2) >= 10 & g(z) != 5"),
+            Expr::And {
+                terms: vec![
+                    Expr::Geq {
+                        left: Box::new(Expr::Sum {
+                            terms: vec![
+                                Expr::Function { name: vec!["f".to_string()], args: vec![Expr::QualifiedId { ids: vec!["x".to_string()] }] },
+                                Expr::Mul {
+                                    factors: vec![
+                                        Expr::Int(3),
+                                        Expr::Sum {
+                                            terms: vec![Expr::QualifiedId { ids: vec!["y".to_string()] }, Expr::Opposite { term: Box::new(Expr::Int(2)) },]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }),
+                        right: Box::new(Expr::Int(10))
+                    },
+                    Expr::Neq {
+                        left: Box::new(Expr::Function { name: vec!["g".to_string()], args: vec![Expr::QualifiedId { ids: vec!["z".to_string()] }] }),
+                        right: Box::new(Expr::Int(5))
+                    }
+                ]
+            }
+        );
     }
 }
