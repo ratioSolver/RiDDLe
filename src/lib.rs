@@ -1,5 +1,5 @@
 use crate::{
-    language::{Expr, Statement},
+    language::{Expr, PredicateDef, Statement},
     lexer::Lexer,
     parser::Parser,
 };
@@ -7,6 +7,12 @@ use crate::{
 pub mod language;
 mod lexer;
 mod parser;
+
+pub fn parse_predicate(input: &str) -> Result<PredicateDef, String> {
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    parser.parse_predicate()
+}
 
 pub fn parse_statement(input: &str) -> Result<Statement, String> {
     let lexer = Lexer::new(input);

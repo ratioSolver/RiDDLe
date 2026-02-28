@@ -37,9 +37,9 @@ pub struct MethodDef {
 
 #[derive(Debug, PartialEq)]
 pub struct PredicateDef {
-    name: String,
-    args: Vec<(Vec<String>, String)>,
-    statements: Vec<Statement>,
+    pub name: String,
+    pub args: Vec<(Vec<String>, String)>,
+    pub statements: Vec<Statement>,
 }
 
 #[derive(Debug, PartialEq)]

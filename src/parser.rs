@@ -50,8 +50,54 @@ impl<'a> Parser<'a> {
         unimplemented!()
     }
 
-    pub fn parse_predicate(&mut self) -> Result<PredicateDef, String> {
-        unimplemented!()
+    pub(crate) fn parse_predicate(&mut self) -> Result<PredicateDef, String> {
+        self.expect(Token::Predicate)?;
+        let name = match self.next() {
+            Some(Token::Identifier(name)) => name,
+            _ => return Err("Expected identifier after 'predicate'".to_string()),
+        };
+        self.expect(Token::LParen)?;
+        let mut args = Vec::new();
+        while !matches!(self.peek(0), Some(Token::RParen)) {
+            let arg_type = match self.next() {
+                Some(Token::Bool) => Ok(vec!["bool".to_string()]),
+                Some(Token::Int) => Ok(vec!["int".to_string()]),
+                Some(Token::Real) => Ok(vec!["real".to_string()]),
+                Some(Token::String) => Ok(vec!["string".to_string()]),
+                Some(Token::Identifier(name)) => {
+                    let mut ids = vec![name];
+                    while let Some(Token::Dot) = self.peek(0) {
+                        self.expect(Token::Dot)?; // consume '.'
+                        if let Some(Token::Identifier(next_name)) = self.next() {
+                            ids.push(next_name);
+                        } else {
+                            return Err("Expected identifier after '.' in type".to_string());
+                        }
+                    }
+                    Ok(ids)
+                }
+                Some(token) => Err(format!("Unexpected token in type: {:?}", token)),
+                None => Err("Unexpected end of input while parsing type".to_string()),
+            }?;
+            let arg_name = match self.next() {
+                Some(Token::Identifier(name)) => name,
+                _ => return Err("Expected identifier in predicate arguments".to_string()),
+            };
+            args.push((arg_type, arg_name));
+            if let Some(Token::Comma) = self.peek(0) {
+                self.expect(Token::Comma)?; // consume ','
+            } else {
+                break;
+            }
+        }
+        self.expect(Token::RParen)?;
+        self.expect(Token::LBrace)?;
+        let mut statements = Vec::new();
+        while !matches!(self.peek(0), Some(Token::RBrace)) {
+            statements.push(self.parse_statement()?);
+        }
+        self.expect(Token::RBrace)?;
+        Ok(PredicateDef { name, args, statements })
     }
 
     pub(crate) fn parse_statement(&mut self) -> Result<Statement, String> {
@@ -448,6 +494,27 @@ mod tests {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
         parser.parse_equality_expression().expect("Failed to parse equality expression")
+    }
+
+    #[test]
+    fn test_predicate() {
+        let input = r#"
+            predicate isEven(int x) {
+                2*x == 0;
+            }
+        "#;
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let predicate = parser.parse_predicate().expect("Failed to parse predicate");
+        assert_eq!(predicate.name, "isEven");
+        assert_eq!(predicate.args, vec![(vec!["int".to_string()], "x".to_string())]);
+        assert_eq!(predicate.statements.len(), 1);
+        if let Statement::Expr(Expr::Eq { left, right }) = &predicate.statements[0] {
+            assert_eq!(**left, Expr::Mul { factors: vec![Expr::Int(2), Expr::QualifiedId { ids: vec!["x".to_string()] }] });
+            assert_eq!(**right, Expr::Int(0));
+        } else {
+            panic!("Expected equality statement in predicate body");
+        }
     }
 
     #[test]
