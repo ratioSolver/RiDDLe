@@ -8,6 +8,18 @@ pub mod language;
 mod lexer;
 mod parser;
 
+pub fn parse_constructor(input: &str) -> Result<language::ConstructorDef, String> {
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    parser.parse_constructor()
+}
+
+pub fn parse_method(input: &str) -> Result<language::MethodDef, String> {
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    parser.parse_method()
+}
+
 pub fn parse_predicate(input: &str) -> Result<PredicateDef, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);

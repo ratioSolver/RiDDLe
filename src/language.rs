@@ -2,37 +2,37 @@ use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, PartialEq)]
 pub struct ProblemDef {
-    methods: Vec<MethodDef>,
-    predicates: Vec<PredicateDef>,
-    classes: Vec<ClassDef>,
-    statements: Vec<Statement>,
+    pub methods: Vec<MethodDef>,
+    pub predicates: Vec<PredicateDef>,
+    pub classes: Vec<ClassDef>,
+    pub statements: Vec<Statement>,
 }
 
 type Field = (Vec<String>, Vec<(String, Option<Expr>)>); // (type, [(name, optional initializer)])
 
 #[derive(Debug, PartialEq)]
 pub struct ClassDef {
-    name: String,
-    parents: Vec<Vec<String>>,
-    fields: Vec<Field>,
-    constructors: Vec<ConstructorDef>,
-    methods: Vec<MethodDef>,
-    predicates: Vec<PredicateDef>,
+    pub name: String,
+    pub parents: Vec<Vec<String>>,
+    pub fields: Vec<Field>,
+    pub constructors: Vec<ConstructorDef>,
+    pub methods: Vec<MethodDef>,
+    pub predicates: Vec<PredicateDef>,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct ConstructorDef {
-    args: Vec<(Vec<String>, String)>,
-    init: Vec<(String, Vec<Expr>)>,
-    statements: Vec<Statement>,
+    pub args: Vec<(Vec<String>, String)>,
+    pub init: Vec<(String, Vec<Expr>)>,
+    pub statements: Vec<Statement>,
 }
 
 #[derive(Debug, PartialEq)]
 pub struct MethodDef {
-    return_type: Option<Vec<String>>,
-    name: String,
-    args: Vec<(Vec<String>, String)>,
-    statements: Vec<Statement>,
+    pub return_type: Option<Vec<String>>,
+    pub name: String,
+    pub args: Vec<(Vec<String>, String)>,
+    pub statements: Vec<Statement>,
 }
 
 #[derive(Debug, PartialEq)]

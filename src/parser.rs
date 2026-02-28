@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, iter::Peekable};
 
 use crate::{
-    language::{ClassDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
+    language::{ClassDef, ConstructorDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
     lexer::{Lexer, Token},
 };
 
@@ -46,8 +46,158 @@ impl<'a> Parser<'a> {
         unimplemented!()
     }
 
-    pub fn parse_method(&mut self) -> Result<MethodDef, String> {
-        unimplemented!()
+    pub(crate) fn parse_constructor(&mut self) -> Result<ConstructorDef, String> {
+        let _ = match self.next() {
+            Some(Token::Identifier(name)) => name,
+            _ => return Err("Expected constructor name".to_string()),
+        };
+        self.expect(Token::LParen)?;
+        let mut args = Vec::new();
+        while !matches!(self.peek(0), Some(Token::RParen)) {
+            let arg_type = match self.next() {
+                Some(Token::Bool) => Ok(vec!["bool".to_string()]),
+                Some(Token::Int) => Ok(vec!["int".to_string()]),
+                Some(Token::Real) => Ok(vec!["real".to_string()]),
+                Some(Token::String) => Ok(vec!["string".to_string()]),
+                Some(Token::Identifier(name)) => {
+                    let mut ids = vec![name];
+                    while let Some(Token::Dot) = self.peek(0) {
+                        self.expect(Token::Dot)?; // consume '.'
+                        if let Some(Token::Identifier(next_name)) = self.next() {
+                            ids.push(next_name);
+                        } else {
+                            return Err("Expected identifier after '.' in type".to_string());
+                        }
+                    }
+                    Ok(ids)
+                }
+                Some(token) => Err(format!("Unexpected token in type: {:?}", token)),
+                None => Err("Unexpected end of input while parsing type".to_string()),
+            }?;
+            let arg_name = match self.next() {
+                Some(Token::Identifier(name)) => name,
+                _ => return Err("Expected identifier in constructor arguments".to_string()),
+            };
+            args.push((arg_type, arg_name));
+            if let Some(Token::Comma) = self.peek(0) {
+                self.expect(Token::Comma)?; // consume ','
+            } else {
+                break;
+            }
+        }
+        self.expect(Token::RParen)?;
+        let mut init = Vec::new();
+        if let Some(Token::Colon) = self.peek(0) {
+            self.expect(Token::Colon)?; // consume ':'
+            while !matches!(self.peek(0), Some(Token::LBrace)) {
+                let field_name = match self.next() {
+                    Some(Token::Identifier(name)) => name,
+                    _ => return Err("Expected identifier in constructor initialization".to_string()),
+                };
+                self.expect(Token::LParen)?;
+                let mut exprs = Vec::new();
+                while !matches!(self.peek(0), Some(Token::RParen)) {
+                    exprs.push(self.parse_expression()?);
+                    if let Some(Token::Comma) = self.peek(0) {
+                        self.expect(Token::Comma)?; // consume ','
+                    } else {
+                        break;
+                    }
+                }
+                self.expect(Token::RParen)?;
+                init.push((field_name, exprs));
+                if let Some(Token::Comma) = self.peek(0) {
+                    self.expect(Token::Comma)?; // consume ','
+                } else {
+                    break;
+                }
+            }
+        }
+        self.expect(Token::LBrace)?;
+        let mut statements = Vec::new();
+        while !matches!(self.peek(0), Some(Token::RBrace)) {
+            statements.push(self.parse_statement()?);
+        }
+        self.expect(Token::RBrace)?;
+        Ok(ConstructorDef { args, init, statements })
+    }
+
+    pub(crate) fn parse_method(&mut self) -> Result<MethodDef, String> {
+        let return_type = match self.peek(0) {
+            Some(Token::Bool) | Some(Token::Int) | Some(Token::Real) | Some(Token::String) | Some(Token::Identifier(_)) => {
+                let return_type = match self.next().unwrap() {
+                    Token::Bool => vec!["bool".to_string()],
+                    Token::Int => vec!["int".to_string()],
+                    Token::Real => vec!["real".to_string()],
+                    Token::String => vec!["string".to_string()],
+                    Token::Identifier(name) => {
+                        let mut ids = vec![name];
+                        while let Some(Token::Dot) = self.peek(0) {
+                            self.expect(Token::Dot)?; // consume '.'
+                            if let Some(Token::Identifier(next_name)) = self.next() {
+                                ids.push(next_name);
+                            } else {
+                                return Err("Expected identifier after '.' in type".to_string());
+                            }
+                        }
+                        ids
+                    }
+                    _ => unreachable!(),
+                };
+                Some(return_type)
+            }
+            Some(Token::Void) => {
+                self.expect(Token::Void)?; // consume 'void'
+                None
+            }
+            _ => return Err("Expected return type or 'void'".to_string()),
+        };
+        let name = match self.next() {
+            Some(Token::Identifier(name)) => name,
+            _ => return Err("Expected method name".to_string()),
+        };
+        self.expect(Token::LParen)?;
+        let mut args = Vec::new();
+        while !matches!(self.peek(0), Some(Token::RParen)) {
+            let arg_type = match self.next() {
+                Some(Token::Bool) => Ok(vec!["bool".to_string()]),
+                Some(Token::Int) => Ok(vec!["int".to_string()]),
+                Some(Token::Real) => Ok(vec!["real".to_string()]),
+                Some(Token::String) => Ok(vec!["string".to_string()]),
+                Some(Token::Identifier(name)) => {
+                    let mut ids = vec![name];
+                    while let Some(Token::Dot) = self.peek(0) {
+                        self.expect(Token::Dot)?; // consume '.'
+                        if let Some(Token::Identifier(next_name)) = self.next() {
+                            ids.push(next_name);
+                        } else {
+                            return Err("Expected identifier after '.' in type".to_string());
+                        }
+                    }
+                    Ok(ids)
+                }
+                Some(token) => Err(format!("Unexpected token in type: {:?}", token)),
+                None => Err("Unexpected end of input while parsing type".to_string()),
+            }?;
+            let arg_name = match self.next() {
+                Some(Token::Identifier(name)) => name,
+                _ => return Err("Expected identifier in method arguments".to_string()),
+            };
+            args.push((arg_type, arg_name));
+            if let Some(Token::Comma) = self.peek(0) {
+                self.expect(Token::Comma)?; // consume ','
+            } else {
+                break;
+            }
+        }
+        self.expect(Token::RParen)?;
+        self.expect(Token::LBrace)?;
+        let mut statements = Vec::new();
+        while !matches!(self.peek(0), Some(Token::RBrace)) {
+            statements.push(self.parse_statement()?);
+        }
+        self.expect(Token::RBrace)?;
+        Ok(MethodDef { return_type, name, args, statements })
     }
 
     pub(crate) fn parse_predicate(&mut self) -> Result<PredicateDef, String> {
@@ -474,7 +624,7 @@ impl<'a> Parser<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{parse_expression, parse_statement};
+    use crate::{parse_constructor, parse_expression, parse_method, parse_statement};
 
     use super::*;
 
@@ -494,6 +644,101 @@ mod tests {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
         parser.parse_equality_expression().expect("Failed to parse equality expression")
+    }
+
+    #[test]
+    fn test_constructor() {
+        let input = r#"
+            Point(int x, int y) : distance(x, y) {
+                distance = sqrt(x*x + y*y);
+            }
+        "#;
+        let constructor = parse_constructor(input).expect("Failed to parse constructor");
+        assert_eq!(constructor.args, vec![(vec!["int".to_string()], "x".to_string()), (vec!["int".to_string()], "y".to_string())]);
+        assert_eq!(constructor.init, vec![("distance".to_string(), vec![Expr::QualifiedId { ids: vec!["x".to_string()] }, Expr::QualifiedId { ids: vec!["y".to_string()] }])]);
+        assert_eq!(constructor.statements.len(), 1);
+        if let Statement::Assign { name, value } = &constructor.statements[0] {
+            assert_eq!(name, &vec!["distance".to_string()]);
+            assert_eq!(
+                *value,
+                Expr::Function {
+                    name: vec!["sqrt".to_string()],
+                    args: vec![Expr::Sum {
+                        terms: vec![
+                            Expr::Mul {
+                                factors: vec![Expr::QualifiedId { ids: vec!["x".to_string()] }, Expr::QualifiedId { ids: vec!["x".to_string()] }]
+                            },
+                            Expr::Mul {
+                                factors: vec![Expr::QualifiedId { ids: vec!["y".to_string()] }, Expr::QualifiedId { ids: vec!["y".to_string()] }]
+                            },
+                        ]
+                    }]
+                }
+            );
+        } else {
+            panic!("Expected assignment statement in constructor body");
+        }
+    }
+
+    #[test]
+    fn test_method() {
+        let input = r#"
+            void move(int dx, int dy) {
+                x = x + dx;
+                y = y + dy;
+            }
+        "#;
+        let method = parse_method(input).expect("Failed to parse method");
+        assert_eq!(method.return_type, None);
+        assert_eq!(method.name, "move");
+        assert_eq!(method.args, vec![(vec!["int".to_string()], "dx".to_string()), (vec!["int".to_string()], "dy".to_string())]);
+        assert_eq!(method.statements.len(), 2);
+        if let Statement::Assign { name, value } = &method.statements[0] {
+            assert_eq!(name, &vec!["x".to_string()]);
+            assert_eq!(
+                *value,
+                Expr::Sum {
+                    terms: vec![Expr::QualifiedId { ids: vec!["x".to_string()] }, Expr::QualifiedId { ids: vec!["dx".to_string()] }]
+                }
+            );
+        } else {
+            panic!("Expected assignment statement in method body");
+        }
+        if let Statement::Assign { name, value } = &method.statements[1] {
+            assert_eq!(name, &vec!["y".to_string()]);
+            assert_eq!(
+                *value,
+                Expr::Sum {
+                    terms: vec![Expr::QualifiedId { ids: vec!["y".to_string()] }, Expr::QualifiedId { ids: vec!["dy".to_string()] }]
+                }
+            );
+        } else {
+            panic!("Expected assignment statement in method body");
+        }
+    }
+
+    #[test]
+    fn test_function() {
+        let input = r#"
+                int add(int a, int b) {
+                    return a + b;
+                }
+            "#;
+        let method = parse_method(input).expect("Failed to parse function");
+        assert_eq!(method.return_type, Some(vec!["int".to_string()]));
+        assert_eq!(method.name, "add");
+        assert_eq!(method.args, vec![(vec!["int".to_string()], "a".to_string()), (vec!["int".to_string()], "b".to_string())]);
+        assert_eq!(method.statements.len(), 1);
+        if let Statement::Return { value } = &method.statements[0] {
+            assert_eq!(
+                *value,
+                Expr::Sum {
+                    terms: vec![Expr::QualifiedId { ids: vec!["a".to_string()] }, Expr::QualifiedId { ids: vec!["b".to_string()] }]
+                }
+            );
+        } else {
+            panic!("Expected return statement in function body");
+        }
     }
 
     #[test]
