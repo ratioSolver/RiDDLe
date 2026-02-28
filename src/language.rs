@@ -1,34 +1,34 @@
 use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug, PartialEq)]
-pub struct Problem {
-    methods: Vec<Method>,
-    predicates: Vec<Predicate>,
-    classes: Vec<Class>,
+pub struct ProblemDef {
+    methods: Vec<MethodDef>,
+    predicates: Vec<PredicateDef>,
+    classes: Vec<ClassDef>,
     statements: Vec<Statement>,
 }
 
 type Field = (Vec<String>, Vec<(String, Option<Expr>)>); // (type, [(name, optional initializer)])
 
 #[derive(Debug, PartialEq)]
-pub struct Class {
+pub struct ClassDef {
     name: String,
     parents: Vec<Vec<String>>,
     fields: Vec<Field>,
-    constructors: Vec<Constructor>,
-    methods: Vec<Method>,
-    predicates: Vec<Predicate>,
+    constructors: Vec<ConstructorDef>,
+    methods: Vec<MethodDef>,
+    predicates: Vec<PredicateDef>,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Constructor {
+pub struct ConstructorDef {
     args: Vec<(Vec<String>, String)>,
     init: Vec<(String, Vec<Expr>)>,
     statements: Vec<Statement>,
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Method {
+pub struct MethodDef {
     return_type: Option<Vec<String>>,
     name: String,
     args: Vec<(Vec<String>, String)>,
@@ -36,7 +36,7 @@ pub struct Method {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Predicate {
+pub struct PredicateDef {
     name: String,
     args: Vec<(Vec<String>, String)>,
     statements: Vec<Statement>,
@@ -74,7 +74,7 @@ pub enum Expr {
     And { terms: Vec<Expr> },
 }
 
-impl Display for Problem {
+impl Display for ProblemDef {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         for method in &self.methods {
             writeln!(f, "{}", method)?;
@@ -92,7 +92,7 @@ impl Display for Problem {
     }
 }
 
-impl Display for Class {
+impl Display for ClassDef {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         writeln!(f, "class {}{} {{", self.name, if !self.parents.is_empty() { format!(" extends {}", self.parents.iter().map(|p| p.join(".")).collect::<Vec<_>>().join(", ")) } else { String::new() })?;
         for (field_type, fields) in &self.fields {
@@ -111,13 +111,13 @@ impl Display for Class {
     }
 }
 
-impl Display for Constructor {
+impl Display for ConstructorDef {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "constructor({}) {{\n{}\n}}", self.args.iter().map(|(t, n)| format!("{} {}", t.join("."), n)).collect::<Vec<_>>().join(", "), self.statements.iter().map(|s| format!("    {}", s)).collect::<Vec<_>>().join("\n"))
     }
 }
 
-impl Display for Method {
+impl Display for MethodDef {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(
             f,
@@ -130,7 +130,7 @@ impl Display for Method {
     }
 }
 
-impl Display for Predicate {
+impl Display for PredicateDef {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(f, "predicate {}({}) {{\n{}\n}}", self.name, self.args.iter().map(|(t, n)| format!("{} {}", t.join("."), n)).collect::<Vec<_>>().join(", "), self.statements.iter().map(|s| format!("    {}", s)).collect::<Vec<_>>().join("\n"))
     }

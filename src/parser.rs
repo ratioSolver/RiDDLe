@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, iter::Peekable};
 
 use crate::{
-    language::{Class, Expr, Method, Predicate, Problem, Statement},
+    language::{ClassDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
     lexer::{Lexer, Token},
 };
 
@@ -38,19 +38,19 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_problem(&mut self) -> Result<Problem, String> {
+    pub fn parse_problem(&mut self) -> Result<ProblemDef, String> {
         unimplemented!()
     }
 
-    pub fn parse_class(&mut self) -> Result<Class, String> {
+    pub fn parse_class(&mut self) -> Result<ClassDef, String> {
         unimplemented!()
     }
 
-    pub fn parse_method(&mut self) -> Result<Method, String> {
+    pub fn parse_method(&mut self) -> Result<MethodDef, String> {
         unimplemented!()
     }
 
-    pub fn parse_predicate(&mut self) -> Result<Predicate, String> {
+    pub fn parse_predicate(&mut self) -> Result<PredicateDef, String> {
         unimplemented!()
     }
 
