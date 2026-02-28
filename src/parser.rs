@@ -548,6 +548,59 @@ mod tests {
     }
 
     #[test]
+    fn test_complex_statement() {
+        let input = r#"
+            {
+                x == 1;
+                for (Point i) {
+                    y == i;
+                }
+            } or {
+                x == 2;
+                for (Point j) {
+                    y == j;
+                }
+            } [42.0]
+        "#;
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let statement = parser.parse_statement().expect("Failed to parse complex statement");
+        if let Statement::Disjunction { disjuncts } = statement {
+            assert_eq!(disjuncts.len(), 2);
+            // First disjunct
+            assert_eq!(disjuncts[0].1, Expr::Int(1));
+            if let Statement::ForAll { var_type, var_name, statements } = &disjuncts[0].0[1] {
+                assert_eq!(var_type, &vec!["Point".to_string()]);
+                assert_eq!(var_name, "i");
+                assert_eq!(statements.len(), 1);
+                if let Statement::Expr(Expr::Eq { left, right }) = &statements[0] {
+                    assert_eq!(**left, Expr::QualifiedId { ids: vec!["y".to_string()] });
+                    assert_eq!(**right, Expr::QualifiedId { ids: vec!["i".to_string()] });
+                } else {
+                    panic!("Expected equality statement in first for loop body");
+                }
+            } else {
+                panic!("Expected for loop in first disjunct");
+            }
+            // Second disjunct
+            assert_eq!(disjuncts[1].1, Expr::Real(420, 10));
+            if let Statement::ForAll { var_type, var_name, statements } = &disjuncts[1].0[1] {
+                assert_eq!(var_type, &vec!["Point".to_string()]);
+                assert_eq!(var_name, "j");
+                assert_eq!(statements.len(), 1);
+                if let Statement::Expr(Expr::Eq { left, right }) = &statements[0] {
+                    assert_eq!(**left, Expr::QualifiedId { ids: vec!["y".to_string()] });
+                    assert_eq!(**right, Expr::QualifiedId { ids: vec!["j".to_string()] });
+                } else {
+                    panic!("Expected equality statement in second for loop body");
+                }
+            } else {
+                panic!("Expected for loop in second disjunct");
+            }
+        }
+    }
+
+    #[test]
     fn test_primary_expressions() {
         assert_eq!(parse_primary_expression("true"), Expr::Bool(true));
         assert_eq!(parse_primary_expression("false"), Expr::Bool(false));
