@@ -164,7 +164,7 @@ impl<'a> Parser<'a> {
                     _ => {
                         let expr = self.parse_expression()?;
                         self.expect(Token::Semicolon)?;
-                        return Ok(Statement::Expr(expr));
+                        Ok(Statement::Expr(expr))
                     }
                 }
             }
