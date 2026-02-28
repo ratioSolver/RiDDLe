@@ -8,6 +8,12 @@ pub mod language;
 mod lexer;
 mod parser;
 
+pub fn parse_problem(input: &str) -> Result<language::ProblemDef, String> {
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    parser.parse_problem()
+}
+
 pub fn parse_class(input: &str) -> Result<language::ClassDef, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);

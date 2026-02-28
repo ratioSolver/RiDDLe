@@ -38,8 +38,39 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub fn parse_problem(&mut self) -> Result<ProblemDef, String> {
-        unimplemented!()
+    pub(crate) fn parse_problem(&mut self) -> Result<ProblemDef, String> {
+        let mut methods = Vec::new();
+        let mut predicates = Vec::new();
+        let mut classes = Vec::new();
+        let mut statements = Vec::new();
+        while self.peek(0).is_some() {
+            match self.peek(0) {
+                Some(Token::Class) => classes.push(self.parse_class()?),
+                Some(Token::Predicate) => predicates.push(self.parse_predicate()?),
+                Some(Token::Void) => methods.push(self.parse_method()?),
+                _ => {
+                    // Lookahead to distinguish between method declaration and top-level statement
+                    let mut lookahead = 0;
+                    while let Some(Token::Identifier(_)) = self.peek(lookahead) {
+                        lookahead += 1;
+                        if let Some(Token::Dot) = self.peek(lookahead) {
+                            lookahead += 1; // consume '.'
+                        } else {
+                            break;
+                        }
+                    }
+                    let t0 = self.peek(lookahead).cloned();
+                    let t1 = self.peek(lookahead + 1).cloned();
+                    println!("Lookahead {:?}", self.lookahead);
+                    println!("Lookahead tokens: {:?}, {:?}", t0, t1);
+                    match (t0, t1) {
+                        (Some(Token::Identifier(_)), Some(Token::LParen)) => methods.push(self.parse_method()?),
+                        _ => statements.push(self.parse_statement()?),
+                    }
+                }
+            }
+        }
+        Ok(ProblemDef { methods, predicates, classes, statements })
     }
 
     pub(crate) fn parse_class(&mut self) -> Result<ClassDef, String> {
@@ -83,6 +114,7 @@ impl<'a> Parser<'a> {
                 Some(Token::Predicate) => predicates.push(self.parse_predicate()?),
                 Some(Token::Void) => methods.push(self.parse_method()?),
                 _ => {
+                    println!("Lookahead {:?}", self.lookahead);
                     // Lookahead to distinguish between constructor and field/method declaration
                     let mut lookahead = 0;
                     while let Some(Token::Bool | Token::Int | Token::Real | Token::String | Token::Identifier(_)) = self.peek(lookahead) {
@@ -93,11 +125,13 @@ impl<'a> Parser<'a> {
                             break;
                         }
                     }
-                    if lookahead == 1 && matches!(self.peek(1), Some(Token::Identifier(id)) if id == &name) {
+                    if lookahead == 1 && matches!(self.peek(0), Some(Token::Identifier(id)) if id == &name) {
                         constructors.push(self.parse_constructor()?);
                     } else {
-                        let t0 = self.peek(lookahead + 1).cloned();
-                        let t1 = self.peek(lookahead + 2).cloned();
+                        let t0 = self.peek(lookahead).cloned();
+                        let t1 = self.peek(lookahead + 1).cloned();
+                        println!("Parsing class '{}', lookahead tokens: {:?}, {:?}", name, t0, t1);
+                        println!("Lookahead {:?}", self.lookahead);
                         match (t0, t1) {
                             (Some(Token::Identifier(_)), Some(Token::LParen)) => methods.push(self.parse_method()?),
                             _ => {
@@ -121,7 +155,7 @@ impl<'a> Parser<'a> {
                                     Some(token) => return Err(format!("Unexpected token in type: {:?}", token)),
                                     None => return Err("Unexpected end of input while parsing type".to_string()),
                                 };
-                                let name = match self.next() {
+                                let field_name = match self.next() {
                                     Some(Token::Identifier(name)) => name,
                                     _ => return Err("Expected field name".to_string()),
                                 };
@@ -131,10 +165,10 @@ impl<'a> Parser<'a> {
                                 } else {
                                     None
                                 };
-                                let mut field_names = vec![(name, init_expr)];
+                                let mut field_inits = vec![(field_name, init_expr)];
                                 while let Some(Token::Comma) = self.peek(0) {
                                     self.expect(Token::Comma)?; // consume ','
-                                    let name = match self.next() {
+                                    let field_name = match self.next() {
                                         Some(Token::Identifier(name)) => name,
                                         _ => return Err("Expected field name".to_string()),
                                     };
@@ -144,10 +178,10 @@ impl<'a> Parser<'a> {
                                     } else {
                                         None
                                     };
-                                    field_names.push((name, init_expr));
+                                    field_inits.push((field_name, init_expr));
                                 }
                                 self.expect(Token::Semicolon)?;
-                                fields.push((field_type, field_names));
+                                fields.push((field_type, field_inits));
                             }
                         }
                     }
@@ -736,7 +770,7 @@ impl<'a> Parser<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{parse_class, parse_constructor, parse_expression, parse_method, parse_statement};
+    use crate::{parse_class, parse_constructor, parse_expression, parse_method, parse_problem, parse_statement};
 
     use super::*;
 
@@ -756,6 +790,36 @@ mod tests {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
         parser.parse_equality_expression().expect("Failed to parse equality expression")
+    }
+
+    #[test]
+    fn test_problem() {
+        let input = r#"
+            class Point {
+                int x, y;
+
+                void move(int dx, int dy) {
+                    x = x + dx;
+                    y = y + dy;
+                }
+
+                int distanceFromOrigin() {
+                    return sqrt(x*x + y*y);
+                }
+
+                predicate isAtOrigin() {
+                    x == 0 & y == 0;
+                }
+
+                Point(int x, int y) : distance(x, y) {
+                    distance = sqrt(x*x + y*y);
+                }
+            }
+
+            Point p = new Point(3, 4);
+            fact isAtOrigin = new p.isAtOrigin();
+        "#;
+        let program = parse_problem(input).expect("Failed to parse problem");
     }
 
     #[test]
