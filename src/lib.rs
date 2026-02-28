@@ -58,7 +58,227 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse_statement(&mut self) -> Result<Statement, String> {
-        unimplemented!()
+        match self.peek(0) {
+            Some(Token::Bool | Token::Int | Token::Real | Token::String) => {
+                let field_type = match self.next().unwrap() {
+                    Token::Bool => vec!["bool".to_string()],
+                    Token::Int => vec!["int".to_string()],
+                    Token::Real => vec!["real".to_string()],
+                    _ => unreachable!(),
+                };
+                let name = match self.next() {
+                    Some(Token::Identifier(name)) => name,
+                    _ => return Err("Expected variable name".to_string()),
+                };
+                let init_expr = if let Some(Token::Equal) = self.peek(0) {
+                    self.expect(Token::Equal)?; // consume '='
+                    Some(self.parse_expression()?)
+                } else {
+                    None
+                };
+                let mut fields = vec![(name, init_expr)];
+                while let Some(Token::Comma) = self.peek(0) {
+                    self.expect(Token::Comma)?; // consume ','
+                    let name = match self.next() {
+                        Some(Token::Identifier(name)) => name,
+                        _ => return Err("Expected variable name".to_string()),
+                    };
+                    let init_expr = if let Some(Token::Equal) = self.peek(0) {
+                        self.expect(Token::Equal)?; // consume '='
+                        Some(self.parse_expression()?)
+                    } else {
+                        None
+                    };
+                    fields.push((name, init_expr));
+                }
+                self.expect(Token::Semicolon)?;
+                Ok(Statement::LocalField { field_type, fields })
+            }
+            Some(Token::Identifier(_)) => {
+                let mut lookahead = 1;
+                while let Some(Token::Identifier(_)) = self.peek(lookahead + 1) {
+                    lookahead += 1;
+                    if let Some(Token::Dot) = self.peek(lookahead + 1) {
+                        lookahead += 1; // consume '.'
+                    } else {
+                        break;
+                    }
+                }
+                match self.peek(lookahead) {
+                    Some(Token::Equal) => {
+                        let mut ids = match self.next() {
+                            Some(Token::Identifier(name)) => vec![name],
+                            _ => return Err("Expected identifier".to_string()),
+                        };
+                        while let Some(Token::Dot) = self.peek(0) {
+                            self.expect(Token::Dot)?; // consume '.'
+                            if let Some(Token::Identifier(next_name)) = self.next() {
+                                ids.push(next_name);
+                            } else {
+                                return Err("Expected identifier after '.'".to_string());
+                            }
+                        }
+                        self.expect(Token::Equal)?; // consume '='
+                        let value = self.parse_expression()?;
+                        self.expect(Token::Semicolon)?;
+                        Ok(Statement::Assign { name: ids, value })
+                    }
+                    Some(Token::Identifier(_)) => {
+                        let mut ids = match self.next() {
+                            Some(Token::Identifier(name)) => vec![name],
+                            _ => return Err("Expected identifier".to_string()),
+                        };
+                        while let Some(Token::Dot) = self.peek(0) {
+                            self.expect(Token::Dot)?; // consume '.'
+                            if let Some(Token::Identifier(next_name)) = self.next() {
+                                ids.push(next_name);
+                            } else {
+                                return Err("Expected identifier after '.'".to_string());
+                            }
+                        }
+                        let name = match self.next() {
+                            Some(Token::Identifier(name)) => name,
+                            _ => return Err("Expected variable name".to_string()),
+                        };
+                        let init_expr = if let Some(Token::Equal) = self.peek(0) {
+                            self.expect(Token::Equal)?; // consume '='
+                            Some(self.parse_expression()?)
+                        } else {
+                            None
+                        };
+                        let mut fields = vec![(name, init_expr)];
+                        while let Some(Token::Comma) = self.peek(0) {
+                            self.expect(Token::Comma)?; // consume ','
+                            let name = match self.next() {
+                                Some(Token::Identifier(name)) => name,
+                                _ => return Err("Expected variable name".to_string()),
+                            };
+                            let init_expr = if let Some(Token::Equal) = self.peek(0) {
+                                self.expect(Token::Equal)?; // consume '='
+                                Some(self.parse_expression()?)
+                            } else {
+                                None
+                            };
+                            fields.push((name, init_expr));
+                        }
+                        self.expect(Token::Semicolon)?;
+                        Ok(Statement::LocalField { field_type: ids, fields })
+                    }
+                    _ => {
+                        let expr = self.parse_expression()?;
+                        self.expect(Token::Semicolon)?;
+                        return Ok(Statement::Expr(expr));
+                    }
+                }
+            }
+            Some(Token::LBrace) => {
+                self.next(); // consume '{'
+                let mut branches = Vec::new();
+                loop {
+                    let mut statements = Vec::new();
+                    while !matches!(self.peek(0), Some(Token::RBrace)) {
+                        statements.push(self.parse_statement()?);
+                    }
+                    self.expect(Token::RBrace)?;
+
+                    let cost = if let Some(Token::LBracket) = self.peek(0) {
+                        self.next(); // consume '['
+                        let cost_expr = self.parse_expression()?;
+                        self.expect(Token::RBracket)?;
+                        cost_expr
+                    } else {
+                        Expr::Int(1) // default cost
+                    };
+                    branches.push((statements, cost));
+                    if let Some(Token::Or) = self.peek(0) {
+                        self.next(); // consume 'or'
+                        self.expect(Token::LBrace)?; // consume '{' for the next branch
+                    } else {
+                        break;
+                    }
+                }
+                Ok(Statement::Disjunction { disjuncts: branches })
+            }
+            Some(Token::For) => {
+                self.next(); // consume 'for'
+                self.expect(Token::LParen)?;
+                let mut var_type = match self.next() {
+                    Some(Token::Identifier(name)) => vec![name],
+                    _ => return Err("Expected identifier".to_string()),
+                };
+                while let Some(Token::Dot) = self.peek(0) {
+                    self.expect(Token::Dot)?; // consume '.'
+                    if let Some(Token::Identifier(next_name)) = self.next() {
+                        var_type.push(next_name);
+                    } else {
+                        return Err("Expected identifier after '.'".to_string());
+                    }
+                }
+                let var_name = match self.next() {
+                    Some(Token::Identifier(name)) => name,
+                    _ => return Err("Expected variable name in for loop".to_string()),
+                };
+                self.expect(Token::RParen)?;
+                self.expect(Token::LBrace)?;
+                let mut statements = Vec::new();
+                while !matches!(self.peek(0), Some(Token::RBrace)) {
+                    statements.push(self.parse_statement()?);
+                }
+                self.expect(Token::RBrace)?;
+                Ok(Statement::ForAll { var_type, var_name, statements })
+            }
+            Some(Token::Return) => {
+                self.next(); // consume 'return'
+                let value = self.parse_expression()?;
+                self.expect(Token::Semicolon)?;
+                Ok(Statement::Return { value })
+            }
+            Some(Token::Fact) | Some(Token::Goal) => {
+                let is_fact = matches!(self.next(), Some(Token::Fact)); // consume 'fact' or 'goal'
+                let name = match self.next() {
+                    Some(Token::Identifier(name)) => name,
+                    _ => return Err("Expected identifier after 'fact' or 'goal'".to_string()),
+                };
+                self.expect(Token::Equal)?;
+                self.expect(Token::New)?; // consume 'new'
+                let mut predicate_name = match self.next() {
+                    Some(Token::Identifier(name)) => vec![name],
+                    _ => return Err("Expected identifier".to_string()),
+                };
+                while let Some(Token::Dot) = self.peek(0) {
+                    self.expect(Token::Dot)?; // consume '.'
+                    if let Some(Token::Identifier(next_name)) = self.next() {
+                        predicate_name.push(next_name);
+                    } else {
+                        return Err("Expected identifier after '.'".to_string());
+                    }
+                }
+                self.expect(Token::LParen)?;
+                let mut args = Vec::new();
+                while !matches!(self.peek(0), Some(Token::RParen)) {
+                    let arg_name = match self.next() {
+                        Some(Token::Identifier(name)) => name,
+                        _ => return Err("Expected identifier in formula arguments".to_string()),
+                    };
+                    self.expect(Token::Colon)?;
+                    let arg_expr = self.parse_expression()?;
+                    args.push((arg_name, arg_expr));
+                    if let Some(Token::Comma) = self.peek(0) {
+                        self.expect(Token::Comma)?; // consume ','
+                    } else {
+                        break;
+                    }
+                }
+                self.expect(Token::RParen)?;
+                self.expect(Token::Semicolon)?;
+                Ok(Statement::Formula { is_fact, name, predicate_name, args })
+            }
+            _ => {
+                let expr = self.parse_expression()?;
+                self.expect(Token::Semicolon)?;
+                Ok(Statement::Expr(expr))
+            }
+        }
     }
 
     fn parse_expression(&mut self) -> Result<Expr, String> {
@@ -209,6 +429,12 @@ impl<'a> Parser<'a> {
     }
 }
 
+pub fn parse_statement(input: &str) -> Statement {
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    parser.parse_statement().expect("Failed to parse statement")
+}
+
 pub fn parse_expression(input: &str) -> Expr {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
@@ -235,6 +461,35 @@ mod tests {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
         parser.parse_equality_expression().expect("Failed to parse equality expression")
+    }
+
+    #[test]
+    fn test_disjunction() {
+        let input = r#"
+            {
+                x == 1;
+            } or {
+                x == 2;
+            }
+        "#;
+        let statement = parse_statement(input);
+        if let Statement::Disjunction { disjuncts } = statement {
+            assert_eq!(disjuncts.len(), 2);
+            if let Statement::Expr(Expr::Eq { left, right }) = &disjuncts[0].0[0] {
+                assert_eq!(**left, Expr::QualifiedId { ids: vec!["x".to_string()] });
+                assert_eq!(**right, Expr::Int(1));
+            } else {
+                panic!("Expected equality statement in first disjunct");
+            }
+            if let Statement::Expr(Expr::Eq { left, right }) = &disjuncts[1].0[0] {
+                assert_eq!(**left, Expr::QualifiedId { ids: vec!["x".to_string()] });
+                assert_eq!(**right, Expr::Int(2));
+            } else {
+                panic!("Expected equality statement in second disjunct");
+            }
+        } else {
+            panic!("Expected disjunction statement");
+        }
     }
 
     #[test]
