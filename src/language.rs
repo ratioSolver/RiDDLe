@@ -8,11 +8,13 @@ pub struct Problem {
     statements: Vec<Statement>,
 }
 
+type Field = (Vec<String>, Vec<(String, Option<Expr>)>); // (type, [(name, optional initializer)])
+
 #[derive(Debug, PartialEq)]
 pub struct Class {
     name: String,
     parents: Vec<Vec<String>>,
-    fields: Vec<(Vec<String>, Vec<(String, Option<Expr>)>)>,
+    fields: Vec<Field>,
     constructors: Vec<Constructor>,
     methods: Vec<Method>,
     predicates: Vec<Predicate>,
@@ -75,16 +77,16 @@ pub enum Expr {
 impl Display for Problem {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         for method in &self.methods {
-            write!(f, "{}\n", method)?;
+            writeln!(f, "{}", method)?;
         }
         for predicate in &self.predicates {
-            write!(f, "{}\n", predicate)?;
+            writeln!(f, "{}", predicate)?;
         }
         for class in &self.classes {
-            write!(f, "{}\n", class)?;
+            writeln!(f, "{}", class)?;
         }
         for statement in &self.statements {
-            write!(f, "{}\n", statement)?;
+            writeln!(f, "{}", statement)?;
         }
         Ok(())
     }
@@ -92,18 +94,18 @@ impl Display for Problem {
 
 impl Display for Class {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "class {}{} {{\n", self.name, if !self.parents.is_empty() { format!(" extends {}", self.parents.iter().map(|p| p.join(".")).collect::<Vec<_>>().join(", ")) } else { String::new() })?;
+        writeln!(f, "class {}{} {{", self.name, if !self.parents.is_empty() { format!(" extends {}", self.parents.iter().map(|p| p.join(".")).collect::<Vec<_>>().join(", ")) } else { String::new() })?;
         for (field_type, fields) in &self.fields {
-            write!(f, "    {} {};\n", field_type.join("."), fields.iter().map(|(n, v)| format!("{}{}", n, v.as_ref().map(|v| format!(" = {}", v)).unwrap_or_default())).collect::<Vec<_>>().join(", "))?;
+            writeln!(f, "    {} {};", field_type.join("."), fields.iter().map(|(n, v)| format!("{}{}", n, v.as_ref().map(|v| format!(" = {}", v)).unwrap_or_default())).collect::<Vec<_>>().join(", "))?;
         }
         for constructor in &self.constructors {
-            write!(f, "    {}\n", constructor)?;
+            writeln!(f, "    {}", constructor)?;
         }
         for method in &self.methods {
-            write!(f, "    {}\n", method)?;
+            writeln!(f, "    {}", method)?;
         }
         for predicate in &self.predicates {
-            write!(f, "    {}\n", predicate)?;
+            writeln!(f, "    {}", predicate)?;
         }
         write!(f, "}}")
     }

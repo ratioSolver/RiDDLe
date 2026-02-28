@@ -45,7 +45,7 @@ pub(crate) enum Token {
     Fact,
     Goal,
     Or,
-    EOF,
+    Eof,
 }
 
 pub(crate) struct Lexer<'a> {
@@ -179,7 +179,7 @@ impl<'a> Lexer<'a> {
                     self.next_token()
                 }
             },
-            None => Token::EOF,
+            None => Token::Eof,
         }
     }
 
@@ -264,7 +264,7 @@ impl Iterator for Lexer<'_> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let token = self.next_token();
-        if token == Token::EOF { None } else { Some(token) }
+        if token == Token::Eof { None } else { Some(token) }
     }
 }
 
