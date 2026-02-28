@@ -96,9 +96,9 @@ impl<'a> Parser<'a> {
             }
             Some(Token::Identifier(_)) => {
                 let mut lookahead = 1;
-                while let Some(Token::Identifier(_)) = self.peek(lookahead + 1) {
+                while let Some(Token::Identifier(_)) = self.peek(lookahead) {
                     lookahead += 1;
-                    if let Some(Token::Dot) = self.peek(lookahead + 1) {
+                    if let Some(Token::Dot) = self.peek(lookahead) {
                         lookahead += 1; // consume '.'
                     } else {
                         break;
@@ -172,7 +172,7 @@ impl<'a> Parser<'a> {
                 }
             }
             Some(Token::LBrace) => {
-                self.next(); // consume '{'
+                self.expect(Token::LBrace)?; // consume '{'
                 let mut branches = Vec::new();
                 loop {
                     let mut statements = Vec::new();
@@ -182,7 +182,7 @@ impl<'a> Parser<'a> {
                     self.expect(Token::RBrace)?;
 
                     let cost = if let Some(Token::LBracket) = self.peek(0) {
-                        self.next(); // consume '['
+                        self.expect(Token::LBracket)?; // consume '['
                         let cost_expr = self.parse_expression()?;
                         self.expect(Token::RBracket)?;
                         cost_expr
@@ -191,7 +191,7 @@ impl<'a> Parser<'a> {
                     };
                     branches.push((statements, cost));
                     if let Some(Token::Or) = self.peek(0) {
-                        self.next(); // consume 'or'
+                        self.expect(Token::Or)?; // consume 'or'
                         self.expect(Token::LBrace)?; // consume '{' for the next branch
                     } else {
                         break;
@@ -200,7 +200,7 @@ impl<'a> Parser<'a> {
                 Ok(Statement::Disjunction { disjuncts: branches })
             }
             Some(Token::For) => {
-                self.next(); // consume 'for'
+                self.expect(Token::For)?; // consume 'for'
                 self.expect(Token::LParen)?;
                 let mut var_type = match self.next() {
                     Some(Token::Identifier(name)) => vec![name],
@@ -228,7 +228,7 @@ impl<'a> Parser<'a> {
                 Ok(Statement::ForAll { var_type, var_name, statements })
             }
             Some(Token::Return) => {
-                self.next(); // consume 'return'
+                self.expect(Token::Return)?; // consume 'return'
                 let value = self.parse_expression()?;
                 self.expect(Token::Semicolon)?;
                 Ok(Statement::Return { value })
@@ -429,10 +429,10 @@ impl<'a> Parser<'a> {
     }
 }
 
-pub fn parse_statement(input: &str) -> Statement {
+pub fn parse_statement(input: &str) -> Result<Statement, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    parser.parse_statement().expect("Failed to parse statement")
+    parser.parse_statement()
 }
 
 pub fn parse_expression(input: &str) -> Expr {
@@ -473,7 +473,7 @@ mod tests {
             }
         "#;
         let statement = parse_statement(input);
-        if let Statement::Disjunction { disjuncts } = statement {
+        if let Ok(Statement::Disjunction { disjuncts }) = statement {
             assert_eq!(disjuncts.len(), 2);
             if let Statement::Expr(Expr::Eq { left, right }) = &disjuncts[0].0[0] {
                 assert_eq!(**left, Expr::QualifiedId { ids: vec!["x".to_string()] });
@@ -489,6 +489,74 @@ mod tests {
             }
         } else {
             panic!("Expected disjunction statement");
+        }
+    }
+
+    #[test]
+    fn test_priced_disjunction() {
+        let input = r#"
+            {
+                x == 1;
+            } [5] or {
+                x == 2;
+            } [10.0]
+        "#;
+        let statement = parse_statement(input).expect("Failed to parse priced disjunction");
+        if let Statement::Disjunction { disjuncts } = statement {
+            assert_eq!(disjuncts.len(), 2);
+            assert_eq!(disjuncts[0].1, Expr::Int(5));
+            assert_eq!(disjuncts[1].1, Expr::Real(100, 10));
+        } else {
+            panic!("Expected disjunction statement");
+        }
+    }
+
+    #[test]
+    fn test_for_all() {
+        let input = r#"
+            for (Point i) {
+                x == i;
+            }
+        "#;
+        let statement = parse_statement(input).expect("Failed to parse for loop");
+        if let Statement::ForAll { var_type, var_name, statements } = statement {
+            assert_eq!(var_type, vec!["Point".to_string()]);
+            assert_eq!(var_name, "i");
+            assert_eq!(statements.len(), 1);
+            if let Statement::Expr(Expr::Eq { left, right }) = &statements[0] {
+                assert_eq!(**left, Expr::QualifiedId { ids: vec!["x".to_string()] });
+                assert_eq!(**right, Expr::QualifiedId { ids: vec!["i".to_string()] });
+            } else {
+                panic!("Expected equality statement in for loop body");
+            }
+        } else {
+            panic!("Expected for loop statement");
+        }
+    }
+
+    #[test]
+    fn test_formula() {
+        let input = r#"
+            fact isEven = new Even(x: 2*x);
+        "#;
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        let statement = parser.parse_statement().expect("Failed to parse formula");
+        if let Statement::Formula { is_fact, name, predicate_name, args } = statement {
+            assert!(is_fact);
+            assert_eq!(name, "isEven");
+            assert_eq!(predicate_name, vec!["Even".to_string()]);
+            assert_eq!(args.len(), 1);
+            assert_eq!(args[0].0, "x");
+            if let Expr::Mul { factors } = &args[0].1 {
+                assert_eq!(factors.len(), 2);
+                assert_eq!(factors[0], Expr::Int(2));
+                assert_eq!(factors[1], Expr::QualifiedId { ids: vec!["x".to_string()] });
+            } else {
+                panic!("Expected multiplication expression in formula argument");
+            }
+        } else {
+            panic!("Expected formula statement");
         }
     }
 
