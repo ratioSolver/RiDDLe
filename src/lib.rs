@@ -14,23 +14,19 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(lexer: Lexer<'a>) -> Self {
+    pub(crate) fn new(lexer: Lexer<'a>) -> Self {
         Parser { lexer: lexer.peekable(), lookahead: VecDeque::new() }
     }
 
-    fn peek(&mut self) -> Option<&Token> {
-        if let Some(token) = self.lookahead.back() { Some(token) } else { self.lexer.peek() }
-    }
-
-    fn peek_n(&mut self, n: usize) -> Option<&Token> {
-        while self.lookahead.len() < n {
+    fn peek(&mut self, n: usize) -> Option<&Token> {
+        while self.lookahead.len() <= n {
             if let Some(token) = self.lexer.next() {
                 self.lookahead.push_back(token);
             } else {
                 break;
             }
         }
-        self.lookahead.get(n - 1)
+        self.lookahead.get(n)
     }
 
     fn next(&mut self) -> Option<Token> {
@@ -65,13 +61,13 @@ impl<'a> Parser<'a> {
         unimplemented!()
     }
 
-    pub fn parse_expression(&mut self) -> Result<Expr, String> {
+    fn parse_expression(&mut self) -> Result<Expr, String> {
         self.parse_or_expression()
     }
 
     fn parse_or_expression(&mut self) -> Result<Expr, String> {
         let mut terms = vec![self.parse_and_expression()?];
-        while let Some(Token::Bar) = self.peek() {
+        while let Some(Token::Bar) = self.peek(0) {
             self.expect(Token::Bar)?; // consume '|'
             terms.push(self.parse_and_expression()?);
         }
@@ -80,7 +76,7 @@ impl<'a> Parser<'a> {
 
     fn parse_and_expression(&mut self) -> Result<Expr, String> {
         let mut terms = vec![self.parse_equality_expression()?];
-        while let Some(Token::Amp) = self.peek() {
+        while let Some(Token::Amp) = self.peek(0) {
             self.expect(Token::Amp)?; // consume '&'
             terms.push(self.parse_equality_expression()?);
         }
@@ -89,7 +85,7 @@ impl<'a> Parser<'a> {
 
     fn parse_equality_expression(&mut self) -> Result<Expr, String> {
         let left = self.parse_relational_expression()?;
-        match self.peek() {
+        match self.peek(0) {
             Some(Token::EqualEqual) => {
                 self.expect(Token::EqualEqual)?; // consume '=='
                 let right = self.parse_relational_expression()?;
@@ -106,7 +102,7 @@ impl<'a> Parser<'a> {
 
     fn parse_relational_expression(&mut self) -> Result<Expr, String> {
         let left = self.parse_additive_expression()?;
-        match self.peek() {
+        match self.peek(0) {
             Some(Token::LessThan) => {
                 self.expect(Token::LessThan)?; // consume '<'
                 let right = self.parse_additive_expression()?;
@@ -133,7 +129,7 @@ impl<'a> Parser<'a> {
 
     fn parse_additive_expression(&mut self) -> Result<Expr, String> {
         let mut terms = vec![self.parse_multiplicative_expression()?];
-        while let Some(token) = self.peek() {
+        while let Some(token) = self.peek(0) {
             match token {
                 Token::Plus => {
                     self.expect(Token::Plus)?; // consume '+'
@@ -152,7 +148,7 @@ impl<'a> Parser<'a> {
 
     fn parse_multiplicative_expression(&mut self) -> Result<Expr, String> {
         let mut factors = vec![self.parse_primary_expression()?];
-        while let Some(token) = self.peek() {
+        while let Some(token) = self.peek(0) {
             match token {
                 Token::Asterisk => {
                     self.expect(Token::Asterisk)?; // consume '*'
@@ -177,7 +173,7 @@ impl<'a> Parser<'a> {
             Some(Token::RealLiteral(int_part, frac_part)) => Ok(Expr::Real(int_part, frac_part)),
             Some(Token::Identifier(name)) => {
                 let mut ids = vec![name];
-                while let Some(Token::Dot) = self.peek() {
+                while let Some(Token::Dot) = self.peek(0) {
                     self.expect(Token::Dot)?; // consume '.'
                     if let Some(Token::Identifier(next_name)) = self.next() {
                         ids.push(next_name);
@@ -185,12 +181,12 @@ impl<'a> Parser<'a> {
                         return Err("Expected identifier after '.'".to_string());
                     }
                 }
-                if let Some(Token::LParen) = self.peek() {
+                if let Some(Token::LParen) = self.peek(0) {
                     self.expect(Token::LParen)?;
                     let mut exprs = Vec::new();
-                    while !matches!(self.peek(), Some(Token::RParen)) {
+                    while !matches!(self.peek(0), Some(Token::RParen)) {
                         exprs.push(self.parse_expression()?);
-                        if let Some(Token::Comma) = self.peek() {
+                        if let Some(Token::Comma) = self.peek(0) {
                             self.expect(Token::Comma)?; // consume ','
                         } else {
                             break;
