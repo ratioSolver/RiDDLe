@@ -42,8 +42,120 @@ impl<'a> Parser<'a> {
         unimplemented!()
     }
 
-    pub fn parse_class(&mut self) -> Result<ClassDef, String> {
-        unimplemented!()
+    pub(crate) fn parse_class(&mut self) -> Result<ClassDef, String> {
+        self.expect(Token::Class)?;
+        let name = match self.next() {
+            Some(Token::Identifier(name)) => name,
+            _ => return Err("Expected class name".to_string()),
+        };
+        let mut parents = Vec::new();
+        if let Some(Token::Colon) = self.peek(0) {
+            self.expect(Token::Colon)?; // consume ':'
+            loop {
+                let parent_name = match self.next() {
+                    Some(Token::Identifier(name)) => name,
+                    _ => return Err("Expected parent class name".to_string()),
+                };
+                let mut ids = vec![parent_name];
+                while let Some(Token::Dot) = self.peek(0) {
+                    self.expect(Token::Dot)?; // consume '.'
+                    if let Some(Token::Identifier(next_name)) = self.next() {
+                        ids.push(next_name);
+                    } else {
+                        return Err("Expected identifier after '.' in parent class name".to_string());
+                    }
+                }
+                parents.push(ids);
+                if let Some(Token::Comma) = self.peek(0) {
+                    self.expect(Token::Comma)?; // consume ','
+                } else {
+                    break;
+                }
+            }
+        }
+        self.expect(Token::LBrace)?;
+        let mut fields = Vec::new();
+        let mut constructors = Vec::new();
+        let mut methods = Vec::new();
+        let mut predicates = Vec::new();
+        while !matches!(self.peek(0), Some(Token::RBrace)) {
+            match self.peek(0) {
+                Some(Token::Predicate) => predicates.push(self.parse_predicate()?),
+                Some(Token::Void) => methods.push(self.parse_method()?),
+                _ => {
+                    // Lookahead to distinguish between constructor and field/method declaration
+                    let mut lookahead = 0;
+                    while let Some(Token::Bool | Token::Int | Token::Real | Token::String | Token::Identifier(_)) = self.peek(lookahead) {
+                        lookahead += 1;
+                        if let Some(Token::Dot) = self.peek(lookahead) {
+                            lookahead += 1; // consume '.'
+                        } else {
+                            break;
+                        }
+                    }
+                    if lookahead == 1 && matches!(self.peek(1), Some(Token::Identifier(id)) if id == &name) {
+                        constructors.push(self.parse_constructor()?);
+                    } else {
+                        let t0 = self.peek(lookahead + 1).cloned();
+                        let t1 = self.peek(lookahead + 2).cloned();
+                        match (t0, t1) {
+                            (Some(Token::Identifier(_)), Some(Token::LParen)) => methods.push(self.parse_method()?),
+                            _ => {
+                                let field_type = match self.next() {
+                                    Some(Token::Bool) => vec!["bool".to_string()],
+                                    Some(Token::Int) => vec!["int".to_string()],
+                                    Some(Token::Real) => vec!["real".to_string()],
+                                    Some(Token::String) => vec!["string".to_string()],
+                                    Some(Token::Identifier(name)) => {
+                                        let mut ids = vec![name];
+                                        while let Some(Token::Dot) = self.peek(0) {
+                                            self.expect(Token::Dot)?; // consume '.'
+                                            if let Some(Token::Identifier(next_name)) = self.next() {
+                                                ids.push(next_name);
+                                            } else {
+                                                return Err("Expected identifier after '.' in type".to_string());
+                                            }
+                                        }
+                                        ids
+                                    }
+                                    Some(token) => return Err(format!("Unexpected token in type: {:?}", token)),
+                                    None => return Err("Unexpected end of input while parsing type".to_string()),
+                                };
+                                let name = match self.next() {
+                                    Some(Token::Identifier(name)) => name,
+                                    _ => return Err("Expected field name".to_string()),
+                                };
+                                let init_expr = if let Some(Token::Equal) = self.peek(0) {
+                                    self.expect(Token::Equal)?; // consume '='
+                                    Some(self.parse_expression()?)
+                                } else {
+                                    None
+                                };
+                                let mut field_names = vec![(name, init_expr)];
+                                while let Some(Token::Comma) = self.peek(0) {
+                                    self.expect(Token::Comma)?; // consume ','
+                                    let name = match self.next() {
+                                        Some(Token::Identifier(name)) => name,
+                                        _ => return Err("Expected field name".to_string()),
+                                    };
+                                    let init_expr = if let Some(Token::Equal) = self.peek(0) {
+                                        self.expect(Token::Equal)?; // consume '='
+                                        Some(self.parse_expression()?)
+                                    } else {
+                                        None
+                                    };
+                                    field_names.push((name, init_expr));
+                                }
+                                self.expect(Token::Semicolon)?;
+                                fields.push((field_type, field_names));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.expect(Token::RBrace)?;
+        Ok(ClassDef { name, parents, fields, constructors, methods, predicates })
     }
 
     pub(crate) fn parse_constructor(&mut self) -> Result<ConstructorDef, String> {
@@ -624,7 +736,7 @@ impl<'a> Parser<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{parse_constructor, parse_expression, parse_method, parse_statement};
+    use crate::{parse_class, parse_constructor, parse_expression, parse_method, parse_statement};
 
     use super::*;
 
@@ -644,6 +756,62 @@ mod tests {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
         parser.parse_equality_expression().expect("Failed to parse equality expression")
+    }
+
+    #[test]
+    fn test_class() {
+        let input = r#"
+            class Point {
+                int x, y;
+
+                void move(int dx, int dy) {
+                    x = x + dx;
+                    y = y + dy;
+                }
+
+                predicate isOrigin() {
+                    x == 0 & y == 0;
+                }
+            }
+        "#;
+        let class = parse_class(input).expect("Failed to parse class");
+        assert_eq!(class.name, "Point");
+        assert!(class.parents.is_empty());
+        assert_eq!(class.fields.len(), 1);
+        assert_eq!(class.fields[0].0, vec!["int".to_string()]);
+        assert_eq!(class.fields[0].1.len(), 2);
+        assert_eq!(class.fields[0].1[0].0, "x".to_string());
+        assert_eq!(class.fields[0].1[1].0, "y".to_string());
+        assert_eq!(class.constructors.len(), 0);
+        assert_eq!(class.methods.len(), 1);
+        assert_eq!(class.methods[0].return_type, None);
+        assert_eq!(class.methods[0].name, "move");
+        assert_eq!(class.methods[0].args.len(), 2);
+        assert_eq!(class.methods[0].args[0].0, vec!["int".to_string()]);
+        assert_eq!(class.methods[0].args[0].1, "dx".to_string());
+        assert_eq!(class.methods[0].args[1].0, vec!["int".to_string()]);
+        assert_eq!(class.methods[0].args[1].1, "dy".to_string());
+        assert_eq!(class.predicates.len(), 1);
+        assert_eq!(class.predicates[0].name, "isOrigin");
+        assert_eq!(class.predicates[0].args.len(), 0);
+        assert_eq!(class.predicates[0].statements.len(), 1);
+        if let Statement::Expr(Expr::And { terms }) = &class.predicates[0].statements[0] {
+            assert_eq!(terms.len(), 2);
+            if let Expr::Eq { left, right } = &terms[0] {
+                assert_eq!(**left, Expr::QualifiedId { ids: vec!["x".to_string()] });
+                assert_eq!(**right, Expr::Int(0));
+            } else {
+                panic!("Expected equality expression in predicate body");
+            }
+            if let Expr::Eq { left, right } = &terms[1] {
+                assert_eq!(**left, Expr::QualifiedId { ids: vec!["y".to_string()] });
+                assert_eq!(**right, Expr::Int(0));
+            } else {
+                panic!("Expected equality expression in predicate body");
+            }
+        } else {
+            panic!("Expected conjunction expression in predicate body");
+        }
     }
 
     #[test]

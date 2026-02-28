@@ -8,6 +8,12 @@ pub mod language;
 mod lexer;
 mod parser;
 
+pub fn parse_class(input: &str) -> Result<language::ClassDef, String> {
+    let lexer = Lexer::new(input);
+    let mut parser = Parser::new(lexer);
+    parser.parse_class()
+}
+
 pub fn parse_constructor(input: &str) -> Result<language::ConstructorDef, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
