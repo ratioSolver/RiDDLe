@@ -69,6 +69,25 @@ impl<'a> Parser<'a> {
         unimplemented!()
     }
 
+    fn parse_additive_expression(&mut self) -> Result<Expr, String> {
+        let mut terms = vec![self.parse_multiplicative_expression()?];
+        while let Some(token) = self.peek() {
+            match token {
+                Token::Plus => {
+                    self.expect(Token::Plus)?; // consume '+'
+                    terms.push(self.parse_multiplicative_expression()?);
+                }
+                Token::Minus => {
+                    self.expect(Token::Minus)?; // consume '-'
+                    let right = self.parse_multiplicative_expression()?;
+                    terms.push(Expr::Opposite { term: Box::new(right) });
+                }
+                _ => break,
+            }
+        }
+        if terms.len() == 1 { Ok(terms.remove(0)) } else { Ok(Expr::Sum { terms }) }
+    }
+
     fn parse_multiplicative_expression(&mut self) -> Result<Expr, String> {
         let mut factors = vec![self.parse_primary_expression()?];
         while let Some(token) = self.peek() {
@@ -142,6 +161,12 @@ mod tests {
         parser.parse_primary_expression().expect("Failed to parse primary expression")
     }
 
+    fn parse_arithmetic_expression(input: &str) -> Expr {
+        let lexer = Lexer::new(input);
+        let mut parser = Parser::new(lexer);
+        parser.parse_additive_expression().expect("Failed to parse arithmetic expression")
+    }
+
     #[test]
     fn test_primary_expressions() {
         assert_eq!(parse_primary_expression("true"), Expr::Bool(true));
@@ -154,5 +179,20 @@ mod tests {
         assert_eq!(parse_primary_expression("f()"), Expr::Function { name: vec!["f".to_string()], args: vec![] });
         // assert_eq!(parse_primary_expression("g(1, true)"), Expr::Function { name: vec!["g".to_string()], args: vec![Expr::Int(1), Expr::Bool(true)] });
         // assert_eq!(parse_primary_expression("Math.max(1, 2)"), Expr::Function { name: vec!["Math".to_string(), "max".to_string()], args: vec![Expr::Int(1), Expr::Int(2)] });
+    }
+
+    #[test]
+    fn test_arithmetic() {
+        // 1 + 2
+        assert_eq!(parse_arithmetic_expression("1 + 2"), Expr::Sum { terms: vec![Expr::Int(1), Expr::Int(2)] });
+
+        // 1 * 2
+        assert_eq!(parse_arithmetic_expression("1 * 2"), Expr::Mul { factors: vec![Expr::Int(1), Expr::Int(2)] });
+
+        // 1 + 2 * 3
+        assert_eq!(parse_arithmetic_expression("1 + 2 * 3"), Expr::Sum { terms: vec![Expr::Int(1), Expr::Mul { factors: vec![Expr::Int(2), Expr::Int(3)] },] });
+
+        // (1 + 2) * 3
+        // assert_eq!(parse_arithmetic_expression("(1 + 2) * 3"), Expr::Mul { factors: vec![Expr::Sum { terms: vec![Expr::Int(1), Expr::Int(2)] }, Expr::Int(3),] });
     }
 }
