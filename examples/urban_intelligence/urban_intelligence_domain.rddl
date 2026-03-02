@@ -1,12 +1,12 @@
 class MunicipalTechnician {
     ReusableResource activity = new ReusableResource(2.0);
-};
+}
 
-class Road {};
+class Road {}
 
-class Building {};
+class Building {}
 
-class GreenSpace {};
+class GreenSpace {}
 
 predicate DoesRoadMaintenance(MunicipalTechnician mt) {
     false;
