@@ -61,8 +61,6 @@ impl<'a> Parser<'a> {
                     }
                     let t0 = self.peek(lookahead).cloned();
                     let t1 = self.peek(lookahead + 1).cloned();
-                    println!("Lookahead {:?}", self.lookahead);
-                    println!("Lookahead tokens: {:?}, {:?}", t0, t1);
                     match (t0, t1) {
                         (Some(Token::Identifier(_)), Some(Token::LParen)) => methods.push(self.parse_method()?),
                         _ => statements.push(self.parse_statement()?),
@@ -114,7 +112,6 @@ impl<'a> Parser<'a> {
                 Some(Token::Predicate) => predicates.push(self.parse_predicate()?),
                 Some(Token::Void) => methods.push(self.parse_method()?),
                 _ => {
-                    println!("Lookahead {:?}", self.lookahead);
                     // Lookahead to distinguish between constructor and field/method declaration
                     let mut lookahead = 0;
                     while let Some(Token::Bool | Token::Int | Token::Real | Token::String | Token::Identifier(_)) = self.peek(lookahead) {
@@ -130,8 +127,6 @@ impl<'a> Parser<'a> {
                     } else {
                         let t0 = self.peek(lookahead).cloned();
                         let t1 = self.peek(lookahead + 1).cloned();
-                        println!("Parsing class '{}', lookahead tokens: {:?}, {:?}", name, t0, t1);
-                        println!("Lookahead {:?}", self.lookahead);
                         match (t0, t1) {
                             (Some(Token::Identifier(_)), Some(Token::LParen)) => methods.push(self.parse_method()?),
                             _ => {
@@ -434,7 +429,7 @@ impl<'a> Parser<'a> {
                 Ok(Statement::LocalField { field_type, fields })
             }
             Some(Token::Identifier(_)) => {
-                let mut lookahead = 1;
+                let mut lookahead = 0;
                 while let Some(Token::Identifier(_)) = self.peek(lookahead) {
                     lookahead += 1;
                     if let Some(Token::Dot) = self.peek(lookahead) {
@@ -730,6 +725,7 @@ impl<'a> Parser<'a> {
             Some(Token::BoolLiteral(value)) => Ok(Expr::Bool(value)),
             Some(Token::IntLiteral(value)) => Ok(Expr::Int(value)),
             Some(Token::RealLiteral(int_part, frac_part)) => Ok(Expr::Real(int_part, frac_part)),
+            Some(Token::StringLiteral(value)) => Ok(Expr::String(value)),
             Some(Token::Identifier(name)) => {
                 let mut ids = vec![name];
                 while let Some(Token::Dot) = self.peek(0) {
@@ -761,6 +757,32 @@ impl<'a> Parser<'a> {
                 let expr = self.parse_expression()?;
                 self.expect(Token::RParen)?;
                 Ok(expr)
+            }
+            Some(Token::New) => {
+                let mut class_name = match self.next() {
+                    Some(Token::Identifier(name)) => vec![name],
+                    _ => return Err("Expected identifier after 'new'".to_string()),
+                };
+                while let Some(Token::Dot) = self.peek(0) {
+                    self.expect(Token::Dot)?; // consume '.'
+                    if let Some(Token::Identifier(next_name)) = self.next() {
+                        class_name.push(next_name);
+                    } else {
+                        return Err("Expected identifier after '.'".to_string());
+                    }
+                }
+                self.expect(Token::LParen)?;
+                let mut args = Vec::new();
+                while !matches!(self.peek(0), Some(Token::RParen)) {
+                    args.push(self.parse_expression()?);
+                    if let Some(Token::Comma) = self.peek(0) {
+                        self.expect(Token::Comma)?; // consume ','
+                    } else {
+                        break;
+                    }
+                }
+                self.expect(Token::RParen)?;
+                Ok(Expr::NewObject { class_name, args })
             }
             Some(token) => Err(format!("Unexpected token: {:?}", token)),
             None => Err("Unexpected end of input".to_string()),
@@ -820,6 +842,39 @@ mod tests {
             fact isAtOrigin = new p.isAtOrigin();
         "#;
         let program = parse_problem(input).expect("Failed to parse problem");
+        assert_eq!(program.classes.len(), 1);
+        assert_eq!(program.classes[0].name, "Point");
+        assert!(program.classes[0].parents.is_empty());
+        assert_eq!(program.classes[0].fields.len(), 1);
+        assert_eq!(program.classes[0].fields[0].0, vec!["int".to_string()]);
+        assert_eq!(program.classes[0].fields[0].1.len(), 2);
+        assert_eq!(program.classes[0].fields[0].1[0].0, "x".to_string());
+        assert_eq!(program.classes[0].fields[0].1[1].0, "y".to_string());
+        assert_eq!(program.classes[0].constructors.len(), 1);
+        assert_eq!(program.classes[0].constructors[0].args, vec![(vec!["int".to_string()], "x".to_string()), (vec!["int".to_string()], "y".to_string())]);
+        assert_eq!(program.classes[0].constructors[0].init, vec![("distance".to_string(), vec![Expr::QualifiedId { ids: vec!["x".to_string()] }, Expr::QualifiedId { ids: vec!["y".to_string()] }])]);
+        assert_eq!(program.classes[0].constructors[0].statements.len(), 1);
+        if let Statement::Assign { name, value } = &program.classes[0].constructors[0].statements[0] {
+            assert_eq!(name, &vec!["distance".to_string()]);
+            assert_eq!(
+                *value,
+                Expr::Function {
+                    name: vec!["sqrt".to_string()],
+                    args: vec![Expr::Sum {
+                        terms: vec![
+                            Expr::Mul {
+                                factors: vec![Expr::QualifiedId { ids: vec!["x".to_string()] }, Expr::QualifiedId { ids: vec!["x".to_string()] }]
+                            },
+                            Expr::Mul {
+                                factors: vec![Expr::QualifiedId { ids: vec!["y".to_string()] }, Expr::QualifiedId { ids: vec!["y".to_string()] }]
+                            },
+                        ]
+                    }]
+                }
+            );
+        } else {
+            panic!("Expected assignment statement in constructor body");
+        }
     }
 
     #[test]

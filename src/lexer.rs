@@ -7,6 +7,7 @@ pub(crate) enum Token {
     BoolLiteral(bool),
     IntLiteral(i64),
     RealLiteral(i64, i64),
+    StringLiteral(String),
     Plus,
     Minus,
     Asterisk,
@@ -172,6 +173,20 @@ impl<'a> Lexer<'a> {
                     self.input.next();
                     Token::Semicolon
                 }
+                '"' => {
+                    self.input.next(); // consume opening quote
+                    let mut string = String::new();
+                    while let Some(&ch) = self.input.peek() {
+                        if ch == '"' {
+                            self.input.next(); // consume closing quote
+                            break;
+                        } else {
+                            string.push(ch);
+                            self.input.next();
+                        }
+                    }
+                    Token::StringLiteral(string)
+                }
                 '0'..='9' => self.read_number(),
                 'a'..='z' | 'A'..='Z' | '_' => self.read_identifier(),
                 _ => {
@@ -308,6 +323,17 @@ mod tests {
         let input = "var1 var_2 123 45.67";
         let mut lexer = Lexer::new(input);
         let expected_tokens = vec![Token::Identifier("var1".to_string()), Token::Identifier("var_2".to_string()), Token::IntLiteral(123), Token::RealLiteral(4567, 100)];
+        for expected in expected_tokens {
+            let token = lexer.next_token();
+            assert_eq!(token, expected);
+        }
+    }
+
+    #[test]
+    fn test_lexer_string_literals() {
+        let input = r#""hello" "world""#;
+        let mut lexer = Lexer::new(input);
+        let expected_tokens = vec![Token::StringLiteral("hello".to_string()), Token::StringLiteral("world".to_string())];
         for expected in expected_tokens {
             let token = lexer.next_token();
             assert_eq!(token, expected);

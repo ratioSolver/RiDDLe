@@ -58,6 +58,7 @@ pub enum Expr {
     Bool(bool),
     Int(i64),
     Real(i64, i64),
+    String(String),
     QualifiedId { ids: Vec<String> },
     Sum { terms: Vec<Expr> },
     Opposite { term: Box<Expr> },
@@ -72,6 +73,7 @@ pub enum Expr {
     Geq { left: Box<Expr>, right: Box<Expr> },
     Or { terms: Vec<Expr> },
     And { terms: Vec<Expr> },
+    NewObject { class_name: Vec<String>, args: Vec<Expr> },
 }
 
 impl Display for ProblemDef {
@@ -156,6 +158,7 @@ impl Display for Expr {
             Expr::Bool(b) => write!(f, "{}", b),
             Expr::Int(i) => write!(f, "{}", i),
             Expr::Real(n, d) => write!(f, "{}/{}", n, d),
+            Expr::String(s) => write!(f, "\"{}\"", s),
             Expr::QualifiedId { ids } => write!(f, "{}", ids.join(".")),
             Expr::Sum { terms } => write!(f, "({})", terms.iter().map(|t| format!("{}", t)).collect::<Vec<_>>().join(" + ")),
             Expr::Opposite { term } => write!(f, "-({})", term),
@@ -170,6 +173,7 @@ impl Display for Expr {
             Expr::Geq { left, right } => write!(f, "({} >= {})", left, right),
             Expr::Or { terms } => write!(f, "({})", terms.iter().map(|t| format!("{}", t)).collect::<Vec<_>>().join(" || ")),
             Expr::And { terms } => write!(f, "({})", terms.iter().map(|t| format!("{}", t)).collect::<Vec<_>>().join(" && ")),
+            Expr::NewObject { class_name, args } => write!(f, "new {}({})", class_name.join("."), args.iter().map(|a| format!("{}", a)).collect::<Vec<_>>().join(", ")),
         }
     }
 }
