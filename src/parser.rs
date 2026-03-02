@@ -412,13 +412,38 @@ impl<'a> Parser<'a> {
             }
         }
         self.expect(Token::RParen)?;
+        let mut parents = Vec::new();
+        if let Some(Token::Colon) = self.peek(0) {
+            self.expect(Token::Colon)?; // consume ':'
+            loop {
+                let parent_name = match self.next() {
+                    Some(Token::Identifier(name)) => name,
+                    _ => return Err("Expected parent predicate name".to_string()),
+                };
+                let mut ids = vec![parent_name];
+                while let Some(Token::Dot) = self.peek(0) {
+                    self.expect(Token::Dot)?; // consume '.'
+                    if let Some(Token::Identifier(next_name)) = self.next() {
+                        ids.push(next_name);
+                    } else {
+                        return Err("Expected identifier after '.' in parent predicate name".to_string());
+                    }
+                }
+                parents.push(ids);
+                if let Some(Token::Comma) = self.peek(0) {
+                    self.expect(Token::Comma)?; // consume ','
+                } else {
+                    break;
+                }
+            }
+        }
         self.expect(Token::LBrace)?;
         let mut statements = Vec::new();
         while !matches!(self.peek(0), Some(Token::RBrace)) {
             statements.push(self.parse_statement()?);
         }
         self.expect(Token::RBrace)?;
-        Ok(PredicateDef { name, args, statements })
+        Ok(PredicateDef { name, args, parents, statements })
     }
 
     pub(crate) fn parse_statement(&mut self) -> Result<Statement, String> {

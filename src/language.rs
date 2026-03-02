@@ -48,6 +48,7 @@ pub struct MethodDef {
 pub struct PredicateDef {
     pub name: String,
     pub args: Vec<(Vec<String>, String)>,
+    pub parents: Vec<Vec<String>>,
     pub statements: Vec<Statement>,
 }
 
