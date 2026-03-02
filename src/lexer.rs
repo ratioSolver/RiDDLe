@@ -217,7 +217,7 @@ impl<'a> Lexer<'a> {
                 (Some('/'), Some('/')) => {
                     self.input.next();
                     self.input.next();
-                    while let Some(ch) = self.input.next() {
+                    for ch in self.input.by_ref() {
                         if ch == '\n' {
                             break;
                         }
@@ -227,7 +227,7 @@ impl<'a> Lexer<'a> {
                     self.input.next();
                     self.input.next();
                     let mut prev = '\0';
-                    while let Some(ch) = self.input.next() {
+                    for ch in self.input.by_ref() {
                         if prev == '*' && ch == '/' {
                             break;
                         }
