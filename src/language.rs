@@ -5,10 +5,17 @@ pub struct ProblemDef {
     pub methods: Vec<MethodDef>,
     pub predicates: Vec<PredicateDef>,
     pub classes: Vec<ClassDef>,
+    pub enums: Vec<EnumDef>,
     pub statements: Vec<Statement>,
 }
 
 type Field = (Vec<String>, Vec<(String, Option<Expr>)>); // (type, [(name, optional initializer)])
+
+#[derive(Debug, PartialEq)]
+pub struct EnumDef {
+    pub name: String,
+    pub values: Vec<String>,
+}
 
 #[derive(Debug, PartialEq)]
 pub struct ClassDef {
@@ -18,6 +25,8 @@ pub struct ClassDef {
     pub constructors: Vec<ConstructorDef>,
     pub methods: Vec<MethodDef>,
     pub predicates: Vec<PredicateDef>,
+    pub classes: Vec<ClassDef>,
+    pub enums: Vec<EnumDef>,
 }
 
 #[derive(Debug, PartialEq)]
