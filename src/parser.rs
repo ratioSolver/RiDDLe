@@ -783,6 +783,33 @@ impl<'a> Parser<'a> {
                     Ok(Expr::QualifiedId { ids })
                 }
             }
+            Some(Token::This) => {
+                let mut ids = vec!["this".to_string()];
+                while let Some(Token::Dot) = self.peek(0) {
+                    self.expect(Token::Dot)?; // consume '.'
+                    if let Some(Token::Identifier(next_name)) = self.next() {
+                        ids.push(next_name);
+                    } else {
+                        return Err("Expected identifier after '.'".to_string());
+                    }
+                }
+                if let Some(Token::LParen) = self.peek(0) {
+                    self.expect(Token::LParen)?;
+                    let mut exprs = Vec::new();
+                    while !matches!(self.peek(0), Some(Token::RParen)) {
+                        exprs.push(self.parse_expression()?);
+                        if let Some(Token::Comma) = self.peek(0) {
+                            self.expect(Token::Comma)?; // consume ','
+                        } else {
+                            break;
+                        }
+                    }
+                    self.expect(Token::RParen)?;
+                    Ok(Expr::Function { name: ids, args: exprs })
+                } else {
+                    Ok(Expr::QualifiedId { ids })
+                }
+            }
             Some(Token::LParen) => {
                 let expr = self.parse_expression()?;
                 self.expect(Token::RParen)?;

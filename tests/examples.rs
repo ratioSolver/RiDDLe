@@ -28,3 +28,13 @@ test_riddle!(test_core_10, "examples/core/example_10.rddl");
 test_riddle!(test_core_11, "examples/core/example_11.rddl");
 test_riddle!(test_core_12, "examples/core/example_12.rddl");
 test_riddle!(test_core_13, "examples/core/example_13.rddl");
+
+test_riddle!(blocks_domain, "examples/blocks/blocks_domain.rddl");
+test_riddle!(blocks_01, "examples/blocks/blocks_01.rddl");
+test_riddle!(blocks_02, "examples/blocks/blocks_02.rddl");
+test_riddle!(blocks_03, "examples/blocks/blocks_03.rddl");
+
+test_riddle!(types_rr_rr0, "examples/types/rr/rr_0.rddl");
+test_riddle!(types_rr_rr1, "examples/types/rr/rr_1.rddl");
+test_riddle!(types_rr_rr2, "examples/types/rr/rr_2.rddl");
+test_riddle!(types_rr_rr3, "examples/types/rr/rr_3.rddl");
