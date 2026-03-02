@@ -9,7 +9,7 @@ pub struct ProblemDef {
     pub statements: Vec<Statement>,
 }
 
-type Field = (Vec<String>, Vec<(String, Option<Expr>)>); // (type, [(name, optional initializer)])
+pub type Field = (Vec<String>, Vec<(String, Option<Expr>)>); // (type, [(name, optional initializer)])
 
 #[derive(Debug, PartialEq)]
 pub struct EnumDef {
