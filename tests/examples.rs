@@ -38,3 +38,7 @@ test_riddle!(types_rr_rr0, "examples/types/rr/rr_0.rddl");
 test_riddle!(types_rr_rr1, "examples/types/rr/rr_1.rddl");
 test_riddle!(types_rr_rr2, "examples/types/rr/rr_2.rddl");
 test_riddle!(types_rr_rr3, "examples/types/rr/rr_3.rddl");
+test_riddle!(types_sv_sv0, "examples/types/sv/sv_0.rddl");
+test_riddle!(types_sv_sv1, "examples/types/sv/sv_1.rddl");
+test_riddle!(types_sv_sv2, "examples/types/sv/sv_2.rddl");
+test_riddle!(types_sv_sv3, "examples/types/sv/sv_3.rddl");
