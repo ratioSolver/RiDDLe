@@ -59,7 +59,7 @@ impl<'a> Lexer<'a> {
     }
 
     pub(crate) fn next_token(&mut self) -> Token {
-        self.skip_whitespace();
+        self.skip_whitespace_and_comments();
         match self.input.peek() {
             Some(&ch) => match ch {
                 '+' => {
@@ -204,6 +204,37 @@ impl<'a> Lexer<'a> {
                 self.input.next();
             } else {
                 break;
+            }
+        }
+    }
+
+    fn skip_whitespace_and_comments(&mut self) {
+        loop {
+            self.skip_whitespace();
+
+            let mut lookahead = self.input.clone();
+            match (lookahead.next(), lookahead.next()) {
+                (Some('/'), Some('/')) => {
+                    self.input.next();
+                    self.input.next();
+                    while let Some(ch) = self.input.next() {
+                        if ch == '\n' {
+                            break;
+                        }
+                    }
+                }
+                (Some('/'), Some('*')) => {
+                    self.input.next();
+                    self.input.next();
+                    let mut prev = '\0';
+                    while let Some(ch) = self.input.next() {
+                        if prev == '*' && ch == '/' {
+                            break;
+                        }
+                        prev = ch;
+                    }
+                }
+                _ => break,
             }
         }
     }
@@ -378,5 +409,38 @@ mod tests {
 
         // 0.5 -> RealLiteral(5, 10)
         assert_eq!(lexer.next_token(), Token::RealLiteral(5, 10));
+    }
+
+    #[test]
+    fn test_lexer_skips_single_line_comments() {
+        let input = "int x; // comment\n real y;";
+        let mut lexer = Lexer::new(input);
+        let expected_tokens = vec![Token::Int, Token::Identifier("x".to_string()), Token::Semicolon, Token::Real, Token::Identifier("y".to_string()), Token::Semicolon];
+
+        for expected in expected_tokens {
+            assert_eq!(lexer.next_token(), expected);
+        }
+    }
+
+    #[test]
+    fn test_lexer_skips_multiline_comments() {
+        let input = "int /* ignore\nthis */ value;";
+        let mut lexer = Lexer::new(input);
+        let expected_tokens = vec![Token::Int, Token::Identifier("value".to_string()), Token::Semicolon];
+
+        for expected in expected_tokens {
+            assert_eq!(lexer.next_token(), expected);
+        }
+    }
+
+    #[test]
+    fn test_lexer_slash_still_tokenized_when_not_comment() {
+        let input = "a / b";
+        let mut lexer = Lexer::new(input);
+        let expected_tokens = vec![Token::Identifier("a".to_string()), Token::Slash, Token::Identifier("b".to_string())];
+
+        for expected in expected_tokens {
+            assert_eq!(lexer.next_token(), expected);
+        }
     }
 }
