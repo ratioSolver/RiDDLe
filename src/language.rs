@@ -9,7 +9,7 @@ pub struct ProblemDef {
     pub statements: Vec<Statement>,
 }
 
-pub type Field = (Vec<String>, Vec<(String, Option<Expr>)>); // (type, [(name, optional initializer)])
+pub type FieldDef = (Vec<String>, Vec<(String, Option<Expr>)>); // (type, [(name, optional initializer)])
 
 #[derive(Debug, PartialEq)]
 pub struct EnumDef {
@@ -21,7 +21,7 @@ pub struct EnumDef {
 pub struct ClassDef {
     pub name: String,
     pub parents: Vec<Vec<String>>,
-    pub fields: Vec<Field>,
+    pub fields: Vec<FieldDef>,
     pub constructors: Vec<ConstructorDef>,
     pub methods: Vec<MethodDef>,
     pub predicates: Vec<PredicateDef>,

@@ -1,5 +1,5 @@
 use crate::{
-    language::{Expr, PredicateDef, Statement},
+    language::{ClassDef, ConstructorDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
     lexer::Lexer,
     parser::Parser,
 };
@@ -9,31 +9,31 @@ pub mod language;
 mod lexer;
 mod parser;
 
-pub fn parse_problem(input: &str) -> Result<language::ProblemDef, String> {
+pub fn parse_problem(input: &str) -> Result<ProblemDef, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_problem()
 }
 
-pub fn parse_enum(input: &str) -> Result<language::EnumDef, String> {
+pub fn parse_enum(input: &str) -> Result<EnumDef, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_enum()
 }
 
-pub fn parse_class(input: &str) -> Result<language::ClassDef, String> {
+pub fn parse_class(input: &str) -> Result<ClassDef, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_class()
 }
 
-pub fn parse_constructor(input: &str) -> Result<language::ConstructorDef, String> {
+pub fn parse_constructor(input: &str) -> Result<ConstructorDef, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_constructor()
 }
 
-pub fn parse_method(input: &str) -> Result<language::MethodDef, String> {
+pub fn parse_method(input: &str) -> Result<MethodDef, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_method()
