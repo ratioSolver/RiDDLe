@@ -4,6 +4,7 @@ use crate::{
     parser::Parser,
 };
 
+pub mod env;
 pub mod language;
 mod lexer;
 mod parser;
