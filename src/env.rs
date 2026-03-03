@@ -1,4 +1,4 @@
-use crate::language::{ClassDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement};
+use crate::language::{ClassDef, ConstructorDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement};
 use std::{
     any::Any,
     cell::RefCell,
@@ -208,9 +208,25 @@ impl CommonScope {
         scope
     }
 
+    pub fn from_costructor(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, constructor: ConstructorDef) -> Self {
+        let scope = Self::new(core, parent);
+        for (arg_type, arg_name) in constructor.args {
+            scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
+        }
+        scope
+    }
+
     pub fn from_method(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, method: MethodDef) -> Self {
         let scope = Self::new(core, parent);
         for (arg_type, arg_name) in method.args {
+            scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
+        }
+        scope
+    }
+
+    pub fn from_predicate(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, predicate: PredicateDef) -> Self {
+        let scope = Self::new(core, parent);
+        for (arg_type, arg_name) in predicate.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
         }
         scope
@@ -314,19 +330,119 @@ impl Scope for Method {
     }
 }
 
-pub struct CompositeClass {
+pub struct Constructor {
+    core: Weak<dyn Core>,
+    scope: CommonScope,
+    args: Vec<(Vec<String>, String)>,
+    statements: Vec<Statement>,
+}
+
+impl Constructor {
+    pub fn new(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, mut constructor: ConstructorDef) -> Self {
+        Self {
+            core: Rc::downgrade(&core),
+            args: std::mem::take(&mut constructor.args),
+            statements: std::mem::take(&mut constructor.statements),
+            scope: CommonScope::from_costructor(core, parent, constructor),
+        }
+    }
+}
+
+impl Scope for Constructor {
+    fn core(self: Rc<Self>) -> Rc<dyn Core> {
+        self.core.upgrade().unwrap()
+    }
+
+    fn parent(&self) -> Option<Rc<dyn Scope>> {
+        self.scope.parent.clone()
+    }
+
+    fn get_field(&self, name: &str) -> Option<Rc<Field>> {
+        self.scope.get_field(name)
+    }
+
+    fn get_method(&self, name: &str) -> Option<Rc<Method>> {
+        self.scope.get_method(name)
+    }
+
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+        self.scope.get_class(name)
+    }
+
+    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
+        self.scope.get_enum(name)
+    }
+
+    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+        self.scope.get_predicate(name)
+    }
+}
+
+pub struct Predicate {
     core: Weak<dyn Core>,
     scope: CommonScope,
     name: String,
+    args: Vec<(Vec<String>, String)>,
+    statements: Vec<Statement>,
+}
+
+impl Predicate {
+    pub fn new(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, mut predicate: PredicateDef) -> Self {
+        Self {
+            core: Rc::downgrade(&core),
+            name: std::mem::take(&mut predicate.name),
+            args: std::mem::take(&mut predicate.args),
+            statements: std::mem::take(&mut predicate.statements),
+            scope: CommonScope::from_predicate(core, parent, predicate),
+        }
+    }
+}
+
+impl Scope for Predicate {
+    fn core(self: Rc<Self>) -> Rc<dyn Core> {
+        self.core.upgrade().unwrap()
+    }
+
+    fn parent(&self) -> Option<Rc<dyn Scope>> {
+        self.scope.parent.clone()
+    }
+
+    fn get_field(&self, name: &str) -> Option<Rc<Field>> {
+        self.scope.get_field(name)
+    }
+
+    fn get_method(&self, name: &str) -> Option<Rc<Method>> {
+        self.scope.get_method(name)
+    }
+
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+        self.scope.get_class(name)
+    }
+
+    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
+        self.scope.get_enum(name)
+    }
+
+    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+        self.scope.get_predicate(name)
+    }
+}
+
+pub struct CompositeClass {
+    core: Weak<dyn Core>,
+    scope: Rc<CommonScope>,
+    name: String,
+    constructors: Vec<Constructor>,
     instances: RefCell<Vec<Rc<CompositeObject>>>,
 }
 
 impl CompositeClass {
-    pub fn new(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, class: ClassDef) -> Self {
+    pub fn new(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Self {
         Self {
             core: Rc::downgrade(&core),
-            scope: CommonScope::new(core, parent),
-            name: class.name.clone(),
+            name: std::mem::take(&mut class.name),
+            constructors: std::mem::take(&mut class.constructors).into_iter().map(|c| Constructor::new(core.clone(), parent.clone(), c)).collect(),
+            scope: CommonScope::from_class(core, parent, class),
             instances: RefCell::new(Vec::new()),
         }
     }
