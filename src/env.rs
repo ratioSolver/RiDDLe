@@ -163,66 +163,6 @@ pub struct CommonScope {
     predicates: RefCell<HashMap<String, Rc<PredicateDef>>>,
 }
 
-pub struct CompositeClass {
-    core: Weak<dyn Core>,
-    name: String,
-    scope: Rc<CommonScope>,
-}
-
-impl CompositeClass {
-    pub fn new(core: Rc<dyn Core>, class: ClassDef) -> Self {
-        Self {
-            core: Rc::downgrade(&core),
-            name: class.name.clone(),
-            scope: Rc::new(CommonScope::new(core, None)),
-        }
-    }
-}
-
-impl Class for CompositeClass {
-    fn name(&self) -> &str {
-        &self.name
-    }
-
-    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
-        self
-    }
-
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
-        unimplemented!()
-    }
-}
-
-impl Scope for CompositeClass {
-    fn core(self: Rc<Self>) -> Rc<dyn Core> {
-        self.core.upgrade().unwrap()
-    }
-
-    fn parent(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.parent.clone()
-    }
-
-    fn get_field(&self, name: &str) -> Option<Rc<Field>> {
-        self.scope.get_field(name)
-    }
-
-    fn get_method(&self, name: &str) -> Option<Rc<MethodDef>> {
-        self.scope.get_method(name)
-    }
-
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
-        self.scope.get_class(name)
-    }
-
-    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
-        self.scope.get_enum(name)
-    }
-
-    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
-        self.scope.get_predicate(name)
-    }
-}
-
 impl CommonEnv {
     pub fn new(parent: Option<Rc<dyn Env>>) -> Self {
         Self { parent, variables: RefCell::new(HashMap::new()) }
@@ -311,6 +251,97 @@ impl Scope for CommonScope {
 
     fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
         self.predicates.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_predicate(name))
+    }
+}
+
+pub struct CompositeClass {
+    core: Weak<dyn Core>,
+    name: String,
+    scope: CommonScope,
+}
+
+impl CompositeClass {
+    pub fn new(core: Rc<dyn Core>, class: ClassDef) -> Self {
+        Self { core: Rc::downgrade(&core), name: class.name.clone(), scope: CommonScope::new(core, None) }
+    }
+}
+
+impl Class for CompositeClass {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
+        unimplemented!()
+    }
+}
+
+impl Scope for CompositeClass {
+    fn core(self: Rc<Self>) -> Rc<dyn Core> {
+        self.core.upgrade().unwrap()
+    }
+
+    fn parent(&self) -> Option<Rc<dyn Scope>> {
+        self.scope.parent.clone()
+    }
+
+    fn get_field(&self, name: &str) -> Option<Rc<Field>> {
+        self.scope.get_field(name)
+    }
+
+    fn get_method(&self, name: &str) -> Option<Rc<MethodDef>> {
+        self.scope.get_method(name)
+    }
+
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+        self.scope.get_class(name)
+    }
+
+    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
+        self.scope.get_enum(name)
+    }
+
+    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+        self.scope.get_predicate(name)
+    }
+}
+
+pub struct CompositeObject {
+    class: Rc<dyn Class>,
+    env: CommonEnv,
+}
+
+impl CompositeObject {
+    pub fn new(class: Rc<dyn Class>, parent_env: Option<Rc<dyn Env>>) -> Self {
+        Self { class, env: CommonEnv::new(parent_env) }
+    }
+}
+
+impl Object for CompositeObject {
+    fn class(&self) -> Rc<dyn Class> {
+        self.class.clone()
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+
+    fn as_env(&self) -> Option<&dyn Env> {
+        Some(&self.env)
+    }
+}
+
+impl Env for CompositeObject {
+    fn parent(&self) -> Option<Rc<dyn Env>> {
+        self.env.parent.clone()
+    }
+
+    fn get(&self, name: &str) -> Option<Rc<dyn Object>> {
+        self.env.get(name)
     }
 }
 
