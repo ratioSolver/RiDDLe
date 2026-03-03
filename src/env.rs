@@ -16,16 +16,96 @@ pub struct BoolClass {
     core: Weak<dyn Core>,
 }
 
+impl BoolClass {
+    pub fn new(core: Rc<dyn Core>) -> Self {
+        Self { core: Rc::downgrade(&core) }
+    }
+}
+
+impl Class for BoolClass {
+    fn name(&self) -> &str {
+        "bool"
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
+        self.core.upgrade().unwrap().new_bool_var()
+    }
+}
+
 pub struct IntClass {
     core: Weak<dyn Core>,
+}
+
+impl IntClass {
+    pub fn new(core: Rc<dyn Core>) -> Self {
+        Self { core: Rc::downgrade(&core) }
+    }
+}
+
+impl Class for IntClass {
+    fn name(&self) -> &str {
+        "int"
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
+        self.core.upgrade().unwrap().new_int_var()
+    }
 }
 
 pub struct RealClass {
     core: Weak<dyn Core>,
 }
 
+impl RealClass {
+    pub fn new(core: Rc<dyn Core>) -> Self {
+        Self { core: Rc::downgrade(&core) }
+    }
+}
+
+impl Class for RealClass {
+    fn name(&self) -> &str {
+        "real"
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
+        self.core.upgrade().unwrap().new_real_var()
+    }
+}
+
 pub struct StringClass {
     core: Weak<dyn Core>,
+}
+
+impl StringClass {
+    pub fn new(core: Rc<dyn Core>) -> Self {
+        Self { core: Rc::downgrade(&core) }
+    }
+}
+
+impl Class for StringClass {
+    fn name(&self) -> &str {
+        "string"
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
+        self.core.upgrade().unwrap().new_string_var()
+    }
 }
 
 pub struct Field {
@@ -81,97 +161,6 @@ pub struct CommonScope {
     classes: RefCell<HashMap<String, Rc<dyn Class>>>,
     enums: RefCell<HashMap<String, Rc<EnumDef>>>,
     predicates: RefCell<HashMap<String, Rc<PredicateDef>>>,
-}
-
-pub trait Core: Scope + Env {
-    fn new_bool(&self, value: bool) -> Rc<dyn Object>;
-    fn new_bool_var(&self) -> Rc<dyn Object>;
-    fn new_int(&self, value: i64) -> Rc<dyn Object>;
-    fn new_int_var(&self) -> Rc<dyn Object>;
-    fn new_real(&self, num: i64, den: i64) -> Rc<dyn Object>;
-    fn new_real_var(&self) -> Rc<dyn Object>;
-    fn new_string(&self, value: String) -> Rc<dyn Object>;
-    fn new_string_var(&self) -> Rc<dyn Object>;
-}
-
-impl BoolClass {
-    pub fn new(core: Rc<dyn Core>) -> Self {
-        Self { core: Rc::downgrade(&core) }
-    }
-}
-
-impl Class for BoolClass {
-    fn name(&self) -> &str {
-        "bool"
-    }
-
-    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
-        self
-    }
-
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
-        self.core.upgrade().unwrap().new_bool_var()
-    }
-}
-
-impl IntClass {
-    pub fn new(core: Rc<dyn Core>) -> Self {
-        Self { core: Rc::downgrade(&core) }
-    }
-}
-
-impl Class for IntClass {
-    fn name(&self) -> &str {
-        "int"
-    }
-
-    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
-        self
-    }
-
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
-        self.core.upgrade().unwrap().new_int_var()
-    }
-}
-
-impl RealClass {
-    pub fn new(core: Rc<dyn Core>) -> Self {
-        Self { core: Rc::downgrade(&core) }
-    }
-}
-
-impl Class for RealClass {
-    fn name(&self) -> &str {
-        "real"
-    }
-
-    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
-        self
-    }
-
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
-        self.core.upgrade().unwrap().new_real_var()
-    }
-}
-
-impl StringClass {
-    pub fn new(core: Rc<dyn Core>) -> Self {
-        Self { core: Rc::downgrade(&core) }
-    }
-}
-
-impl Class for StringClass {
-    fn name(&self) -> &str {
-        "string"
-    }
-
-    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
-        self
-    }
-
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
-        self.core.upgrade().unwrap().new_string_var()
-    }
 }
 
 pub struct CompositeClass {
@@ -323,4 +312,15 @@ impl Scope for CommonScope {
     fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
         self.predicates.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_predicate(name))
     }
+}
+
+pub trait Core: Scope + Env {
+    fn new_bool(&self, value: bool) -> Rc<dyn Object>;
+    fn new_bool_var(&self) -> Rc<dyn Object>;
+    fn new_int(&self, value: i64) -> Rc<dyn Object>;
+    fn new_int_var(&self) -> Rc<dyn Object>;
+    fn new_real(&self, num: i64, den: i64) -> Rc<dyn Object>;
+    fn new_real_var(&self) -> Rc<dyn Object>;
+    fn new_string(&self, value: String) -> Rc<dyn Object>;
+    fn new_string_var(&self) -> Rc<dyn Object>;
 }
