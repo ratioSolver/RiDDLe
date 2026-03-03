@@ -114,6 +114,24 @@ pub struct Field {
     default: Option<Expr>,
 }
 
+impl Field {
+    pub fn new(name: String, field_type: Vec<String>, default: Option<Expr>) -> Self {
+        Self { name, field_type, default }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn field_type(&self) -> &[String] {
+        &self.field_type
+    }
+
+    pub fn default(&self) -> Option<&Expr> {
+        self.default.as_ref()
+    }
+}
+
 pub trait Object {
     fn class(&self) -> Rc<dyn Class>;
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
@@ -298,6 +316,22 @@ impl Method {
             scope: CommonScope::from_method(core, parent, method),
         }
     }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn return_type(&self) -> Option<&[String]> {
+        self.return_type.as_deref()
+    }
+
+    pub fn args(&self) -> &[(Vec<String>, String)] {
+        &self.args
+    }
+
+    pub fn statements(&self) -> &[Statement] {
+        &self.statements
+    }
 }
 
 impl Scope for Method {
@@ -345,6 +379,14 @@ impl Constructor {
             statements: std::mem::take(&mut constructor.statements),
             scope: CommonScope::from_costructor(core, parent, constructor),
         }
+    }
+
+    pub fn args(&self) -> &[(Vec<String>, String)] {
+        &self.args
+    }
+
+    pub fn statements(&self) -> &[Statement] {
+        &self.statements
     }
 }
 
@@ -396,6 +438,18 @@ impl Predicate {
             scope: CommonScope::from_predicate(core, parent, predicate),
         }
     }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn args(&self) -> &[(Vec<String>, String)] {
+        &self.args
+    }
+
+    pub fn statements(&self) -> &[Statement] {
+        &self.statements
+    }
 }
 
 impl Scope for Predicate {
@@ -432,6 +486,7 @@ pub struct CompositeClass {
     core: Weak<dyn Core>,
     scope: Rc<CommonScope>,
     name: String,
+    parents: Vec<Vec<String>>,
     constructors: Vec<Constructor>,
     instances: RefCell<Vec<Rc<CompositeObject>>>,
 }
@@ -441,10 +496,27 @@ impl CompositeClass {
         Self {
             core: Rc::downgrade(&core),
             name: std::mem::take(&mut class.name),
+            parents: std::mem::take(&mut class.parents),
             constructors: std::mem::take(&mut class.constructors).into_iter().map(|c| Constructor::new(core.clone(), parent.clone(), c)).collect(),
             scope: CommonScope::from_class(core, parent, class),
             instances: RefCell::new(Vec::new()),
         }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn parents(&self) -> &[Vec<String>] {
+        &self.parents
+    }
+
+    pub fn constructors(&self) -> &[Constructor] {
+        &self.constructors
+    }
+
+    pub fn instances(&self) -> Vec<Rc<CompositeObject>> {
+        self.instances.borrow().clone()
     }
 }
 
