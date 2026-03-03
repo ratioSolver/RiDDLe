@@ -17,8 +17,8 @@ pub struct BoolClass {
 }
 
 impl BoolClass {
-    pub fn new(core: Rc<dyn Core>) -> Self {
-        Self { core: Rc::downgrade(&core) }
+    pub fn new(core: Weak<dyn Core>) -> Self {
+        Self { core }
     }
 }
 
@@ -41,8 +41,8 @@ pub struct IntClass {
 }
 
 impl IntClass {
-    pub fn new(core: Rc<dyn Core>) -> Self {
-        Self { core: Rc::downgrade(&core) }
+    pub fn new(core: Weak<dyn Core>) -> Self {
+        Self { core }
     }
 }
 
@@ -65,8 +65,8 @@ pub struct RealClass {
 }
 
 impl RealClass {
-    pub fn new(core: Rc<dyn Core>) -> Self {
-        Self { core: Rc::downgrade(&core) }
+    pub fn new(core: Weak<dyn Core>) -> Self {
+        Self { core }
     }
 }
 
@@ -89,8 +89,8 @@ pub struct StringClass {
 }
 
 impl StringClass {
-    pub fn new(core: Rc<dyn Core>) -> Self {
-        Self { core: Rc::downgrade(&core) }
+    pub fn new(core: Weak<dyn Core>) -> Self {
+        Self { core }
     }
 }
 
@@ -198,9 +198,9 @@ impl Env for CommonEnv {
 }
 
 impl CommonScope {
-    pub fn new(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>) -> Self {
+    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>) -> Self {
         Self {
-            core: Rc::downgrade(&core),
+            core,
             parent,
             fields: RefCell::new(HashMap::new()),
             methods: RefCell::new(HashMap::new()),
@@ -210,7 +210,7 @@ impl CommonScope {
         }
     }
 
-    pub fn from_class(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, class: ClassDef) -> Rc<Self> {
+    pub fn from_class(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, class: ClassDef) -> Rc<Self> {
         let scope = Rc::new(Self::new(core.clone(), parent));
         for (field_type, fields) in class.fields {
             for (name, default) in fields {
@@ -226,7 +226,7 @@ impl CommonScope {
         scope
     }
 
-    pub fn from_costructor(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, constructor: ConstructorDef) -> Self {
+    pub fn from_costructor(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, constructor: ConstructorDef) -> Self {
         let scope = Self::new(core, parent);
         for (arg_type, arg_name) in constructor.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
@@ -234,7 +234,7 @@ impl CommonScope {
         scope
     }
 
-    pub fn from_method(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, method: MethodDef) -> Self {
+    pub fn from_method(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, method: MethodDef) -> Self {
         let scope = Self::new(core, parent);
         for (arg_type, arg_name) in method.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
@@ -242,7 +242,7 @@ impl CommonScope {
         scope
     }
 
-    pub fn from_predicate(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, predicate: PredicateDef) -> Self {
+    pub fn from_predicate(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, predicate: PredicateDef) -> Self {
         let scope = Self::new(core, parent);
         for (arg_type, arg_name) in predicate.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
@@ -252,13 +252,13 @@ impl CommonScope {
 
     pub fn add_problem(&self, problem: ProblemDef) {
         for method in problem.methods {
-            self.methods.borrow_mut().entry(method.name.clone()).or_default().push(Rc::new(Method::new(self.core.upgrade().unwrap(), Some(self.core.upgrade().unwrap()), method)));
+            self.methods.borrow_mut().entry(method.name.clone()).or_default().push(Rc::new(Method::new(self.core.clone(), Some(self.core.upgrade().unwrap()), method)));
         }
         for predicate in problem.predicates {
             self.predicates.borrow_mut().insert(predicate.name.clone(), Rc::new(predicate));
         }
         for class in problem.classes {
-            self.classes.borrow_mut().insert(class.name.clone(), Rc::new(CompositeClass::new(self.core.upgrade().unwrap(), Some(self.core.upgrade().unwrap()), class)));
+            self.classes.borrow_mut().insert(class.name.clone(), Rc::new(CompositeClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class)));
         }
         for enm in problem.enums {
             self.enums.borrow_mut().insert(enm.name.clone(), Rc::new(enm));
@@ -306,9 +306,9 @@ pub struct Method {
 }
 
 impl Method {
-    pub fn new(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, mut method: MethodDef) -> Self {
+    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut method: MethodDef) -> Self {
         Self {
-            core: Rc::downgrade(&core),
+            core: core.clone(),
             name: std::mem::take(&mut method.name),
             return_type: std::mem::take(&mut method.return_type),
             args: std::mem::take(&mut method.args),
@@ -372,9 +372,9 @@ pub struct Constructor {
 }
 
 impl Constructor {
-    pub fn new(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, mut constructor: ConstructorDef) -> Self {
+    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut constructor: ConstructorDef) -> Self {
         Self {
-            core: Rc::downgrade(&core),
+            core: core.clone(),
             args: std::mem::take(&mut constructor.args),
             statements: std::mem::take(&mut constructor.statements),
             scope: CommonScope::from_costructor(core, parent, constructor),
@@ -430,9 +430,9 @@ pub struct Predicate {
 }
 
 impl Predicate {
-    pub fn new(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, mut predicate: PredicateDef) -> Self {
+    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut predicate: PredicateDef) -> Self {
         Self {
-            core: Rc::downgrade(&core),
+            core: core.clone(),
             name: std::mem::take(&mut predicate.name),
             args: std::mem::take(&mut predicate.args),
             statements: std::mem::take(&mut predicate.statements),
@@ -530,9 +530,9 @@ pub struct CompositeClass {
 }
 
 impl CompositeClass {
-    pub fn new(core: Rc<dyn Core>, parent: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Self {
+    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Self {
         Self {
-            core: Rc::downgrade(&core),
+            core: core.clone(),
             name: std::mem::take(&mut class.name),
             parents: std::mem::take(&mut class.parents),
             constructors: std::mem::take(&mut class.constructors).into_iter().map(|c| Constructor::new(core.clone(), parent.clone(), c)).collect(),
@@ -648,4 +648,134 @@ pub trait Core: Scope + Env {
     fn new_real_var(&self) -> Rc<dyn Object>;
     fn new_string(&self, value: String) -> Rc<dyn Object>;
     fn new_string_var(&self) -> Rc<dyn Object>;
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{env::*, language::*, parse_problem};
+
+    struct TestObject {
+        class: Weak<dyn Class>,
+    }
+
+    impl Object for TestObject {
+        fn class(&self) -> Rc<dyn Class> {
+            self.class.upgrade().unwrap()
+        }
+
+        fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+            self
+        }
+    }
+
+    struct TestCore {
+        scope: CommonScope,
+        envs: CommonEnv,
+    }
+
+    impl TestCore {
+        fn new() -> Rc<Self> {
+            let core = Rc::new_cyclic(|core| Self {
+                scope: {
+                    let core: Weak<TestCore> = core.clone();
+                    CommonScope::new(core, None)
+                },
+                envs: CommonEnv::new(None),
+            });
+            let core_dyn: Rc<dyn Core> = core.clone();
+            core.scope.classes.borrow_mut().insert("bool".to_string(), Rc::new(BoolClass::new(Rc::downgrade(&core_dyn))));
+            core.scope.classes.borrow_mut().insert("int".to_string(), Rc::new(IntClass::new(Rc::downgrade(&core_dyn))));
+            core.scope.classes.borrow_mut().insert("real".to_string(), Rc::new(RealClass::new(Rc::downgrade(&core_dyn))));
+            core.scope.classes.borrow_mut().insert("string".to_string(), Rc::new(StringClass::new(Rc::downgrade(&core_dyn))));
+            core
+        }
+
+        fn read(&mut self, riddle: &str) {
+            let problem = parse_problem(riddle).expect("Failed to parse problem");
+            self.scope.add_problem(problem);
+        }
+    }
+
+    impl Core for TestCore {
+        fn new_bool(&self, _value: bool) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").expect("bool class not found")) })
+        }
+
+        fn new_bool_var(&self) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
+        }
+
+        fn new_int(&self, _value: i64) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
+        }
+
+        fn new_int_var(&self) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
+        }
+
+        fn new_real(&self, _num: i64, _den: i64) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("real").unwrap()) })
+        }
+
+        fn new_real_var(&self) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("real").unwrap()) })
+        }
+
+        fn new_string(&self, _value: String) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("string").unwrap()) })
+        }
+
+        fn new_string_var(&self) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("string").unwrap()) })
+        }
+    }
+
+    impl Scope for TestCore {
+        fn core(self: Rc<Self>) -> Rc<dyn Core> {
+            self
+        }
+
+        fn parent(&self) -> Option<Rc<dyn Scope>> {
+            None
+        }
+
+        fn get_field(&self, _name: &str) -> Option<Rc<Field>> {
+            None
+        }
+
+        fn get_method(&self, name: &str) -> Option<Rc<Method>> {
+            self.scope.get_method(name)
+        }
+
+        fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+            self.scope.get_class(name)
+        }
+
+        fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
+            self.scope.get_enum(name)
+        }
+
+        fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+            self.scope.get_predicate(name)
+        }
+    }
+
+    impl Env for TestCore {
+        fn parent(&self) -> Option<Rc<dyn Env>> {
+            None
+        }
+
+        fn get(&self, _name: &str) -> Option<Rc<dyn Object>> {
+            None
+        }
+    }
+
+    #[test]
+    fn create_core() {
+        let core = TestCore::new();
+        assert!(core.get_class("bool").is_some());
+        assert!(core.get_class("int").is_some());
+        assert!(core.get_class("real").is_some());
+        assert!(core.get_class("string").is_some());
+    }
 }
