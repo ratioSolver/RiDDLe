@@ -1,11 +1,10 @@
+use crate::language::{ClassDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef};
 use std::{
     any::Any,
     cell::RefCell,
     collections::HashMap,
     rc::{Rc, Weak},
 };
-
-use crate::language::{ClassDef, EnumDef, Expr, FieldDef, MethodDef, PredicateDef, ProblemDef};
 
 pub trait Class {
     fn name(&self) -> &str;
