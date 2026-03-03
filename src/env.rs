@@ -426,6 +426,7 @@ pub struct Predicate {
     name: String,
     args: Vec<(Vec<String>, String)>,
     statements: Vec<Statement>,
+    atoms: RefCell<Vec<Rc<Atom>>>,
 }
 
 impl Predicate {
@@ -436,6 +437,7 @@ impl Predicate {
             args: std::mem::take(&mut predicate.args),
             statements: std::mem::take(&mut predicate.statements),
             scope: CommonScope::from_predicate(core, parent, predicate),
+            atoms: RefCell::new(Vec::new()),
         }
     }
 
@@ -449,6 +451,12 @@ impl Predicate {
 
     pub fn statements(&self) -> &[Statement] {
         &self.statements
+    }
+
+    pub fn new_atom(self: Rc<Self>, fact: bool, parent_env: Option<Rc<dyn Env>>) -> Rc<Atom> {
+        let atom = Rc::new(Atom::new(self.clone(), fact, parent_env));
+        self.atoms.borrow_mut().push(atom.clone());
+        atom
     }
 }
 
@@ -479,6 +487,36 @@ impl Scope for Predicate {
 
     fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
         self.scope.get_predicate(name)
+    }
+}
+
+pub struct Atom {
+    predicate: Weak<Predicate>,
+    fact: bool,
+    env: CommonEnv,
+}
+
+impl Atom {
+    pub fn new(predicate: Rc<Predicate>, fact: bool, parent_env: Option<Rc<dyn Env>>) -> Self {
+        Self { predicate: Rc::downgrade(&predicate), fact, env: CommonEnv::new(parent_env) }
+    }
+
+    pub fn predicate(&self) -> Rc<Predicate> {
+        self.predicate.upgrade().unwrap()
+    }
+
+    pub fn is_fact(&self) -> bool {
+        self.fact
+    }
+}
+
+impl Env for Atom {
+    fn parent(&self) -> Option<Rc<dyn Env>> {
+        self.env.parent.clone()
+    }
+
+    fn get(&self, name: &str) -> Option<Rc<dyn Object>> {
+        self.env.get(name)
     }
 }
 
@@ -567,19 +605,19 @@ impl Scope for CompositeClass {
 }
 
 pub struct CompositeObject {
-    class: Rc<dyn Class>,
+    class: Weak<dyn Class>,
     env: CommonEnv,
 }
 
 impl CompositeObject {
     pub fn new(class: Rc<dyn Class>, parent_env: Option<Rc<dyn Env>>) -> Self {
-        Self { class, env: CommonEnv::new(parent_env) }
+        Self { class: Rc::downgrade(&class), env: CommonEnv::new(parent_env) }
     }
 }
 
 impl Object for CompositeObject {
     fn class(&self) -> Rc<dyn Class> {
-        self.class.clone()
+        self.class.upgrade().unwrap()
     }
 
     fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
