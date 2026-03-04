@@ -12,7 +12,7 @@ pub trait Type {
         self.name()
     }
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
-    fn as_class(&self) -> Option<&dyn Class> {
+    fn as_class(self: Rc<Self>) -> Option<Rc<dyn Class>> {
         None
     }
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var>;
@@ -639,7 +639,7 @@ impl Type for CommonClass {
         self
     }
 
-    fn as_class(&self) -> Option<&dyn Class> {
+    fn as_class(self: Rc<Self>) -> Option<Rc<dyn Class>> {
         Some(self)
     }
 
@@ -772,8 +772,11 @@ pub trait Core: Scope + Env {
 
     fn or(&self, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
     fn and(&self, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+
+    fn assert(&self, term: Rc<dyn Var>) -> bool;
 }
 
+#[derive(Debug)]
 pub enum RiddleError {
     NotAnEnvironment(String),
     NotAClass(String),
@@ -784,6 +787,13 @@ pub enum RiddleError {
 
 pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result<(), RiddleError> {
     match stmt {
+        Statement::Expr(expr) => {
+            if scp.clone().core().assert(evaluate(scp, env, expr)?) {
+                Ok(())
+            } else {
+                Err(RiddleError::RuntimeError("Assertion failed".into()))
+            }
+        }
         _ => unimplemented!(),
     }
 }
@@ -861,13 +871,12 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
         }
         Expr::NewObject { class_name, args } => {
             let (first, rest) = class_name.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty class name".into()))?;
-            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?;
-            rest.iter().try_fold(class.clone(), |acc, id| acc.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string()))?.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id))))?;
+            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
+            rest.iter().try_fold(class.clone(), |acc, id| acc.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
             let evaluated_args: Vec<Rc<dyn Var>> = args.iter().map(|a| evaluate(scp.clone(), env.clone(), a)).collect::<Result<_, _>>()?;
-            let constructor = class.as_class().ok_or_else(|| RiddleError::NotAClass(class_name.join(".")))?.constructor(&evaluated_args.iter().map(|arg| arg.class()).collect::<Vec<_>>()).ok_or_else(|| RiddleError::NotFound(format!("Constructor for class '{}' with specified argument types", class_name.join("."))))?;
+            let constructor = class.constructor(&evaluated_args.iter().map(|arg| arg.class()).collect::<Vec<_>>()).ok_or_else(|| RiddleError::NotFound(format!("Constructor for class '{}' with specified argument types", class_name.join("."))))?;
             constructor.call(env, evaluated_args)?.ok_or_else(|| RiddleError::RuntimeError(format!("Constructor for class '{}' did not return a value", class_name.join("."))))
         }
-        _ => unimplemented!(),
     }
 }
 
@@ -902,8 +911,8 @@ mod tests {
     }
 
     struct TestCore {
-        scope: CommonScope,
-        envs: CommonEnv,
+        scope: Rc<CommonScope>,
+        env: Rc<CommonEnv>,
     }
 
     impl TestCore {
@@ -911,9 +920,9 @@ mod tests {
             let core = Rc::new_cyclic(|core| Self {
                 scope: {
                     let core: Weak<TestCore> = core.clone();
-                    CommonScope::new(core, None)
+                    Rc::new(CommonScope::new(core.clone(), None))
                 },
-                envs: CommonEnv::new(None),
+                env: Rc::new(CommonEnv::new(None)),
             });
             let core_dyn: Rc<dyn Core> = core.clone();
             core.scope.classes.borrow_mut().insert("bool".to_string(), Rc::new(BoolType::new(Rc::downgrade(&core_dyn))));
@@ -924,8 +933,12 @@ mod tests {
         }
 
         fn read(&mut self, riddle: &str) {
-            let problem = parse_problem(riddle).expect("Failed to parse problem");
+            let mut problem = parse_problem(riddle).expect("Failed to parse problem");
+            let statments = std::mem::take(&mut problem.statements);
             self.scope.add_problem(problem);
+            for stmt in statments {
+                execute(self.scope.clone(), self.env.clone(), &stmt).expect("Failed to execute statement");
+            }
         }
     }
 
@@ -1008,6 +1021,10 @@ mod tests {
 
         fn and(&self, _terms: &[Rc<dyn Var>]) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
+        }
+
+        fn assert(&self, _term: Rc<dyn Var>) -> bool {
+            true
         }
     }
 
