@@ -831,6 +831,19 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
             }
             Ok(())
         }
+        Statement::Assign { name, value } => {
+            let value = evaluate(scp.clone(), env.clone(), value)?;
+            if name.len() == 1 {
+                env.set(name[0].clone(), value);
+                Ok(())
+            } else {
+                let (first, rest) = name.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty assignment path".into()))?;
+                let root = env.get(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?;
+                let (last, rest) = rest.split_last().ok_or_else(|| RiddleError::RuntimeError("Empty assignment path".into()))?;
+                rest.iter().try_fold(root, |acc, id| acc.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(id.to_string()))?.get(id).ok_or_else(|| RiddleError::NotFound(format!("Member '{}' in path", id))))?.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(last.to_string()))?.set(last.to_string(), value);
+                Ok(())
+            }
+        }
         _ => unimplemented!(),
     }
 }
