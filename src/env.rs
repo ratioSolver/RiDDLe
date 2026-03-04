@@ -612,17 +612,17 @@ pub fn is_assignable_from(target: &Rc<dyn Type>, source: &Rc<dyn Type>) -> bool 
     if Rc::ptr_eq(target, source) {
         return true;
     }
-    if let Some(target_class) = target.clone().as_class() {
-        if let Some(source_class) = source.clone().as_class() {
-            for parent in source_class.parents() {
-                if parent.iter().map(|s| s.as_str()).eq(target_class.full_name().split('.')) {
-                    return true;
-                }
+    if let Some(target_class) = target.clone().as_class()
+        && let Some(source_class) = source.clone().as_class()
+    {
+        for parent in source_class.parents() {
+            if parent.iter().map(|s| s.as_str()).eq(target_class.full_name().split('.')) {
+                return true;
             }
-            for parent in target_class.parents() {
-                if parent.iter().map(|s| s.as_str()).eq(source_class.full_name().split('.')) {
-                    return true;
-                }
+        }
+        for parent in target_class.parents() {
+            if parent.iter().map(|s| s.as_str()).eq(source_class.full_name().split('.')) {
+                return true;
             }
         }
     }
