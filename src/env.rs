@@ -608,6 +608,27 @@ pub trait Class: Type + Scope {
     fn instances(&self) -> Vec<Rc<Object>>;
 }
 
+pub fn is_assignable_from(target: &Rc<dyn Type>, source: &Rc<dyn Type>) -> bool {
+    if Rc::ptr_eq(target, source) {
+        return true;
+    }
+    if let Some(target_class) = target.clone().as_class() {
+        if let Some(source_class) = source.clone().as_class() {
+            for parent in source_class.parents() {
+                if parent.iter().map(|s| s.as_str()).eq(target_class.full_name().split('.')) {
+                    return true;
+                }
+            }
+            for parent in target_class.parents() {
+                if parent.iter().map(|s| s.as_str()).eq(source_class.full_name().split('.')) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
 pub struct CommonClass {
     core: Weak<dyn Core>,
     scope: Rc<CommonScope>,
@@ -793,6 +814,22 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
             } else {
                 Err(RiddleError::RuntimeError("Assertion failed".into()))
             }
+        }
+        Statement::LocalField { field_type, fields } => {
+            let (first, rest) = field_type.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty field type path".into()))?;
+            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
+            rest.iter().try_fold(class.clone(), |acc, id| acc.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
+            for (name, default) in fields {
+                if let Some(expr) = default {
+                    let value = evaluate(scp.clone(), env.clone(), expr)?;
+                    let class_as_type: Rc<dyn Type> = class.clone();
+                    if !is_assignable_from(&class_as_type, &value.class()) {
+                        return Err(RiddleError::TypeError(format!("Default value for field '{}' is not assignable to field type '{}'", name, field_type.join("."))));
+                    }
+                    env.set(name.clone(), value);
+                }
+            }
+            Ok(())
         }
         _ => unimplemented!(),
     }
