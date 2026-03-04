@@ -8,6 +8,9 @@ use std::{
 
 pub trait Class {
     fn name(&self) -> &str;
+    fn full_name(&self) -> &str {
+        self.name()
+    }
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
     fn new_instance(self: Rc<Self>) -> Rc<dyn Object>;
 }
@@ -145,7 +148,7 @@ pub trait Scope {
     fn parent(&self) -> Option<Rc<dyn Scope>>;
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>>;
-    fn get_method(&self, name: &str) -> Option<Rc<Method>>;
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>>;
     fn get_class(&self, name: &str) -> Option<Rc<dyn Class>>;
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>>;
     fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>>;
@@ -154,6 +157,7 @@ pub trait Scope {
 pub trait Env {
     fn parent(&self) -> Option<Rc<dyn Env>>;
     fn get(&self, name: &str) -> Option<Rc<dyn Object>>;
+    fn set(&self, name: String, value: Rc<dyn Object>);
 }
 
 pub trait EnvExt {
@@ -194,6 +198,10 @@ impl Env for CommonEnv {
 
     fn get(&self, name: &str) -> Option<Rc<dyn Object>> {
         self.variables.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get(name))
+    }
+
+    fn set(&self, name: String, value: Rc<dyn Object>) {
+        self.variables.borrow_mut().insert(name, value);
     }
 }
 
@@ -279,8 +287,8 @@ impl Scope for CommonScope {
         self.fields.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_field(name))
     }
 
-    fn get_method(&self, name: &str) -> Option<Rc<Method>> {
-        self.methods.borrow().get(name).and_then(|ms| ms.first().cloned()).or_else(|| self.parent.as_ref()?.get_method(name))
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+        self.methods.borrow().get(name).and_then(|methods| methods.iter().find(|m| classes.iter().any(|c| m.scope.get_class(&c.name()).is_some()))).cloned().or_else(|| self.parent.as_ref()?.get_method(name, classes))
     }
 
     fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
@@ -347,8 +355,8 @@ impl Scope for Method {
         self.scope.get_field(name)
     }
 
-    fn get_method(&self, name: &str) -> Option<Rc<Method>> {
-        self.scope.get_method(name)
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+        self.scope.get_method(name, classes)
     }
 
     fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
@@ -403,8 +411,8 @@ impl Scope for Constructor {
         self.scope.get_field(name)
     }
 
-    fn get_method(&self, name: &str) -> Option<Rc<Method>> {
-        self.scope.get_method(name)
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+        self.scope.get_method(name, classes)
     }
 
     fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
@@ -473,8 +481,8 @@ impl Scope for Predicate {
         self.scope.get_field(name)
     }
 
-    fn get_method(&self, name: &str) -> Option<Rc<Method>> {
-        self.scope.get_method(name)
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+        self.scope.get_method(name, classes)
     }
 
     fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
@@ -517,6 +525,10 @@ impl Env for Atom {
 
     fn get(&self, name: &str) -> Option<Rc<dyn Object>> {
         self.env.get(name)
+    }
+
+    fn set(&self, name: String, value: Rc<dyn Object>) {
+        self.env.set(name, value);
     }
 }
 
@@ -587,8 +599,8 @@ impl Scope for CompositeClass {
         self.scope.get_field(name)
     }
 
-    fn get_method(&self, name: &str) -> Option<Rc<Method>> {
-        self.scope.get_method(name)
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+        self.scope.get_method(name, classes)
     }
 
     fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
@@ -637,6 +649,10 @@ impl Env for CompositeObject {
     fn get(&self, name: &str) -> Option<Rc<dyn Object>> {
         self.env.get(name)
     }
+
+    fn set(&self, name: String, value: Rc<dyn Object>) {
+        self.env.set(name, value);
+    }
 }
 
 pub trait Core: Scope + Env {
@@ -646,8 +662,70 @@ pub trait Core: Scope + Env {
     fn new_int_var(&self) -> Rc<dyn Object>;
     fn new_real(&self, num: i64, den: i64) -> Rc<dyn Object>;
     fn new_real_var(&self) -> Rc<dyn Object>;
-    fn new_string(&self, value: String) -> Rc<dyn Object>;
+    fn new_string(&self, value: &str) -> Rc<dyn Object>;
     fn new_string_var(&self) -> Rc<dyn Object>;
+
+    fn sum(&self, sum: &[Rc<dyn Object>]) -> Rc<dyn Object>;
+    fn opposite(&self, term: Rc<dyn Object>) -> Rc<dyn Object>;
+    fn mul(&self, mul: &[Rc<dyn Object>]) -> Rc<dyn Object>;
+    fn div(&self, left: Rc<dyn Object>, right: Rc<dyn Object>) -> Rc<dyn Object>;
+}
+
+pub enum RiddleError {
+    NotAnEnvironment(String),
+    TypeError(String),
+    NotFound(String),
+    RuntimeError(String),
+}
+
+pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result<(), RiddleError> {
+    match stmt {
+        _ => unimplemented!(),
+    }
+}
+
+pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<dyn Object>, RiddleError> {
+    match expr {
+        Expr::Bool(bool) => Ok(scp.core().new_bool(*bool)),
+        Expr::Int(int) => Ok(scp.core().new_int(*int)),
+        Expr::Real(num, den) => Ok(scp.core().new_real(*num, *den)),
+        Expr::String(string) => Ok(scp.core().new_string(string)),
+        Expr::QualifiedId { ids } => {
+            let (first, rest) = ids.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty identifier path".into()))?;
+            let root = env.get(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?;
+            rest.iter().try_fold(root, |acc, id| acc.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(id.to_string()))?.get(id).ok_or_else(|| RiddleError::NotFound(format!("Member '{}' in path", id))))
+        }
+        Expr::Sum { terms } => {
+            let evaluated_terms: Vec<Rc<dyn Object>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
+            Ok(scp.core().sum(&evaluated_terms))
+        }
+        Expr::Opposite { term } => {
+            let evaluated_term = evaluate(scp.clone(), env, term)?;
+            Ok(scp.core().opposite(evaluated_term))
+        }
+        Expr::Mul { factors } => {
+            let evaluated_factors: Vec<Rc<dyn Object>> = factors.iter().map(|f| evaluate(scp.clone(), env.clone(), f)).collect::<Result<_, _>>()?;
+            Ok(scp.core().mul(&evaluated_factors))
+        }
+        Expr::Div { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().div(evaluated_left, evaluated_right))
+        }
+        _ => unimplemented!(),
+    }
+}
+
+pub fn arith_class(cr: Rc<dyn Core>, terms: &[Rc<dyn Object>]) -> Result<Rc<dyn Class>, RiddleError> {
+    if terms.iter().all(|t| t.class().name() == "int") {
+        Ok(cr.get_class("int").expect("int class not found"))
+    } else if terms.iter().all(|t| t.class().name() == "real") {
+        Ok(cr.get_class("real").expect("real class not found"))
+    } else if terms.iter().all(|t| t.class().name() == "int" || t.class().name() == "real") {
+        Ok(cr.get_class("real").expect("real class not found"))
+    } else {
+        Err(RiddleError::TypeError("Invalid types for arithmetic operation".into()))
+    }
 }
 
 #[cfg(test)]
@@ -721,12 +799,28 @@ mod tests {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("real").unwrap()) })
         }
 
-        fn new_string(&self, _value: String) -> Rc<dyn Object> {
+        fn new_string(&self, _value: &str) -> Rc<dyn Object> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("string").unwrap()) })
         }
 
         fn new_string_var(&self) -> Rc<dyn Object> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("string").unwrap()) })
+        }
+
+        fn sum(&self, _sum: &[Rc<dyn Object>]) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
+        }
+
+        fn opposite(&self, _term: Rc<dyn Object>) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
+        }
+
+        fn mul(&self, _mul: &[Rc<dyn Object>]) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
+        }
+
+        fn div(&self, _left: Rc<dyn Object>, _right: Rc<dyn Object>) -> Rc<dyn Object> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
         }
     }
 
@@ -743,8 +837,8 @@ mod tests {
             None
         }
 
-        fn get_method(&self, name: &str) -> Option<Rc<Method>> {
-            self.scope.get_method(name)
+        fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+            self.scope.get_method(name, classes)
         }
 
         fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
@@ -768,6 +862,8 @@ mod tests {
         fn get(&self, _name: &str) -> Option<Rc<dyn Object>> {
             None
         }
+
+        fn set(&self, _name: String, _value: Rc<dyn Object>) {}
     }
 
     #[test]
