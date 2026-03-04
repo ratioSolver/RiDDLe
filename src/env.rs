@@ -6,26 +6,26 @@ use std::{
     rc::{Rc, Weak},
 };
 
-pub trait Class {
+pub trait Type {
     fn name(&self) -> &str;
     fn full_name(&self) -> &str {
         self.name()
     }
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object>;
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Var>;
 }
 
-pub struct BoolClass {
+pub struct BoolType {
     core: Weak<dyn Core>,
 }
 
-impl BoolClass {
+impl BoolType {
     pub fn new(core: Weak<dyn Core>) -> Self {
         Self { core }
     }
 }
 
-impl Class for BoolClass {
+impl Type for BoolType {
     fn name(&self) -> &str {
         "bool"
     }
@@ -34,22 +34,22 @@ impl Class for BoolClass {
         self
     }
 
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
         self.core.upgrade().unwrap().new_bool_var()
     }
 }
 
-pub struct IntClass {
+pub struct IntType {
     core: Weak<dyn Core>,
 }
 
-impl IntClass {
+impl IntType {
     pub fn new(core: Weak<dyn Core>) -> Self {
         Self { core }
     }
 }
 
-impl Class for IntClass {
+impl Type for IntType {
     fn name(&self) -> &str {
         "int"
     }
@@ -58,22 +58,22 @@ impl Class for IntClass {
         self
     }
 
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
         self.core.upgrade().unwrap().new_int_var()
     }
 }
 
-pub struct RealClass {
+pub struct RealType {
     core: Weak<dyn Core>,
 }
 
-impl RealClass {
+impl RealType {
     pub fn new(core: Weak<dyn Core>) -> Self {
         Self { core }
     }
 }
 
-impl Class for RealClass {
+impl Type for RealType {
     fn name(&self) -> &str {
         "real"
     }
@@ -82,22 +82,22 @@ impl Class for RealClass {
         self
     }
 
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
         self.core.upgrade().unwrap().new_real_var()
     }
 }
 
-pub struct StringClass {
+pub struct StringType {
     core: Weak<dyn Core>,
 }
 
-impl StringClass {
+impl StringType {
     pub fn new(core: Weak<dyn Core>) -> Self {
         Self { core }
     }
 }
 
-impl Class for StringClass {
+impl Type for StringType {
     fn name(&self) -> &str {
         "string"
     }
@@ -106,7 +106,7 @@ impl Class for StringClass {
         self
     }
 
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
         self.core.upgrade().unwrap().new_string_var()
     }
 }
@@ -135,8 +135,8 @@ impl Field {
     }
 }
 
-pub trait Object {
-    fn class(&self) -> Rc<dyn Class>;
+pub trait Var {
+    fn class(&self) -> Rc<dyn Type>;
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
     fn as_env(&self) -> Option<&dyn Env> {
         None
@@ -148,31 +148,31 @@ pub trait Scope {
     fn parent(&self) -> Option<Rc<dyn Scope>>;
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>>;
-    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>>;
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>>;
+    fn get_method(&self, name: &str, types: &[Rc<dyn Type>]) -> Option<Rc<Method>>;
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>>;
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>>;
     fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>>;
 }
 
 pub trait Env {
     fn parent(&self) -> Option<Rc<dyn Env>>;
-    fn get(&self, name: &str) -> Option<Rc<dyn Object>>;
-    fn set(&self, name: String, value: Rc<dyn Object>);
+    fn get(&self, name: &str) -> Option<Rc<dyn Var>>;
+    fn set(&self, name: String, value: Rc<dyn Var>);
 }
 
 pub trait EnvExt {
-    fn get_as<T: Object + 'static>(&self, name: &str) -> Option<Rc<T>>;
+    fn get_as<T: Var + 'static>(&self, name: &str) -> Option<Rc<T>>;
 }
 
 impl<E: Env + ?Sized> EnvExt for E {
-    fn get_as<T: Object + 'static>(&self, name: &str) -> Option<Rc<T>> {
+    fn get_as<T: Var + 'static>(&self, name: &str) -> Option<Rc<T>> {
         self.get(name)?.as_any().downcast::<T>().ok()
     }
 }
 
 pub struct CommonEnv {
     parent: Option<Rc<dyn Env>>,
-    variables: RefCell<HashMap<String, Rc<dyn Object>>>,
+    variables: RefCell<HashMap<String, Rc<dyn Var>>>,
 }
 
 pub struct CommonScope {
@@ -180,7 +180,7 @@ pub struct CommonScope {
     parent: Option<Rc<dyn Scope>>,
     fields: RefCell<HashMap<String, Rc<Field>>>,
     methods: RefCell<HashMap<String, Vec<Rc<Method>>>>,
-    classes: RefCell<HashMap<String, Rc<dyn Class>>>,
+    classes: RefCell<HashMap<String, Rc<dyn Type>>>,
     enums: RefCell<HashMap<String, Rc<EnumDef>>>,
     predicates: RefCell<HashMap<String, Rc<PredicateDef>>>,
 }
@@ -196,11 +196,11 @@ impl Env for CommonEnv {
         self.parent.clone()
     }
 
-    fn get(&self, name: &str) -> Option<Rc<dyn Object>> {
+    fn get(&self, name: &str) -> Option<Rc<dyn Var>> {
         self.variables.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get(name))
     }
 
-    fn set(&self, name: String, value: Rc<dyn Object>) {
+    fn set(&self, name: String, value: Rc<dyn Var>) {
         self.variables.borrow_mut().insert(name, value);
     }
 }
@@ -266,7 +266,7 @@ impl CommonScope {
             self.predicates.borrow_mut().insert(predicate.name.clone(), Rc::new(predicate));
         }
         for class in problem.classes {
-            self.classes.borrow_mut().insert(class.name.clone(), Rc::new(CompositeClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class)));
+            self.classes.borrow_mut().insert(class.name.clone(), Rc::new(Class::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class)));
         }
         for enm in problem.enums {
             self.enums.borrow_mut().insert(enm.name.clone(), Rc::new(enm));
@@ -287,11 +287,30 @@ impl Scope for CommonScope {
         self.fields.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_field(name))
     }
 
-    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
-        self.methods.borrow().get(name).and_then(|methods| methods.iter().find(|m| classes.iter().any(|c| m.scope.get_class(&c.name()).is_some()))).cloned().or_else(|| self.parent.as_ref()?.get_method(name, classes))
+    fn get_method(&self, name: &str, types: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
+        self.methods
+            .borrow()
+            .get(name)
+            .and_then(|methods| {
+                methods
+                    .iter()
+                    .find(|m| {
+                        if m.args().len() != types.len() {
+                            return false;
+                        }
+                        for (class, arg_type) in types.iter().zip(m.args().iter().map(|(t, _)| t)) {
+                            if !class.full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
+                                return false;
+                            }
+                        }
+                        true
+                    })
+                    .cloned()
+            })
+            .or_else(|| self.parent.as_ref()?.get_method(name, types))
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
         self.classes.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_class(name))
     }
 
@@ -355,11 +374,11 @@ impl Scope for Method {
         self.scope.get_field(name)
     }
 
-    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
         self.scope.get_method(name, classes)
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
         self.scope.get_class(name)
     }
 
@@ -411,11 +430,11 @@ impl Scope for Constructor {
         self.scope.get_field(name)
     }
 
-    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
         self.scope.get_method(name, classes)
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
         self.scope.get_class(name)
     }
 
@@ -481,11 +500,11 @@ impl Scope for Predicate {
         self.scope.get_field(name)
     }
 
-    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
         self.scope.get_method(name, classes)
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
         self.scope.get_class(name)
     }
 
@@ -523,25 +542,25 @@ impl Env for Atom {
         self.env.parent.clone()
     }
 
-    fn get(&self, name: &str) -> Option<Rc<dyn Object>> {
+    fn get(&self, name: &str) -> Option<Rc<dyn Var>> {
         self.env.get(name)
     }
 
-    fn set(&self, name: String, value: Rc<dyn Object>) {
+    fn set(&self, name: String, value: Rc<dyn Var>) {
         self.env.set(name, value);
     }
 }
 
-pub struct CompositeClass {
+pub struct Class {
     core: Weak<dyn Core>,
     scope: Rc<CommonScope>,
     name: String,
     parents: Vec<Vec<String>>,
     constructors: Vec<Constructor>,
-    instances: RefCell<Vec<Rc<CompositeObject>>>,
+    instances: RefCell<Vec<Rc<Object>>>,
 }
 
-impl CompositeClass {
+impl Class {
     pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Self {
         Self {
             core: core.clone(),
@@ -565,12 +584,26 @@ impl CompositeClass {
         &self.constructors
     }
 
-    pub fn instances(&self) -> Vec<Rc<CompositeObject>> {
+    pub fn constructor(&self, args: &[Rc<dyn Type>]) -> Option<&Constructor> {
+        self.constructors.iter().find(|c| {
+            if c.args().len() != args.len() {
+                return false;
+            }
+            for ((arg_type, _), class) in c.args().iter().zip(args.iter()) {
+                if !class.full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
+                    return false;
+                }
+            }
+            true
+        })
+    }
+
+    pub fn instances(&self) -> Vec<Rc<Object>> {
         self.instances.borrow().clone()
     }
 }
 
-impl Class for CompositeClass {
+impl Type for Class {
     fn name(&self) -> &str {
         &self.name
     }
@@ -579,14 +612,14 @@ impl Class for CompositeClass {
         self
     }
 
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Object> {
-        let instance = Rc::new(CompositeObject::new(self.clone(), None));
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
+        let instance = Rc::new(Object::new(self.clone(), None));
         self.instances.borrow_mut().push(instance.clone());
         instance
     }
 }
 
-impl Scope for CompositeClass {
+impl Scope for Class {
     fn core(self: Rc<Self>) -> Rc<dyn Core> {
         self.core.upgrade().unwrap()
     }
@@ -599,11 +632,11 @@ impl Scope for CompositeClass {
         self.scope.get_field(name)
     }
 
-    fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+    fn get_method(&self, name: &str, classes: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
         self.scope.get_method(name, classes)
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
         self.scope.get_class(name)
     }
 
@@ -616,19 +649,19 @@ impl Scope for CompositeClass {
     }
 }
 
-pub struct CompositeObject {
-    class: Weak<dyn Class>,
+pub struct Object {
+    class: Weak<dyn Type>,
     env: CommonEnv,
 }
 
-impl CompositeObject {
-    pub fn new(class: Rc<dyn Class>, parent_env: Option<Rc<dyn Env>>) -> Self {
+impl Object {
+    pub fn new(class: Rc<dyn Type>, parent_env: Option<Rc<dyn Env>>) -> Self {
         Self { class: Rc::downgrade(&class), env: CommonEnv::new(parent_env) }
     }
 }
 
-impl Object for CompositeObject {
-    fn class(&self) -> Rc<dyn Class> {
+impl Var for Object {
+    fn class(&self) -> Rc<dyn Type> {
         self.class.upgrade().unwrap()
     }
 
@@ -641,34 +674,34 @@ impl Object for CompositeObject {
     }
 }
 
-impl Env for CompositeObject {
+impl Env for Object {
     fn parent(&self) -> Option<Rc<dyn Env>> {
         self.env.parent.clone()
     }
 
-    fn get(&self, name: &str) -> Option<Rc<dyn Object>> {
+    fn get(&self, name: &str) -> Option<Rc<dyn Var>> {
         self.env.get(name)
     }
 
-    fn set(&self, name: String, value: Rc<dyn Object>) {
+    fn set(&self, name: String, value: Rc<dyn Var>) {
         self.env.set(name, value);
     }
 }
 
 pub trait Core: Scope + Env {
-    fn new_bool(&self, value: bool) -> Rc<dyn Object>;
-    fn new_bool_var(&self) -> Rc<dyn Object>;
-    fn new_int(&self, value: i64) -> Rc<dyn Object>;
-    fn new_int_var(&self) -> Rc<dyn Object>;
-    fn new_real(&self, num: i64, den: i64) -> Rc<dyn Object>;
-    fn new_real_var(&self) -> Rc<dyn Object>;
-    fn new_string(&self, value: &str) -> Rc<dyn Object>;
-    fn new_string_var(&self) -> Rc<dyn Object>;
+    fn new_bool(&self, value: bool) -> Rc<dyn Var>;
+    fn new_bool_var(&self) -> Rc<dyn Var>;
+    fn new_int(&self, value: i64) -> Rc<dyn Var>;
+    fn new_int_var(&self) -> Rc<dyn Var>;
+    fn new_real(&self, num: i64, den: i64) -> Rc<dyn Var>;
+    fn new_real_var(&self) -> Rc<dyn Var>;
+    fn new_string(&self, value: &str) -> Rc<dyn Var>;
+    fn new_string_var(&self) -> Rc<dyn Var>;
 
-    fn sum(&self, sum: &[Rc<dyn Object>]) -> Rc<dyn Object>;
-    fn opposite(&self, term: Rc<dyn Object>) -> Rc<dyn Object>;
-    fn mul(&self, mul: &[Rc<dyn Object>]) -> Rc<dyn Object>;
-    fn div(&self, left: Rc<dyn Object>, right: Rc<dyn Object>) -> Rc<dyn Object>;
+    fn sum(&self, sum: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn opposite(&self, term: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn mul(&self, mul: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn div(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
 }
 
 pub enum RiddleError {
@@ -684,7 +717,7 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
     }
 }
 
-pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<dyn Object>, RiddleError> {
+pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<dyn Var>, RiddleError> {
     match expr {
         Expr::Bool(bool) => Ok(scp.core().new_bool(*bool)),
         Expr::Int(int) => Ok(scp.core().new_int(*int)),
@@ -696,7 +729,7 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
             rest.iter().try_fold(root, |acc, id| acc.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(id.to_string()))?.get(id).ok_or_else(|| RiddleError::NotFound(format!("Member '{}' in path", id))))
         }
         Expr::Sum { terms } => {
-            let evaluated_terms: Vec<Rc<dyn Object>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
+            let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
             Ok(scp.core().sum(&evaluated_terms))
         }
         Expr::Opposite { term } => {
@@ -704,7 +737,7 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
             Ok(scp.core().opposite(evaluated_term))
         }
         Expr::Mul { factors } => {
-            let evaluated_factors: Vec<Rc<dyn Object>> = factors.iter().map(|f| evaluate(scp.clone(), env.clone(), f)).collect::<Result<_, _>>()?;
+            let evaluated_factors: Vec<Rc<dyn Var>> = factors.iter().map(|f| evaluate(scp.clone(), env.clone(), f)).collect::<Result<_, _>>()?;
             Ok(scp.core().mul(&evaluated_factors))
         }
         Expr::Div { left, right } => {
@@ -716,7 +749,7 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
     }
 }
 
-pub fn arith_class(cr: Rc<dyn Core>, terms: &[Rc<dyn Object>]) -> Result<Rc<dyn Class>, RiddleError> {
+pub fn arith_class(cr: Rc<dyn Core>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Type>, RiddleError> {
     if terms.iter().all(|t| t.class().name() == "int") {
         Ok(cr.get_class("int").expect("int class not found"))
     } else if terms.iter().all(|t| t.class().name() == "real") {
@@ -733,11 +766,11 @@ mod tests {
     use crate::{env::*, language::*, parse_problem};
 
     struct TestObject {
-        class: Weak<dyn Class>,
+        class: Weak<dyn Type>,
     }
 
-    impl Object for TestObject {
-        fn class(&self) -> Rc<dyn Class> {
+    impl Var for TestObject {
+        fn class(&self) -> Rc<dyn Type> {
             self.class.upgrade().unwrap()
         }
 
@@ -761,10 +794,10 @@ mod tests {
                 envs: CommonEnv::new(None),
             });
             let core_dyn: Rc<dyn Core> = core.clone();
-            core.scope.classes.borrow_mut().insert("bool".to_string(), Rc::new(BoolClass::new(Rc::downgrade(&core_dyn))));
-            core.scope.classes.borrow_mut().insert("int".to_string(), Rc::new(IntClass::new(Rc::downgrade(&core_dyn))));
-            core.scope.classes.borrow_mut().insert("real".to_string(), Rc::new(RealClass::new(Rc::downgrade(&core_dyn))));
-            core.scope.classes.borrow_mut().insert("string".to_string(), Rc::new(StringClass::new(Rc::downgrade(&core_dyn))));
+            core.scope.classes.borrow_mut().insert("bool".to_string(), Rc::new(BoolType::new(Rc::downgrade(&core_dyn))));
+            core.scope.classes.borrow_mut().insert("int".to_string(), Rc::new(IntType::new(Rc::downgrade(&core_dyn))));
+            core.scope.classes.borrow_mut().insert("real".to_string(), Rc::new(RealType::new(Rc::downgrade(&core_dyn))));
+            core.scope.classes.borrow_mut().insert("string".to_string(), Rc::new(StringType::new(Rc::downgrade(&core_dyn))));
             core
         }
 
@@ -775,51 +808,51 @@ mod tests {
     }
 
     impl Core for TestCore {
-        fn new_bool(&self, _value: bool) -> Rc<dyn Object> {
+        fn new_bool(&self, _value: bool) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").expect("bool class not found")) })
         }
 
-        fn new_bool_var(&self) -> Rc<dyn Object> {
+        fn new_bool_var(&self) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
         }
 
-        fn new_int(&self, _value: i64) -> Rc<dyn Object> {
+        fn new_int(&self, _value: i64) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
         }
 
-        fn new_int_var(&self) -> Rc<dyn Object> {
+        fn new_int_var(&self) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
         }
 
-        fn new_real(&self, _num: i64, _den: i64) -> Rc<dyn Object> {
+        fn new_real(&self, _num: i64, _den: i64) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("real").unwrap()) })
         }
 
-        fn new_real_var(&self) -> Rc<dyn Object> {
+        fn new_real_var(&self) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("real").unwrap()) })
         }
 
-        fn new_string(&self, _value: &str) -> Rc<dyn Object> {
+        fn new_string(&self, _value: &str) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("string").unwrap()) })
         }
 
-        fn new_string_var(&self) -> Rc<dyn Object> {
+        fn new_string_var(&self) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("string").unwrap()) })
         }
 
-        fn sum(&self, _sum: &[Rc<dyn Object>]) -> Rc<dyn Object> {
+        fn sum(&self, _sum: &[Rc<dyn Var>]) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
         }
 
-        fn opposite(&self, _term: Rc<dyn Object>) -> Rc<dyn Object> {
+        fn opposite(&self, _term: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
         }
 
-        fn mul(&self, _mul: &[Rc<dyn Object>]) -> Rc<dyn Object> {
+        fn mul(&self, _mul: &[Rc<dyn Var>]) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
         }
 
-        fn div(&self, _left: Rc<dyn Object>, _right: Rc<dyn Object>) -> Rc<dyn Object> {
+        fn div(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
         }
     }
@@ -837,11 +870,11 @@ mod tests {
             None
         }
 
-        fn get_method(&self, name: &str, classes: &[Rc<dyn Class>]) -> Option<Rc<Method>> {
+        fn get_method(&self, name: &str, classes: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
             self.scope.get_method(name, classes)
         }
 
-        fn get_class(&self, name: &str) -> Option<Rc<dyn Class>> {
+        fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
             self.scope.get_class(name)
         }
 
@@ -859,11 +892,11 @@ mod tests {
             None
         }
 
-        fn get(&self, _name: &str) -> Option<Rc<dyn Object>> {
+        fn get(&self, _name: &str) -> Option<Rc<dyn Var>> {
             None
         }
 
-        fn set(&self, _name: String, _value: Rc<dyn Object>) {}
+        fn set(&self, _name: String, _value: Rc<dyn Var>) {}
     }
 
     #[test]
