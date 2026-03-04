@@ -883,8 +883,6 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
 pub fn arith_class(cr: Rc<dyn Core>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Type>, RiddleError> {
     if terms.iter().all(|t| t.class().name() == "int") {
         Ok(cr.get_class("int").expect("int class not found"))
-    } else if terms.iter().all(|t| t.class().name() == "real") {
-        Ok(cr.get_class("real").expect("real class not found"))
     } else if terms.iter().all(|t| t.class().name() == "int" || t.class().name() == "real") {
         Ok(cr.get_class("real").expect("real class not found"))
     } else {
