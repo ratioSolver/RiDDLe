@@ -12,6 +12,9 @@ pub trait Type {
         self.name()
     }
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
+    fn as_class(&self) -> Option<&dyn Class> {
+        None
+    }
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var>;
 }
 
@@ -144,6 +147,9 @@ pub trait Var {
 }
 
 pub trait Scope {
+    fn as_class(self: Rc<Self>) -> Option<Rc<dyn Class>> {
+        None
+    }
     fn core(self: Rc<Self>) -> Rc<dyn Core>;
     fn parent(&self) -> Option<Rc<dyn Scope>>;
 
@@ -266,7 +272,7 @@ impl CommonScope {
             self.predicates.borrow_mut().insert(predicate.name.clone(), Rc::new(predicate));
         }
         for class in problem.classes {
-            self.classes.borrow_mut().insert(class.name.clone(), Rc::new(Class::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class)));
+            self.classes.borrow_mut().insert(class.name.clone(), Rc::new(CommonClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class)));
         }
         for enm in problem.enums {
             self.enums.borrow_mut().insert(enm.name.clone(), Rc::new(enm));
@@ -325,7 +331,7 @@ impl Scope for CommonScope {
 
 pub struct Method {
     core: Weak<dyn Core>,
-    scope: CommonScope,
+    scope: Rc<CommonScope>,
     name: String,
     return_type: Option<Vec<String>>,
     args: Vec<(Vec<String>, String)>,
@@ -340,7 +346,7 @@ impl Method {
             return_type: std::mem::take(&mut method.return_type),
             args: std::mem::take(&mut method.args),
             statements: std::mem::take(&mut method.statements),
-            scope: CommonScope::from_method(core, parent, method),
+            scope: Rc::new(CommonScope::from_method(core, parent, method)),
         }
     }
 
@@ -358,6 +364,30 @@ impl Method {
 
     pub fn statements(&self) -> &[Statement] {
         &self.statements
+    }
+
+    pub fn call(&self, env: Rc<dyn Env>, args: Vec<Rc<dyn Var>>) -> Result<Option<Rc<dyn Var>>, RiddleError> {
+        if args.len() != self.args.len() {
+            return Err(RiddleError::RuntimeError(format!("Expected {} arguments, got {}", self.args.len(), args.len())));
+        }
+        let method_env = Rc::new(CommonEnv::new(Some(env)));
+        for ((arg_type, arg_name), arg_value) in self.args.iter().zip(args.into_iter()) {
+            if !arg_value.class().full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
+                return Err(RiddleError::TypeError(format!("Argument '{}' expected to be of type '{}', got '{}'", arg_name, arg_type.join("."), arg_value.class().name())));
+            }
+            method_env.set(arg_name.clone(), arg_value);
+        }
+        for stmt in &self.statements {
+            execute(self.scope.clone(), method_env.clone(), stmt)?;
+        }
+        if let Some(return_type) = &self.return_type {
+            method_env
+                .get("return")
+                .ok_or_else(|| RiddleError::RuntimeError("Method did not set return value".into()))
+                .and_then(|ret| if ret.class().full_name().split('.').eq(return_type.iter().map(|s| s.as_str())) { Ok(Some(ret)) } else { Err(RiddleError::TypeError(format!("Return value expected to be of type '{}', got '{}'", return_type.join("."), ret.class().name()))) })
+        } else {
+            Ok(None)
+        }
     }
 }
 
@@ -393,7 +423,7 @@ impl Scope for Method {
 
 pub struct Constructor {
     core: Weak<dyn Core>,
-    scope: CommonScope,
+    scope: Rc<CommonScope>,
     args: Vec<(Vec<String>, String)>,
     statements: Vec<Statement>,
 }
@@ -404,7 +434,7 @@ impl Constructor {
             core: core.clone(),
             args: std::mem::take(&mut constructor.args),
             statements: std::mem::take(&mut constructor.statements),
-            scope: CommonScope::from_costructor(core, parent, constructor),
+            scope: Rc::new(CommonScope::from_costructor(core, parent, constructor)),
         }
     }
 
@@ -414,6 +444,26 @@ impl Constructor {
 
     pub fn statements(&self) -> &[Statement] {
         &self.statements
+    }
+
+    pub fn call(&self, env: Rc<dyn Env>, args: Vec<Rc<dyn Var>>) -> Result<Option<Rc<dyn Var>>, RiddleError> {
+        if args.len() != self.args.len() {
+            return Err(RiddleError::RuntimeError(format!("Expected {} arguments, got {}", self.args.len(), args.len())));
+        }
+        let class = self.scope.parent.as_ref().expect("Constructor scope should have a parent").clone().as_class().expect("Constructor scope parent should be a class");
+        let object = class.new_instance();
+        let constructor_env = Rc::new(CommonEnv::new(Some(env)));
+        constructor_env.set("this".to_string(), object.clone());
+        for ((arg_type, arg_name), arg_value) in self.args.iter().zip(args.into_iter()) {
+            if !arg_value.class().full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
+                return Err(RiddleError::TypeError(format!("Argument '{}' expected to be of type '{}', got '{}'", arg_name, arg_type.join("."), arg_value.class().name())));
+            }
+            constructor_env.set(arg_name.clone(), arg_value);
+        }
+        for stmt in &self.statements {
+            execute(self.scope.clone(), constructor_env.clone(), stmt)?;
+        }
+        Ok(Some(object))
     }
 }
 
@@ -551,7 +601,14 @@ impl Env for Atom {
     }
 }
 
-pub struct Class {
+pub trait Class: Type + Scope {
+    fn parents(&self) -> &[Vec<String>];
+    fn constructors(&self) -> &[Constructor];
+    fn constructor(&self, args: &[Rc<dyn Type>]) -> Option<&Constructor>;
+    fn instances(&self) -> Vec<Rc<Object>>;
+}
+
+pub struct CommonClass {
     core: Weak<dyn Core>,
     scope: Rc<CommonScope>,
     name: String,
@@ -560,7 +617,7 @@ pub struct Class {
     instances: RefCell<Vec<Rc<Object>>>,
 }
 
-impl Class {
+impl CommonClass {
     pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Self {
         Self {
             core: core.clone(),
@@ -571,45 +628,19 @@ impl Class {
             instances: RefCell::new(Vec::new()),
         }
     }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn parents(&self) -> &[Vec<String>] {
-        &self.parents
-    }
-
-    pub fn constructors(&self) -> &[Constructor] {
-        &self.constructors
-    }
-
-    pub fn constructor(&self, args: &[Rc<dyn Type>]) -> Option<&Constructor> {
-        self.constructors.iter().find(|c| {
-            if c.args().len() != args.len() {
-                return false;
-            }
-            for ((arg_type, _), class) in c.args().iter().zip(args.iter()) {
-                if !class.full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
-                    return false;
-                }
-            }
-            true
-        })
-    }
-
-    pub fn instances(&self) -> Vec<Rc<Object>> {
-        self.instances.borrow().clone()
-    }
 }
 
-impl Type for Class {
+impl Type for CommonClass {
     fn name(&self) -> &str {
         &self.name
     }
 
     fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
         self
+    }
+
+    fn as_class(&self) -> Option<&dyn Class> {
+        Some(self)
     }
 
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
@@ -619,7 +650,7 @@ impl Type for Class {
     }
 }
 
-impl Scope for Class {
+impl Scope for CommonClass {
     fn core(self: Rc<Self>) -> Rc<dyn Core> {
         self.core.upgrade().unwrap()
     }
@@ -646,6 +677,34 @@ impl Scope for Class {
 
     fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
         self.scope.get_predicate(name)
+    }
+}
+
+impl Class for CommonClass {
+    fn parents(&self) -> &[Vec<String>] {
+        &self.parents
+    }
+
+    fn constructors(&self) -> &[Constructor] {
+        &self.constructors
+    }
+
+    fn constructor(&self, args: &[Rc<dyn Type>]) -> Option<&Constructor> {
+        self.constructors.iter().find(|c| {
+            if c.args().len() != args.len() {
+                return false;
+            }
+            for ((arg_type, _), class) in c.args().iter().zip(args.iter()) {
+                if !class.full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
+                    return false;
+                }
+            }
+            true
+        })
+    }
+
+    fn instances(&self) -> Vec<Rc<Object>> {
+        self.instances.borrow().clone()
     }
 }
 
@@ -702,10 +761,22 @@ pub trait Core: Scope + Env {
     fn opposite(&self, term: Rc<dyn Var>) -> Rc<dyn Var>;
     fn mul(&self, mul: &[Rc<dyn Var>]) -> Rc<dyn Var>;
     fn div(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+
+    fn eq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn neq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+
+    fn lt(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn leq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn geq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn gt(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+
+    fn or(&self, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn and(&self, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
 }
 
 pub enum RiddleError {
     NotAnEnvironment(String),
+    NotAClass(String),
     TypeError(String),
     NotFound(String),
     RuntimeError(String),
@@ -744,6 +815,57 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
             Ok(scp.core().div(evaluated_left, evaluated_right))
+        }
+        Expr::Function { name, args } => {
+            let evaluated_args: Vec<Rc<dyn Var>> = args.iter().map(|a| evaluate(scp.clone(), env.clone(), a)).collect::<Result<_, _>>()?;
+            let method = scp.get_method(name.last().unwrap(), &evaluated_args.iter().map(|arg| arg.class()).collect::<Vec<_>>()).ok_or_else(|| RiddleError::NotFound(format!("Method '{}' with specified argument types", name.join("."))))?;
+            method.call(env, evaluated_args)?.ok_or_else(|| RiddleError::RuntimeError(format!("Method '{}' did not return a value", name.join("."))))
+        }
+        Expr::Eq { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().eq(evaluated_left, evaluated_right))
+        }
+        Expr::Neq { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().neq(evaluated_left, evaluated_right))
+        }
+        Expr::Lt { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().lt(evaluated_left, evaluated_right))
+        }
+        Expr::Leq { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().leq(evaluated_left, evaluated_right))
+        }
+        Expr::Geq { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().geq(evaluated_left, evaluated_right))
+        }
+        Expr::Gt { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().gt(evaluated_left, evaluated_right))
+        }
+        Expr::Or { terms } => {
+            let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
+            Ok(scp.core().or(&evaluated_terms))
+        }
+        Expr::And { terms } => {
+            let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
+            Ok(scp.core().and(&evaluated_terms))
+        }
+        Expr::NewObject { class_name, args } => {
+            let (first, rest) = class_name.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty class name".into()))?;
+            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?;
+            rest.iter().try_fold(class.clone(), |acc, id| acc.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string()))?.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id))))?;
+            let evaluated_args: Vec<Rc<dyn Var>> = args.iter().map(|a| evaluate(scp.clone(), env.clone(), a)).collect::<Result<_, _>>()?;
+            let constructor = class.as_class().ok_or_else(|| RiddleError::NotAClass(class_name.join(".")))?.constructor(&evaluated_args.iter().map(|arg| arg.class()).collect::<Vec<_>>()).ok_or_else(|| RiddleError::NotFound(format!("Constructor for class '{}' with specified argument types", class_name.join("."))))?;
+            constructor.call(env, evaluated_args)?.ok_or_else(|| RiddleError::RuntimeError(format!("Constructor for class '{}' did not return a value", class_name.join("."))))
         }
         _ => unimplemented!(),
     }
@@ -854,6 +976,38 @@ mod tests {
 
         fn div(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_class("int").unwrap()) })
+        }
+
+        fn eq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
+        }
+
+        fn neq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
+        }
+
+        fn lt(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
+        }
+
+        fn leq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
+        }
+
+        fn geq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
+        }
+
+        fn gt(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
+        }
+
+        fn or(&self, _terms: &[Rc<dyn Var>]) -> Rc<dyn Var> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
+        }
+
+        fn and(&self, _terms: &[Rc<dyn Var>]) -> Rc<dyn Var> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.get_class("bool").unwrap()) })
         }
     }
 
