@@ -728,7 +728,15 @@ impl Class for CommonClass {
     }
 
     fn instances(&self) -> Vec<Rc<Object>> {
-        self.instances.borrow().clone()
+        let mut instances = self.instances.borrow().clone();
+        for parent in &self.parents {
+            if let Some(parent_class) = self.core.upgrade().unwrap().get_class(&parent.join(".")) {
+                if let Some(parent_class) = parent_class.as_class() {
+                    instances.extend(parent_class.instances());
+                }
+            }
+        }
+        instances
     }
 }
 
@@ -931,6 +939,19 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
                 rest.iter().try_fold(root, |acc, id| acc.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(id.to_string()))?.get(id).ok_or_else(|| RiddleError::NotFound(format!("Member '{}' in path", id))))?.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(last.to_string()))?.set(last.to_string(), value);
                 Ok(())
             }
+        }
+        Statement::ForAll { var_type, var_name, statements } => {
+            let (first, rest) = var_type.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty variable type path".into()))?;
+            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
+            rest.iter().try_fold(class.clone(), |acc, id| acc.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
+            for instance in class.instances() {
+                let loop_env = Rc::new(CommonEnv::new(Some(env.clone())));
+                loop_env.set(var_name.clone(), instance);
+                for stmt in statements {
+                    execute(scp.clone(), loop_env.clone(), stmt)?;
+                }
+            }
+            Ok(())
         }
         _ => unimplemented!(),
     }
