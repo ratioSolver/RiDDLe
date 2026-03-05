@@ -815,20 +815,20 @@ impl CommonCore {
         c_core
     }
 
-    pub fn bool_type(&self) -> Rc<dyn Type> {
-        self.scope.get_class("bool").unwrap()
+    pub fn bool_type(&self) -> Rc<BoolType> {
+        self.scope.get_class("bool").expect("Core should have bool type").as_any().downcast::<BoolType>().expect("Core bool type should be BoolType")
     }
 
-    pub fn int_type(&self) -> Rc<dyn Type> {
-        self.scope.get_class("int").unwrap()
+    pub fn int_type(&self) -> Rc<IntType> {
+        self.scope.get_class("int").expect("Core should have int type").as_any().downcast::<IntType>().expect("Core int type should be IntType")
     }
 
-    pub fn real_type(&self) -> Rc<dyn Type> {
-        self.scope.get_class("real").unwrap()
+    pub fn real_type(&self) -> Rc<RealType> {
+        self.scope.get_class("real").expect("Core should have real type").as_any().downcast::<RealType>().expect("Core real type should be RealType")
     }
 
-    pub fn string_type(&self) -> Rc<dyn Type> {
-        self.scope.get_class("string").unwrap()
+    pub fn string_type(&self) -> Rc<StringType> {
+        self.scope.get_class("string").expect("Core should have string type").as_any().downcast::<StringType>().expect("Core string type should be StringType")
     }
 
     pub fn read(&self, riddle: &str) {
