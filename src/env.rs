@@ -1,4 +1,7 @@
-use crate::language::{ClassDef, ConstructorDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement};
+use crate::{
+    language::{ClassDef, ConstructorDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
+    parse_problem,
+};
 use std::{
     any::Any,
     cell::RefCell,
@@ -797,6 +800,91 @@ pub trait Core: Scope + Env {
     fn assert(&self, term: Rc<dyn Var>) -> bool;
 }
 
+pub struct CommonCore {
+    scope: Rc<CommonScope>,
+    env: Rc<CommonEnv>,
+}
+
+impl CommonCore {
+    pub fn new(core: Weak<dyn Core>) -> Rc<Self> {
+        let c_core = Rc::new(CommonCore { scope: Rc::new(CommonScope::new(core.clone(), None)), env: Rc::new(CommonEnv::new(None)) });
+        c_core.scope.classes.borrow_mut().insert("bool".to_string(), Rc::new(BoolType::new(core.clone())));
+        c_core.scope.classes.borrow_mut().insert("int".to_string(), Rc::new(IntType::new(core.clone())));
+        c_core.scope.classes.borrow_mut().insert("real".to_string(), Rc::new(RealType::new(core.clone())));
+        c_core.scope.classes.borrow_mut().insert("string".to_string(), Rc::new(StringType::new(core.clone())));
+        c_core
+    }
+
+    pub fn bool_type(&self) -> Rc<dyn Type> {
+        self.scope.get_class("bool").unwrap()
+    }
+
+    pub fn int_type(&self) -> Rc<dyn Type> {
+        self.scope.get_class("int").unwrap()
+    }
+
+    pub fn real_type(&self) -> Rc<dyn Type> {
+        self.scope.get_class("real").unwrap()
+    }
+
+    pub fn string_type(&self) -> Rc<dyn Type> {
+        self.scope.get_class("string").unwrap()
+    }
+
+    pub fn read(&self, riddle: &str) {
+        let mut problem = parse_problem(riddle).expect("Failed to parse problem");
+        let statments = std::mem::take(&mut problem.statements);
+        self.scope.add_problem(problem);
+        for stmt in statments {
+            execute(self.scope.clone(), self.env.clone(), &stmt).expect("Failed to execute statement");
+        }
+    }
+}
+
+impl Scope for CommonCore {
+    fn core(self: Rc<Self>) -> Rc<dyn Core> {
+        self.scope.clone().core()
+    }
+
+    fn parent(&self) -> Option<Rc<dyn Scope>> {
+        None
+    }
+
+    fn get_field(&self, _name: &str) -> Option<Rc<Field>> {
+        self.scope.get_field(_name)
+    }
+
+    fn get_method(&self, _name: &str, _classes: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
+        self.scope.get_method(_name, _classes)
+    }
+
+    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
+        self.scope.get_class(name)
+    }
+
+    fn get_enum(&self, _name: &str) -> Option<Rc<EnumDef>> {
+        self.scope.get_enum(_name)
+    }
+
+    fn get_predicate(&self, _name: &str) -> Option<Rc<PredicateDef>> {
+        self.scope.get_predicate(_name)
+    }
+}
+
+impl Env for CommonCore {
+    fn parent(&self) -> Option<Rc<dyn Env>> {
+        None
+    }
+
+    fn get(&self, name: &str) -> Option<Rc<dyn Var>> {
+        self.env.get(name)
+    }
+
+    fn set(&self, name: String, value: Rc<dyn Var>) {
+        self.env.set(name, value);
+    }
+}
+
 #[derive(Debug)]
 pub enum RiddleError {
     NotAnEnvironment(String),
@@ -942,7 +1030,7 @@ pub fn arith_class(cr: Rc<dyn Core>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Typ
 
 #[cfg(test)]
 mod tests {
-    use crate::{env::*, language::*, parse_problem};
+    use crate::{env::*, language::*};
 
     struct TestObject {
         class: Weak<dyn Type>,
@@ -959,34 +1047,21 @@ mod tests {
     }
 
     struct TestCore {
-        scope: Rc<CommonScope>,
-        env: Rc<CommonEnv>,
+        core: Rc<CommonCore>,
     }
 
     impl TestCore {
         fn new() -> Rc<Self> {
-            let core = Rc::new_cyclic(|core| Self {
-                scope: {
+            Rc::new_cyclic(|core| Self {
+                core: {
                     let core: Weak<TestCore> = core.clone();
-                    Rc::new(CommonScope::new(core.clone(), None))
+                    CommonCore::new(core)
                 },
-                env: Rc::new(CommonEnv::new(None)),
-            });
-            let core_dyn: Rc<dyn Core> = core.clone();
-            core.scope.classes.borrow_mut().insert("bool".to_string(), Rc::new(BoolType::new(Rc::downgrade(&core_dyn))));
-            core.scope.classes.borrow_mut().insert("int".to_string(), Rc::new(IntType::new(Rc::downgrade(&core_dyn))));
-            core.scope.classes.borrow_mut().insert("real".to_string(), Rc::new(RealType::new(Rc::downgrade(&core_dyn))));
-            core.scope.classes.borrow_mut().insert("string".to_string(), Rc::new(StringType::new(Rc::downgrade(&core_dyn))));
-            core
+            })
         }
 
-        fn read(&mut self, riddle: &str) {
-            let mut problem = parse_problem(riddle).expect("Failed to parse problem");
-            let statments = std::mem::take(&mut problem.statements);
-            self.scope.add_problem(problem);
-            for stmt in statments {
-                execute(self.scope.clone(), self.env.clone(), &stmt).expect("Failed to execute statement");
-            }
+        fn read(&self, riddle: &str) {
+            self.core.read(riddle);
         }
     }
 
@@ -1090,19 +1165,19 @@ mod tests {
         }
 
         fn get_method(&self, name: &str, classes: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
-            self.scope.get_method(name, classes)
+            self.core.get_method(name, classes)
         }
 
         fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
-            self.scope.get_class(name)
+            self.core.get_class(name)
         }
 
         fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
-            self.scope.get_enum(name)
+            self.core.get_enum(name)
         }
 
         fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
-            self.scope.get_predicate(name)
+            self.core.get_predicate(name)
         }
     }
 
@@ -1111,11 +1186,13 @@ mod tests {
             None
         }
 
-        fn get(&self, _name: &str) -> Option<Rc<dyn Var>> {
-            None
+        fn get(&self, name: &str) -> Option<Rc<dyn Var>> {
+            self.core.get(name)
         }
 
-        fn set(&self, _name: String, _value: Rc<dyn Var>) {}
+        fn set(&self, name: String, value: Rc<dyn Var>) {
+            self.core.set(name, value);
+        }
     }
 
     #[test]
