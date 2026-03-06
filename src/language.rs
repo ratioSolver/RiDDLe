@@ -68,7 +68,7 @@ pub struct PredicateDef {
     pub statements: Vec<Statement>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
     Expr(Expr),
     LocalField { field_type: Vec<String>, fields: Vec<(String, Option<Expr>)> },
@@ -79,7 +79,7 @@ pub enum Statement {
     Return { value: Expr },
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Expr {
     Bool(bool),
     Int(i64),
@@ -204,6 +204,12 @@ impl Display for Expr {
     }
 }
 
+pub struct Disjunction {
+    pub scp: Rc<dyn Scope>,
+    pub env: Rc<dyn Env>,
+    pub disjuncts: Vec<(Vec<Statement>, Expr)>,
+}
+
 pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result<(), RiddleError> {
     match stmt {
         Statement::Expr(expr) => {
@@ -253,6 +259,11 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
                     execute(scp.clone(), loop_env.clone(), stmt)?;
                 }
             }
+            Ok(())
+        }
+        Statement::Disjunction { disjuncts } => {
+            let disjunction = Disjunction { scp: scp.clone(), env: env.clone(), disjuncts: disjuncts.clone() };
+            scp.core().new_disjunction(disjunction);
             Ok(())
         }
         _ => unimplemented!(),

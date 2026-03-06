@@ -1,6 +1,6 @@
 use crate::{
     env::{CommonEnv, Env, Var},
-    language::{EnumDef, PredicateDef, execute},
+    language::{Disjunction, EnumDef, PredicateDef, execute},
     parse_problem,
     scope::{BoolType, CommonScope, Field, IntType, Method, RealType, Scope, StringType, Type},
 };
@@ -33,6 +33,7 @@ pub trait Core: Scope + Env {
     fn and(&self, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
 
     fn assert(&self, term: Rc<dyn Var>) -> bool;
+    fn new_disjunction(&self, disjunction: Disjunction);
 }
 
 pub struct CommonCore {
@@ -242,6 +243,8 @@ mod tests {
         fn assert(&self, _term: Rc<dyn Var>) -> bool {
             true
         }
+
+        fn new_disjunction(&self, _disjunction: Disjunction) {}
     }
 
     impl Scope for TestCore {
