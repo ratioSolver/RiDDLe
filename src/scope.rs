@@ -12,8 +12,8 @@ use std::{
 
 pub trait Type {
     fn name(&self) -> &str;
-    fn full_name(&self) -> &str {
-        self.name()
+    fn full_name(&self) -> String {
+        self.name().to_string()
     }
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
     fn as_class(self: Rc<Self>) -> Option<Rc<dyn Class>> {
@@ -496,8 +496,13 @@ impl Type for Predicate {
         &self.name
     }
 
-    fn full_name(&self) -> &str {
-        &self.name
+    fn full_name(&self) -> String {
+        if self.scope.scope.is_none() {
+            self.name.clone()
+        } else {
+            let class = self.scope.scope.as_ref().unwrap().clone().as_class().unwrap();
+            format!("{}.{}", class.full_name(), self.name)
+        }
     }
 
     fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
@@ -598,8 +603,13 @@ impl Type for CommonClass {
         &self.name
     }
 
-    fn full_name(&self) -> &str {
-        &self.name
+    fn full_name(&self) -> String {
+        if self.scope.scope.is_none() {
+            self.name.clone()
+        } else {
+            let class = self.scope.scope.as_ref().unwrap().clone().as_class().unwrap();
+            format!("{}.{}", class.full_name(), self.name)
+        }
     }
 
     fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
