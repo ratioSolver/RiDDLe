@@ -1,4 +1,20 @@
-use std::fmt::{Display, Formatter, Result};
+use crate::{
+    env::{CommonEnv, Env, Var},
+    scope::{Scope, Type, is_assignable_from},
+};
+use std::{
+    fmt::{self, Display, Formatter},
+    rc::Rc,
+};
+
+#[derive(Debug)]
+pub enum RiddleError {
+    NotAnEnvironment(String),
+    NotAClass(String),
+    TypeError(String),
+    NotFound(String),
+    RuntimeError(String),
+}
 
 #[derive(Debug, PartialEq)]
 pub struct ProblemDef {
@@ -87,7 +103,7 @@ pub enum Expr {
 }
 
 impl Display for ProblemDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         for method in &self.methods {
             writeln!(f, "{}", method)?;
         }
@@ -105,7 +121,7 @@ impl Display for ProblemDef {
 }
 
 impl Display for ClassDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         writeln!(f, "class {}{} {{", self.name, if !self.parents.is_empty() { format!(" extends {}", self.parents.iter().map(|p| p.join(".")).collect::<Vec<_>>().join(", ")) } else { String::new() })?;
         for (field_type, fields) in &self.fields {
             writeln!(f, "    {} {};", field_type.join("."), fields.iter().map(|(n, v)| format!("{}{}", n, v.as_ref().map(|v| format!(" = {}", v)).unwrap_or_default())).collect::<Vec<_>>().join(", "))?;
@@ -124,13 +140,13 @@ impl Display for ClassDef {
 }
 
 impl Display for ConstructorDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "constructor({}) {{\n{}\n}}", self.args.iter().map(|(t, n)| format!("{} {}", t.join("."), n)).collect::<Vec<_>>().join(", "), self.statements.iter().map(|s| format!("    {}", s)).collect::<Vec<_>>().join("\n"))
     }
 }
 
 impl Display for MethodDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {}({}) {{\n{}\n}}",
@@ -143,13 +159,13 @@ impl Display for MethodDef {
 }
 
 impl Display for PredicateDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "predicate {}({}) {{\n{}\n}}", self.name, self.args.iter().map(|(t, n)| format!("{} {}", t.join("."), n)).collect::<Vec<_>>().join(", "), self.statements.iter().map(|s| format!("    {}", s)).collect::<Vec<_>>().join("\n"))
     }
 }
 
 impl Display for Statement {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Statement::Expr(e) => write!(f, "{};", e),
             Statement::LocalField { field_type, fields } => write!(f, "{} {};", field_type.join("."), fields.iter().map(|(n, v)| format!("{}{}", n, v.as_ref().map(|v| format!(" = {}", v)).unwrap_or_default())).collect::<Vec<_>>().join(", ")),
@@ -163,7 +179,7 @@ impl Display for Statement {
 }
 
 impl Display for Expr {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match self {
             Expr::Bool(b) => write!(f, "{}", b),
             Expr::Int(i) => write!(f, "{}", i),
@@ -184,6 +200,143 @@ impl Display for Expr {
             Expr::Or { terms } => write!(f, "({})", terms.iter().map(|t| format!("{}", t)).collect::<Vec<_>>().join(" || ")),
             Expr::And { terms } => write!(f, "({})", terms.iter().map(|t| format!("{}", t)).collect::<Vec<_>>().join(" && ")),
             Expr::NewObject { class_name, args } => write!(f, "new {}({})", class_name.join("."), args.iter().map(|a| format!("{}", a)).collect::<Vec<_>>().join(", ")),
+        }
+    }
+}
+
+pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result<(), RiddleError> {
+    match stmt {
+        Statement::Expr(expr) => {
+            if scp.clone().core().assert(evaluate(scp, env, expr)?) {
+                Ok(())
+            } else {
+                Err(RiddleError::RuntimeError("Assertion failed".into()))
+            }
+        }
+        Statement::LocalField { field_type, fields } => {
+            let (first, rest) = field_type.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty field type path".into()))?;
+            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
+            rest.iter().try_fold(class.clone(), |acc, id| acc.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
+            for (name, default) in fields {
+                if let Some(expr) = default {
+                    let value = evaluate(scp.clone(), env.clone(), expr)?;
+                    let class_as_type: Rc<dyn Type> = class.clone();
+                    if !is_assignable_from(&class_as_type, &value.class()) {
+                        return Err(RiddleError::TypeError(format!("Default value for field '{}' is not assignable to field type '{}'", name, field_type.join("."))));
+                    }
+                    env.set(name.clone(), value);
+                }
+            }
+            Ok(())
+        }
+        Statement::Assign { name, value } => {
+            let value = evaluate(scp.clone(), env.clone(), value)?;
+            if name.len() == 1 {
+                env.set(name[0].clone(), value);
+                Ok(())
+            } else {
+                let (first, rest) = name.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty assignment path".into()))?;
+                let root = env.get(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?;
+                let (last, rest) = rest.split_last().ok_or_else(|| RiddleError::RuntimeError("Empty assignment path".into()))?;
+                rest.iter().try_fold(root, |acc, id| acc.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(id.to_string()))?.get(id).ok_or_else(|| RiddleError::NotFound(format!("Member '{}' in path", id))))?.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(last.to_string()))?.set(last.to_string(), value);
+                Ok(())
+            }
+        }
+        Statement::ForAll { var_type, var_name, statements } => {
+            let (first, rest) = var_type.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty variable type path".into()))?;
+            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
+            rest.iter().try_fold(class.clone(), |acc, id| acc.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
+            for instance in class.instances() {
+                let loop_env = Rc::new(CommonEnv::new(Some(env.clone())));
+                loop_env.set(var_name.clone(), instance);
+                for stmt in statements {
+                    execute(scp.clone(), loop_env.clone(), stmt)?;
+                }
+            }
+            Ok(())
+        }
+        _ => unimplemented!(),
+    }
+}
+
+pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<dyn Var>, RiddleError> {
+    match expr {
+        Expr::Bool(bool) => Ok(scp.core().new_bool(*bool)),
+        Expr::Int(int) => Ok(scp.core().new_int(*int)),
+        Expr::Real(num, den) => Ok(scp.core().new_real(*num, *den)),
+        Expr::String(string) => Ok(scp.core().new_string(string)),
+        Expr::QualifiedId { ids } => {
+            let (first, rest) = ids.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty identifier path".into()))?;
+            let root = env.get(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?;
+            rest.iter().try_fold(root, |acc, id| acc.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(id.to_string()))?.get(id).ok_or_else(|| RiddleError::NotFound(format!("Member '{}' in path", id))))
+        }
+        Expr::Sum { terms } => {
+            let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
+            Ok(scp.core().sum(&evaluated_terms))
+        }
+        Expr::Opposite { term } => {
+            let evaluated_term = evaluate(scp.clone(), env, term)?;
+            Ok(scp.core().opposite(evaluated_term))
+        }
+        Expr::Mul { factors } => {
+            let evaluated_factors: Vec<Rc<dyn Var>> = factors.iter().map(|f| evaluate(scp.clone(), env.clone(), f)).collect::<Result<_, _>>()?;
+            Ok(scp.core().mul(&evaluated_factors))
+        }
+        Expr::Div { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().div(evaluated_left, evaluated_right))
+        }
+        Expr::Function { name, args } => {
+            let evaluated_args: Vec<Rc<dyn Var>> = args.iter().map(|a| evaluate(scp.clone(), env.clone(), a)).collect::<Result<_, _>>()?;
+            let method = scp.get_method(name.last().unwrap(), &evaluated_args.iter().map(|arg| arg.class()).collect::<Vec<_>>()).ok_or_else(|| RiddleError::NotFound(format!("Method '{}' with specified argument types", name.join("."))))?;
+            method.call(env, evaluated_args)?.ok_or_else(|| RiddleError::RuntimeError(format!("Method '{}' did not return a value", name.join("."))))
+        }
+        Expr::Eq { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().eq(evaluated_left, evaluated_right))
+        }
+        Expr::Neq { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().neq(evaluated_left, evaluated_right))
+        }
+        Expr::Lt { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().lt(evaluated_left, evaluated_right))
+        }
+        Expr::Leq { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().leq(evaluated_left, evaluated_right))
+        }
+        Expr::Geq { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().geq(evaluated_left, evaluated_right))
+        }
+        Expr::Gt { left, right } => {
+            let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
+            let evaluated_right = evaluate(scp.clone(), env, right)?;
+            Ok(scp.core().gt(evaluated_left, evaluated_right))
+        }
+        Expr::Or { terms } => {
+            let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
+            Ok(scp.core().or(&evaluated_terms))
+        }
+        Expr::And { terms } => {
+            let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
+            Ok(scp.core().and(&evaluated_terms))
+        }
+        Expr::NewObject { class_name, args } => {
+            let (first, rest) = class_name.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty class name".into()))?;
+            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
+            rest.iter().try_fold(class.clone(), |acc, id| acc.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
+            let evaluated_args: Vec<Rc<dyn Var>> = args.iter().map(|a| evaluate(scp.clone(), env.clone(), a)).collect::<Result<_, _>>()?;
+            let constructor = class.constructor(&evaluated_args.iter().map(|arg| arg.class()).collect::<Vec<_>>()).ok_or_else(|| RiddleError::NotFound(format!("Constructor for class '{}' with specified argument types", class_name.join("."))))?;
+            constructor.call(env, evaluated_args)?.ok_or_else(|| RiddleError::RuntimeError(format!("Constructor for class '{}' did not return a value", class_name.join("."))))
         }
     }
 }

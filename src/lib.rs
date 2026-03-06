@@ -4,10 +4,12 @@ use crate::{
     parser::Parser,
 };
 
+pub mod core;
 pub mod env;
 pub mod language;
 mod lexer;
 mod parser;
+pub mod scope;
 
 pub fn parse_problem(input: &str) -> Result<ProblemDef, String> {
     let lexer = Lexer::new(input);
