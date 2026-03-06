@@ -330,8 +330,8 @@ impl Method {
         }
         let method_env = Rc::new(CommonEnv::new(Some(env)));
         for ((arg_type, arg_name), arg_value) in self.args.iter().zip(args.into_iter()) {
-            if !arg_value.class().full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
-                return Err(RiddleError::TypeError(format!("Argument '{}' expected to be of type '{}', got '{}'", arg_name, arg_type.join("."), arg_value.class().name())));
+            if !arg_value.var_type().full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
+                return Err(RiddleError::TypeError(format!("Argument '{}' expected to be of type '{}', got '{}'", arg_name, arg_type.join("."), arg_value.var_type().name())));
             }
             method_env.set(arg_name.clone(), arg_value);
         }
@@ -342,7 +342,7 @@ impl Method {
             method_env
                 .get("return")
                 .ok_or_else(|| RiddleError::RuntimeError("Method did not set return value".into()))
-                .and_then(|ret| if ret.class().full_name().split('.').eq(return_type.iter().map(|s| s.as_str())) { Ok(Some(ret)) } else { Err(RiddleError::TypeError(format!("Return value expected to be of type '{}', got '{}'", return_type.join("."), ret.class().name()))) })
+                .and_then(|ret| if ret.var_type().full_name().split('.').eq(return_type.iter().map(|s| s.as_str())) { Ok(Some(ret)) } else { Err(RiddleError::TypeError(format!("Return value expected to be of type '{}', got '{}'", return_type.join("."), ret.var_type().name()))) })
         } else {
             Ok(None)
         }
@@ -413,8 +413,8 @@ impl Constructor {
         let constructor_env = Rc::new(CommonEnv::new(Some(env)));
         constructor_env.set("this".to_string(), object.clone());
         for ((arg_type, arg_name), arg_value) in self.args.iter().zip(args.into_iter()) {
-            if !arg_value.class().full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
-                return Err(RiddleError::TypeError(format!("Argument '{}' expected to be of type '{}', got '{}'", arg_name, arg_type.join("."), arg_value.class().name())));
+            if !arg_value.var_type().full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
+                return Err(RiddleError::TypeError(format!("Argument '{}' expected to be of type '{}', got '{}'", arg_name, arg_type.join("."), arg_value.var_type().name())));
             }
             constructor_env.set(arg_name.clone(), arg_value);
         }
@@ -694,9 +694,9 @@ impl Class for CommonClass {
 }
 
 pub fn arith_class(cr: Rc<dyn Core>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Type>, RiddleError> {
-    if terms.iter().all(|t| t.class().name() == "int") {
+    if terms.iter().all(|t| t.var_type().name() == "int") {
         Ok(cr.get_class("int").expect("int class not found"))
-    } else if terms.iter().all(|t| t.class().name() == "int" || t.class().name() == "real") {
+    } else if terms.iter().all(|t| t.var_type().name() == "int" || t.var_type().name() == "real") {
         Ok(cr.get_class("real").expect("real class not found"))
     } else {
         Err(RiddleError::TypeError("Invalid types for arithmetic operation".into()))

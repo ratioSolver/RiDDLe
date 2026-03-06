@@ -642,6 +642,7 @@ impl<'a> Parser<'a> {
                         return Err("Expected identifier after '.'".to_string());
                     }
                 }
+                let (predicate_name, tau) = predicate_name.split_last().ok_or("Predicate name cannot be empty".to_string())?;
                 self.expect(Token::LParen)?;
                 let mut args = Vec::new();
                 while !matches!(self.peek(0), Some(Token::RParen)) {
@@ -660,7 +661,7 @@ impl<'a> Parser<'a> {
                 }
                 self.expect(Token::RParen)?;
                 self.expect(Token::Semicolon)?;
-                Ok(Statement::Formula { is_fact, name, predicate_name, args })
+                Ok(Statement::Formula { is_fact, name, tau: tau.to_vec(), predicate_name: predicate_name.to_string(), args })
             }
             _ => {
                 let expr = self.parse_expression()?;
@@ -1222,10 +1223,11 @@ mod tests {
         let lexer = Lexer::new(input);
         let mut parser = Parser::new(lexer);
         let statement = parser.parse_statement().expect("Failed to parse formula");
-        if let Statement::Formula { is_fact, name, predicate_name, args } = statement {
+        if let Statement::Formula { is_fact, name, tau, predicate_name, args } = statement {
             assert!(is_fact);
             assert_eq!(name, "isEven");
-            assert_eq!(predicate_name, vec!["Even".to_string()]);
+            assert_eq!(tau, vec![] as Vec<String>);
+            assert_eq!(predicate_name, "Even");
             assert_eq!(args.len(), 1);
             assert_eq!(args[0].0, "x");
             if let Expr::Mul { factors } = &args[0].1 {

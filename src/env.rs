@@ -7,7 +7,7 @@ use std::{
 };
 
 pub trait Var {
-    fn class(&self) -> Rc<dyn Type>;
+    fn var_type(&self) -> Rc<dyn Type>;
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
     fn as_env(&self) -> Option<&dyn Env> {
         None
@@ -76,7 +76,7 @@ impl Atom {
 }
 
 impl Var for Atom {
-    fn class(&self) -> Rc<dyn Type> {
+    fn var_type(&self) -> Rc<dyn Type> {
         self.predicate()
     }
 
@@ -115,7 +115,7 @@ impl Object {
 }
 
 impl Var for Object {
-    fn class(&self) -> Rc<dyn Type> {
+    fn var_type(&self) -> Rc<dyn Type> {
         self.class.upgrade().unwrap()
     }
 

@@ -131,7 +131,7 @@ mod tests {
     }
 
     impl Var for TestObject {
-        fn class(&self) -> Rc<dyn Type> {
+        fn var_type(&self) -> Rc<dyn Type> {
             self.class.upgrade().unwrap()
         }
 
