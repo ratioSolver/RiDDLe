@@ -75,6 +75,20 @@ impl Atom {
     }
 }
 
+impl Var for Atom {
+    fn class(&self) -> Rc<dyn Type> {
+        self.predicate()
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+
+    fn as_env(&self) -> Option<&dyn Env> {
+        Some(&self.env)
+    }
+}
+
 impl Env for Atom {
     fn parent(&self) -> Option<Rc<dyn Env>> {
         self.env.parent.clone()
