@@ -153,7 +153,7 @@ pub trait Scope {
     fn get_method(&self, name: &str, types: &[Rc<dyn Type>]) -> Option<Rc<Method>>;
     fn get_class(&self, name: &str) -> Option<Rc<dyn Type>>;
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>>;
-    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>>;
+    fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>>;
 }
 
 pub struct CommonScope {
@@ -163,7 +163,7 @@ pub struct CommonScope {
     methods: RefCell<HashMap<String, Vec<Rc<Method>>>>,
     pub(crate) classes: RefCell<HashMap<String, Rc<dyn Type>>>,
     enums: RefCell<HashMap<String, Rc<EnumDef>>>,
-    predicates: RefCell<HashMap<String, Rc<PredicateDef>>>,
+    predicates: RefCell<HashMap<String, Rc<Predicate>>>,
 }
 
 impl CommonScope {
@@ -186,11 +186,11 @@ impl CommonScope {
                 scope.fields.borrow_mut().insert(name.clone(), Rc::new(Field { name, field_type: field_type.clone(), default }));
             }
         }
-        for method in class.methods {
-            scope.methods.borrow_mut().entry(method.name.clone()).or_default().push(Rc::new(Method::new(core.clone(), Some(scope.clone()), method)));
+        for method_def in class.methods {
+            scope.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Rc::new(Method::new(core.clone(), Some(scope.clone()), method_def)));
         }
-        for predicate in class.predicates {
-            scope.predicates.borrow_mut().insert(predicate.name.clone(), Rc::new(predicate));
+        for predicate_def in class.predicates {
+            scope.predicates.borrow_mut().insert(predicate_def.name.clone(), Rc::new(Predicate::new(core.clone(), Some(scope.clone()), predicate_def)));
         }
         scope
     }
@@ -220,17 +220,17 @@ impl CommonScope {
     }
 
     pub fn add_problem(&self, problem: ProblemDef) {
-        for method in problem.methods {
-            self.methods.borrow_mut().entry(method.name.clone()).or_default().push(Rc::new(Method::new(self.core.clone(), Some(self.core.upgrade().unwrap()), method)));
+        for method_def in problem.methods {
+            self.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Rc::new(Method::new(self.core.clone(), Some(self.core.upgrade().unwrap()), method_def)));
         }
-        for predicate in problem.predicates {
-            self.predicates.borrow_mut().insert(predicate.name.clone(), Rc::new(predicate));
+        for predicate_def in problem.predicates {
+            self.predicates.borrow_mut().insert(predicate_def.name.clone(), Rc::new(Predicate::new(self.core.clone(), Some(self.core.upgrade().unwrap()), predicate_def)));
         }
-        for class in problem.classes {
-            self.classes.borrow_mut().insert(class.name.clone(), Rc::new(CommonClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class)));
+        for class_def in problem.classes {
+            self.classes.borrow_mut().insert(class_def.name.clone(), Rc::new(CommonClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class_def)));
         }
-        for enm in problem.enums {
-            self.enums.borrow_mut().insert(enm.name.clone(), Rc::new(enm));
+        for enum_def in problem.enums {
+            self.enums.borrow_mut().insert(enum_def.name.clone(), Rc::new(enum_def));
         }
     }
 }
@@ -279,7 +279,7 @@ impl Scope for CommonScope {
         self.enums.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_enum(name))
     }
 
-    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+    fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
         self.predicates.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_predicate(name))
     }
 }
@@ -371,7 +371,7 @@ impl Scope for Method {
         self.scope.get_enum(name)
     }
 
-    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+    fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
         self.scope.get_predicate(name)
     }
 }
@@ -447,7 +447,7 @@ impl Scope for Constructor {
         self.scope.get_enum(name)
     }
 
-    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+    fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
         self.scope.get_predicate(name)
     }
 }
@@ -517,7 +517,7 @@ impl Scope for Predicate {
         self.scope.get_enum(name)
     }
 
-    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+    fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
         self.scope.get_predicate(name)
     }
 }
@@ -617,7 +617,7 @@ impl Scope for CommonClass {
         self.scope.get_enum(name)
     }
 
-    fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+    fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
         self.scope.get_predicate(name)
     }
 }

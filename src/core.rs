@@ -1,8 +1,8 @@
 use crate::{
     env::{CommonEnv, Env, Var},
-    language::{Disjunction, EnumDef, PredicateDef, execute},
+    language::{Disjunction, EnumDef, execute},
     parse_problem,
-    scope::{BoolType, CommonScope, Field, IntType, Method, RealType, Scope, StringType, Type},
+    scope::{BoolType, CommonScope, Field, IntType, Method, Predicate, RealType, Scope, StringType, Type},
 };
 use std::rc::{Rc, Weak};
 
@@ -102,7 +102,7 @@ impl Scope for CommonCore {
         self.scope.get_enum(_name)
     }
 
-    fn get_predicate(&self, _name: &str) -> Option<Rc<PredicateDef>> {
+    fn get_predicate(&self, _name: &str) -> Option<Rc<Predicate>> {
         self.scope.get_predicate(_name)
     }
 }
@@ -272,7 +272,7 @@ mod tests {
             self.core.get_enum(name)
         }
 
-        fn get_predicate(&self, name: &str) -> Option<Rc<PredicateDef>> {
+        fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
             self.core.get_predicate(name)
         }
     }

@@ -266,6 +266,11 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
             scp.core().new_disjunction(disjunction);
             Ok(())
         }
+        Statement::Formula { is_fact, name, predicate_name, args } => {
+            let (first, rest) = predicate_name.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty predicate name path".into()))?;
+            let predicate = scp.get_predicate(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?;
+            Ok(())
+        }
         _ => unimplemented!(),
     }
 }
