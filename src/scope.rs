@@ -19,6 +19,9 @@ pub trait Type {
     fn as_class(self: Rc<Self>) -> Option<Rc<dyn Class>> {
         None
     }
+    fn as_predicate(self: Rc<Self>) -> Option<Rc<Predicate>> {
+        None
+    }
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var>;
 }
 
@@ -147,7 +150,7 @@ pub trait Scope {
         None
     }
     fn core(self: Rc<Self>) -> Rc<dyn Core>;
-    fn parent(&self) -> Option<Rc<dyn Scope>>;
+    fn scope(&self) -> Option<Rc<dyn Scope>>;
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>>;
     fn get_method(&self, name: &str, types: &[Rc<dyn Type>]) -> Option<Rc<Method>>;
@@ -158,7 +161,7 @@ pub trait Scope {
 
 pub struct CommonScope {
     core: Weak<dyn Core>,
-    parent: Option<Rc<dyn Scope>>,
+    scope: Option<Rc<dyn Scope>>,
     fields: RefCell<HashMap<String, Rc<Field>>>,
     methods: RefCell<HashMap<String, Vec<Rc<Method>>>>,
     pub(crate) classes: RefCell<HashMap<String, Rc<dyn Type>>>,
@@ -170,7 +173,7 @@ impl CommonScope {
     pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>) -> Self {
         Self {
             core,
-            parent,
+            scope: parent,
             fields: RefCell::new(HashMap::new()),
             methods: RefCell::new(HashMap::new()),
             classes: RefCell::new(HashMap::new()),
@@ -240,12 +243,12 @@ impl Scope for CommonScope {
         self.core.upgrade().unwrap()
     }
 
-    fn parent(&self) -> Option<Rc<dyn Scope>> {
-        self.parent.clone()
+    fn scope(&self) -> Option<Rc<dyn Scope>> {
+        self.scope.clone()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {
-        self.fields.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_field(name))
+        self.fields.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_field(name))
     }
 
     fn get_method(&self, name: &str, types: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
@@ -268,19 +271,19 @@ impl Scope for CommonScope {
                     })
                     .cloned()
             })
-            .or_else(|| self.parent.as_ref()?.get_method(name, types))
+            .or_else(|| self.scope.as_ref()?.get_method(name, types))
     }
 
     fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
-        self.classes.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_class(name))
+        self.classes.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_class(name))
     }
 
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
-        self.enums.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_enum(name))
+        self.enums.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_enum(name))
     }
 
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
-        self.predicates.borrow().get(name).cloned().or_else(|| self.parent.as_ref()?.get_predicate(name))
+        self.predicates.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_predicate(name))
     }
 }
 
@@ -351,8 +354,8 @@ impl Scope for Method {
         self.core.upgrade().unwrap()
     }
 
-    fn parent(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.parent.clone()
+    fn scope(&self) -> Option<Rc<dyn Scope>> {
+        self.scope.scope.clone()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {
@@ -405,7 +408,7 @@ impl Constructor {
         if args.len() != self.args.len() {
             return Err(RiddleError::RuntimeError(format!("Expected {} arguments, got {}", self.args.len(), args.len())));
         }
-        let class = self.scope.parent.as_ref().expect("Constructor scope should have a parent").clone().as_class().expect("Constructor scope parent should be a class");
+        let class = self.scope.scope.as_ref().expect("Constructor scope should have a parent").clone().as_class().expect("Constructor scope parent should be a class");
         let object = class.new_instance();
         let constructor_env = Rc::new(CommonEnv::new(Some(env)));
         constructor_env.set("this".to_string(), object.clone());
@@ -427,8 +430,8 @@ impl Scope for Constructor {
         self.core.upgrade().unwrap()
     }
 
-    fn parent(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.parent.clone()
+    fn scope(&self) -> Option<Rc<dyn Scope>> {
+        self.scope.scope.clone()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {
@@ -473,10 +476,6 @@ impl Predicate {
         }
     }
 
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
     pub fn args(&self) -> &[(Vec<String>, String)] {
         &self.args
     }
@@ -492,13 +491,35 @@ impl Predicate {
     }
 }
 
+impl Type for Predicate {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn full_name(&self) -> &str {
+        &self.name
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+
+    fn as_predicate(self: Rc<Self>) -> Option<Rc<Predicate>> {
+        Some(self)
+    }
+
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
+        panic!("Cannot create instance of a predicate");
+    }
+}
+
 impl Scope for Predicate {
     fn core(self: Rc<Self>) -> Rc<dyn Core> {
         self.core.upgrade().unwrap()
     }
 
-    fn parent(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.parent.clone()
+    fn scope(&self) -> Option<Rc<dyn Scope>> {
+        self.scope.scope.clone()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {
@@ -577,6 +598,10 @@ impl Type for CommonClass {
         &self.name
     }
 
+    fn full_name(&self) -> &str {
+        &self.name
+    }
+
     fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
         self
     }
@@ -597,8 +622,8 @@ impl Scope for CommonClass {
         self.core.upgrade().unwrap()
     }
 
-    fn parent(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.parent.clone()
+    fn scope(&self) -> Option<Rc<dyn Scope>> {
+        self.scope.scope.clone()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {

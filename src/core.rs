@@ -82,7 +82,7 @@ impl Scope for CommonCore {
         self.scope.clone().core()
     }
 
-    fn parent(&self) -> Option<Rc<dyn Scope>> {
+    fn scope(&self) -> Option<Rc<dyn Scope>> {
         None
     }
 
@@ -252,7 +252,7 @@ mod tests {
             self
         }
 
-        fn parent(&self) -> Option<Rc<dyn Scope>> {
+        fn scope(&self) -> Option<Rc<dyn Scope>> {
             None
         }
 
