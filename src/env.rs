@@ -1,4 +1,4 @@
-use crate::scope::{Predicate, Type};
+use crate::scope::{Predicate, Scope, Type};
 use std::{
     any::Any,
     cell::RefCell,
@@ -9,7 +9,7 @@ use std::{
 pub trait Var {
     fn var_type(&self) -> Rc<dyn Type>;
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
-    fn as_env(&self) -> Option<&dyn Env> {
+    fn as_env(self: Rc<Self>) -> Option<Rc<dyn Env>> {
         None
     }
 }
@@ -62,8 +62,9 @@ pub struct Atom {
 }
 
 impl Atom {
-    pub fn new(predicate: Rc<Predicate>, fact: bool, parent_env: Option<Rc<dyn Env>>) -> Self {
-        Self { predicate: Rc::downgrade(&predicate), fact, env: CommonEnv::new(parent_env) }
+    pub fn new(predicate: Rc<Predicate>, fact: bool, args: HashMap<String, Rc<dyn Var>>) -> Self {
+        let env = args.get("tau").and_then(|tau| tau.clone().as_env()).unwrap_or_else(|| predicate.clone().core().clone());
+        Self { predicate: Rc::downgrade(&predicate), fact, env: CommonEnv::new(Some(env)) }
     }
 
     pub fn predicate(&self) -> Rc<Predicate> {
@@ -84,8 +85,8 @@ impl Var for Atom {
         self
     }
 
-    fn as_env(&self) -> Option<&dyn Env> {
-        Some(&self.env)
+    fn as_env(self: Rc<Self>) -> Option<Rc<dyn Env>> {
+        Some(self.clone())
     }
 }
 
@@ -123,8 +124,8 @@ impl Var for Object {
         self
     }
 
-    fn as_env(&self) -> Option<&dyn Env> {
-        Some(&self.env)
+    fn as_env(self: Rc<Self>) -> Option<Rc<dyn Env>> {
+        Some(self.clone())
     }
 }
 

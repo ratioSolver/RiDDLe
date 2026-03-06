@@ -1,8 +1,9 @@
 use crate::{
     env::{CommonEnv, Env, Var},
-    scope::{Scope, Type, is_assignable_from},
+    scope::{Scope, is_assignable_from},
 };
 use std::{
+    collections::{HashMap, VecDeque},
     fmt::{self, Display, Formatter},
     rc::Rc,
 };
@@ -11,6 +12,7 @@ use std::{
 pub enum RiddleError {
     NotAnEnvironment(String),
     NotAClass(String),
+    NotAPredicate(String),
     TypeError(String),
     NotFound(String),
     RuntimeError(String),
@@ -221,13 +223,12 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
         }
         Statement::LocalField { field_type, fields } => {
             let (first, rest) = field_type.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty field type path".into()))?;
-            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
-            rest.iter().try_fold(class.clone(), |acc, id| acc.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
+            let fld_tp = scp.get_type(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?;
+            rest.iter().try_fold(fld_tp.clone(), |acc, id| acc.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?.get_type(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id))))?;
             for (name, default) in fields {
                 if let Some(expr) = default {
                     let value = evaluate(scp.clone(), env.clone(), expr)?;
-                    let class_as_type: Rc<dyn Type> = class.clone();
-                    if !is_assignable_from(&class_as_type, &value.var_type()) {
+                    if !is_assignable_from(&fld_tp, &value.var_type()) {
                         return Err(RiddleError::TypeError(format!("Default value for field '{}' is not assignable to field type '{}'", name, field_type.join("."))));
                     }
                     env.set(name.clone(), value);
@@ -250,8 +251,8 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
         }
         Statement::ForAll { var_type, var_name, statements } => {
             let (first, rest) = var_type.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty variable type path".into()))?;
-            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
-            rest.iter().try_fold(class.clone(), |acc, id| acc.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
+            let class = scp.get_type(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
+            rest.iter().try_fold(class.clone(), |acc, id| acc.get_type(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
             for instance in class.instances() {
                 let loop_env = Rc::new(CommonEnv::new(Some(env.clone())));
                 loop_env.set(var_name.clone(), instance);
@@ -275,11 +276,61 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
                 let root = rest.iter().try_fold(root, |acc, id| acc.as_env().ok_or_else(|| RiddleError::NotAnEnvironment(id.to_string()))?.get(id).ok_or_else(|| RiddleError::NotFound(format!("Member '{}' in path", id))))?;
                 Some(root)
             };
-            let predicate = if let Some(tau) = tau {
+            let predicate = if let Some(tau) = tau.clone() {
                 tau.as_ref().var_type().as_class().ok_or_else(|| RiddleError::NotAClass(format!("Type '{}' in tau path", tau.var_type().full_name())))?.get_predicate(predicate_name).ok_or_else(|| RiddleError::NotFound(format!("Predicate '{}' in class '{}'", predicate_name, tau.var_type().full_name())))?
             } else {
                 scp.get_predicate(predicate_name).ok_or_else(|| RiddleError::NotFound(format!("Predicate '{}'", predicate_name)))?
             };
+            let mut args: HashMap<String, Rc<dyn Var>> = args
+                .iter()
+                .map(|(n, e)| {
+                    let val = evaluate(scp.clone(), env.clone(), e)?;
+                    Ok((n.clone(), val))
+                })
+                .collect::<Result<_, _>>()?;
+            if tau.is_some() {
+                args.insert("tau".to_string(), tau.unwrap());
+            }
+            let mut pred_hierarchy = VecDeque::from(vec![predicate.clone()]);
+            while let Some(pred) = pred_hierarchy.pop_front() {
+                for (arg_type, name) in pred.args() {
+                    if !args.contains_key(name) {
+                        let (first, rest) = arg_type.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty argument type path".into()))?;
+                        let arg_tp = scp.get_type(first).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in argument type path", first)))?;
+                        let arg_tp = rest.iter().try_fold(arg_tp, |acc, id| acc.as_class().ok_or_else(|| RiddleError::NotAClass(format!("Class '{}' in argument type path", first)))?.get_type(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in argument type path", id))))?;
+                        if let Some(class) = arg_tp.clone().as_class() {
+                            let instances = class.instances().into_iter().map(|obj| obj as Rc<dyn Var>).collect::<Vec<_>>();
+                            if instances.is_empty() {
+                                return Err(RiddleError::RuntimeError(format!("No instances found for argument '{}' of type '{}'", name, class.full_name())));
+                            } else if instances.len() == 1 {
+                                args.insert(name.clone(), instances[0].clone());
+                            } else {
+                                args.insert(name.clone(), scp.clone().core().new_var(class, instances.as_slice()));
+                            }
+                        } else {
+                            args.insert(name.clone(), arg_tp.new_instance());
+                        }
+                    }
+                }
+                for parent in pred.parents() {
+                    let (first, rest) = parent.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty parent predicate path".into()))?;
+                    let parent = if rest.is_empty() {
+                        scp.get_predicate(first).ok_or_else(|| RiddleError::NotFound(format!("Predicate '{}' in parent path", first)))?
+                    } else {
+                        let arg_tp = scp.get_type(first).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in parent path", first)))?;
+                        let (last, rest) = rest.split_last().ok_or_else(|| RiddleError::RuntimeError("Empty parent predicate path".into()))?;
+                        rest.iter()
+                            .try_fold(arg_tp, |acc, id| acc.as_class().ok_or_else(|| RiddleError::NotAClass(format!("Class '{}' in parent path", first)))?.get_type(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in parent path", id))))?
+                            .as_class()
+                            .ok_or_else(|| RiddleError::NotAClass(format!("Type '{}' in parent path is not a class", first)))?
+                            .get_predicate(last)
+                            .ok_or_else(|| RiddleError::NotFound(format!("Predicate '{}' in parent path", last)))?
+                    };
+                    pred_hierarchy.push_back(parent);
+                }
+            }
+            let atom = predicate.new_atom(*is_fact, args);
+            env.set(name.clone(), atom);
             Ok(())
         }
         _ => unimplemented!(),
@@ -359,8 +410,8 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
         }
         Expr::NewObject { class_name, args } => {
             let (first, rest) = class_name.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty class name".into()))?;
-            let class = scp.get_class(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
-            rest.iter().try_fold(class.clone(), |acc, id| acc.get_class(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
+            let class = scp.get_type(first).ok_or_else(|| RiddleError::NotFound(first.to_string()))?.as_class().ok_or_else(|| RiddleError::NotAClass(first.to_string()))?;
+            rest.iter().try_fold(class.clone(), |acc, id| acc.get_type(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in path", id)))?.as_class().ok_or_else(|| RiddleError::NotAClass(id.to_string())))?;
             let evaluated_args: Vec<Rc<dyn Var>> = args.iter().map(|a| evaluate(scp.clone(), env.clone(), a)).collect::<Result<_, _>>()?;
             let constructor = class.constructor(&evaluated_args.iter().map(|arg| arg.var_type()).collect::<Vec<_>>()).ok_or_else(|| RiddleError::NotFound(format!("Constructor for class '{}' with specified argument types", class_name.join("."))))?;
             constructor.call(env, evaluated_args)?.ok_or_else(|| RiddleError::RuntimeError(format!("Constructor for class '{}' did not return a value", class_name.join("."))))

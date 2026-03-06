@@ -154,7 +154,7 @@ pub trait Scope {
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>>;
     fn get_method(&self, name: &str, types: &[Rc<dyn Type>]) -> Option<Rc<Method>>;
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>>;
+    fn get_type(&self, name: &str) -> Option<Rc<dyn Type>>;
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>>;
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>>;
 }
@@ -170,10 +170,10 @@ pub struct CommonScope {
 }
 
 impl CommonScope {
-    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>) -> Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>) -> Self {
         Self {
             core,
-            scope: parent,
+            scope,
             fields: RefCell::new(HashMap::new()),
             methods: RefCell::new(HashMap::new()),
             classes: RefCell::new(HashMap::new()),
@@ -182,8 +182,8 @@ impl CommonScope {
         }
     }
 
-    pub fn from_class(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, class: ClassDef) -> Rc<Self> {
-        let scope = Rc::new(Self::new(core.clone(), parent));
+    pub fn from_class(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, class: ClassDef) -> Rc<Self> {
+        let scope = Rc::new(Self::new(core.clone(), scope));
         for (field_type, fields) in class.fields {
             for (name, default) in fields {
                 scope.fields.borrow_mut().insert(name.clone(), Rc::new(Field { name, field_type: field_type.clone(), default }));
@@ -198,24 +198,24 @@ impl CommonScope {
         scope
     }
 
-    pub fn from_costructor(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, constructor: ConstructorDef) -> Self {
-        let scope = Self::new(core, parent);
+    pub fn from_costructor(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, constructor: ConstructorDef) -> Self {
+        let scope = Self::new(core, scope);
         for (arg_type, arg_name) in constructor.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
         }
         scope
     }
 
-    pub fn from_method(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, method: MethodDef) -> Self {
-        let scope = Self::new(core, parent);
+    pub fn from_method(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, method: MethodDef) -> Self {
+        let scope = Self::new(core, scope);
         for (arg_type, arg_name) in method.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
         }
         scope
     }
 
-    pub fn from_predicate(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, predicate: PredicateDef) -> Self {
-        let scope = Self::new(core, parent);
+    pub fn from_predicate(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, predicate: PredicateDef) -> Self {
+        let scope = Self::new(core, scope);
         for (arg_type, arg_name) in predicate.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
         }
@@ -274,8 +274,8 @@ impl Scope for CommonScope {
             .or_else(|| self.scope.as_ref()?.get_method(name, types))
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
-        self.classes.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_class(name))
+    fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
+        self.classes.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_type(name))
     }
 
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
@@ -297,14 +297,14 @@ pub struct Method {
 }
 
 impl Method {
-    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut method: MethodDef) -> Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut method: MethodDef) -> Self {
         Self {
             core: core.clone(),
             name: std::mem::take(&mut method.name),
             return_type: std::mem::take(&mut method.return_type),
             args: std::mem::take(&mut method.args),
             statements: std::mem::take(&mut method.statements),
-            scope: Rc::new(CommonScope::from_method(core, parent, method)),
+            scope: Rc::new(CommonScope::from_method(core, scope, method)),
         }
     }
 
@@ -366,8 +366,8 @@ impl Scope for Method {
         self.scope.get_method(name, classes)
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
-        self.scope.get_class(name)
+    fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
+        self.scope.get_type(name)
     }
 
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
@@ -387,12 +387,12 @@ pub struct Constructor {
 }
 
 impl Constructor {
-    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut constructor: ConstructorDef) -> Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut constructor: ConstructorDef) -> Self {
         Self {
             core: core.clone(),
             args: std::mem::take(&mut constructor.args),
             statements: std::mem::take(&mut constructor.statements),
-            scope: Rc::new(CommonScope::from_costructor(core, parent, constructor)),
+            scope: Rc::new(CommonScope::from_costructor(core, scope, constructor)),
         }
     }
 
@@ -442,8 +442,8 @@ impl Scope for Constructor {
         self.scope.get_method(name, classes)
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
-        self.scope.get_class(name)
+    fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
+        self.scope.get_type(name)
     }
 
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
@@ -459,21 +459,27 @@ pub struct Predicate {
     core: Weak<dyn Core>,
     scope: CommonScope,
     name: String,
+    parents: Vec<Vec<String>>,
     args: Vec<(Vec<String>, String)>,
     statements: Vec<Statement>,
     atoms: RefCell<Vec<Rc<Atom>>>,
 }
 
 impl Predicate {
-    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut predicate: PredicateDef) -> Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut predicate: PredicateDef) -> Self {
         Self {
             core: core.clone(),
             name: std::mem::take(&mut predicate.name),
+            parents: std::mem::take(&mut predicate.parents),
             args: std::mem::take(&mut predicate.args),
             statements: std::mem::take(&mut predicate.statements),
-            scope: CommonScope::from_predicate(core, parent, predicate),
+            scope: CommonScope::from_predicate(core, scope, predicate),
             atoms: RefCell::new(Vec::new()),
         }
+    }
+
+    pub fn parents(&self) -> &[Vec<String>] {
+        &self.parents
     }
 
     pub fn args(&self) -> &[(Vec<String>, String)] {
@@ -484,9 +490,10 @@ impl Predicate {
         &self.statements
     }
 
-    pub fn new_atom(self: Rc<Self>, fact: bool, parent_env: Option<Rc<dyn Env>>) -> Rc<Atom> {
-        let atom = Rc::new(Atom::new(self.clone(), fact, parent_env));
+    pub fn new_atom(self: Rc<Self>, fact: bool, args: HashMap<String, Rc<dyn Var>>) -> Rc<Atom> {
+        let atom = Rc::new(Atom::new(self.clone(), fact, args));
         self.atoms.borrow_mut().push(atom.clone());
+        self.core().new_atom(atom.clone());
         atom
     }
 }
@@ -535,8 +542,8 @@ impl Scope for Predicate {
         self.scope.get_method(name, classes)
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
-        self.scope.get_class(name)
+    fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
+        self.scope.get_type(name)
     }
 
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
@@ -586,13 +593,13 @@ pub struct CommonClass {
 }
 
 impl CommonClass {
-    pub fn new(core: Weak<dyn Core>, parent: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Self {
         Self {
             core: core.clone(),
             name: std::mem::take(&mut class.name),
             parents: std::mem::take(&mut class.parents),
-            constructors: std::mem::take(&mut class.constructors).into_iter().map(|c| Constructor::new(core.clone(), parent.clone(), c)).collect(),
-            scope: CommonScope::from_class(core, parent, class),
+            constructors: std::mem::take(&mut class.constructors).into_iter().map(|c| Constructor::new(core.clone(), scope.clone(), c)).collect(),
+            scope: CommonScope::from_class(core, scope, class),
             instances: RefCell::new(Vec::new()),
         }
     }
@@ -644,8 +651,8 @@ impl Scope for CommonClass {
         self.scope.get_method(name, classes)
     }
 
-    fn get_class(&self, name: &str) -> Option<Rc<dyn Type>> {
-        self.scope.get_class(name)
+    fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
+        self.scope.get_type(name)
     }
 
     fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
@@ -683,7 +690,7 @@ impl Class for CommonClass {
     fn instances(&self) -> Vec<Rc<Object>> {
         let mut instances = self.instances.borrow().clone();
         for parent in &self.parents {
-            if let Some(parent_class) = self.core.upgrade().unwrap().get_class(&parent.join(".")) {
+            if let Some(parent_class) = self.core.upgrade().unwrap().get_type(&parent.join(".")) {
                 if let Some(parent_class) = parent_class.as_class() {
                     instances.extend(parent_class.instances());
                 }
@@ -695,9 +702,9 @@ impl Class for CommonClass {
 
 pub fn arith_class(cr: Rc<dyn Core>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Type>, RiddleError> {
     if terms.iter().all(|t| t.var_type().name() == "int") {
-        Ok(cr.get_class("int").expect("int class not found"))
+        Ok(cr.get_type("int").expect("int class not found"))
     } else if terms.iter().all(|t| t.var_type().name() == "int" || t.var_type().name() == "real") {
-        Ok(cr.get_class("real").expect("real class not found"))
+        Ok(cr.get_type("real").expect("real class not found"))
     } else {
         Err(RiddleError::TypeError("Invalid types for arithmetic operation".into()))
     }
