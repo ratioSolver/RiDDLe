@@ -15,6 +15,7 @@ pub enum RiddleError {
     NotAPredicate(String),
     TypeError(String),
     NotFound(String),
+    InconsistencyError(String),
     RuntimeError(String),
 }
 
@@ -305,7 +306,7 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
                             } else if instances.len() == 1 {
                                 args.insert(name.clone(), instances[0].clone());
                             } else {
-                                args.insert(name.clone(), scp.clone().core().new_var(class, instances.as_slice()));
+                                args.insert(name.clone(), scp.clone().core().new_var(class, instances.as_slice())?);
                             }
                         } else {
                             args.insert(name.clone(), arg_tp.new_instance());
@@ -350,20 +351,20 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
         }
         Expr::Sum { terms } => {
             let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
-            Ok(scp.core().sum(&evaluated_terms))
+            Ok(scp.core().sum(&evaluated_terms)?)
         }
         Expr::Opposite { term } => {
             let evaluated_term = evaluate(scp.clone(), env, term)?;
-            Ok(scp.core().opposite(evaluated_term))
+            Ok(scp.core().opposite(evaluated_term)?)
         }
         Expr::Mul { factors } => {
             let evaluated_factors: Vec<Rc<dyn Var>> = factors.iter().map(|f| evaluate(scp.clone(), env.clone(), f)).collect::<Result<_, _>>()?;
-            Ok(scp.core().mul(&evaluated_factors))
+            Ok(scp.core().mul(&evaluated_factors)?)
         }
         Expr::Div { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(scp.core().div(evaluated_left, evaluated_right))
+            Ok(scp.core().div(evaluated_left, evaluated_right)?)
         }
         Expr::Function { name, args } => {
             let evaluated_args: Vec<Rc<dyn Var>> = args.iter().map(|a| evaluate(scp.clone(), env.clone(), a)).collect::<Result<_, _>>()?;
@@ -373,40 +374,40 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
         Expr::Eq { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(scp.core().eq(evaluated_left, evaluated_right))
+            Ok(scp.core().eq(evaluated_left, evaluated_right)?)
         }
         Expr::Neq { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(scp.core().neq(evaluated_left, evaluated_right))
+            Ok(scp.core().neq(evaluated_left, evaluated_right)?)
         }
         Expr::Lt { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(scp.core().lt(evaluated_left, evaluated_right))
+            Ok(scp.core().lt(evaluated_left, evaluated_right)?)
         }
         Expr::Leq { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(scp.core().leq(evaluated_left, evaluated_right))
+            Ok(scp.core().leq(evaluated_left, evaluated_right)?)
         }
         Expr::Geq { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(scp.core().geq(evaluated_left, evaluated_right))
+            Ok(scp.core().geq(evaluated_left, evaluated_right)?)
         }
         Expr::Gt { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(scp.core().gt(evaluated_left, evaluated_right))
+            Ok(scp.core().gt(evaluated_left, evaluated_right)?)
         }
         Expr::Or { terms } => {
             let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
-            Ok(scp.core().or(&evaluated_terms))
+            Ok(scp.core().or(&evaluated_terms)?)
         }
         Expr::And { terms } => {
             let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
-            Ok(scp.core().and(&evaluated_terms))
+            Ok(scp.core().and(&evaluated_terms)?)
         }
         Expr::NewObject { class_name, args } => {
             let (first, rest) = class_name.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty class name".into()))?;

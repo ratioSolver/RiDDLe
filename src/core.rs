@@ -1,6 +1,6 @@
 use crate::{
     env::{Atom, CommonEnv, Env, Var},
-    language::{Disjunction, EnumDef, execute},
+    language::{Disjunction, EnumDef, RiddleError, execute},
     parse_problem,
     scope::{BoolType, CommonScope, Field, IntType, Method, Predicate, RealType, Scope, StringType, Type},
 };
@@ -16,25 +16,25 @@ pub trait Core: Scope + Env {
     fn new_string(&self, value: &str) -> Rc<dyn Var>;
     fn new_string_var(&self) -> Rc<dyn Var>;
 
-    fn sum(self: Rc<Self>, sum: &[Rc<dyn Var>]) -> Rc<dyn Var>;
-    fn opposite(self: Rc<Self>, term: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn mul(self: Rc<Self>, mul: &[Rc<dyn Var>]) -> Rc<dyn Var>;
-    fn div(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn sum(self: Rc<Self>, sum: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn opposite(self: Rc<Self>, term: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn mul(self: Rc<Self>, mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn div(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn eq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn neq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn eq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn neq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn lt(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn leq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn geq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn gt(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn lt(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn leq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn geq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn gt(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn or(self: Rc<Self>, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
-    fn and(self: Rc<Self>, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn or(self: Rc<Self>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn and(self: Rc<Self>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
 
     fn assert(self: Rc<Self>, term: Rc<dyn Var>) -> bool;
-    fn new_enum(self: Rc<Self>, variants: &[&str]) -> Rc<dyn Var>;
-    fn new_var(self: Rc<Self>, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn new_enum(self: Rc<Self>, variants: &[&str]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn new_var(self: Rc<Self>, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
     fn new_disjunction(self: Rc<Self>, disjunction: Disjunction);
     fn new_atom(self: Rc<Self>, atom: Rc<Atom>);
 }
@@ -195,64 +195,70 @@ mod tests {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("string").unwrap()) })
         }
 
-        fn sum(self: Rc<Self>, _sum: &[Rc<dyn Var>]) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.core.get_type("int").unwrap()) })
+        fn sum(self: Rc<Self>, _sum: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.core.get_type("int").unwrap()) }))
         }
 
-        fn opposite(self: Rc<Self>, _term: Rc<dyn Var>) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
+        fn opposite(self: Rc<Self>, _term: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
         }
 
-        fn mul(self: Rc<Self>, _mul: &[Rc<dyn Var>]) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
+        fn mul(self: Rc<Self>, _mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
         }
 
-        fn div(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
+        fn div(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
         }
 
-        fn eq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
+        fn eq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn neq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
+        fn neq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn lt(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
+        fn lt(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn leq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
+        fn leq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn geq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
+        fn geq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn gt(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
+        fn gt(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn or(self: Rc<Self>, _terms: &[Rc<dyn Var>]) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
+        fn or(self: Rc<Self>, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn and(self: Rc<Self>, _terms: &[Rc<dyn Var>]) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
+        fn and(self: Rc<Self>, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
         fn assert(self: Rc<Self>, _term: Rc<dyn Var>) -> bool {
             true
         }
 
-        fn new_enum(self: Rc<Self>, _variants: &[&str]) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
+        fn new_enum(self: Rc<Self>, variants: &[&str]) -> Result<Rc<dyn Var>, RiddleError> {
+            if variants.is_empty() {
+                return Err(RiddleError::InconsistencyError("Cannot create enum with no variants".into()));
+            }
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
         }
 
-        fn new_var(self: Rc<Self>, class: Rc<dyn Type>, _instances: &[Rc<dyn Var>]) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&class) })
+        fn new_var(self: Rc<Self>, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+            if instances.is_empty() {
+                return Err(RiddleError::InconsistencyError("Cannot create variable with no instances".into()));
+            }
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&class) }))
         }
 
         fn new_disjunction(self: Rc<Self>, _disjunction: Disjunction) {}
