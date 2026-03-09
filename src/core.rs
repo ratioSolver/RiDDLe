@@ -16,27 +16,27 @@ pub trait Core: Scope + Env {
     fn new_string(&self, value: &str) -> Rc<dyn Var>;
     fn new_string_var(&self) -> Rc<dyn Var>;
 
-    fn sum(self: Rc<Self>, sum: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
-    fn opposite(self: Rc<Self>, term: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-    fn mul(self: Rc<Self>, mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
-    fn div(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn sum(&self, sum: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn opposite(&self, term: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn mul(&self, mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn div(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn eq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-    fn neq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn eq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn neq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn lt(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-    fn leq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-    fn geq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-    fn gt(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn lt(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn leq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn geq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
+    fn gt(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn or(self: Rc<Self>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
-    fn and(self: Rc<Self>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn or(&self, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn and(&self, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn assert(self: Rc<Self>, term: Rc<dyn Var>) -> bool;
-    fn new_enum(self: Rc<Self>, variants: &[&str]) -> Result<Rc<dyn Var>, RiddleError>;
-    fn new_var(self: Rc<Self>, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
-    fn new_disjunction(self: Rc<Self>, disjunction: Disjunction);
-    fn new_atom(self: Rc<Self>, atom: Rc<Atom>);
+    fn assert(&self, term: Rc<dyn Var>) -> bool;
+    fn new_enum(&self, variants: &[&str]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn new_var(&self, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
+    fn new_disjunction(&self, disjunction: Disjunction);
+    fn new_atom(&self, atom: Rc<Atom>);
 }
 
 pub struct CommonCore {
@@ -195,75 +195,75 @@ mod tests {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("string").unwrap()) })
         }
 
-        fn sum(self: Rc<Self>, _sum: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+        fn sum(&self, _sum: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.core.get_type("int").unwrap()) }))
         }
 
-        fn opposite(self: Rc<Self>, _term: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+        fn opposite(&self, _term: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
         }
 
-        fn mul(self: Rc<Self>, _mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+        fn mul(&self, _mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
         }
 
-        fn div(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+        fn div(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
         }
 
-        fn eq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+        fn eq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn neq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+        fn neq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn lt(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+        fn lt(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn leq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+        fn leq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn geq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+        fn geq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn gt(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
+        fn gt(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn or(self: Rc<Self>, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+        fn or(&self, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn and(self: Rc<Self>, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+        fn and(&self, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
         }
 
-        fn assert(self: Rc<Self>, _term: Rc<dyn Var>) -> bool {
+        fn assert(&self, _term: Rc<dyn Var>) -> bool {
             true
         }
 
-        fn new_enum(self: Rc<Self>, variants: &[&str]) -> Result<Rc<dyn Var>, RiddleError> {
+        fn new_enum(&self, variants: &[&str]) -> Result<Rc<dyn Var>, RiddleError> {
             if variants.is_empty() {
                 return Err(RiddleError::InconsistencyError("Cannot create enum with no variants".into()));
             }
             Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
         }
 
-        fn new_var(self: Rc<Self>, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
+        fn new_var(&self, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
             if instances.is_empty() {
                 return Err(RiddleError::InconsistencyError("Cannot create variable with no instances".into()));
             }
             Ok(Rc::new(TestObject { class: Rc::downgrade(&class) }))
         }
 
-        fn new_disjunction(self: Rc<Self>, _disjunction: Disjunction) {}
+        fn new_disjunction(&self, _disjunction: Disjunction) {}
 
-        fn new_atom(self: Rc<Self>, _atom: Rc<Atom>) {}
+        fn new_atom(&self, _atom: Rc<Atom>) {}
     }
 
     impl Scope for TestCore {

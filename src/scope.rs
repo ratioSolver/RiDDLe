@@ -700,7 +700,7 @@ impl Class for CommonClass {
     }
 }
 
-pub fn arith_class(cr: Rc<dyn Core>, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Type>, RiddleError> {
+pub fn arith_class(cr: &dyn Core, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Type>, RiddleError> {
     if terms.iter().all(|t| t.var_type().name() == "int") {
         Ok(cr.get_type("int").expect("int class not found"))
     } else if terms.iter().all(|t| t.var_type().name() == "int" || t.var_type().name() == "real") {
