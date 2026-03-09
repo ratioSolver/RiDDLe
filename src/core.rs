@@ -16,27 +16,27 @@ pub trait Core: Scope + Env {
     fn new_string(&self, value: &str) -> Rc<dyn Var>;
     fn new_string_var(&self) -> Rc<dyn Var>;
 
-    fn sum(&self, sum: &[Rc<dyn Var>]) -> Rc<dyn Var>;
-    fn opposite(&self, term: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn mul(&self, mul: &[Rc<dyn Var>]) -> Rc<dyn Var>;
-    fn div(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn sum(self: Rc<Self>, sum: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn opposite(self: Rc<Self>, term: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn mul(self: Rc<Self>, mul: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn div(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
 
-    fn eq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn neq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn eq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn neq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
 
-    fn lt(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn leq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn geq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
-    fn gt(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn lt(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn leq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn geq(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
+    fn gt(self: Rc<Self>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Rc<dyn Var>;
 
-    fn or(&self, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
-    fn and(&self, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn or(self: Rc<Self>, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn and(self: Rc<Self>, terms: &[Rc<dyn Var>]) -> Rc<dyn Var>;
 
-    fn assert(&self, term: Rc<dyn Var>) -> bool;
-    fn new_enum(&self, variants: &[&str]) -> Rc<dyn Var>;
-    fn new_var(&self, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Rc<dyn Var>;
-    fn new_disjunction(&self, disjunction: Disjunction);
-    fn new_atom(&self, atom: Rc<Atom>);
+    fn assert(self: Rc<Self>, term: Rc<dyn Var>) -> bool;
+    fn new_enum(self: Rc<Self>, variants: &[&str]) -> Rc<dyn Var>;
+    fn new_var(self: Rc<Self>, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Rc<dyn Var>;
+    fn new_disjunction(self: Rc<Self>, disjunction: Disjunction);
+    fn new_atom(self: Rc<Self>, atom: Rc<Atom>);
 }
 
 pub struct CommonCore {
@@ -195,69 +195,69 @@ mod tests {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("string").unwrap()) })
         }
 
-        fn sum(&self, _sum: &[Rc<dyn Var>]) -> Rc<dyn Var> {
+        fn sum(self: Rc<Self>, _sum: &[Rc<dyn Var>]) -> Rc<dyn Var> {
+            Rc::new(TestObject { class: Rc::downgrade(&self.core.get_type("int").unwrap()) })
+        }
+
+        fn opposite(self: Rc<Self>, _term: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
         }
 
-        fn opposite(&self, _term: Rc<dyn Var>) -> Rc<dyn Var> {
+        fn mul(self: Rc<Self>, _mul: &[Rc<dyn Var>]) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
         }
 
-        fn mul(&self, _mul: &[Rc<dyn Var>]) -> Rc<dyn Var> {
+        fn div(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
         }
 
-        fn div(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
-        }
-
-        fn eq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+        fn eq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
         }
 
-        fn neq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+        fn neq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
         }
 
-        fn lt(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+        fn lt(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
         }
 
-        fn leq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+        fn leq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
         }
 
-        fn geq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+        fn geq(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
         }
 
-        fn gt(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
+        fn gt(self: Rc<Self>, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
         }
 
-        fn or(&self, _terms: &[Rc<dyn Var>]) -> Rc<dyn Var> {
+        fn or(self: Rc<Self>, _terms: &[Rc<dyn Var>]) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
         }
 
-        fn and(&self, _terms: &[Rc<dyn Var>]) -> Rc<dyn Var> {
+        fn and(self: Rc<Self>, _terms: &[Rc<dyn Var>]) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
         }
 
-        fn assert(&self, _term: Rc<dyn Var>) -> bool {
+        fn assert(self: Rc<Self>, _term: Rc<dyn Var>) -> bool {
             true
         }
 
-        fn new_enum(&self, _variants: &[&str]) -> Rc<dyn Var> {
+        fn new_enum(self: Rc<Self>, _variants: &[&str]) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
         }
 
-        fn new_var(&self, class: Rc<dyn Type>, _instances: &[Rc<dyn Var>]) -> Rc<dyn Var> {
+        fn new_var(self: Rc<Self>, class: Rc<dyn Type>, _instances: &[Rc<dyn Var>]) -> Rc<dyn Var> {
             Rc::new(TestObject { class: Rc::downgrade(&class) })
         }
 
-        fn new_disjunction(&self, _disjunction: Disjunction) {}
+        fn new_disjunction(self: Rc<Self>, _disjunction: Disjunction) {}
 
-        fn new_atom(&self, _atom: Rc<Atom>) {}
+        fn new_atom(self: Rc<Self>, _atom: Rc<Atom>) {}
     }
 
     impl Scope for TestCore {
