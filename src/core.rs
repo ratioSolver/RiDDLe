@@ -21,9 +21,6 @@ pub trait Core: Scope + Env {
     fn mul(&self, mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
     fn div(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn or(&self, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
-    fn and(&self, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
-
     fn assert(&self, term: Rc<dyn Var>) -> bool;
     fn new_enum(&self, variants: &[&str]) -> Result<Rc<dyn Var>, RiddleError>;
     fn new_var(&self, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
@@ -201,14 +198,6 @@ mod tests {
 
         fn div(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.int_type() as Rc<dyn Type>)) }))
-        }
-
-        fn or(&self, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.bool_type() as Rc<dyn Type>)) }))
-        }
-
-        fn and(&self, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.bool_type() as Rc<dyn Type>)) }))
         }
 
         fn assert(&self, _term: Rc<dyn Var>) -> bool {

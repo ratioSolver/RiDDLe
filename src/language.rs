@@ -436,11 +436,11 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
         }
         Expr::Or { terms } => {
             let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
-            Ok(scp.core().or(&evaluated_terms)?)
+            Ok(Rc::new(BoolExpr::Or { var_type: Rc::downgrade(&scp.core().bool_type()), terms: evaluated_terms }))
         }
         Expr::And { terms } => {
             let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
-            Ok(scp.core().and(&evaluated_terms)?)
+            Ok(Rc::new(BoolExpr::And { var_type: Rc::downgrade(&scp.core().bool_type()), terms: evaluated_terms }))
         }
         Expr::NewObject { class_name, args } => {
             let (first, rest) = class_name.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty class name".into()))?;
