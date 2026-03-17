@@ -1,5 +1,5 @@
 use crate::{
-    env::{Atom, CommonEnv, Env, Var},
+    env::{Atom, BoolExpr, CommonEnv, Env, Var},
     language::{Disjunction, EnumDef, RiddleError, execute},
     parse_problem,
     scope::{BoolType, CommonScope, Field, IntType, Method, Predicate, RealType, Scope, StringType, Type},
@@ -21,7 +21,7 @@ pub trait Core: Scope + Env {
     fn mul(&self, mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
     fn div(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn assert(&self, term: Rc<dyn Var>) -> bool;
+    fn assert(&self, term: Rc<BoolExpr>) -> bool;
     fn new_enum(&self, variants: &[&str]) -> Result<Rc<dyn Var>, RiddleError>;
     fn new_var(&self, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
     fn new_disjunction(&self, disjunction: Disjunction);
@@ -200,7 +200,7 @@ mod tests {
             Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.int_type() as Rc<dyn Type>)) }))
         }
 
-        fn assert(&self, _term: Rc<dyn Var>) -> bool {
+        fn assert(&self, _term: Rc<BoolExpr>) -> bool {
             true
         }
 
