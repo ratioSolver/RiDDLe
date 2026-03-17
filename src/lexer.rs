@@ -25,6 +25,7 @@ pub(crate) enum Token {
     Colon,
     Equal,
     EqualEqual,
+    Not,
     NotEqual,
     LessThan,
     LessEqual,
@@ -148,7 +149,7 @@ impl<'a> Lexer<'a> {
                         self.input.next();
                         Token::NotEqual
                     } else {
-                        self.next_token()
+                        Token::Not
                     }
                 }
                 '<' => {
@@ -320,7 +321,7 @@ mod tests {
 
     #[test]
     fn test_lexer_basic_tokens() {
-        let input = "+ - * / ( ) { } [ ] , ; = == != < <= > >= ";
+        let input = "+ - * / ( ) { } [ ] , ; = == ! != < <= > >= ";
         let mut lexer = Lexer::new(input);
         let expected_tokens = vec![
             Token::Plus,
@@ -337,6 +338,7 @@ mod tests {
             Token::Semicolon,
             Token::Equal,
             Token::EqualEqual,
+            Token::Not,
             Token::NotEqual,
             Token::LessThan,
             Token::LessEqual,

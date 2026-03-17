@@ -143,87 +143,20 @@ impl Env for Object {
     }
 }
 
-pub struct EqVar {
-    pub var_type: Weak<BoolType>,
-    pub left: Rc<dyn Var>,
-    pub right: Rc<dyn Var>,
+pub enum BoolExpr {
+    Eq { var_type: Weak<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var> },
+    Not { var_type: Weak<BoolType>, term: Rc<dyn Var> },
+    Lt { var_type: Weak<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var> },
+    Leq { var_type: Weak<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var> },
+    Or { var_type: Weak<BoolType>, terms: Vec<Rc<dyn Var>> },
+    And { var_type: Weak<BoolType>, terms: Vec<Rc<dyn Var>> },
 }
 
-impl EqVar {
-    pub fn new(var_type: Rc<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Self {
-        Self { var_type: Rc::downgrade(&var_type), left, right }
-    }
-}
-
-impl Var for EqVar {
+impl Var for BoolExpr {
     fn var_type(&self) -> Rc<dyn Type> {
-        self.var_type.upgrade().unwrap()
-    }
-
-    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
-        self
-    }
-}
-
-pub struct NeqVar {
-    pub var_type: Weak<BoolType>,
-    pub left: Rc<dyn Var>,
-    pub right: Rc<dyn Var>,
-}
-
-impl NeqVar {
-    pub fn new(var_type: Rc<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Self {
-        Self { var_type: Rc::downgrade(&var_type), left, right }
-    }
-}
-
-impl Var for NeqVar {
-    fn var_type(&self) -> Rc<dyn Type> {
-        self.var_type.upgrade().unwrap()
-    }
-
-    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
-        self
-    }
-}
-
-pub struct LtVar {
-    pub var_type: Weak<BoolType>,
-    pub left: Rc<dyn Var>,
-    pub right: Rc<dyn Var>,
-}
-
-impl LtVar {
-    pub fn new(var_type: Rc<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Self {
-        Self { var_type: Rc::downgrade(&var_type), left, right }
-    }
-}
-
-impl Var for LtVar {
-    fn var_type(&self) -> Rc<dyn Type> {
-        self.var_type.upgrade().unwrap()
-    }
-
-    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
-        self
-    }
-}
-
-pub struct LeqVar {
-    pub var_type: Weak<BoolType>,
-    pub left: Rc<dyn Var>,
-    pub right: Rc<dyn Var>,
-}
-
-impl LeqVar {
-    pub fn new(var_type: Rc<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Self {
-        Self { var_type: Rc::downgrade(&var_type), left, right }
-    }
-}
-
-impl Var for LeqVar {
-    fn var_type(&self) -> Rc<dyn Type> {
-        self.var_type.upgrade().unwrap()
+        match self {
+            BoolExpr::Eq { var_type: var_tp, .. } | BoolExpr::Not { var_type: var_tp, .. } | BoolExpr::Lt { var_type: var_tp, .. } | BoolExpr::Leq { var_type: var_tp, .. } | BoolExpr::Or { var_type: var_tp, .. } | BoolExpr::And { var_type: var_tp, .. } => var_tp.upgrade().unwrap(),
+        }
     }
 
     fn as_any(self: Rc<Self>) -> Rc<dyn Any> {

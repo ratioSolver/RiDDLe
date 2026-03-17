@@ -778,6 +778,7 @@ impl<'a> Parser<'a> {
 
     fn parse_primary_expression(&mut self) -> Result<Expr, String> {
         match self.next() {
+            Some(Token::Not) => Ok(Expr::Not { term: Box::new(self.parse_primary_expression()?) }),
             Some(Token::BoolLiteral(value)) => Ok(Expr::Bool(value)),
             Some(Token::IntLiteral(value)) => Ok(Expr::Int(value)),
             Some(Token::RealLiteral(int_part, frac_part)) => Ok(Expr::Real(int_part, frac_part)),
@@ -1299,6 +1300,7 @@ mod tests {
     fn test_primary_expressions() {
         assert_eq!(parse_primary_expression("true"), Expr::Bool(true));
         assert_eq!(parse_primary_expression("false"), Expr::Bool(false));
+        assert_eq!(parse_primary_expression("!true"), Expr::Not { term: Box::new(Expr::Bool(true)) });
         assert_eq!(parse_primary_expression("123"), Expr::Int(123));
         assert_eq!(parse_primary_expression("12.34"), Expr::Real(1234, 100));
         assert_eq!(parse_primary_expression("foo"), Expr::QualifiedId { ids: vec!["foo".to_string()] });
@@ -1338,6 +1340,12 @@ mod tests {
     fn test_logical() {
         assert_eq!(parse_expression("true & false"), Expr::And { terms: vec![Expr::Bool(true), Expr::Bool(false)] });
         assert_eq!(parse_expression("true | false"), Expr::Or { terms: vec![Expr::Bool(true), Expr::Bool(false)] });
+        assert_eq!(
+            parse_expression("!a & b"),
+            Expr::And {
+                terms: vec![Expr::Not { term: Box::new(Expr::QualifiedId { ids: vec!["a".to_string()] }) }, Expr::QualifiedId { ids: vec!["b".to_string()] }]
+            }
+        );
 
         // n-ary logical ops
         assert_eq!(

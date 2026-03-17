@@ -1,5 +1,5 @@
 use crate::{
-    env::{CommonEnv, Env, EqVar, LeqVar, LtVar, NeqVar, Var},
+    env::{BoolExpr, CommonEnv, Env, Var},
     scope::{Scope, is_assignable_from},
 };
 use std::{
@@ -91,6 +91,7 @@ pub enum Expr {
     QualifiedId { ids: Vec<String> },
     Sum { terms: Vec<Expr> },
     Opposite { term: Box<Expr> },
+    Not { term: Box<Expr> },
     Mul { factors: Vec<Expr> },
     Div { left: Box<Expr>, right: Box<Expr> },
     Function { name: Vec<String>, args: Vec<Expr> },
@@ -191,6 +192,7 @@ impl Display for Expr {
             Expr::QualifiedId { ids } => write!(f, "{}", ids.join(".")),
             Expr::Sum { terms } => write!(f, "({})", terms.iter().map(|t| format!("{}", t)).collect::<Vec<_>>().join(" + ")),
             Expr::Opposite { term } => write!(f, "-({})", term),
+            Expr::Not { term } => write!(f, "!({})", term),
             Expr::Mul { factors } => write!(f, "({})", factors.iter().map(|t| format!("{}", t)).collect::<Vec<_>>().join(" * ")),
             Expr::Div { left, right } => write!(f, "({} / {})", left, right),
             Expr::Function { name, args } => write!(f, "{}({})", name.join("."), args.iter().map(|a| format!("{}", a)).collect::<Vec<_>>().join(", ")),
@@ -357,6 +359,10 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
             let evaluated_term = evaluate(scp.clone(), env, term)?;
             Ok(scp.core().opposite(evaluated_term)?)
         }
+        Expr::Not { term } => {
+            let evaluated_term = evaluate(scp.clone(), env, term)?;
+            Ok(Rc::new(BoolExpr::Not { var_type: Rc::downgrade(&scp.core().bool_type()), term: evaluated_term }))
+        }
         Expr::Mul { factors } => {
             let evaluated_factors: Vec<Rc<dyn Var>> = factors.iter().map(|f| evaluate(scp.clone(), env.clone(), f)).collect::<Result<_, _>>()?;
             Ok(scp.core().mul(&evaluated_factors)?)
@@ -374,32 +380,59 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
         Expr::Eq { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(Rc::new(EqVar::new(scp.core().bool_type(), evaluated_left, evaluated_right)))
+            Ok(Rc::new(BoolExpr::Eq {
+                var_type: Rc::downgrade(&scp.core().bool_type()),
+                left: evaluated_left,
+                right: evaluated_right,
+            }))
         }
         Expr::Neq { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(Rc::new(NeqVar::new(scp.core().bool_type(), evaluated_left, evaluated_right)))
+            Ok(Rc::new(BoolExpr::Not {
+                var_type: Rc::downgrade(&scp.clone().core().bool_type()),
+                term: Rc::new(BoolExpr::Eq {
+                    var_type: Rc::downgrade(&scp.core().bool_type()),
+                    left: evaluated_left,
+                    right: evaluated_right,
+                }),
+            }))
         }
         Expr::Lt { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(Rc::new(LtVar::new(scp.core().bool_type(), evaluated_left, evaluated_right)))
+            Ok(Rc::new(BoolExpr::Lt {
+                var_type: Rc::downgrade(&scp.core().bool_type()),
+                left: evaluated_left,
+                right: evaluated_right,
+            }))
         }
         Expr::Leq { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(Rc::new(LeqVar::new(scp.core().bool_type(), evaluated_left, evaluated_right)))
+            Ok(Rc::new(BoolExpr::Leq {
+                var_type: Rc::downgrade(&scp.core().bool_type()),
+                left: evaluated_left,
+                right: evaluated_right,
+            }))
         }
         Expr::Geq { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(Rc::new(LeqVar::new(scp.core().bool_type(), evaluated_right, evaluated_left)))
+            Ok(Rc::new(BoolExpr::Leq {
+                var_type: Rc::downgrade(&scp.core().bool_type()),
+                left: evaluated_right,
+                right: evaluated_left,
+            }))
         }
         Expr::Gt { left, right } => {
             let evaluated_left = evaluate(scp.clone(), env.clone(), left)?;
             let evaluated_right = evaluate(scp.clone(), env, right)?;
-            Ok(Rc::new(LtVar::new(scp.core().bool_type(), evaluated_right, evaluated_left)))
+            Ok(Rc::new(BoolExpr::Lt {
+                var_type: Rc::downgrade(&scp.core().bool_type()),
+                left: evaluated_right,
+                right: evaluated_left,
+            }))
         }
         Expr::Or { terms } => {
             let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
