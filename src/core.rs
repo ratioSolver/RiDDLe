@@ -21,14 +21,6 @@ pub trait Core: Scope + Env {
     fn mul(&self, mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
     fn div(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
 
-    fn eq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-    fn neq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-
-    fn lt(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-    fn leq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-    fn geq(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-    fn gt(&self, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError>;
-
     fn or(&self, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
     fn and(&self, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
 
@@ -37,6 +29,22 @@ pub trait Core: Scope + Env {
     fn new_var(&self, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError>;
     fn new_disjunction(&self, disjunction: Disjunction);
     fn new_atom(&self, atom: Rc<Atom>);
+
+    fn bool_type(&self) -> Rc<BoolType> {
+        self.get_type("bool").expect("Core should have bool type").as_any().downcast::<BoolType>().expect("Core bool type should be BoolType")
+    }
+
+    fn int_type(&self) -> Rc<IntType> {
+        self.get_type("int").expect("Core should have int type").as_any().downcast::<IntType>().expect("Core int type should be IntType")
+    }
+
+    fn real_type(&self) -> Rc<RealType> {
+        self.get_type("real").expect("Core should have real type").as_any().downcast::<RealType>().expect("Core real type should be RealType")
+    }
+
+    fn string_type(&self) -> Rc<StringType> {
+        self.get_type("string").expect("Core should have string type").as_any().downcast::<StringType>().expect("Core string type should be StringType")
+    }
 }
 
 pub struct CommonCore {
@@ -52,22 +60,6 @@ impl CommonCore {
         c_core.scope.classes.borrow_mut().insert("real".to_string(), Rc::new(RealType::new(core.clone())));
         c_core.scope.classes.borrow_mut().insert("string".to_string(), Rc::new(StringType::new(core.clone())));
         c_core
-    }
-
-    pub fn bool_type(&self) -> Rc<BoolType> {
-        self.scope.get_type("bool").expect("Core should have bool type").as_any().downcast::<BoolType>().expect("Core bool type should be BoolType")
-    }
-
-    pub fn int_type(&self) -> Rc<IntType> {
-        self.scope.get_type("int").expect("Core should have int type").as_any().downcast::<IntType>().expect("Core int type should be IntType")
-    }
-
-    pub fn real_type(&self) -> Rc<RealType> {
-        self.scope.get_type("real").expect("Core should have real type").as_any().downcast::<RealType>().expect("Core real type should be RealType")
-    }
-
-    pub fn string_type(&self) -> Rc<StringType> {
-        self.scope.get_type("string").expect("Core should have string type").as_any().downcast::<StringType>().expect("Core string type should be StringType")
     }
 
     pub fn read(&self, riddle: &str) {
@@ -135,7 +127,7 @@ mod tests {
 
     impl Var for TestObject {
         fn var_type(&self) -> Rc<dyn Type> {
-            self.class.upgrade().unwrap()
+            self.class.upgrade().expect("Class should still exist")
         }
 
         fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
@@ -164,83 +156,59 @@ mod tests {
 
     impl Core for TestCore {
         fn new_bool(&self, _value: bool) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").expect("bool class not found")) })
+            Rc::new(TestObject { class: Rc::downgrade(&(self.bool_type() as Rc<dyn Type>)) })
         }
 
         fn new_bool_var(&self) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) })
+            Rc::new(TestObject { class: Rc::downgrade(&(self.bool_type() as Rc<dyn Type>)) })
         }
 
         fn new_int(&self, _value: i64) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
+            Rc::new(TestObject { class: Rc::downgrade(&(self.int_type() as Rc<dyn Type>)) })
         }
 
         fn new_int_var(&self) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) })
+            Rc::new(TestObject { class: Rc::downgrade(&(self.int_type() as Rc<dyn Type>)) })
         }
 
         fn new_real(&self, _num: i64, _den: i64) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("real").unwrap()) })
+            Rc::new(TestObject { class: Rc::downgrade(&(self.real_type() as Rc<dyn Type>)) })
         }
 
         fn new_real_var(&self) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("real").unwrap()) })
+            Rc::new(TestObject { class: Rc::downgrade(&(self.real_type() as Rc<dyn Type>)) })
         }
 
         fn new_string(&self, _value: &str) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("string").unwrap()) })
+            Rc::new(TestObject { class: Rc::downgrade(&(self.string_type() as Rc<dyn Type>)) })
         }
 
         fn new_string_var(&self) -> Rc<dyn Var> {
-            Rc::new(TestObject { class: Rc::downgrade(&self.get_type("string").unwrap()) })
+            Rc::new(TestObject { class: Rc::downgrade(&(self.string_type() as Rc<dyn Type>)) })
         }
 
         fn sum(&self, _sum: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.core.get_type("int").unwrap()) }))
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.int_type() as Rc<dyn Type>)) }))
         }
 
         fn opposite(&self, _term: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.int_type() as Rc<dyn Type>)) }))
         }
 
         fn mul(&self, _mul: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.int_type() as Rc<dyn Type>)) }))
         }
 
         fn div(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
-        }
-
-        fn eq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
-        }
-
-        fn neq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
-        }
-
-        fn lt(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
-        }
-
-        fn leq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
-        }
-
-        fn geq(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
-        }
-
-        fn gt(&self, _left: Rc<dyn Var>, _right: Rc<dyn Var>) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.int_type() as Rc<dyn Type>)) }))
         }
 
         fn or(&self, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.bool_type() as Rc<dyn Type>)) }))
         }
 
         fn and(&self, _terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("bool").unwrap()) }))
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.bool_type() as Rc<dyn Type>)) }))
         }
 
         fn assert(&self, _term: Rc<dyn Var>) -> bool {
@@ -251,7 +219,7 @@ mod tests {
             if variants.is_empty() {
                 return Err(RiddleError::InconsistencyError("Cannot create enum with no variants".into()));
             }
-            Ok(Rc::new(TestObject { class: Rc::downgrade(&self.get_type("int").unwrap()) }))
+            Ok(Rc::new(TestObject { class: Rc::downgrade(&(self.int_type() as Rc<dyn Type>)) }))
         }
 
         fn new_var(&self, class: Rc<dyn Type>, instances: &[Rc<dyn Var>]) -> Result<Rc<dyn Var>, RiddleError> {

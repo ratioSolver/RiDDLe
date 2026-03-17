@@ -1,4 +1,4 @@
-use crate::scope::{Predicate, Scope, Type};
+use crate::scope::{BoolType, Predicate, Scope, Type};
 use std::{
     any::Any,
     cell::RefCell,
@@ -140,5 +140,93 @@ impl Env for Object {
 
     fn set(&self, name: String, value: Rc<dyn Var>) {
         self.env.set(name, value);
+    }
+}
+
+pub struct EqVar {
+    pub var_type: Weak<BoolType>,
+    pub left: Rc<dyn Var>,
+    pub right: Rc<dyn Var>,
+}
+
+impl EqVar {
+    pub fn new(var_type: Rc<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Self {
+        Self { var_type: Rc::downgrade(&var_type), left, right }
+    }
+}
+
+impl Var for EqVar {
+    fn var_type(&self) -> Rc<dyn Type> {
+        self.var_type.upgrade().unwrap()
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+}
+
+pub struct NeqVar {
+    pub var_type: Weak<BoolType>,
+    pub left: Rc<dyn Var>,
+    pub right: Rc<dyn Var>,
+}
+
+impl NeqVar {
+    pub fn new(var_type: Rc<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Self {
+        Self { var_type: Rc::downgrade(&var_type), left, right }
+    }
+}
+
+impl Var for NeqVar {
+    fn var_type(&self) -> Rc<dyn Type> {
+        self.var_type.upgrade().unwrap()
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+}
+
+pub struct LtVar {
+    pub var_type: Weak<BoolType>,
+    pub left: Rc<dyn Var>,
+    pub right: Rc<dyn Var>,
+}
+
+impl LtVar {
+    pub fn new(var_type: Rc<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Self {
+        Self { var_type: Rc::downgrade(&var_type), left, right }
+    }
+}
+
+impl Var for LtVar {
+    fn var_type(&self) -> Rc<dyn Type> {
+        self.var_type.upgrade().unwrap()
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+}
+
+pub struct LeqVar {
+    pub var_type: Weak<BoolType>,
+    pub left: Rc<dyn Var>,
+    pub right: Rc<dyn Var>,
+}
+
+impl LeqVar {
+    pub fn new(var_type: Rc<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var>) -> Self {
+        Self { var_type: Rc::downgrade(&var_type), left, right }
+    }
+}
+
+impl Var for LeqVar {
+    fn var_type(&self) -> Rc<dyn Type> {
+        self.var_type.upgrade().unwrap()
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
     }
 }
