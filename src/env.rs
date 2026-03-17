@@ -144,8 +144,9 @@ impl Env for Object {
 }
 
 pub enum BoolExpr {
-    Eq { var_type: Weak<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var> },
+    Term { var_type: Weak<BoolType>, term: Rc<dyn Var> },
     Not { var_type: Weak<BoolType>, term: Rc<dyn Var> },
+    Eq { var_type: Weak<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var> },
     Lt { var_type: Weak<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var> },
     Leq { var_type: Weak<BoolType>, left: Rc<dyn Var>, right: Rc<dyn Var> },
     Or { var_type: Weak<BoolType>, terms: Vec<Rc<dyn Var>> },
@@ -155,11 +156,83 @@ pub enum BoolExpr {
 impl Var for BoolExpr {
     fn var_type(&self) -> Rc<dyn Type> {
         match self {
-            BoolExpr::Eq { var_type: var_tp, .. } | BoolExpr::Not { var_type: var_tp, .. } | BoolExpr::Lt { var_type: var_tp, .. } | BoolExpr::Leq { var_type: var_tp, .. } | BoolExpr::Or { var_type: var_tp, .. } | BoolExpr::And { var_type: var_tp, .. } => var_tp.upgrade().unwrap(),
+            BoolExpr::Term { var_type: var_tp, .. } | BoolExpr::Not { var_type: var_tp, .. } | BoolExpr::Eq { var_type: var_tp, .. } | BoolExpr::Lt { var_type: var_tp, .. } | BoolExpr::Leq { var_type: var_tp, .. } | BoolExpr::Or { var_type: var_tp, .. } | BoolExpr::And { var_type: var_tp, .. } => var_tp.upgrade().unwrap(),
         }
     }
 
     fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
         self
     }
+}
+
+fn push_negations(expr: Rc<dyn Var>) -> Rc<BoolExpr> {
+    if let Ok(bool_expr) = expr.as_any().downcast::<BoolExpr>() {
+        match bool_expr.as_ref() {
+            BoolExpr::Not { var_type, term } => {
+                let inner_expr = push_negations(term.clone());
+                match inner_expr.as_any().downcast_ref::<BoolExpr>() {
+                    Some(BoolExpr::Not { var_type: inner_var_type, term: inner_term }) => Rc::new(BoolExpr::Term { var_type: inner_var_type.clone(), term: inner_term.clone() }),
+                    Some(BoolExpr::And { var_type: inner_var_type, terms }) => Rc::new(BoolExpr::Or {
+                        var_type: inner_var_type.clone(),
+                        terms: terms.iter().map(|t| push_negations(t.clone()) as Rc<dyn Var>).collect(),
+                    }),
+                    Some(BoolExpr::Or { var_type: inner_var_type, terms }) => Rc::new(BoolExpr::And {
+                        var_type: inner_var_type.clone(),
+                        terms: terms.iter().map(|t| push_negations(t.clone()) as Rc<dyn Var>).collect(),
+                    }),
+                    _ => Rc::new(BoolExpr::Not { var_type: var_type.clone(), term: push_negations(term.clone()) }),
+                }
+            }
+            BoolExpr::And { var_type, terms } => Rc::new(BoolExpr::And {
+                var_type: var_type.clone(),
+                terms: terms.iter().map(|t| push_negations(t.clone()) as Rc<dyn Var>).collect(),
+            }),
+            BoolExpr::Or { var_type, terms } => Rc::new(BoolExpr::Or {
+                var_type: var_type.clone(),
+                terms: terms.iter().map(|t| push_negations(t.clone()) as Rc<dyn Var>).collect(),
+            }),
+            _ => bool_expr.clone(),
+        }
+    } else {
+        panic!("Expected a BoolExpr");
+    }
+}
+
+fn distribute(expr: Rc<dyn Var>) -> Rc<BoolExpr> {
+    if let Ok(bool_expr) = expr.as_any().downcast::<BoolExpr>() {
+        match bool_expr.as_ref() {
+            BoolExpr::Or { var_type, terms } => {
+                let distributed_terms: Vec<Rc<BoolExpr>> = terms.iter().map(|t| distribute(t.clone())).collect();
+                let mut result_terms: Vec<Rc<dyn Var>> = vec![Rc::new(BoolExpr::Term {
+                    var_type: var_type.clone(),
+                    term: Rc::new(BoolExpr::And { var_type: var_type.clone(), terms: vec![] }),
+                })];
+                for term in distributed_terms {
+                    if let BoolExpr::Or { terms: or_terms, .. } = term.as_ref() {
+                        let mut new_result_terms: Vec<Rc<dyn Var>> = Vec::new();
+                        for res_term in &result_terms {
+                            for or_term in or_terms {
+                                new_result_terms.push(Rc::new(BoolExpr::And { var_type: var_type.clone(), terms: vec![res_term.clone(), or_term.clone()] }));
+                            }
+                        }
+                        result_terms = new_result_terms;
+                    } else {
+                        result_terms = result_terms.into_iter().map(|res_term| Rc::new(BoolExpr::And { var_type: var_type.clone(), terms: vec![res_term, term.clone()] }) as Rc<dyn Var>).collect();
+                    }
+                }
+                Rc::new(BoolExpr::Or { var_type: var_type.clone(), terms: result_terms })
+            }
+            BoolExpr::And { var_type, terms } => Rc::new(BoolExpr::Or {
+                var_type: var_type.clone(),
+                terms: terms.iter().map(|t| distribute(t.clone()) as Rc<dyn Var>).collect(),
+            }),
+            _ => bool_expr.clone(),
+        }
+    } else {
+        panic!("Expected a BoolExpr");
+    }
+}
+
+pub(crate) fn to_cnf(expr: Rc<dyn Var>) -> Rc<BoolExpr> {
+    distribute(push_negations(expr))
 }

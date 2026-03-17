@@ -1,5 +1,5 @@
 use crate::{
-    env::{BoolExpr, CommonEnv, Env, Var},
+    env::{BoolExpr, CommonEnv, Env, Var, to_cnf},
     scope::{Scope, is_assignable_from},
 };
 use std::{
@@ -218,7 +218,7 @@ pub struct Disjunction {
 pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result<(), RiddleError> {
     match stmt {
         Statement::Expr(expr) => {
-            if scp.clone().core().assert(evaluate(scp, env, expr)?) {
+            if scp.clone().core().assert(to_cnf(evaluate(scp.clone(), env.clone(), expr)?)) {
                 Ok(())
             } else {
                 Err(RiddleError::RuntimeError("Assertion failed".into()))
