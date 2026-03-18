@@ -691,10 +691,10 @@ impl Class for CommonClass {
     fn instances(&self) -> Vec<Rc<Object>> {
         let mut instances = self.instances.borrow().clone();
         for parent in &self.parents {
-            if let Some(parent_class) = self.core.upgrade().unwrap().get_type(&parent.join(".")) {
-                if let Some(parent_class) = parent_class.as_class() {
-                    instances.extend(parent_class.instances());
-                }
+            if let Some(parent_class) = self.core.upgrade().unwrap().get_type(&parent.join("."))
+                && let Some(parent_class) = parent_class.as_class()
+            {
+                instances.extend(parent_class.instances());
             }
         }
         instances
