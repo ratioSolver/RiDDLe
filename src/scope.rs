@@ -1,6 +1,6 @@
 use crate::{
     core::Core,
-    env::{Atom, CommonEnv, Env, Object, Var},
+    env::{Atom, BoolExpr, CommonEnv, Env, Object, Var},
     language::{ClassDef, ConstructorDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef, RiddleError, Statement, execute},
 };
 use std::{
@@ -45,7 +45,8 @@ impl Type for BoolType {
     }
 
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
-        self.core.upgrade().unwrap().new_bool_var()
+        let var = self.core.upgrade().unwrap().new_bool_var();
+        Rc::new(BoolExpr::Term { var_type: Rc::downgrade(&self), term: var })
     }
 }
 

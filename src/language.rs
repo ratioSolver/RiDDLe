@@ -235,6 +235,17 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
                         return Err(RiddleError::TypeError(format!("Default value for field '{}' is not assignable to field type '{}'", name, field_type.join("."))));
                     }
                     env.set(name.clone(), value);
+                } else if let Some(class) = fld_tp.clone().as_class() {
+                    let instances = class.instances().into_iter().map(|obj| obj as Rc<dyn Var>).collect::<Vec<_>>();
+                    if instances.is_empty() {
+                        return Err(RiddleError::RuntimeError(format!("No instances found for field '{}' of type '{}'", name, class.full_name())));
+                    } else if instances.len() == 1 {
+                        env.set(name.clone(), instances[0].clone());
+                    } else {
+                        env.set(name.clone(), scp.clone().core().new_var(class, instances.as_slice())?);
+                    }
+                } else {
+                    env.set(name.clone(), fld_tp.clone().new_instance());
                 }
             }
             Ok(())
@@ -342,7 +353,10 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
 
 pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<dyn Var>, RiddleError> {
     match expr {
-        Expr::Bool(bool) => Ok(scp.core().new_bool(*bool)),
+        Expr::Bool(bool) => {
+            let evaluated_term = scp.clone().core().new_bool(*bool);
+            Ok(Rc::new(BoolExpr::Term { var_type: Rc::downgrade(&scp.core().bool_type()), term: evaluated_term }))
+        }
         Expr::Int(int) => Ok(scp.core().new_int(*int)),
         Expr::Real(num, den) => Ok(scp.core().new_real(*num, *den)),
         Expr::String(string) => Ok(scp.core().new_string(string)),
@@ -360,7 +374,7 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
             Ok(scp.core().opposite(evaluated_term)?)
         }
         Expr::Not { term } => {
-            let evaluated_term = evaluate(scp.clone(), env, term)?;
+            let evaluated_term = evaluate(scp.clone(), env, term)?.as_any().downcast::<BoolExpr>().map_err(|_| RiddleError::TypeError("Expected a boolean expression in 'not' operator".into()))?;
             Ok(Rc::new(BoolExpr::Not { var_type: Rc::downgrade(&scp.core().bool_type()), term: evaluated_term }))
         }
         Expr::Mul { factors } => {
@@ -435,11 +449,11 @@ pub fn evaluate(scp: Rc<dyn Scope>, env: Rc<dyn Env>, expr: &Expr) -> Result<Rc<
             }))
         }
         Expr::Or { terms } => {
-            let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
+            let evaluated_terms: Vec<Rc<BoolExpr>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t).expect("Expected a boolean expression in 'or' operator").as_any().downcast::<BoolExpr>().expect("Expected a boolean expression in 'or' operator")).collect();
             Ok(Rc::new(BoolExpr::Or { var_type: Rc::downgrade(&scp.core().bool_type()), terms: evaluated_terms }))
         }
         Expr::And { terms } => {
-            let evaluated_terms: Vec<Rc<dyn Var>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t)).collect::<Result<_, _>>()?;
+            let evaluated_terms: Vec<Rc<BoolExpr>> = terms.iter().map(|t| evaluate(scp.clone(), env.clone(), t).expect("Expected a boolean expression in 'and' operator").as_any().downcast::<BoolExpr>().expect("Expected a boolean expression in 'and' operator")).collect();
             Ok(Rc::new(BoolExpr::And { var_type: Rc::downgrade(&scp.core().bool_type()), terms: evaluated_terms }))
         }
         Expr::NewObject { class_name, args } => {
