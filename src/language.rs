@@ -302,8 +302,8 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
                     Ok((n.clone(), val))
                 })
                 .collect::<Result<_, _>>()?;
-            if tau.is_some() {
-                args.insert("tau".to_string(), tau.unwrap());
+            if let Some(tau) = tau {
+                args.insert("tau".to_string(), tau);
             }
             let mut pred_hierarchy = VecDeque::from(vec![predicate.clone()]);
             while let Some(pred) = pred_hierarchy.pop_front() {
