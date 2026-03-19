@@ -156,7 +156,6 @@ pub trait Scope {
     fn get_field(&self, name: &str) -> Option<Rc<Field>>;
     fn get_method(&self, name: &str, types: &[Rc<dyn Type>]) -> Option<Rc<Method>>;
     fn get_type(&self, name: &str) -> Option<Rc<dyn Type>>;
-    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>>;
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>>;
 }
 
@@ -166,7 +165,6 @@ pub struct CommonScope {
     fields: RefCell<HashMap<String, Rc<Field>>>,
     methods: RefCell<HashMap<String, Vec<Rc<Method>>>>,
     pub(crate) classes: RefCell<HashMap<String, Rc<dyn Type>>>,
-    enums: RefCell<HashMap<String, Rc<EnumDef>>>,
     predicates: RefCell<HashMap<String, Rc<Predicate>>>,
 }
 
@@ -178,7 +176,6 @@ impl CommonScope {
             fields: RefCell::new(HashMap::new()),
             methods: RefCell::new(HashMap::new()),
             classes: RefCell::new(HashMap::new()),
-            enums: RefCell::new(HashMap::new()),
             predicates: RefCell::new(HashMap::new()),
         }
     }
@@ -234,7 +231,7 @@ impl CommonScope {
             self.classes.borrow_mut().insert(class_def.name.clone(), Rc::new(CommonClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class_def)));
         }
         for enum_def in problem.enums {
-            self.enums.borrow_mut().insert(enum_def.name.clone(), Rc::new(enum_def));
+            self.classes.borrow_mut().insert(enum_def.name.clone(), Rc::new(Enum::new(enum_def)));
         }
     }
 }
@@ -277,10 +274,6 @@ impl Scope for CommonScope {
 
     fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
         self.classes.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_type(name))
-    }
-
-    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
-        self.enums.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_enum(name))
     }
 
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
@@ -371,10 +364,6 @@ impl Scope for Method {
         self.scope.get_type(name)
     }
 
-    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
-        self.scope.get_enum(name)
-    }
-
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
         self.scope.get_predicate(name)
     }
@@ -445,10 +434,6 @@ impl Scope for Constructor {
 
     fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
         self.scope.get_type(name)
-    }
-
-    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
-        self.scope.get_enum(name)
     }
 
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
@@ -522,7 +507,7 @@ impl Type for Predicate {
     }
 
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
-        panic!("Cannot create instance of a predicate");
+        panic!("Cannot create instance of a predicate")
     }
 }
 
@@ -545,10 +530,6 @@ impl Scope for Predicate {
 
     fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
         self.scope.get_type(name)
-    }
-
-    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
-        self.scope.get_enum(name)
     }
 
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
@@ -656,10 +637,6 @@ impl Scope for CommonClass {
         self.scope.get_type(name)
     }
 
-    fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
-        self.scope.get_enum(name)
-    }
-
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
         self.scope.get_predicate(name)
     }
@@ -708,5 +685,42 @@ pub fn arith_class(cr: &dyn Core, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Type>,
         Ok(cr.get_type("real").expect("real class not found"))
     } else {
         Err(RiddleError::TypeError("Invalid types for arithmetic operation".into()))
+    }
+}
+
+pub struct Enum {
+    name: String,
+    values: Vec<String>,
+}
+
+impl Enum {
+    pub fn new(enum_def: EnumDef) -> Self {
+        Self { name: enum_def.name, values: enum_def.values }
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn values(&self) -> &[String] {
+        &self.values
+    }
+}
+
+impl Type for Enum {
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn full_name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
+        self
+    }
+
+    fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
+        panic!("Cannot create instance of an enum")
     }
 }

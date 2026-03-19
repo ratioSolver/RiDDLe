@@ -1,6 +1,6 @@
 use crate::{
     env::{Atom, BoolExpr, CommonEnv, Env, Var},
-    language::{Disjunction, EnumDef, RiddleError, execute},
+    language::{Disjunction, RiddleError, execute},
     parse_problem,
     scope::{BoolType, CommonScope, Field, IntType, Method, Predicate, RealType, Scope, StringType, Type},
 };
@@ -88,10 +88,6 @@ impl Scope for CommonCore {
 
     fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
         self.scope.get_type(name)
-    }
-
-    fn get_enum(&self, _name: &str) -> Option<Rc<EnumDef>> {
-        self.scope.get_enum(_name)
     }
 
     fn get_predicate(&self, _name: &str) -> Option<Rc<Predicate>> {
@@ -253,10 +249,6 @@ mod tests {
 
         fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
             self.core.get_type(name)
-        }
-
-        fn get_enum(&self, name: &str) -> Option<Rc<EnumDef>> {
-            self.core.get_enum(name)
         }
 
         fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
