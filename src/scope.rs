@@ -729,7 +729,6 @@ impl Type for Enum {
     }
 
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
-        let variants = self.values.iter().map(String::as_str).collect::<Vec<_>>();
-        self.core.upgrade().unwrap().new_enum(&variants).unwrap()
+        self.core.upgrade().unwrap().new_enum(self.clone()).expect("Failed to create enum instance")
     }
 }
