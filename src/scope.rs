@@ -19,6 +19,9 @@ pub trait Type {
     fn as_class(self: Rc<Self>) -> Option<Rc<dyn Class>> {
         None
     }
+    fn as_enum(self: Rc<Self>) -> Option<Rc<Enum>> {
+        None
+    }
     fn as_predicate(self: Rc<Self>) -> Option<Rc<Predicate>> {
         None
     }
@@ -231,7 +234,7 @@ impl CommonScope {
             self.classes.borrow_mut().insert(class_def.name.clone(), Rc::new(CommonClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class_def)));
         }
         for enum_def in problem.enums {
-            self.classes.borrow_mut().insert(enum_def.name.clone(), Rc::new(Enum::new(enum_def)));
+            self.classes.borrow_mut().insert(enum_def.name.clone(), Rc::new(Enum::new(self.core.clone(), enum_def)));
         }
     }
 }
@@ -689,13 +692,14 @@ pub fn arith_class(cr: &dyn Core, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Type>,
 }
 
 pub struct Enum {
+    core: Weak<dyn Core>,
     name: String,
     values: Vec<String>,
 }
 
 impl Enum {
-    pub fn new(enum_def: EnumDef) -> Self {
-        Self { name: enum_def.name, values: enum_def.values }
+    pub fn new(core: Weak<dyn Core>, enum_def: EnumDef) -> Self {
+        Self { core, name: enum_def.name, values: enum_def.values }
     }
 
     pub fn name(&self) -> &str {
@@ -720,7 +724,12 @@ impl Type for Enum {
         self
     }
 
+    fn as_enum(self: Rc<Self>) -> Option<Rc<Enum>> {
+        Some(self)
+    }
+
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
-        panic!("Cannot create instance of an enum")
+        let variants = self.values.iter().map(String::as_str).collect::<Vec<_>>();
+        self.core.upgrade().unwrap().new_enum(&variants).unwrap()
     }
 }
