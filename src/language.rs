@@ -218,8 +218,11 @@ pub struct Disjunction {
 pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result<(), RiddleError> {
     match stmt {
         Statement::Expr(expr) => {
-            scp.clone().core().assert(to_cnf(evaluate(scp.clone(), env.clone(), expr)?));
-            Ok(())
+            if scp.clone().core().assert(to_cnf(evaluate(scp.clone(), env.clone(), expr)?)) {
+                Ok(())
+            } else {
+                Err(RiddleError::InconsistencyError(format!("Expression '{}' evaluated to false", expr)))
+            }
         }
         Statement::LocalField { field_type, fields } => {
             let (first, rest) = field_type.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty field type path".into()))?;
