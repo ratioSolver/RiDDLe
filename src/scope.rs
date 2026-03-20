@@ -187,7 +187,7 @@ impl CommonScope {
         }
     }
 
-    pub fn from_class(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, class: ClassDef) -> Rc<Self> {
+    pub fn from_class(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, class_scope: Weak<dyn Scope>, class: ClassDef) -> Rc<Self> {
         let scope = Rc::new(Self::new(core.clone(), scope));
         for (field_type, fields) in class.fields {
             for (name, default) in fields {
@@ -195,10 +195,14 @@ impl CommonScope {
             }
         }
         for method_def in class.methods {
-            scope.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Method::new(core.clone(), Some(Rc::downgrade(&(scope.clone() as Rc<dyn Scope>))), method_def));
+            scope.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Method::new(core.clone(), Some(class_scope.clone()), method_def));
+        }
+        for class_def in class.classes {
+            let class_name = class_def.name.clone();
+            scope.classes.borrow_mut().insert(class_name, CommonClass::new(core.clone(), Some(class_scope.clone()), class_def));
         }
         for predicate_def in class.predicates {
-            scope.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(core.clone(), Some(Rc::downgrade(&(scope.clone() as Rc<dyn Scope>))), predicate_def));
+            scope.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(core.clone(), Some(class_scope.clone()), predicate_def));
         }
         scope
     }
@@ -231,11 +235,11 @@ impl CommonScope {
         for method_def in problem.methods {
             self.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Method::new(self.core.clone(), Some(self.core.clone()), method_def));
         }
-        for predicate_def in problem.predicates {
-            self.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(self.core.clone(), Some(self.core.clone()), predicate_def));
-        }
         for class_def in problem.classes {
             self.classes.borrow_mut().insert(class_def.name.clone(), CommonClass::new(self.core.clone(), Some(self.core.clone()), class_def));
+        }
+        for predicate_def in problem.predicates {
+            self.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(self.core.clone(), Some(self.core.clone()), predicate_def));
         }
     }
 }
@@ -587,23 +591,14 @@ impl CommonClass {
     pub fn new(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, mut class: ClassDef) -> Rc<Self> {
         let name = std::mem::take(&mut class.name);
         let parents = std::mem::take(&mut class.parents);
-        let nested_classes = std::mem::take(&mut class.classes);
         let constructors_def = if class.constructors.is_empty() { vec![ConstructorDef { args: Vec::new(), init: Vec::new(), statements: Vec::new() }] } else { std::mem::take(&mut class.constructors) };
-        let scope = CommonScope::from_class(core.clone(), scope, class);
-        Rc::new_cyclic(|weak_self: &Weak<CommonClass>| {
-            for class_def in nested_classes {
-                let class_name = class_def.name.clone();
-                scope.classes.borrow_mut().insert(class_name, CommonClass::new(core.clone(), Some(weak_self.clone()), class_def));
-            }
-
-            Self {
-                core: core.clone(),
-                name,
-                parents,
-                constructors: constructors_def.into_iter().map(|c| Constructor::new(core.clone(), Some(weak_self.clone()), c)).collect(),
-                scope,
-                instances: RefCell::new(Vec::new()),
-            }
+        Rc::new_cyclic(move |weak_self: &Weak<CommonClass>| Self {
+            core: core.clone(),
+            name,
+            parents,
+            constructors: constructors_def.into_iter().map(|c| Constructor::new(core.clone(), Some(weak_self.clone()), c)).collect(),
+            scope: CommonScope::from_class(core.clone(), scope, weak_self.clone(), class),
+            instances: RefCell::new(Vec::new()),
         })
     }
 }

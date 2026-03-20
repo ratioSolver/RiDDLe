@@ -52,10 +52,10 @@ pub struct CommonCore {
 impl CommonCore {
     pub fn new(core: Weak<dyn Core>) -> Rc<Self> {
         let c_core = Rc::new(CommonCore { scope: Rc::new(CommonScope::new(core.clone(), None)), env: Rc::new(CommonEnv::new(None)) });
-        c_core.scope.classes.borrow_mut().insert("bool".to_string(), Rc::new(BoolType::new(core.clone())));
-        c_core.scope.classes.borrow_mut().insert("int".to_string(), Rc::new(IntType::new(core.clone())));
-        c_core.scope.classes.borrow_mut().insert("real".to_string(), Rc::new(RealType::new(core.clone())));
-        c_core.scope.classes.borrow_mut().insert("string".to_string(), Rc::new(StringType::new(core.clone())));
+        c_core.add_type(Rc::new(BoolType::new(core.clone())));
+        c_core.add_type(Rc::new(IntType::new(core.clone())));
+        c_core.add_type(Rc::new(RealType::new(core.clone())));
+        c_core.add_type(Rc::new(StringType::new(core.clone())));
         c_core
     }
 
@@ -66,6 +66,10 @@ impl CommonCore {
         for stmt in statments {
             execute(self.scope.clone(), self.env.clone(), &stmt).expect("Failed to execute statement");
         }
+    }
+
+    pub fn add_type(&self, class: Rc<dyn Type>) {
+        self.scope.classes.borrow_mut().insert(class.name().to_string(), class);
     }
 }
 
