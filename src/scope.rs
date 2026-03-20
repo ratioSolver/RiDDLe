@@ -401,7 +401,8 @@ impl Constructor {
     }
 
     pub fn call(&self, env: Rc<dyn Env>, args: Vec<Rc<dyn Var>>) -> Result<Option<Rc<dyn Var>>, RiddleError> {
-        println!("Scope: {:?}", self.scope);
+        println!("Constructor scope: {:?}", self.scope);
+        println!("Constructor's parent scope: {:?}", self.scope.scope.as_ref().expect("Constructor scope should have a parent").upgrade().expect("Constructor scope parent should be valid").as_class());
         if args.len() != self.args.len() {
             return Err(RiddleError::RuntimeError(format!("Expected {} arguments, got {}", self.args.len(), args.len())));
         }
