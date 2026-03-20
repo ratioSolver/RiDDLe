@@ -50,6 +50,10 @@ pub struct CommonCore {
 }
 
 impl CommonCore {
+    /// Creates a new shared core with a root scope and environment.
+    ///
+    /// The core is initialized with the builtin primitive types:
+    /// `bool`, `int`, `real`, and `string`.
     pub fn new(core: Weak<dyn Core>) -> Rc<Self> {
         let c_core = Rc::new(CommonCore { scope: Rc::new(CommonScope::new(core.clone(), None)), env: Rc::new(CommonEnv::new(None)) });
         c_core.add_type(Rc::new(BoolType::new(core.clone())));
@@ -59,6 +63,13 @@ impl CommonCore {
         c_core
     }
 
+    /// Parses and executes a RiDDLe problem in this core context.
+    ///
+    /// The parsed problem metadata is registered in the current scope,
+    /// then each statement is executed in order using this core scope
+    /// and environment.
+    ///
+    /// Panics if parsing fails or if statement execution returns an error.
     pub fn read(&self, riddle: &str) {
         let mut problem = parse_problem(riddle).expect("Failed to parse problem");
         let statments = std::mem::take(&mut problem.statements);
@@ -68,6 +79,7 @@ impl CommonCore {
         }
     }
 
+    /// Registers a type in the core type table under its declared name.
     pub fn add_type(&self, class: Rc<dyn Type>) {
         self.scope.classes.borrow_mut().insert(class.name().to_string(), class);
     }
