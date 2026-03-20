@@ -278,4 +278,21 @@ mod tests {
         let core = TestCore::new();
         core.read("bool a, b, c; (a & b) | c;");
     }
+
+    #[test]
+    fn nested_classes_are_registered_in_class_scope() {
+        let core = TestCore::new();
+        core.read(
+            r#"
+            class Outer {
+                class Inner {}
+            }
+            "#,
+        );
+
+        let outer = core.get_type("Outer").expect("Outer class should be registered").as_class().expect("Outer should be a class");
+        let inner = outer.get_type("Inner").expect("Inner class should be registered in the enclosing class scope");
+
+        assert_eq!(inner.full_name(), "Outer.Inner");
+    }
 }

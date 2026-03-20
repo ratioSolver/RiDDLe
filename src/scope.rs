@@ -401,8 +401,6 @@ impl Constructor {
     }
 
     pub fn call(&self, env: Rc<dyn Env>, args: Vec<Rc<dyn Var>>) -> Result<Option<Rc<dyn Var>>, RiddleError> {
-        println!("Constructor scope: {:?}", self.scope);
-        println!("Constructor's parent scope: {:?}", self.scope.scope.as_ref().expect("Constructor scope should have a parent").upgrade().expect("Constructor scope parent should be valid").as_class());
         if args.len() != self.args.len() {
             return Err(RiddleError::RuntimeError(format!("Expected {} arguments, got {}", self.args.len(), args.len())));
         }
@@ -499,11 +497,12 @@ impl Type for Predicate {
     }
 
     fn full_name(&self) -> String {
-        if self.scope.scope.is_none() {
-            self.name.clone()
-        } else {
-            let class = self.scope.scope.as_ref().expect("Predicate scope should have a parent").upgrade().expect("Predicate scope parent should be valid").as_class().expect("Predicate scope parent should be a class");
+        if let Some(scope) = self.scope.scope.as_ref().and_then(|scope| scope.upgrade())
+            && let Some(class) = scope.as_class()
+        {
             format!("{}.{}", class.full_name(), self.name)
+        } else {
+            self.name.clone()
         }
     }
 
@@ -588,15 +587,23 @@ impl CommonClass {
     pub fn new(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, mut class: ClassDef) -> Rc<Self> {
         let name = std::mem::take(&mut class.name);
         let parents = std::mem::take(&mut class.parents);
+        let nested_classes = std::mem::take(&mut class.classes);
         let constructors_def = if class.constructors.is_empty() { vec![ConstructorDef { args: Vec::new(), init: Vec::new(), statements: Vec::new() }] } else { std::mem::take(&mut class.constructors) };
         let scope = CommonScope::from_class(core.clone(), scope, class);
-        Rc::new_cyclic(|weak_self: &Weak<CommonClass>| Self {
-            core: core.clone(),
-            name,
-            parents,
-            constructors: constructors_def.into_iter().map(|c| Constructor::new(core.clone(), Some(weak_self.clone()), c)).collect(),
-            scope,
-            instances: RefCell::new(Vec::new()),
+        Rc::new_cyclic(|weak_self: &Weak<CommonClass>| {
+            for class_def in nested_classes {
+                let class_name = class_def.name.clone();
+                scope.classes.borrow_mut().insert(class_name, CommonClass::new(core.clone(), Some(weak_self.clone()), class_def));
+            }
+
+            Self {
+                core: core.clone(),
+                name,
+                parents,
+                constructors: constructors_def.into_iter().map(|c| Constructor::new(core.clone(), Some(weak_self.clone()), c)).collect(),
+                scope,
+                instances: RefCell::new(Vec::new()),
+            }
         })
     }
 }
@@ -607,11 +614,12 @@ impl Type for CommonClass {
     }
 
     fn full_name(&self) -> String {
-        if self.scope.scope.is_none() {
-            self.name.clone()
-        } else {
-            let class = self.scope.scope.as_ref().expect("Class scope should have a parent").upgrade().expect("Class scope parent should be valid").as_class().expect("Class scope parent should be a class");
+        if let Some(scope) = self.scope.scope.as_ref().and_then(|scope| scope.upgrade())
+            && let Some(class) = scope.as_class()
+        {
             format!("{}.{}", class.full_name(), self.name)
+        } else {
+            self.name.clone()
         }
     }
 
@@ -631,6 +639,10 @@ impl Type for CommonClass {
 }
 
 impl Scope for CommonClass {
+    fn as_class(self: Rc<Self>) -> Option<Rc<dyn Class>> {
+        Some(self)
+    }
+
     fn core(self: Rc<Self>) -> Rc<dyn Core> {
         self.core.upgrade().expect("Class core should be valid")
     }
