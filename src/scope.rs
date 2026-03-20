@@ -161,7 +161,7 @@ pub trait Scope {
 
 pub struct CommonScope {
     core: Weak<dyn Core>,
-    scope: Option<Rc<dyn Scope>>,
+    scope: Option<Weak<dyn Scope>>,
     fields: RefCell<HashMap<String, Rc<Field>>>,
     methods: RefCell<HashMap<String, Vec<Rc<Method>>>>,
     pub(crate) classes: RefCell<HashMap<String, Rc<dyn Type>>>,
@@ -169,7 +169,7 @@ pub struct CommonScope {
 }
 
 impl CommonScope {
-    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>) -> Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>) -> Self {
         Self {
             core,
             scope,
@@ -180,7 +180,7 @@ impl CommonScope {
         }
     }
 
-    pub fn from_class(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, class: ClassDef) -> Rc<Self> {
+    pub fn from_class(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, class: ClassDef) -> Rc<Self> {
         let scope = Rc::new(Self::new(core.clone(), scope));
         for (field_type, fields) in class.fields {
             for (name, default) in fields {
@@ -188,15 +188,15 @@ impl CommonScope {
             }
         }
         for method_def in class.methods {
-            scope.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Method::new(core.clone(), Some(scope.clone()), method_def));
+            scope.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Method::new(core.clone(), Some(Rc::downgrade(&(scope.clone() as Rc<dyn Scope>))), method_def));
         }
         for predicate_def in class.predicates {
-            scope.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(core.clone(), Some(scope.clone()), predicate_def));
+            scope.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(core.clone(), Some(Rc::downgrade(&(scope.clone() as Rc<dyn Scope>))), predicate_def));
         }
         scope
     }
 
-    pub fn from_costructor(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, constructor: ConstructorDef) -> Self {
+    pub fn from_costructor(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, constructor: ConstructorDef) -> Self {
         let scope = Self::new(core, scope);
         for (arg_type, arg_name) in constructor.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
@@ -204,7 +204,7 @@ impl CommonScope {
         scope
     }
 
-    pub fn from_method(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, method: MethodDef) -> Self {
+    pub fn from_method(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, method: MethodDef) -> Self {
         let scope = Self::new(core, scope);
         for (arg_type, arg_name) in method.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
@@ -212,7 +212,7 @@ impl CommonScope {
         scope
     }
 
-    pub fn from_predicate(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, predicate: PredicateDef) -> Self {
+    pub fn from_predicate(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, predicate: PredicateDef) -> Self {
         let scope = Self::new(core, scope);
         for (arg_type, arg_name) in predicate.args {
             scope.fields.borrow_mut().insert(arg_name.clone(), Rc::new(Field { name: arg_name, field_type: arg_type, default: None }));
@@ -222,13 +222,13 @@ impl CommonScope {
 
     pub fn add_problem(&self, problem: ProblemDef) {
         for method_def in problem.methods {
-            self.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Method::new(self.core.clone(), Some(self.core.upgrade().unwrap()), method_def));
+            self.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Method::new(self.core.clone(), Some(self.core.clone()), method_def));
         }
         for predicate_def in problem.predicates {
-            self.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(self.core.clone(), Some(self.core.upgrade().unwrap()), predicate_def));
+            self.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(self.core.clone(), Some(self.core.clone()), predicate_def));
         }
         for class_def in problem.classes {
-            self.classes.borrow_mut().insert(class_def.name.clone(), CommonClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class_def));
+            self.classes.borrow_mut().insert(class_def.name.clone(), CommonClass::new(self.core.clone(), Some(self.core.clone()), class_def));
         }
     }
 }
@@ -239,11 +239,11 @@ impl Scope for CommonScope {
     }
 
     fn scope(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.clone()
+        self.scope.as_ref()?.upgrade()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {
-        self.fields.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_field(name))
+        self.fields.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.upgrade()?.get_field(name))
     }
 
     fn get_method(&self, name: &str, types: &[Rc<dyn Type>]) -> Option<Rc<Method>> {
@@ -266,15 +266,15 @@ impl Scope for CommonScope {
                     })
                     .cloned()
             })
-            .or_else(|| self.scope.as_ref()?.get_method(name, types))
+            .or_else(|| self.scope.as_ref()?.upgrade()?.get_method(name, types))
     }
 
     fn get_type(&self, name: &str) -> Option<Rc<dyn Type>> {
-        self.classes.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_type(name))
+        self.classes.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.upgrade()?.get_type(name))
     }
 
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>> {
-        self.predicates.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.get_predicate(name))
+        self.predicates.borrow().get(name).cloned().or_else(|| self.scope.as_ref()?.upgrade()?.get_predicate(name))
     }
 }
 
@@ -288,7 +288,7 @@ pub struct Method {
 }
 
 impl Method {
-    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut method: MethodDef) -> Rc<Self> {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, mut method: MethodDef) -> Rc<Self> {
         Rc::new(Self {
             core: core.clone(),
             name: std::mem::take(&mut method.name),
@@ -342,11 +342,11 @@ impl Method {
 
 impl Scope for Method {
     fn core(self: Rc<Self>) -> Rc<dyn Core> {
-        self.core.upgrade().unwrap()
+        self.core.upgrade().expect("Method core should be valid")
     }
 
     fn scope(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.scope.clone()
+        self.scope.scope.as_ref()?.upgrade()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {
@@ -374,7 +374,7 @@ pub struct Constructor {
 }
 
 impl Constructor {
-    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut constructor: ConstructorDef) -> Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, mut constructor: ConstructorDef) -> Self {
         Self {
             core: core.clone(),
             args: std::mem::take(&mut constructor.args),
@@ -395,7 +395,7 @@ impl Constructor {
         if args.len() != self.args.len() {
             return Err(RiddleError::RuntimeError(format!("Expected {} arguments, got {}", self.args.len(), args.len())));
         }
-        let class = self.scope.scope.as_ref().expect("Constructor scope should have a parent").clone().as_class().expect("Constructor scope parent should be a class");
+        let class = self.scope.scope.as_ref().expect("Constructor scope should have a parent").upgrade().expect("Constructor scope parent should be valid").as_class().expect("Constructor scope parent should be a class");
         let object = class.new_instance();
         let constructor_env = Rc::new(CommonEnv::new(Some(env)));
         constructor_env.set("this".to_string(), object.clone());
@@ -418,7 +418,7 @@ impl Scope for Constructor {
     }
 
     fn scope(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.scope.clone()
+        self.scope.scope.as_ref()?.upgrade()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {
@@ -449,7 +449,7 @@ pub struct Predicate {
 }
 
 impl Predicate {
-    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut predicate: PredicateDef) -> Rc<Self> {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, mut predicate: PredicateDef) -> Rc<Self> {
         Rc::new(Self {
             core: core.clone(),
             name: std::mem::take(&mut predicate.name),
@@ -490,7 +490,7 @@ impl Type for Predicate {
         if self.scope.scope.is_none() {
             self.name.clone()
         } else {
-            let class = self.scope.scope.as_ref().unwrap().clone().as_class().unwrap();
+            let class = self.scope.scope.as_ref().expect("Predicate scope should have a parent").upgrade().expect("Predicate scope parent should be valid").as_class().expect("Predicate scope parent should be a class");
             format!("{}.{}", class.full_name(), self.name)
         }
     }
@@ -514,7 +514,7 @@ impl Scope for Predicate {
     }
 
     fn scope(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.scope.clone()
+        self.scope.scope.as_ref()?.upgrade()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {
@@ -572,16 +572,19 @@ pub struct CommonClass {
 }
 
 impl CommonClass {
-    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Rc<Self> {
-        let c = Rc::new(Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Weak<dyn Scope>>, mut class: ClassDef) -> Rc<Self> {
+        let name = std::mem::take(&mut class.name);
+        let parents = std::mem::take(&mut class.parents);
+        let constructors_def = if class.constructors.is_empty() { vec![ConstructorDef { args: Vec::new(), init: Vec::new(), statements: Vec::new() }] } else { std::mem::take(&mut class.constructors) };
+        let scope = CommonScope::from_class(core.clone(), scope, class);
+        Rc::new_cyclic(|weak_self: &Weak<CommonClass>| Self {
             core: core.clone(),
-            name: std::mem::take(&mut class.name),
-            parents: std::mem::take(&mut class.parents),
-            constructors: std::mem::take(&mut class.constructors).into_iter().map(|c| Constructor::new(core.clone(), scope.clone(), c)).collect(),
-            scope: CommonScope::from_class(core.clone(), scope.clone(), class),
+            name,
+            parents,
+            constructors: constructors_def.into_iter().map(|c| Constructor::new(core.clone(), Some(weak_self.clone()), c)).collect(),
+            scope,
             instances: RefCell::new(Vec::new()),
-        });
-        c
+        })
     }
 }
 
@@ -594,7 +597,7 @@ impl Type for CommonClass {
         if self.scope.scope.is_none() {
             self.name.clone()
         } else {
-            let class = self.scope.scope.as_ref().unwrap().clone().as_class().unwrap();
+            let class = self.scope.scope.as_ref().expect("Class scope should have a parent").upgrade().expect("Class scope parent should be valid").as_class().expect("Class scope parent should be a class");
             format!("{}.{}", class.full_name(), self.name)
         }
     }
@@ -616,11 +619,11 @@ impl Type for CommonClass {
 
 impl Scope for CommonClass {
     fn core(self: Rc<Self>) -> Rc<dyn Core> {
-        self.core.upgrade().unwrap()
+        self.core.upgrade().expect("Class core should be valid")
     }
 
     fn scope(&self) -> Option<Rc<dyn Scope>> {
-        self.scope.scope.clone()
+        self.scope.scope.as_ref()?.upgrade()
     }
 
     fn get_field(&self, name: &str) -> Option<Rc<Field>> {
