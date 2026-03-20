@@ -1,7 +1,7 @@
 use crate::{
     core::Core,
     env::{Atom, BoolExpr, CommonEnv, Env, Object, Var},
-    language::{ClassDef, ConstructorDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef, RiddleError, Statement, execute},
+    language::{ClassDef, ConstructorDef, Expr, MethodDef, PredicateDef, ProblemDef, RiddleError, Statement, execute},
 };
 use std::{
     any::Any,
@@ -17,9 +17,6 @@ pub trait Type {
     }
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
     fn as_class(self: Rc<Self>) -> Option<Rc<dyn Class>> {
-        None
-    }
-    fn as_enum(self: Rc<Self>) -> Option<Rc<Enum>> {
         None
     }
     fn as_predicate(self: Rc<Self>) -> Option<Rc<Predicate>> {
@@ -232,9 +229,6 @@ impl CommonScope {
         }
         for class_def in problem.classes {
             self.classes.borrow_mut().insert(class_def.name.clone(), Rc::new(CommonClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class_def)));
-        }
-        for enum_def in problem.enums {
-            self.classes.borrow_mut().insert(enum_def.name.clone(), Rc::new(Enum::new(self.core.clone(), enum_def)));
         }
     }
 }
@@ -688,47 +682,5 @@ pub fn arith_class(cr: &dyn Core, terms: &[Rc<dyn Var>]) -> Result<Rc<dyn Type>,
         Ok(cr.get_type("real").expect("real class not found"))
     } else {
         Err(RiddleError::TypeError("Invalid types for arithmetic operation".into()))
-    }
-}
-
-pub struct Enum {
-    core: Weak<dyn Core>,
-    name: String,
-    values: Vec<String>,
-}
-
-impl Enum {
-    pub fn new(core: Weak<dyn Core>, enum_def: EnumDef) -> Self {
-        Self { core, name: enum_def.name, values: enum_def.values }
-    }
-
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    pub fn values(&self) -> &[String] {
-        &self.values
-    }
-}
-
-impl Type for Enum {
-    fn name(&self) -> &str {
-        &self.name
-    }
-
-    fn full_name(&self) -> String {
-        self.name.clone()
-    }
-
-    fn as_any(self: Rc<Self>) -> Rc<dyn Any> {
-        self
-    }
-
-    fn as_enum(self: Rc<Self>) -> Option<Rc<Enum>> {
-        Some(self)
-    }
-
-    fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
-        self.core.upgrade().unwrap().new_enum(self.clone()).expect("Failed to create enum instance")
     }
 }

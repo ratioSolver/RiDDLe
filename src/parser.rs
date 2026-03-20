@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, iter::Peekable};
 
 use crate::{
-    language::{ClassDef, ConstructorDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
+    language::{ClassDef, ConstructorDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
     lexer::{Lexer, Token},
 };
 
@@ -42,12 +42,10 @@ impl<'a> Parser<'a> {
         let mut methods = Vec::new();
         let mut predicates = Vec::new();
         let mut classes = Vec::new();
-        let mut enums = Vec::new();
         let mut statements = Vec::new();
         while self.peek(0).is_some() {
             match self.peek(0) {
                 Some(Token::Class) => classes.push(self.parse_class()?),
-                Some(Token::Enum) => enums.push(self.parse_enum()?),
                 Some(Token::Predicate) => predicates.push(self.parse_predicate()?),
                 Some(Token::Void) => methods.push(self.parse_method()?),
                 _ => {
@@ -70,31 +68,7 @@ impl<'a> Parser<'a> {
                 }
             }
         }
-        Ok(ProblemDef { methods, predicates, classes, enums, statements })
-    }
-
-    pub(crate) fn parse_enum(&mut self) -> Result<EnumDef, String> {
-        self.expect(Token::Enum)?;
-        let name = match self.next() {
-            Some(Token::Identifier(name)) => name,
-            _ => return Err("Expected enum name".to_string()),
-        };
-        self.expect(Token::LBrace)?;
-        let mut values = Vec::new();
-        while !matches!(self.peek(0), Some(Token::RBrace)) {
-            let value = match self.next() {
-                Some(Token::Identifier(value)) => value,
-                _ => return Err("Expected enum value".to_string()),
-            };
-            values.push(value);
-            if let Some(Token::Comma) = self.peek(0) {
-                self.expect(Token::Comma)?; // consume ','
-            } else {
-                break;
-            }
-        }
-        self.expect(Token::RBrace)?;
-        Ok(EnumDef { name, values })
+        Ok(ProblemDef { methods, predicates, classes, statements })
     }
 
     pub(crate) fn parse_class(&mut self) -> Result<ClassDef, String> {
@@ -134,13 +108,11 @@ impl<'a> Parser<'a> {
         let mut methods = Vec::new();
         let mut predicates = Vec::new();
         let mut classes = Vec::new();
-        let mut enums = Vec::new();
         while !matches!(self.peek(0), Some(Token::RBrace)) {
             match self.peek(0) {
                 Some(Token::Predicate) => predicates.push(self.parse_predicate()?),
                 Some(Token::Void) => methods.push(self.parse_method()?),
                 Some(Token::Class) => classes.push(self.parse_class()?),
-                Some(Token::Enum) => enums.push(self.parse_enum()?),
                 _ => {
                     // Lookahead to distinguish between constructor and field/method declaration
                     let mut lookahead = 0;
@@ -214,7 +186,7 @@ impl<'a> Parser<'a> {
             }
         }
         self.expect(Token::RBrace)?;
-        Ok(ClassDef { name, parents, fields, constructors, methods, predicates, classes, enums })
+        Ok(ClassDef { name, parents, fields, constructors, methods, predicates, classes })
     }
 
     pub(crate) fn parse_constructor(&mut self) -> Result<ConstructorDef, String> {
@@ -1015,18 +987,6 @@ mod tests {
         } else {
             panic!("Expected conjunction expression in predicate body");
         }
-    }
-
-    #[test]
-    fn test_enum() {
-        let input = r#"
-            enum Color { Red, Green, Blue }
-        "#;
-        let lexer = Lexer::new(input);
-        let mut parser = Parser::new(lexer);
-        let enum_def = parser.parse_enum().expect("Failed to parse enum");
-        assert_eq!(enum_def.name, "Color");
-        assert_eq!(enum_def.values, vec!["Red".to_string(), "Green".to_string(), "Blue".to_string()]);
     }
 
     #[test]

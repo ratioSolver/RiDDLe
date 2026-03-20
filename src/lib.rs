@@ -1,5 +1,5 @@
 use crate::{
-    language::{ClassDef, ConstructorDef, EnumDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
+    language::{ClassDef, ConstructorDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
     lexer::Lexer,
     parser::Parser,
 };
@@ -15,12 +15,6 @@ pub fn parse_problem(input: &str) -> Result<ProblemDef, String> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_problem()
-}
-
-pub fn parse_enum(input: &str) -> Result<EnumDef, String> {
-    let lexer = Lexer::new(input);
-    let mut parser = Parser::new(lexer);
-    parser.parse_enum()
 }
 
 pub fn parse_class(input: &str) -> Result<ClassDef, String> {

@@ -38,7 +38,6 @@ pub(crate) enum Token {
     String,
     Class,
     Predicate,
-    Enum,
     New,
     For,
     This,
@@ -292,7 +291,6 @@ impl<'a> Lexer<'a> {
             "string" => Token::String,
             "class" => Token::Class,
             "predicate" => Token::Predicate,
-            "enum" => Token::Enum,
             "new" => Token::New,
             "for" => Token::For,
             "this" => Token::This,
@@ -375,9 +373,9 @@ mod tests {
 
     #[test]
     fn test_lexer_keywords() {
-        let input = "int real string class predicate enum new for this void return fact goal or";
+        let input = "int real string class predicate new for this void return fact goal or";
         let mut lexer = Lexer::new(input);
-        let expected_tokens = vec![Token::Int, Token::Real, Token::String, Token::Class, Token::Predicate, Token::Enum, Token::New, Token::For, Token::This, Token::Void, Token::Return, Token::Fact, Token::Goal, Token::Or];
+        let expected_tokens = vec![Token::Int, Token::Real, Token::String, Token::Class, Token::Predicate, Token::New, Token::For, Token::This, Token::Void, Token::Return, Token::Fact, Token::Goal, Token::Or];
         for expected in expected_tokens {
             let token = lexer.next_token();
             assert_eq!(token, expected);
