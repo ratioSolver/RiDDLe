@@ -573,14 +573,18 @@ pub struct CommonClass {
 
 impl CommonClass {
     pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Self {
-        Self {
+        let mut c = Self {
             core: core.clone(),
             name: std::mem::take(&mut class.name),
             parents: std::mem::take(&mut class.parents),
             constructors: std::mem::take(&mut class.constructors).into_iter().map(|c| Constructor::new(core.clone(), scope.clone(), c)).collect(),
-            scope: CommonScope::from_class(core, scope, class),
+            scope: CommonScope::from_class(core.clone(), scope.clone(), class),
             instances: RefCell::new(Vec::new()),
+        };
+        if c.constructors.is_empty() {
+            c.constructors.push(Constructor::new(core, scope, ConstructorDef { args: Vec::new(), init: Vec::new(), statements: Vec::new() }));
         }
+        c
     }
 }
 
