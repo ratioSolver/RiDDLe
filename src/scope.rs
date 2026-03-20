@@ -188,10 +188,10 @@ impl CommonScope {
             }
         }
         for method_def in class.methods {
-            scope.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Rc::new(Method::new(core.clone(), Some(scope.clone()), method_def)));
+            scope.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Method::new(core.clone(), Some(scope.clone()), method_def));
         }
         for predicate_def in class.predicates {
-            scope.predicates.borrow_mut().insert(predicate_def.name.clone(), Rc::new(Predicate::new(core.clone(), Some(scope.clone()), predicate_def)));
+            scope.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(core.clone(), Some(scope.clone()), predicate_def));
         }
         scope
     }
@@ -222,13 +222,13 @@ impl CommonScope {
 
     pub fn add_problem(&self, problem: ProblemDef) {
         for method_def in problem.methods {
-            self.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Rc::new(Method::new(self.core.clone(), Some(self.core.upgrade().unwrap()), method_def)));
+            self.methods.borrow_mut().entry(method_def.name.clone()).or_default().push(Method::new(self.core.clone(), Some(self.core.upgrade().unwrap()), method_def));
         }
         for predicate_def in problem.predicates {
-            self.predicates.borrow_mut().insert(predicate_def.name.clone(), Rc::new(Predicate::new(self.core.clone(), Some(self.core.upgrade().unwrap()), predicate_def)));
+            self.predicates.borrow_mut().insert(predicate_def.name.clone(), Predicate::new(self.core.clone(), Some(self.core.upgrade().unwrap()), predicate_def));
         }
         for class_def in problem.classes {
-            self.classes.borrow_mut().insert(class_def.name.clone(), Rc::new(CommonClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class_def)));
+            self.classes.borrow_mut().insert(class_def.name.clone(), CommonClass::new(self.core.clone(), Some(self.core.upgrade().unwrap()), class_def));
         }
     }
 }
@@ -288,15 +288,15 @@ pub struct Method {
 }
 
 impl Method {
-    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut method: MethodDef) -> Self {
-        Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut method: MethodDef) -> Rc<Self> {
+        Rc::new(Self {
             core: core.clone(),
             name: std::mem::take(&mut method.name),
             return_type: std::mem::take(&mut method.return_type),
             args: std::mem::take(&mut method.args),
             statements: std::mem::take(&mut method.statements),
             scope: Rc::new(CommonScope::from_method(core, scope, method)),
-        }
+        })
     }
 
     pub fn name(&self) -> &str {
@@ -449,8 +449,8 @@ pub struct Predicate {
 }
 
 impl Predicate {
-    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut predicate: PredicateDef) -> Self {
-        Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut predicate: PredicateDef) -> Rc<Self> {
+        Rc::new(Self {
             core: core.clone(),
             name: std::mem::take(&mut predicate.name),
             parents: std::mem::take(&mut predicate.parents),
@@ -458,7 +458,7 @@ impl Predicate {
             statements: std::mem::take(&mut predicate.statements),
             scope: CommonScope::from_predicate(core, scope, predicate),
             atoms: RefCell::new(Vec::new()),
-        }
+        })
     }
 
     pub fn parents(&self) -> &[Vec<String>] {
@@ -572,18 +572,15 @@ pub struct CommonClass {
 }
 
 impl CommonClass {
-    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Self {
-        let mut c = Self {
+    pub fn new(core: Weak<dyn Core>, scope: Option<Rc<dyn Scope>>, mut class: ClassDef) -> Rc<Self> {
+        let c = Rc::new(Self {
             core: core.clone(),
             name: std::mem::take(&mut class.name),
             parents: std::mem::take(&mut class.parents),
             constructors: std::mem::take(&mut class.constructors).into_iter().map(|c| Constructor::new(core.clone(), scope.clone(), c)).collect(),
             scope: CommonScope::from_class(core.clone(), scope.clone(), class),
             instances: RefCell::new(Vec::new()),
-        };
-        if c.constructors.is_empty() {
-            c.constructors.push(Constructor::new(core, scope, ConstructorDef { args: Vec::new(), init: Vec::new(), statements: Vec::new() }));
-        }
+        });
         c
     }
 }
