@@ -7,10 +7,11 @@ use std::{
     any::Any,
     cell::RefCell,
     collections::HashMap,
+    fmt,
     rc::{Rc, Weak},
 };
 
-pub trait Type {
+pub trait Type: fmt::Debug {
     fn name(&self) -> &str;
     fn full_name(&self) -> String {
         self.name().to_string()
@@ -25,6 +26,7 @@ pub trait Type {
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var>;
 }
 
+#[derive(Debug)]
 pub struct BoolType {
     core: Weak<dyn Core>,
 }
@@ -50,6 +52,7 @@ impl Type for BoolType {
     }
 }
 
+#[derive(Debug)]
 pub struct IntType {
     core: Weak<dyn Core>,
 }
@@ -74,6 +77,7 @@ impl Type for IntType {
     }
 }
 
+#[derive(Debug)]
 pub struct RealType {
     core: Weak<dyn Core>,
 }
@@ -98,6 +102,7 @@ impl Type for RealType {
     }
 }
 
+#[derive(Debug)]
 pub struct StringType {
     core: Weak<dyn Core>,
 }
@@ -122,6 +127,7 @@ impl Type for StringType {
     }
 }
 
+#[derive(Debug)]
 pub struct Field {
     name: String,
     field_type: Vec<String>,
@@ -159,6 +165,7 @@ pub trait Scope {
     fn get_predicate(&self, name: &str) -> Option<Rc<Predicate>>;
 }
 
+#[derive(Debug)]
 pub struct CommonScope {
     core: Weak<dyn Core>,
     scope: Option<Weak<dyn Scope>>,
@@ -278,6 +285,7 @@ impl Scope for CommonScope {
     }
 }
 
+#[derive(Debug)]
 pub struct Method {
     core: Weak<dyn Core>,
     scope: Rc<CommonScope>,
@@ -366,6 +374,7 @@ impl Scope for Method {
     }
 }
 
+#[derive(Debug)]
 pub struct Constructor {
     core: Weak<dyn Core>,
     scope: Rc<CommonScope>,
@@ -438,6 +447,7 @@ impl Scope for Constructor {
     }
 }
 
+#[derive(Debug)]
 pub struct Predicate {
     core: Weak<dyn Core>,
     scope: CommonScope,
@@ -562,6 +572,7 @@ pub fn is_assignable_from(target: &Rc<dyn Type>, source: &Rc<dyn Type>) -> bool 
     false
 }
 
+#[derive(Debug)]
 pub struct CommonClass {
     core: Weak<dyn Core>,
     scope: Rc<CommonScope>,

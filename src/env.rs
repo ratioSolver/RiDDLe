@@ -3,10 +3,11 @@ use std::{
     any::Any,
     cell::RefCell,
     collections::HashMap,
+    fmt,
     rc::{Rc, Weak},
 };
 
-pub trait Var {
+pub trait Var: fmt::Debug {
     fn var_type(&self) -> Rc<dyn Type>;
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
     fn as_env(self: Rc<Self>) -> Option<Rc<dyn Env>> {
@@ -14,7 +15,7 @@ pub trait Var {
     }
 }
 
-pub trait Env {
+pub trait Env: fmt::Debug {
     fn parent(&self) -> Option<Rc<dyn Env>>;
     fn get(&self, name: &str) -> Option<Rc<dyn Var>>;
     fn set(&self, name: String, value: Rc<dyn Var>);
@@ -30,6 +31,7 @@ impl<E: Env + ?Sized> EnvExt for E {
     }
 }
 
+#[derive(Debug)]
 pub struct CommonEnv {
     parent: Option<Rc<dyn Env>>,
     variables: RefCell<HashMap<String, Rc<dyn Var>>>,
@@ -55,6 +57,7 @@ impl Env for CommonEnv {
     }
 }
 
+#[derive(Debug)]
 pub struct Atom {
     predicate: Weak<Predicate>,
     fact: bool,
@@ -104,6 +107,7 @@ impl Env for Atom {
     }
 }
 
+#[derive(Debug)]
 pub struct Object {
     class: Weak<dyn Type>,
     env: CommonEnv,
@@ -143,6 +147,7 @@ impl Env for Object {
     }
 }
 
+#[derive(Debug)]
 pub enum BoolExpr {
     Term { var_type: Weak<BoolType>, term: Rc<dyn Var> },
     Not { var_type: Weak<BoolType>, term: Rc<BoolExpr> },

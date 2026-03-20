@@ -43,6 +43,7 @@ pub trait Core: Scope + Env {
     }
 }
 
+#[derive(Debug)]
 pub struct CommonCore {
     scope: Rc<CommonScope>,
     env: Rc<CommonEnv>,
@@ -129,6 +130,7 @@ mod tests {
         }
     }
 
+    #[derive(Debug)]
     struct TestCore {
         core: Rc<CommonCore>,
         id_counter: RefCell<usize>,
