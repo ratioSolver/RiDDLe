@@ -8,9 +8,6 @@ use std::{
 };
 
 pub trait Var: fmt::Debug {
-    fn id(self: Rc<Self>) -> usize {
-        Rc::as_ptr(&self) as *const () as usize
-    }
     fn var_type(&self) -> Rc<dyn Type>;
     fn as_any(self: Rc<Self>) -> Rc<dyn Any>;
     fn as_env(self: Rc<Self>) -> Option<Rc<dyn Env>> {
