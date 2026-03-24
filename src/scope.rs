@@ -490,8 +490,18 @@ impl Predicate {
     pub fn new_atom(self: Rc<Self>, fact: bool, args: HashMap<String, Rc<dyn Var>>) -> Rc<Atom> {
         let atom = Rc::new(Atom::new(self.clone(), fact, args));
         self.atoms.borrow_mut().push(atom.clone());
+        for parent in &self.parents {
+            let (first, rest) = parent.split_first().expect("Parent predicate name should not be empty");
+            let root = self.get_predicate(first).expect("Parent predicate should exist");
+            let parent_predicate = rest.iter().fold(root, |current, part| current.get_predicate(part).expect("Parent predicate should exist"));
+            parent_predicate.as_any().downcast_ref::<Predicate>().expect("Parent predicate should be a Predicate").atoms.borrow_mut().push(atom.clone());
+        }
         self.core().new_atom(atom.clone());
         atom
+    }
+
+    pub fn atoms(&self) -> Vec<Rc<Atom>> {
+        self.atoms.borrow().clone()
     }
 }
 
@@ -554,6 +564,7 @@ pub trait Class: Type + Scope {
     fn constructors(&self) -> &[Constructor];
     fn constructor(&self, args: &[Rc<dyn Type>]) -> Option<&Constructor>;
     fn predicates(&self) -> Vec<Rc<Predicate>>;
+    fn classes(&self) -> Vec<Rc<dyn Class>>;
     fn instances(&self) -> Vec<Rc<Object>>;
 }
 
@@ -695,6 +706,10 @@ impl Class for CommonClass {
 
     fn predicates(&self) -> Vec<Rc<Predicate>> {
         self.scope.predicates.borrow().values().cloned().collect()
+    }
+
+    fn classes(&self) -> Vec<Rc<dyn Class>> {
+        self.scope.classes.borrow().values().filter_map(|t| t.clone().as_class()).collect()
     }
 
     fn instances(&self) -> Vec<Rc<Object>> {

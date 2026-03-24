@@ -104,11 +104,16 @@ impl CommonCore {
                 terms.insert(id, instance.var_type().name().to_string());
             }
             for pred in tp.predicates() {
-                let id = Rc::as_ptr(&pred) as *const () as usize;
-                atoms.insert(id, pred.name().to_string());
+                for atom in pred.atoms() {
+                    let id = Rc::as_ptr(&atom) as *const () as usize;
+                    atoms.insert(id, pred.name().to_string());
+                }
+            }
+            for class in tp.classes() {
+                q.push_back(class);
             }
         }
-        json!({ "terms": terms })
+        json!({ "terms": terms, "atoms": atoms })
     }
 }
 
