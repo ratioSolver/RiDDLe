@@ -1,10 +1,15 @@
+use serde_json::{Value, json};
+
 use crate::{
     env::{Atom, BoolExpr, CommonEnv, Env, Var},
     language::{Disjunction, RiddleError, execute},
     parse_problem,
     scope::{BoolType, CommonScope, Field, IntType, Method, Predicate, RealType, Scope, StringType, Type},
 };
-use std::rc::{Rc, Weak};
+use std::{
+    collections::{HashMap, VecDeque},
+    rc::{Rc, Weak},
+};
 
 pub trait Core: Scope + Env {
     fn new_bool(&self, value: bool) -> Rc<dyn Var>;
@@ -82,6 +87,28 @@ impl CommonCore {
     /// Registers a type in the core type table under its declared name.
     pub fn add_type(&self, class: Rc<dyn Type>) {
         self.scope.classes.borrow_mut().insert(class.name().to_string(), class);
+    }
+
+    pub fn to_json(&self) -> Value {
+        let mut terms = HashMap::new();
+        let mut atoms = HashMap::new();
+        let mut q = VecDeque::new();
+        for tp in self.scope.classes.borrow().values() {
+            if let Some(class) = tp.clone().as_class() {
+                q.push_back(class.clone());
+            }
+        }
+        while let Some(tp) = q.pop_front() {
+            for instance in tp.instances() {
+                let id = Rc::as_ptr(&instance) as *const () as usize;
+                terms.insert(id, instance.var_type().name().to_string());
+            }
+            for pred in tp.predicates() {
+                let id = Rc::as_ptr(&pred) as *const () as usize;
+                atoms.insert(id, pred.name().to_string());
+            }
+        }
+        json!({ "terms": terms })
     }
 }
 

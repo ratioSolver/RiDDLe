@@ -9,3 +9,4 @@ repository = "https://github.com/ratioSolver/RiDDLe"
 license-file = "LICENSE.txt"
 
 [dependencies]
+serde_json = "1.0.149"

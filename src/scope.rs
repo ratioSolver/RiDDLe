@@ -553,6 +553,7 @@ pub trait Class: Type + Scope {
     fn parents(&self) -> &[Vec<String>];
     fn constructors(&self) -> &[Constructor];
     fn constructor(&self, args: &[Rc<dyn Type>]) -> Option<&Constructor>;
+    fn predicates(&self) -> Vec<Rc<Predicate>>;
     fn instances(&self) -> Vec<Rc<Object>>;
 }
 
@@ -629,6 +630,12 @@ impl Type for CommonClass {
     fn new_instance(self: Rc<Self>) -> Rc<dyn Var> {
         let instance = Rc::new(Object::new(self.clone(), None));
         self.instances.borrow_mut().push(instance.clone());
+        for parent in &self.parents {
+            let (first, rest) = parent.split_first().expect("Parent class name should not be empty");
+            let root = self.get_type(first).expect("Parent class should exist").as_class().expect("Parent class should be a class");
+            let parent_class = rest.iter().fold(root, |current, part| current.get_type(part).expect("Parent class should exist").as_class().expect("Parent class should be a class"));
+            parent_class.as_any().downcast_ref::<CommonClass>().expect("Parent class should be a CommonClass").instances.borrow_mut().push(instance.clone());
+        }
         instance
     }
 }
@@ -684,6 +691,10 @@ impl Class for CommonClass {
             }
             true
         })
+    }
+
+    fn predicates(&self) -> Vec<Rc<Predicate>> {
+        self.scope.predicates.borrow().values().cloned().collect()
     }
 
     fn instances(&self) -> Vec<Rc<Object>> {
