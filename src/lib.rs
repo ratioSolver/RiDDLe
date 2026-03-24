@@ -3,6 +3,7 @@ use crate::{
     lexer::Lexer,
     parser::Parser,
 };
+pub use serde_json;
 
 pub mod core;
 pub mod env;
