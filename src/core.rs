@@ -1,6 +1,7 @@
 use serde_json::{Value, json};
 
 use crate::{
+    ToJson,
     env::{Atom, BoolExpr, CommonEnv, Env, Var},
     language::{Disjunction, RiddleError, execute},
     parse_problem,
@@ -88,8 +89,10 @@ impl CommonCore {
     pub fn add_type(&self, class: Rc<dyn Type>) {
         self.scope.classes.borrow_mut().insert(class.name().to_string(), class);
     }
+}
 
-    pub fn to_json(&self) -> Value {
+impl ToJson for CommonCore {
+    fn to_json(&self) -> Value {
         let mut terms = HashMap::new();
         let mut atoms = HashMap::new();
         let mut q = VecDeque::new();

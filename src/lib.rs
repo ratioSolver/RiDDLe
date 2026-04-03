@@ -4,6 +4,7 @@ use crate::{
     parser::Parser,
 };
 pub use serde_json;
+use serde_json::Value;
 
 pub mod core;
 pub mod env;
@@ -52,4 +53,8 @@ pub fn parse_expression(input: &str) -> Expr {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_expression().expect("Failed to parse expression")
+}
+
+pub trait ToJson {
+    fn to_json(&self) -> Value;
 }
