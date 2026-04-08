@@ -75,14 +75,15 @@ impl CommonCore {
     /// then each statement is executed in order using this core scope
     /// and environment.
     ///
-    /// Panics if parsing fails or if statement execution returns an error.
-    pub fn read(&self, riddle: &str) {
+    /// Returns an error if parsing or execution fails.
+    pub fn read(&self, riddle: &str) -> Result<(), RiddleError> {
         let mut problem = parse_problem(riddle).expect("Failed to parse problem");
         let statments = std::mem::take(&mut problem.statements);
         self.scope.add_problem(problem);
         for stmt in statments {
-            execute(self.scope.clone(), self.env.clone(), &stmt).expect("Failed to execute statement");
+            execute(self.scope.clone(), self.env.clone(), &stmt)?;
         }
+        Ok(())
     }
 
     /// Registers a type in the core type table under its declared name.
@@ -198,8 +199,8 @@ mod tests {
             })
         }
 
-        fn read(&self, riddle: &str) {
-            self.core.read(riddle);
+        fn read(&self, riddle: &str) -> Result<(), RiddleError> {
+            self.core.read(riddle)
         }
 
         fn next_id(&self) -> usize {
@@ -327,7 +328,7 @@ mod tests {
     #[test]
     fn read_problem() {
         let core = TestCore::new();
-        core.read("bool a, b, c; (a & b) | c;");
+        core.read("bool a, b, c; (a & b) | c;").expect("Failed to read problem with boolean variables and expression");
     }
 
     #[test]
@@ -339,7 +340,8 @@ mod tests {
                 class Inner {}
             }
             "#,
-        );
+        )
+        .expect("Failed to read problem with nested classes");
 
         let outer = core.get_type("Outer").expect("Outer class should be registered").as_class().expect("Outer should be a class");
         let inner = outer.get_type("Inner").expect("Inner class should be registered in the enclosing class scope");
