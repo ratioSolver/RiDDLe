@@ -332,7 +332,7 @@ impl Method {
             return Err(RiddleError::RuntimeError(format!("Expected {} arguments, got {}", self.args.len(), args.len())));
         }
         let method_env = Rc::new(CommonEnv::new(Some(env)));
-        for ((arg_type, arg_name), arg_value) in self.args.iter().zip(args.into_iter()) {
+        for ((arg_type, arg_name), arg_value) in self.args.iter().zip(args) {
             if !arg_value.var_type().full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
                 return Err(RiddleError::TypeError(format!("Argument '{}' expected to be of type '{}', got '{}'", arg_name, arg_type.join("."), arg_value.var_type().name())));
             }
@@ -412,7 +412,7 @@ impl Constructor {
         let object = class.new_instance();
         let constructor_env = Rc::new(CommonEnv::new(Some(env)));
         constructor_env.set("this".to_string(), object.clone());
-        for ((arg_type, arg_name), arg_value) in self.args.iter().zip(args.into_iter()) {
+        for ((arg_type, arg_name), arg_value) in self.args.iter().zip(args) {
             if !arg_value.var_type().full_name().split('.').eq(arg_type.iter().map(|s| s.as_str())) {
                 return Err(RiddleError::TypeError(format!("Argument '{}' expected to be of type '{}', got '{}'", arg_name, arg_type.join("."), arg_value.var_type().name())));
             }
