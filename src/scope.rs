@@ -408,7 +408,7 @@ impl Constructor {
         if args.len() != self.args.len() {
             return Err(RiddleError::RuntimeError(format!("Expected {} arguments, got {}", self.args.len(), args.len())));
         }
-        let class = self.scope.scope.as_ref().expect("Constructor scope should have a parent").upgrade().expect("Constructor scope parent should be valid").as_class().expect("Constructor scope parent should be a class");
+        let class = self.scope.scope.as_ref().and_then(|s| s.upgrade()).and_then(|s| s.as_class()).ok_or_else(|| RiddleError::RuntimeError("Constructor is not defined within a class".into()))?;
         let object = class.new_instance();
         let constructor_env = Rc::new(CommonEnv::new(Some(env)));
         constructor_env.set("this".to_string(), object.clone());
