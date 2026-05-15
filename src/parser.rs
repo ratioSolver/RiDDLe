@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, iter::Peekable};
 
 use crate::{
-    language::{ClassDef, ConstructorDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
+    language::{ClassDef, ConstructorDef, Expr, MethodDef, PredicateDef, ProblemDef, RiddleError, Statement},
     lexer::{Lexer, Token},
 };
 
@@ -30,15 +30,15 @@ impl<'a> Parser<'a> {
         if let Some(token) = self.lookahead.pop_front() { Some(token) } else { self.lexer.next() }
     }
 
-    fn expect(&mut self, expected: Token) -> Result<Token, String> {
+    fn expect(&mut self, expected: Token) -> Result<Token, RiddleError> {
         match self.next() {
             Some(token) if token == expected => Ok(token),
-            Some(token) => Err(format!("Expected {:?}, found {:?}", expected, token)),
-            None => Err(format!("Expected {:?}, found end of input", expected)),
+            Some(token) => Err(RiddleError::RuntimeError(format!("Expected {:?}, found {:?}", expected, token))),
+            None => Err(RiddleError::RuntimeError(format!("Expected {:?}, found end of input", expected))),
         }
     }
 
-    pub(crate) fn parse_problem(&mut self) -> Result<ProblemDef, String> {
+    pub(crate) fn parse_problem(&mut self) -> Result<ProblemDef, RiddleError> {
         let mut methods = Vec::new();
         let mut predicates = Vec::new();
         let mut classes = Vec::new();
@@ -71,11 +71,11 @@ impl<'a> Parser<'a> {
         Ok(ProblemDef { methods, predicates, classes, statements })
     }
 
-    pub(crate) fn parse_class(&mut self) -> Result<ClassDef, String> {
+    pub(crate) fn parse_class(&mut self) -> Result<ClassDef, RiddleError> {
         self.expect(Token::Class)?;
         let name = match self.next() {
             Some(Token::Identifier(name)) => name,
-            _ => return Err("Expected class name".to_string()),
+            _ => return Err(RiddleError::RuntimeError("Expected class name".into())),
         };
         let mut parents = Vec::new();
         if let Some(Token::Colon) = self.peek(0) {
@@ -83,7 +83,7 @@ impl<'a> Parser<'a> {
             loop {
                 let parent_name = match self.next() {
                     Some(Token::Identifier(name)) => name,
-                    _ => return Err("Expected parent class name".to_string()),
+                    _ => return Err(RiddleError::RuntimeError("Expected parent class name".into())),
                 };
                 let mut ids = vec![parent_name];
                 while let Some(Token::Dot) = self.peek(0) {
@@ -91,7 +91,7 @@ impl<'a> Parser<'a> {
                     if let Some(Token::Identifier(next_name)) = self.next() {
                         ids.push(next_name);
                     } else {
-                        return Err("Expected identifier after '.' in parent class name".to_string());
+                        return Err(RiddleError::RuntimeError("Expected identifier after '.' in parent class name".into()));
                     }
                 }
                 parents.push(ids);
@@ -144,17 +144,17 @@ impl<'a> Parser<'a> {
                                             if let Some(Token::Identifier(next_name)) = self.next() {
                                                 ids.push(next_name);
                                             } else {
-                                                return Err("Expected identifier after '.' in type".to_string());
+                                                return Err(RiddleError::RuntimeError("Expected identifier after '.' in type".to_string()));
                                             }
                                         }
                                         ids
                                     }
-                                    Some(token) => return Err(format!("Unexpected token in type: {:?}", token)),
-                                    None => return Err("Unexpected end of input while parsing type".to_string()),
+                                    Some(token) => return Err(RiddleError::RuntimeError(format!("Unexpected token in type: {:?}", token))),
+                                    None => return Err(RiddleError::RuntimeError("Unexpected end of input while parsing type".to_string())),
                                 };
                                 let field_name = match self.next() {
                                     Some(Token::Identifier(name)) => name,
-                                    _ => return Err("Expected field name".to_string()),
+                                    _ => return Err(RiddleError::RuntimeError("Expected field name".to_string())),
                                 };
                                 let init_expr = if let Some(Token::Equal) = self.peek(0) {
                                     self.expect(Token::Equal)?; // consume '='
@@ -167,7 +167,7 @@ impl<'a> Parser<'a> {
                                     self.expect(Token::Comma)?; // consume ','
                                     let field_name = match self.next() {
                                         Some(Token::Identifier(name)) => name,
-                                        _ => return Err("Expected field name".to_string()),
+                                        _ => return Err(RiddleError::RuntimeError("Expected field name".to_string())),
                                     };
                                     let init_expr = if let Some(Token::Equal) = self.peek(0) {
                                         self.expect(Token::Equal)?; // consume '='
@@ -189,10 +189,10 @@ impl<'a> Parser<'a> {
         Ok(ClassDef { name, parents, fields, constructors, methods, predicates, classes })
     }
 
-    pub(crate) fn parse_constructor(&mut self) -> Result<ConstructorDef, String> {
+    pub(crate) fn parse_constructor(&mut self) -> Result<ConstructorDef, RiddleError> {
         let _ = match self.next() {
             Some(Token::Identifier(name)) => name,
-            _ => return Err("Expected constructor name".to_string()),
+            _ => return Err(RiddleError::RuntimeError("Expected constructor name".to_string())),
         };
         self.expect(Token::LParen)?;
         let mut args = Vec::new();
@@ -209,17 +209,17 @@ impl<'a> Parser<'a> {
                         if let Some(Token::Identifier(next_name)) = self.next() {
                             ids.push(next_name);
                         } else {
-                            return Err("Expected identifier after '.' in type".to_string());
+                            return Err(RiddleError::RuntimeError("Expected identifier after '.' in type".to_string()));
                         }
                     }
                     Ok(ids)
                 }
-                Some(token) => Err(format!("Unexpected token in type: {:?}", token)),
-                None => Err("Unexpected end of input while parsing type".to_string()),
+                Some(token) => Err(RiddleError::RuntimeError(format!("Unexpected token in type: {:?}", token))),
+                None => Err(RiddleError::RuntimeError("Unexpected end of input while parsing type".to_string())),
             }?;
             let arg_name = match self.next() {
                 Some(Token::Identifier(name)) => name,
-                _ => return Err("Expected identifier in constructor arguments".to_string()),
+                _ => return Err(RiddleError::RuntimeError("Expected identifier in constructor arguments".to_string())),
             };
             args.push((arg_type, arg_name));
             if let Some(Token::Comma) = self.peek(0) {
@@ -235,7 +235,7 @@ impl<'a> Parser<'a> {
             while !matches!(self.peek(0), Some(Token::LBrace)) {
                 let field_name = match self.next() {
                     Some(Token::Identifier(name)) => name,
-                    _ => return Err("Expected identifier in constructor initialization".to_string()),
+                    _ => return Err(RiddleError::RuntimeError("Expected identifier in constructor initialization".to_string())),
                 };
                 self.expect(Token::LParen)?;
                 let mut exprs = Vec::new();
@@ -265,7 +265,7 @@ impl<'a> Parser<'a> {
         Ok(ConstructorDef { args, init, statements })
     }
 
-    pub(crate) fn parse_method(&mut self) -> Result<MethodDef, String> {
+    pub(crate) fn parse_method(&mut self) -> Result<MethodDef, RiddleError> {
         let return_type = match self.peek(0) {
             Some(Token::Bool) | Some(Token::Int) | Some(Token::Real) | Some(Token::String) | Some(Token::Identifier(_)) => {
                 let return_type = match self.next().unwrap() {
@@ -280,7 +280,7 @@ impl<'a> Parser<'a> {
                             if let Some(Token::Identifier(next_name)) = self.next() {
                                 ids.push(next_name);
                             } else {
-                                return Err("Expected identifier after '.' in type".to_string());
+                                return Err(RiddleError::RuntimeError("Expected identifier after '.' in return type".to_string()));
                             }
                         }
                         ids
@@ -293,11 +293,11 @@ impl<'a> Parser<'a> {
                 self.expect(Token::Void)?; // consume 'void'
                 None
             }
-            _ => return Err("Expected return type or 'void'".to_string()),
+            _ => return Err(RiddleError::RuntimeError("Expected return type or 'void'".to_string())),
         };
         let name = match self.next() {
             Some(Token::Identifier(name)) => name,
-            _ => return Err("Expected method name".to_string()),
+            _ => return Err(RiddleError::RuntimeError("Expected method name".to_string())),
         };
         self.expect(Token::LParen)?;
         let mut args = Vec::new();
@@ -314,17 +314,17 @@ impl<'a> Parser<'a> {
                         if let Some(Token::Identifier(next_name)) = self.next() {
                             ids.push(next_name);
                         } else {
-                            return Err("Expected identifier after '.' in type".to_string());
+                            return Err(RiddleError::RuntimeError("Expected identifier after '.' in type".to_string()));
                         }
                     }
                     Ok(ids)
                 }
-                Some(token) => Err(format!("Unexpected token in type: {:?}", token)),
-                None => Err("Unexpected end of input while parsing type".to_string()),
+                Some(token) => Err(RiddleError::RuntimeError(format!("Unexpected token in type: {:?}", token))),
+                None => Err(RiddleError::RuntimeError("Unexpected end of input while parsing type".to_string())),
             }?;
             let arg_name = match self.next() {
                 Some(Token::Identifier(name)) => name,
-                _ => return Err("Expected identifier in method arguments".to_string()),
+                _ => return Err(RiddleError::RuntimeError("Expected identifier in method arguments".to_string())),
             };
             args.push((arg_type, arg_name));
             if let Some(Token::Comma) = self.peek(0) {
@@ -343,11 +343,11 @@ impl<'a> Parser<'a> {
         Ok(MethodDef { return_type, name, args, statements })
     }
 
-    pub(crate) fn parse_predicate(&mut self) -> Result<PredicateDef, String> {
+    pub(crate) fn parse_predicate(&mut self) -> Result<PredicateDef, RiddleError> {
         self.expect(Token::Predicate)?;
         let name = match self.next() {
             Some(Token::Identifier(name)) => name,
-            _ => return Err("Expected identifier after 'predicate'".to_string()),
+            _ => return Err(RiddleError::RuntimeError("Expected identifier after 'predicate'".to_string())),
         };
         self.expect(Token::LParen)?;
         let mut args = Vec::new();
@@ -364,17 +364,17 @@ impl<'a> Parser<'a> {
                         if let Some(Token::Identifier(next_name)) = self.next() {
                             ids.push(next_name);
                         } else {
-                            return Err("Expected identifier after '.' in type".to_string());
+                            return Err(RiddleError::RuntimeError("Expected identifier after '.' in type".to_string()));
                         }
                     }
                     Ok(ids)
                 }
-                Some(token) => Err(format!("Unexpected token in type: {:?}", token)),
-                None => Err("Unexpected end of input while parsing type".to_string()),
+                Some(token) => Err(RiddleError::RuntimeError(format!("Unexpected token in type: {:?}", token))),
+                None => Err(RiddleError::RuntimeError("Unexpected end of input while parsing type".to_string())),
             }?;
             let arg_name = match self.next() {
                 Some(Token::Identifier(name)) => name,
-                _ => return Err("Expected identifier in predicate arguments".to_string()),
+                _ => return Err(RiddleError::RuntimeError("Expected identifier in predicate arguments".to_string())),
             };
             args.push((arg_type, arg_name));
             if let Some(Token::Comma) = self.peek(0) {
@@ -390,7 +390,7 @@ impl<'a> Parser<'a> {
             loop {
                 let parent_name = match self.next() {
                     Some(Token::Identifier(name)) => name,
-                    _ => return Err("Expected parent predicate name".to_string()),
+                    _ => return Err(RiddleError::RuntimeError("Expected parent predicate name".to_string())),
                 };
                 let mut ids = vec![parent_name];
                 while let Some(Token::Dot) = self.peek(0) {
@@ -398,7 +398,7 @@ impl<'a> Parser<'a> {
                     if let Some(Token::Identifier(next_name)) = self.next() {
                         ids.push(next_name);
                     } else {
-                        return Err("Expected identifier after '.' in parent predicate name".to_string());
+                        return Err(RiddleError::RuntimeError("Expected identifier after '.' in parent predicate name".to_string()));
                     }
                 }
                 parents.push(ids);
@@ -418,7 +418,7 @@ impl<'a> Parser<'a> {
         Ok(PredicateDef { name, args, parents, statements })
     }
 
-    pub(crate) fn parse_statement(&mut self) -> Result<Statement, String> {
+    pub(crate) fn parse_statement(&mut self) -> Result<Statement, RiddleError> {
         match self.peek(0) {
             Some(Token::Bool | Token::Int | Token::Real | Token::String) => {
                 let field_type = match self.next().unwrap() {
@@ -429,7 +429,7 @@ impl<'a> Parser<'a> {
                 };
                 let name = match self.next() {
                     Some(Token::Identifier(name)) => name,
-                    _ => return Err("Expected variable name".to_string()),
+                    _ => return Err(RiddleError::RuntimeError("Expected variable name".into())),
                 };
                 let init_expr = if let Some(Token::Equal) = self.peek(0) {
                     self.expect(Token::Equal)?; // consume '='
@@ -442,7 +442,7 @@ impl<'a> Parser<'a> {
                     self.expect(Token::Comma)?; // consume ','
                     let name = match self.next() {
                         Some(Token::Identifier(name)) => name,
-                        _ => return Err("Expected variable name".to_string()),
+                        _ => return Err(RiddleError::RuntimeError("Expected variable name".into())),
                     };
                     let init_expr = if let Some(Token::Equal) = self.peek(0) {
                         self.expect(Token::Equal)?; // consume '='
@@ -469,14 +469,14 @@ impl<'a> Parser<'a> {
                     Some(Token::Equal) => {
                         let mut ids = match self.next() {
                             Some(Token::Identifier(name)) => vec![name],
-                            _ => return Err("Expected identifier".to_string()),
+                            _ => return Err(RiddleError::RuntimeError("Expected identifier".to_string())),
                         };
                         while let Some(Token::Dot) = self.peek(0) {
                             self.expect(Token::Dot)?; // consume '.'
                             if let Some(Token::Identifier(next_name)) = self.next() {
                                 ids.push(next_name);
                             } else {
-                                return Err("Expected identifier after '.'".to_string());
+                                return Err(RiddleError::RuntimeError("Expected identifier after '.'".to_string()));
                             }
                         }
                         self.expect(Token::Equal)?; // consume '='
@@ -487,19 +487,19 @@ impl<'a> Parser<'a> {
                     Some(Token::Identifier(_)) => {
                         let mut ids = match self.next() {
                             Some(Token::Identifier(name)) => vec![name],
-                            _ => return Err("Expected identifier".to_string()),
+                            _ => return Err(RiddleError::RuntimeError("Expected identifier".to_string())),
                         };
                         while let Some(Token::Dot) = self.peek(0) {
                             self.expect(Token::Dot)?; // consume '.'
                             if let Some(Token::Identifier(next_name)) = self.next() {
                                 ids.push(next_name);
                             } else {
-                                return Err("Expected identifier after '.'".to_string());
+                                return Err(RiddleError::RuntimeError("Expected identifier after '.'".to_string()));
                             }
                         }
                         let name = match self.next() {
                             Some(Token::Identifier(name)) => name,
-                            _ => return Err("Expected variable name".to_string()),
+                            _ => return Err(RiddleError::RuntimeError("Expected variable name".to_string())),
                         };
                         let init_expr = if let Some(Token::Equal) = self.peek(0) {
                             self.expect(Token::Equal)?; // consume '='
@@ -512,7 +512,7 @@ impl<'a> Parser<'a> {
                             self.expect(Token::Comma)?; // consume ','
                             let name = match self.next() {
                                 Some(Token::Identifier(name)) => name,
-                                _ => return Err("Expected variable name".to_string()),
+                                _ => return Err(RiddleError::RuntimeError("Expected variable name".to_string())),
                             };
                             let init_expr = if let Some(Token::Equal) = self.peek(0) {
                                 self.expect(Token::Equal)?; // consume '='
@@ -565,19 +565,19 @@ impl<'a> Parser<'a> {
                 self.expect(Token::LParen)?;
                 let mut var_type = match self.next() {
                     Some(Token::Identifier(name)) => vec![name],
-                    _ => return Err("Expected identifier".to_string()),
+                    _ => return Err(RiddleError::RuntimeError("Expected identifier".to_string())),
                 };
                 while let Some(Token::Dot) = self.peek(0) {
                     self.expect(Token::Dot)?; // consume '.'
                     if let Some(Token::Identifier(next_name)) = self.next() {
                         var_type.push(next_name);
                     } else {
-                        return Err("Expected identifier after '.'".to_string());
+                        return Err(RiddleError::RuntimeError("Expected identifier after '.'".to_string()));
                     }
                 }
                 let var_name = match self.next() {
                     Some(Token::Identifier(name)) => name,
-                    _ => return Err("Expected variable name in for loop".to_string()),
+                    _ => return Err(RiddleError::RuntimeError("Expected variable name in for loop".to_string())),
                 };
                 self.expect(Token::RParen)?;
                 self.expect(Token::LBrace)?;
@@ -598,29 +598,29 @@ impl<'a> Parser<'a> {
                 let is_fact = matches!(self.next(), Some(Token::Fact)); // consume 'fact' or 'goal'
                 let name = match self.next() {
                     Some(Token::Identifier(name)) => name,
-                    _ => return Err("Expected identifier after 'fact' or 'goal'".to_string()),
+                    _ => return Err(RiddleError::RuntimeError("Expected identifier after 'fact' or 'goal'".to_string())),
                 };
                 self.expect(Token::Equal)?;
                 self.expect(Token::New)?; // consume 'new'
                 let mut predicate_name = match self.next() {
                     Some(Token::Identifier(name)) => vec![name],
-                    _ => return Err("Expected identifier".to_string()),
+                    _ => return Err(RiddleError::RuntimeError("Expected identifier after 'new'".to_string())),
                 };
                 while let Some(Token::Dot) = self.peek(0) {
                     self.expect(Token::Dot)?; // consume '.'
                     if let Some(Token::Identifier(next_name)) = self.next() {
                         predicate_name.push(next_name);
                     } else {
-                        return Err("Expected identifier after '.'".to_string());
+                        return Err(RiddleError::TypeError("Expected identifier after '.'".to_string()));
                     }
                 }
-                let (predicate_name, tau) = predicate_name.split_last().ok_or("Predicate name cannot be empty".to_string())?;
+                let (predicate_name, tau) = predicate_name.split_last().ok_or(RiddleError::RuntimeError("Predicate name cannot be empty".to_string()))?;
                 self.expect(Token::LParen)?;
                 let mut args = Vec::new();
                 while !matches!(self.peek(0), Some(Token::RParen)) {
                     let arg_name = match self.next() {
                         Some(Token::Identifier(name)) => name,
-                        _ => return Err("Expected identifier in formula arguments".to_string()),
+                        _ => return Err(RiddleError::RuntimeError("Expected identifier in formula arguments".to_string())),
                     };
                     self.expect(Token::Colon)?;
                     let arg_expr = self.parse_expression()?;
@@ -643,11 +643,11 @@ impl<'a> Parser<'a> {
         }
     }
 
-    pub(crate) fn parse_expression(&mut self) -> Result<Expr, String> {
+    pub(crate) fn parse_expression(&mut self) -> Result<Expr, RiddleError> {
         self.parse_or_expression()
     }
 
-    fn parse_or_expression(&mut self) -> Result<Expr, String> {
+    fn parse_or_expression(&mut self) -> Result<Expr, RiddleError> {
         let mut terms = vec![self.parse_and_expression()?];
         while let Some(Token::Bar) = self.peek(0) {
             self.expect(Token::Bar)?; // consume '|'
@@ -656,7 +656,7 @@ impl<'a> Parser<'a> {
         if terms.len() == 1 { Ok(terms.remove(0)) } else { Ok(Expr::Or { terms }) }
     }
 
-    fn parse_and_expression(&mut self) -> Result<Expr, String> {
+    fn parse_and_expression(&mut self) -> Result<Expr, RiddleError> {
         let mut terms = vec![self.parse_equality_expression()?];
         while let Some(Token::Amp) = self.peek(0) {
             self.expect(Token::Amp)?; // consume '&'
@@ -665,7 +665,7 @@ impl<'a> Parser<'a> {
         if terms.len() == 1 { Ok(terms.remove(0)) } else { Ok(Expr::And { terms }) }
     }
 
-    fn parse_equality_expression(&mut self) -> Result<Expr, String> {
+    fn parse_equality_expression(&mut self) -> Result<Expr, RiddleError> {
         let left = self.parse_relational_expression()?;
         match self.peek(0) {
             Some(Token::EqualEqual) => {
@@ -682,7 +682,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_relational_expression(&mut self) -> Result<Expr, String> {
+    fn parse_relational_expression(&mut self) -> Result<Expr, RiddleError> {
         let left = self.parse_additive_expression()?;
         match self.peek(0) {
             Some(Token::LessThan) => {
@@ -709,7 +709,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-    fn parse_additive_expression(&mut self) -> Result<Expr, String> {
+    fn parse_additive_expression(&mut self) -> Result<Expr, RiddleError> {
         let mut terms = vec![self.parse_multiplicative_expression()?];
         while let Some(token) = self.peek(0) {
             match token {
@@ -728,7 +728,7 @@ impl<'a> Parser<'a> {
         if terms.len() == 1 { Ok(terms.remove(0)) } else { Ok(Expr::Sum { terms }) }
     }
 
-    fn parse_multiplicative_expression(&mut self) -> Result<Expr, String> {
+    fn parse_multiplicative_expression(&mut self) -> Result<Expr, RiddleError> {
         let mut factors = vec![self.parse_primary_expression()?];
         while let Some(token) = self.peek(0) {
             match token {
@@ -748,7 +748,7 @@ impl<'a> Parser<'a> {
         if factors.len() == 1 { Ok(factors.remove(0)) } else { Ok(Expr::Mul { factors }) }
     }
 
-    fn parse_primary_expression(&mut self) -> Result<Expr, String> {
+    fn parse_primary_expression(&mut self) -> Result<Expr, RiddleError> {
         match self.next() {
             Some(Token::Not) => Ok(Expr::Not { term: Box::new(self.parse_primary_expression()?) }),
             Some(Token::BoolLiteral(value)) => Ok(Expr::Bool(value)),
@@ -762,7 +762,7 @@ impl<'a> Parser<'a> {
                     if let Some(Token::Identifier(next_name)) = self.next() {
                         ids.push(next_name);
                     } else {
-                        return Err("Expected identifier after '.'".to_string());
+                        return Err(RiddleError::RuntimeError("Expected identifier after '.'".to_string()));
                     }
                 }
                 if let Some(Token::LParen) = self.peek(0) {
@@ -789,7 +789,7 @@ impl<'a> Parser<'a> {
                     if let Some(Token::Identifier(next_name)) = self.next() {
                         ids.push(next_name);
                     } else {
-                        return Err("Expected identifier after '.'".to_string());
+                        return Err(RiddleError::RuntimeError("Expected identifier after '.'".to_string()));
                     }
                 }
                 if let Some(Token::LParen) = self.peek(0) {
@@ -817,14 +817,14 @@ impl<'a> Parser<'a> {
             Some(Token::New) => {
                 let mut class_name = match self.next() {
                     Some(Token::Identifier(name)) => vec![name],
-                    _ => return Err("Expected identifier after 'new'".to_string()),
+                    _ => return Err(RiddleError::RuntimeError("Expected identifier after 'new'".to_string())),
                 };
                 while let Some(Token::Dot) = self.peek(0) {
                     self.expect(Token::Dot)?; // consume '.'
                     if let Some(Token::Identifier(next_name)) = self.next() {
                         class_name.push(next_name);
                     } else {
-                        return Err("Expected identifier after '.'".to_string());
+                        return Err(RiddleError::RuntimeError("Expected identifier after '.'".to_string()));
                     }
                 }
                 self.expect(Token::LParen)?;
@@ -840,8 +840,8 @@ impl<'a> Parser<'a> {
                 self.expect(Token::RParen)?;
                 Ok(Expr::NewObject { class_name, args })
             }
-            Some(token) => Err(format!("Unexpected token: {:?}", token)),
-            None => Err("Unexpected end of input".to_string()),
+            Some(token) => Err(RiddleError::RuntimeError(format!("Unexpected token: {:?}", token))),
+            None => Err(RiddleError::RuntimeError("Unexpected end of input".to_string())),
         }
     }
 }
@@ -1298,10 +1298,10 @@ mod tests {
 
     #[test]
     fn test_logical() {
-        assert_eq!(parse_expression("true & false"), Expr::And { terms: vec![Expr::Bool(true), Expr::Bool(false)] });
-        assert_eq!(parse_expression("true | false"), Expr::Or { terms: vec![Expr::Bool(true), Expr::Bool(false)] });
+        assert_eq!(parse_expression("true & false").unwrap(), Expr::And { terms: vec![Expr::Bool(true), Expr::Bool(false)] });
+        assert_eq!(parse_expression("true | false").unwrap(), Expr::Or { terms: vec![Expr::Bool(true), Expr::Bool(false)] });
         assert_eq!(
-            parse_expression("!a & b"),
+            parse_expression("!a & b").unwrap(),
             Expr::And {
                 terms: vec![Expr::Not { term: Box::new(Expr::QualifiedId { ids: vec!["a".to_string()] }) }, Expr::QualifiedId { ids: vec!["b".to_string()] }]
             }
@@ -1309,7 +1309,7 @@ mod tests {
 
         // n-ary logical ops
         assert_eq!(
-            parse_expression("a & b & c"),
+            parse_expression("a & b & c").unwrap(),
             Expr::And {
                 terms: vec![Expr::QualifiedId { ids: vec!["a".to_string()] }, Expr::QualifiedId { ids: vec!["b".to_string()] }, Expr::QualifiedId { ids: vec!["c".to_string()] },]
             }
@@ -1317,7 +1317,7 @@ mod tests {
 
         // Mixed precedence: & binds tighter than |
         assert_eq!(
-            parse_expression("a | b & c"),
+            parse_expression("a | b & c").unwrap(),
             Expr::Or {
                 terms: vec![
                     Expr::QualifiedId { ids: vec!["a".to_string()] },
@@ -1332,7 +1332,7 @@ mod tests {
     #[test]
     fn test_complex_expression() {
         assert_eq!(
-            parse_expression("f(x) + 3 * (y - 2) >= 10 & g(z) != 5"),
+            parse_expression("f(x) + 3 * (y - 2) >= 10 & g(z) != 5").unwrap(),
             Expr::And {
                 terms: vec![
                     Expr::Geq {

@@ -77,7 +77,7 @@ impl CommonCore {
     ///
     /// Returns an error if parsing or execution fails.
     pub fn read(&self, riddle: &str) -> Result<(), RiddleError> {
-        let mut problem = parse_problem(riddle).expect("Failed to parse problem");
+        let mut problem = parse_problem(riddle)?;
         let statments = std::mem::take(&mut problem.statements);
         self.scope.add_problem(problem);
         for stmt in statments {

@@ -1,5 +1,5 @@
 use crate::{
-    language::{ClassDef, ConstructorDef, Expr, MethodDef, PredicateDef, ProblemDef, Statement},
+    language::{ClassDef, ConstructorDef, Expr, MethodDef, PredicateDef, ProblemDef, RiddleError, Statement},
     lexer::Lexer,
     parser::Parser,
 };
@@ -13,46 +13,46 @@ mod lexer;
 mod parser;
 pub mod scope;
 
-pub fn parse_problem(input: &str) -> Result<ProblemDef, String> {
+pub fn parse_problem(input: &str) -> Result<ProblemDef, RiddleError> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_problem()
 }
 
-pub fn parse_class(input: &str) -> Result<ClassDef, String> {
+pub fn parse_class(input: &str) -> Result<ClassDef, RiddleError> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_class()
 }
 
-pub fn parse_constructor(input: &str) -> Result<ConstructorDef, String> {
+pub fn parse_constructor(input: &str) -> Result<ConstructorDef, RiddleError> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_constructor()
 }
 
-pub fn parse_method(input: &str) -> Result<MethodDef, String> {
+pub fn parse_method(input: &str) -> Result<MethodDef, RiddleError> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_method()
 }
 
-pub fn parse_predicate(input: &str) -> Result<PredicateDef, String> {
+pub fn parse_predicate(input: &str) -> Result<PredicateDef, RiddleError> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_predicate()
 }
 
-pub fn parse_statement(input: &str) -> Result<Statement, String> {
+pub fn parse_statement(input: &str) -> Result<Statement, RiddleError> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
     parser.parse_statement()
 }
 
-pub fn parse_expression(input: &str) -> Expr {
+pub fn parse_expression(input: &str) -> Result<Expr, RiddleError> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
-    parser.parse_expression().expect("Failed to parse expression")
+    parser.parse_expression()
 }
 
 pub trait ToJson {

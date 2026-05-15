@@ -343,7 +343,7 @@ impl Method {
         }
         if let Some(return_type) = &self.return_type {
             method_env
-                .get("return")
+                .get("__return")
                 .ok_or_else(|| RiddleError::RuntimeError("Method did not set return value".into()))
                 .and_then(|ret| if ret.var_type().full_name().split('.').eq(return_type.iter().map(|s| s.as_str())) { Ok(Some(ret)) } else { Err(RiddleError::TypeError(format!("Return value expected to be of type '{}', got '{}'", return_type.join("."), ret.var_type().name()))) })
         } else {

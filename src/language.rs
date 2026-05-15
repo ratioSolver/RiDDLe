@@ -339,7 +339,11 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
             env.set(name.clone(), atom);
             Ok(())
         }
-        _ => unimplemented!(),
+        Statement::Return { value } => {
+            let ret = evaluate(scp.clone(), env.clone(), value)?;
+            env.set("__return".to_string(), ret);
+            Ok(())
+        }
     }
 }
 
