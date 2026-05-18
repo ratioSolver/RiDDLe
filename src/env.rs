@@ -67,7 +67,11 @@ pub struct Atom {
 impl Atom {
     pub fn new(predicate: Rc<Predicate>, fact: bool, args: HashMap<String, Rc<dyn Var>>) -> Self {
         let env = args.get("tau").and_then(|tau| tau.clone().as_env()).unwrap_or_else(|| predicate.clone().core().clone());
-        Self { predicate: Rc::downgrade(&predicate), fact, env: CommonEnv::new(Some(env)) }
+        let env = CommonEnv::new(Some(env));
+        for (name, value) in args {
+            env.set(name, value);
+        }
+        Self { predicate: Rc::downgrade(&predicate), fact, env }
     }
 
     pub fn predicate(&self) -> Rc<Predicate> {

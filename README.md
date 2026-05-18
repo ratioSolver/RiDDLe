@@ -52,24 +52,21 @@ Example:
 use riddle::parse_problem;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-		let input = r#"
-				class Point {
-						int x, y;
+	let input = r#"
+		class Point {
+			int x, y;
 
-						Point(int x, int y) {
-								this.x = x;
-								this.y = y;
-						}
+			Point(int x, int y): x(x), y(y) {}
 
-						predicate is_origin() {
-								x == 0 & y == 0;
-						}
-				}
-		"#;
+			predicate is_origin() {
+				x == 0 & y == 0;
+			}
+		}
+	"#;
 
-		let ast = parse_problem(input)?;
-		println!("Parsed {} class(es)", ast.classes.len());
-		Ok(())
+	let ast = parse_problem(input)?;
+	println!("Parsed {} class(es)", ast.classes.len());
+	Ok(())
 }
 ```
 
@@ -77,7 +74,7 @@ If you need JSON output, the crate re-exports `serde_json` and provides a `ToJso
 
 ## What The Language Supports Here
 
-Based on the current implementation and tests, the parser/runtime supports:
+The parser/runtime supports:
 
 - primitive types: `bool`, `int`, `real`, `string`
 - classes with:
