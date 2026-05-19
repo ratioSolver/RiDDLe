@@ -538,10 +538,10 @@ impl Predicate {
                     let class_type = self.get_type(first_class).expect("Parent predicate class should exist");
                     let class_type = nested_classes.iter().fold(class_type, |acc, class_name| {
                         let acc_name = acc.full_name();
-                        acc.clone().as_class().expect(format!("Type '{}' in parent path is not a class", acc_name).as_str()).get_type(class_name).expect(format!("Nested class '{}' in parent path not found in '{}'", class_name, acc_name).as_str())
+                        acc.clone().as_class().unwrap_or_else(|| panic!("Type '{}' in parent path is not a class", acc_name)).get_type(class_name).unwrap_or_else(|| panic!("Nested class '{}' in parent path not found in '{}'", class_name, acc_name))
                     });
                     let class_type_name = class_type.full_name();
-                    class_type.clone().as_class().expect(format!("Type '{}' in parent path is not a class", class_type_name).as_str()).get_predicate(predicate_name).expect(format!("Parent predicate '{}' not found in class '{}'", predicate_name, class_type_name).as_str())
+                    class_type.clone().as_class().unwrap_or_else(|| panic!("Type '{}' in parent path is not a class", class_type_name)).get_predicate(predicate_name).unwrap_or_else(|| panic!("Parent predicate '{}' not found in class '{}'", predicate_name, class_type_name))
                 };
                 pred_hierarchy.push_back(parent_predicate);
             }
