@@ -1,5 +1,3 @@
-use serde_json::{Value, json};
-
 use crate::{
     ToJson,
     env::{Atom, BoolExpr, CommonEnv, Env, Var},
@@ -7,6 +5,7 @@ use crate::{
     parse_problem,
     scope::{BoolType, CommonScope, Field, IntType, Method, Predicate, RealType, Scope, StringType, Type},
 };
+use serde_json::{Value, json};
 use std::{
     collections::{HashMap, VecDeque},
     rc::{Rc, Weak},

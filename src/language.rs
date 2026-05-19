@@ -4,7 +4,7 @@ use crate::{
 };
 use std::{
     collections::{HashMap, VecDeque},
-    fmt::{self, Display, Formatter},
+    fmt,
     rc::Rc,
 };
 
@@ -17,6 +17,20 @@ pub enum RiddleError {
     NotFound(String),
     InconsistencyError(String),
     RuntimeError(String),
+}
+
+impl fmt::Display for RiddleError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RiddleError::NotAnEnvironment(name) => write!(f, "Variable '{}' is not an environment", name),
+            RiddleError::NotAClass(name) => write!(f, "Type '{}' is not a class", name),
+            RiddleError::NotAPredicate(name) => write!(f, "Predicate '{}' not found", name),
+            RiddleError::TypeError(msg) => write!(f, "Type error: {}", msg),
+            RiddleError::NotFound(name) => write!(f, "'{}' not found", name),
+            RiddleError::InconsistencyError(msg) => write!(f, "Inconsistency error: {}", msg),
+            RiddleError::RuntimeError(msg) => write!(f, "Runtime error: {}", msg),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -98,8 +112,8 @@ pub enum Expr {
     NewObject { class_name: Vec<String>, args: Vec<Expr> },
 }
 
-impl Display for ProblemDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for ProblemDef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for method in &self.methods {
             writeln!(f, "{}", method)?;
         }
@@ -116,8 +130,8 @@ impl Display for ProblemDef {
     }
 }
 
-impl Display for ClassDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for ClassDef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "class {}{} {{", self.name, if !self.parents.is_empty() { format!(" extends {}", self.parents.iter().map(|p| p.join(".")).collect::<Vec<_>>().join(", ")) } else { String::new() })?;
         for (field_type, fields) in &self.fields {
             writeln!(f, "    {} {};", field_type.join("."), fields.iter().map(|(n, v)| format!("{}{}", n, v.as_ref().map(|v| format!(" = {}", v)).unwrap_or_default())).collect::<Vec<_>>().join(", "))?;
@@ -135,14 +149,14 @@ impl Display for ClassDef {
     }
 }
 
-impl Display for ConstructorDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for ConstructorDef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "constructor({}) {{\n{}\n}}", self.args.iter().map(|(t, n)| format!("{} {}", t.join("."), n)).collect::<Vec<_>>().join(", "), self.statements.iter().map(|s| format!("    {}", s)).collect::<Vec<_>>().join("\n"))
     }
 }
 
-impl Display for MethodDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for MethodDef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{} {}({}) {{\n{}\n}}",
@@ -154,14 +168,14 @@ impl Display for MethodDef {
     }
 }
 
-impl Display for PredicateDef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for PredicateDef {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "predicate {}({}) {{\n{}\n}}", self.name, self.args.iter().map(|(t, n)| format!("{} {}", t.join("."), n)).collect::<Vec<_>>().join(", "), self.statements.iter().map(|s| format!("    {}", s)).collect::<Vec<_>>().join("\n"))
     }
 }
 
-impl Display for Statement {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for Statement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Statement::Expr(e) => write!(f, "{};", e),
             Statement::LocalField { field_type, fields } => write!(f, "{} {};", field_type.join("."), fields.iter().map(|(n, v)| format!("{}{}", n, v.as_ref().map(|v| format!(" = {}", v)).unwrap_or_default())).collect::<Vec<_>>().join(", ")),
@@ -174,8 +188,8 @@ impl Display for Statement {
     }
 }
 
-impl Display for Expr {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+impl fmt::Display for Expr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Expr::Bool(b) => write!(f, "{}", b),
             Expr::Int(i) => write!(f, "{}", i),

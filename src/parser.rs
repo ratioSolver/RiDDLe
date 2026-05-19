@@ -1,9 +1,8 @@
-use std::{collections::VecDeque, iter::Peekable};
-
 use crate::{
     language::{ClassDef, ConstructorDef, Expr, MethodDef, PredicateDef, ProblemDef, RiddleError, Statement},
     lexer::{Lexer, Token},
 };
+use std::{collections::VecDeque, iter::Peekable};
 
 pub struct Parser<'a> {
     lexer: Peekable<Lexer<'a>>,
