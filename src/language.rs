@@ -318,21 +318,21 @@ pub fn execute(scp: Rc<dyn Scope>, env: Rc<dyn Env>, stmt: &Statement) -> Result
                         }
                     }
                 }
-                for parent in pred.parents() {
-                    let (first, rest) = parent.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty parent predicate path".into()))?;
-                    let parent = if rest.is_empty() {
-                        scp.get_predicate(first).ok_or_else(|| RiddleError::NotFound(format!("Predicate '{}' in parent path", first)))?
+                for parent_path in pred.parents() {
+                    let (predicate_name, class_path) = parent_path.split_last().ok_or_else(|| RiddleError::RuntimeError("Empty parent predicate path".into()))?;
+                    let parent_predicate = if class_path.is_empty() {
+                        scp.get_predicate(predicate_name).ok_or_else(|| RiddleError::NotFound(format!("Predicate '{}' in parent path", predicate_name)))?
                     } else {
-                        let arg_tp = scp.get_type(first).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in parent path", first)))?;
-                        let (last, rest) = rest.split_last().ok_or_else(|| RiddleError::RuntimeError("Empty parent predicate path".into()))?;
-                        rest.iter()
-                            .try_fold(arg_tp, |acc, id| acc.as_class().ok_or_else(|| RiddleError::NotAClass(format!("Class '{}' in parent path", first)))?.get_type(id).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in parent path", id))))?
-                            .as_class()
-                            .ok_or_else(|| RiddleError::NotAClass(format!("Type '{}' in parent path is not a class", first)))?
-                            .get_predicate(last)
-                            .ok_or_else(|| RiddleError::NotFound(format!("Predicate '{}' in parent path", last)))?
+                        let (first_class, nested_classes) = class_path.split_first().ok_or_else(|| RiddleError::RuntimeError("Empty parent predicate path".into()))?;
+                        let class_type = scp.get_type(first_class).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in parent path", first_class)))?;
+                        let class_type = nested_classes.iter().try_fold(class_type, |acc, class_name| {
+                            let acc_name = acc.full_name();
+                            acc.clone().as_class().ok_or_else(|| RiddleError::NotAClass(format!("Type '{}' in parent path is not a class", acc_name)))?.get_type(class_name).ok_or_else(|| RiddleError::NotFound(format!("Class '{}' in parent path", class_name)))
+                        })?;
+                        let class_type_name = class_type.full_name();
+                        class_type.clone().as_class().ok_or_else(|| RiddleError::NotAClass(format!("Type '{}' in parent path is not a class", class_type_name)))?.get_predicate(predicate_name).ok_or_else(|| RiddleError::NotFound(format!("Predicate '{}' in parent path", predicate_name)))?
                     };
-                    pred_hierarchy.push_back(parent);
+                    pred_hierarchy.push_back(parent_predicate);
                 }
             }
             let atom = predicate.new_atom(*is_fact, args);
